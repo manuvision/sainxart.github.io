@@ -1,79 +1,94 @@
+var messageDelay = 2000;  // How long to display status messages (in milliseconds)
 
-    
-;(function($) {
-    "use strict";
+// Init the form once the document is ready
+$( init );
 
-    
-    jQuery.validator.addMethod('answercheck', function (value, element) {
-        return this.optional(element) || /^\bcat\b$/.test(value)
-    }, "type the correct answer -_-");
 
-    // validate contactForm form
-    $(function() {
-        $('#contactForm').validate({
-            rules: {
-                name: {
-                    required: true,
-                    minlength: 2
-                },
-                name2: {
-                    required: true,
-                    minlength: 2
-                },
-                email: {
-                    required: true,
-                    email: true
-                },
-                subject: {
-                    required: true,
-                    minlength: 12
-                },
-                message: {
-                    required: true,
-                    minlength: 20
-                }
-            },
-            messages: {
-                name: {
-                    required: "come on, your name, don't you?",
-                    minlength: "your name must consist of at least 2 characters"
-                },
-                name2: {
-                    required: "come on, you have a name, don't you?",
-                    minlength: "your name must consist of at least 2 characters"
-                },
-                email: {
-                    required: "no email, no message"
-                },
-                subject: {
-                    required: "please input your subject"
-                },
-                message: {
-                    required: "um...yea, you have to write something to send this form.",
-                    minlength: "thats all? really?"
-                }
-            },
-            submitHandler: function(form) {
-                $(form).ajaxSubmit({
-                    type:"POST",
-                    data: $(form).serialize(),
-                    url:"contact_process.php",
-                    success: function() {
-                        $('#contactForm :input').attr('disabled', 'disabled');
-                        $('#contactForm').fadeTo( "slow", 0.15, function() {
-                            $(this).find(':input').attr('disabled', 'disabled');
-                            $(this).find('label').css('cursor','default');
-                            $('#success').fadeIn()
-                        })
-                    },
-                    error: function() {
-                        $('#contactForm').fadeTo( "slow", 0.15, function() {
-                            $('#error').fadeIn()
-                        })
-                    }
-                })
-            }
-        })
-    })
-        
-})(jQuery)
+// Initialize the form
+
+function init() {
+
+  // Hide the form initially.
+  // Make submitForm() the form's submit handler.
+  // Position the form so it sits in the centre of the browser window.
+  $('#contactForm').show().submit( submitForm ).addClass( 'positioned' );
+
+  // When the "Send us an email" link is clicked:
+  // 1. Fade the content out
+  // 2. Display the form
+  // 3. Move focus to the first field
+  // 4. Prevent the link being followed
+
+  $('a[href="#contactForm"]').click( function() {
+    $('#contactForm').fadeTo( 'slow', .2 );
+    $('#contactForm').fadeIn( 'slow', function() {
+      $('#senderName').focus();
+    } )
+
+    return false;
+  } );
+  
+}
+
+
+// Submit the form via Ajax
+
+function submitForm() {
+  var contactForm = $(this);
+
+  // Are all the fields filled in?
+
+  if ( !$('#senderName').val() || !$('#senderEmail').val() || !$('#message').val() ) {
+
+    // No; display a warning message and return to the form
+    $('#incompleteMessage').fadeIn().delay(messageDelay).fadeOut();
+    contactForm.fadeOut().delay(messageDelay).fadeIn();
+
+  } else {
+
+    // Yes; submit the form to the PHP script via Ajax
+
+    $('#sendingMessage').fadeIn();
+    contactForm.fadeOut();
+
+    $.ajax( {
+      url: contactForm.attr( 'action' ) + "?ajax=true",
+      type: contactForm.attr( 'method' ),
+      data: contactForm.serialize(),
+      success: submitFinished
+    } );
+  }
+
+  // Prevent the default form submission occurring
+  return false;
+}
+
+
+// Handle the Ajax response
+
+function submitFinished( response ) {
+  response = $.trim( response );
+  $('#sendingMessage').fadeOut();
+
+  if ( response == "success" ) {
+
+    // Form submitted successfully:
+    // 1. Display the success message
+    // 2. Clear the form fields
+    // 3. Fade the content back in
+
+    $('#successMessage').fadeIn().delay(messageDelay).fadeOut();
+    $('#senderName').val( "" );
+    $('#senderEmail').val( "" );
+    $('#message').val( "" );
+
+    $('#contactForm').delay(messageDelay+500).fadeIn();
+
+  } else {
+
+    // Form submission failed: Display the failure message,
+    // then redisplay the form
+    $('#failureMessage').fadeIn().delay(messageDelay).fadeOut();
+    $('#contactForm').delay(messageDelay+500).fadeIn();
+  }
+}
