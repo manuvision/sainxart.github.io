@@ -124,13 +124,13 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
 ***********************/
 
 html {   
-    font-family: "Roboto",sans-serif;
+    font-family: "helvetica",sans-serif;
 }
 
 body {
     color: #6f7c82;
     font-weight: 400;
-    font-family: 'Roboto', sans-serif;
+    font-family: 'helvetica', sans-serif;
     font-size: 16px;
     line-height: 26px;
 }
@@ -142,7 +142,7 @@ body {
 p { 
     color: #6f7c82;
     font-weight: 400;
-    font-family: 'Roboto', sans-serif;
+    font-family: 'helvetica', sans-serif;
     font-size: 16px;
     line-height: 26px;
     overflow-x: hidden;
@@ -338,7 +338,7 @@ padding: 0px 15px 0px 10px;
 line-height: 25px;
 font-size: 16px;
 font-weight: 700;
-font-family: "Roboto",sans-serif;
+font-family: "helvetica",sans-serif;
 display: inline-block;
 background: rgba(0, 0, 0, 0);
 margin-bottom: 5px;
@@ -366,7 +366,7 @@ box-sizing:border-box;
 
 .hover-cover    {   color: #6f7c82;
 font-weight: 400;
-font-family: 'Roboto', sans-serif;
+font-family: 'helvetica', sans-serif;
 font-size: 16px;
 line-height: 26px; opacity:0; 
 visibility:hidden; position:absolute;top:5%;left:5%;width:90%;height:90%; background:#fff; padding:20px; box-sizing:border-box;  text-align:center;

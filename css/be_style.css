@@ -3625,7 +3625,7 @@ body.contact #Content,body.content_no_padding #Content {
 }
 
 #header_action_button,#header_cart,#menu > ul > li > a,.offer_li .title h3,.timeline_items li h3 span,body,button,input[type=button],input[type=email],input[type=password],input[type=reset],input[type=submit],input[type=tel],input[type=text],select,span.date_label,textarea {
-    font-family: Roboto,Arial,Tahoma,sans-serif;
+    font-family: helvetica,Arial,Tahoma,sans-serif;
     font-weight: 400;
 }
 
@@ -3640,7 +3640,7 @@ body.contact #Content,body.content_no_padding #Content {
 }
 
 h5 {
-    font-family: Roboto,Arial,Tahoma,sans-serif;
+    font-family: helvetica,Arial,Tahoma,sans-serif;
     font-weight: 700;
 }
 

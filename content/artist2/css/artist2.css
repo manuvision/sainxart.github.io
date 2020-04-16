@@ -1618,25 +1618,25 @@ html {
 	background-color: #f7f7f7;
 }
 body, button, span.date_label, .timeline_items li h3 span, input[type="submit"], input[type="reset"], input[type="button"], input[type="text"], input[type="password"], input[type="tel"], input[type="email"], textarea, select, .offer_li .title h3 {
-	font-family: "Roboto", Arial, Tahoma, sans-serif;
+	font-family: "helvetica", Arial, Tahoma, sans-serif;
 }
 #menu>ul>li>a, .action_button, #overlay-menu ul li a {
-	font-family: "Roboto", Arial, Tahoma, sans-serif;
+	font-family: "helvetica", Arial, Tahoma, sans-serif;
 }
 #Subheader .title {
-	font-family: "Roboto", Arial, Tahoma, sans-serif;
+	font-family: "helvetica", Arial, Tahoma, sans-serif;
 }
 h1, h2, h3, h4, .text-logo #logo {
-	font-family: "Roboto", Arial, Tahoma, sans-serif;
+	font-family: "helvetica", Arial, Tahoma, sans-serif;
 }
 h5, h6 {
-	font-family: "Roboto", Arial, Tahoma, sans-serif;
+	font-family: "helvetica", Arial, Tahoma, sans-serif;
 }
 blockquote {
-	font-family: "Roboto", Arial, Tahoma, sans-serif;
+	font-family: "helvetica", Arial, Tahoma, sans-serif;
 }
 .chart_box .chart .num, .counter .desc_wrapper .number-wrapper, .how_it_works .image .number, .pricing-box .plan-header .price, .quick_fact .number-wrapper, .woocommerce .product div.entry-summary .price {
-	font-family: "Roboto", Arial, Tahoma, sans-serif;
+	font-family: "helvetica", Arial, Tahoma, sans-serif;
 }
 body {
 	font-size: 14px;
