@@ -1,94 +1,47 @@
-var messageDelay = 2000;  // How long to display status messages (in milliseconds)
+$(function () {
 
-// Init the form once the document is ready
-$( init );
+    "use strict";
 
+    // init the validator
+    // validator files are included in the download package
+    // otherwise download from http://1000hz.github.io/bootstrap-validator
 
-// Initialize the form
-
-function init() {
-
-  // Hide the form initially.
-  // Make submitForm() the form's submit handler.
-  // Position the form so it sits in the centre of the browser window.
-  $('#contactForm').show().submit( submitForm ).addClass( 'positioned' );
-
-  // When the "Send us an email" link is clicked:
-  // 1. Fade the content out
-  // 2. Display the form
-  // 3. Move focus to the first field
-  // 4. Prevent the link being followed
-
-  $('a[href="#contactForm"]').click( function() {
-    $('#contactForm').fadeTo( 'slow', .2 );
-    $('#contactForm').fadeIn( 'slow', function() {
-      $('#senderName').focus();
-    } )
-
-    return false;
-  } );
-  
-}
+    $('#contact-form').validator();
 
 
-// Submit the form via Ajax
+    // when the form is submitted
+    $('#contact-form').on('submit', function (e) {
 
-function submitForm() {
-  var contactForm = $(this);
+        // if the validator does not prevent form submit
+        if (!e.isDefaultPrevented()) {
+            var url = "form/contact.php";
 
-  // Are all the fields filled in?
+            // POST values in the background the the script URL
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: $(this).serialize(),
+                success: function (data)
+                {
+                    // data = JSON object that contact.php returns
 
-  if ( !$('#senderName').val() || !$('#senderEmail').val() || !$('#message').val() ) {
+                    // we recieve the type of the message: success x danger and apply it to the 
+                    var messageAlert = 'alert-' + data.type;
+                    var messageText = data.message;
 
-    // No; display a warning message and return to the form
-    $('#incompleteMessage').fadeIn().delay(messageDelay).fadeOut();
-    contactForm.fadeOut().delay(messageDelay).fadeIn();
-
-  } else {
-
-    // Yes; submit the form to the PHP script via Ajax
-
-    $('#sendingMessage').fadeIn();
-    contactForm.fadeOut();
-
-    $.ajax( {
-      url: contactForm.attr( 'action' ) + "?ajax=true",
-      type: contactForm.attr( 'method' ),
-      data: contactForm.serialize(),
-      success: submitFinished
-    } );
-  }
-
-  // Prevent the default form submission occurring
-  return false;
-}
-
-
-// Handle the Ajax response
-
-function submitFinished( response ) {
-  response = $.trim( response );
-  $('#sendingMessage').fadeOut();
-
-  if ( response == "success" ) {
-
-    // Form submitted successfully:
-    // 1. Display the success message
-    // 2. Clear the form fields
-    // 3. Fade the content back in
-
-    $('#successMessage').fadeIn().delay(messageDelay).fadeOut();
-    $('#senderName').val( "" );
-    $('#senderEmail').val( "" );
-    $('#message').val( "" );
-
-    $('#contactForm').delay(messageDelay+500).fadeIn();
-
-  } else {
-
-    // Form submission failed: Display the failure message,
-    // then redisplay the form
-    $('#failureMessage').fadeIn().delay(messageDelay).fadeOut();
-    $('#contactForm').delay(messageDelay+500).fadeIn();
-  }
-}
+                    // let's compose Bootstrap alert box HTML
+                    var alertBox = '<div class="alert ' + messageAlert + ' alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' + messageText + '</div>';
+                    
+                    // If we have messageAlert and messageText
+                    if (messageAlert && messageText) {
+                        // inject the alert to .messages div in our form
+                        $('#contact-form').find('.messages').html(alertBox);
+                        // empty the form
+                        $('#contact-form')[0].reset();
+                    }
+                }
+            });
+            return false;
+        }
+    })
+});
