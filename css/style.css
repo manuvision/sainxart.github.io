@@ -1029,7 +1029,7 @@ section.home.light .social-icons li a:hover {
   transition: all 0.3s ease-in-out;
 }
 .portfolio-item .mask {
-  background: #6C6CE5;
+  background: #000000;
   position: absolute;
   left: 0;
   top: 0;
@@ -1041,7 +1041,7 @@ section.home.light .social-icons li a:hover {
   transition: all 0.3s ease-in-out;
 }
 .portfolio-item:hover .mask {
-  opacity: 0.9;
+  opacity: 0.69;
 }
 .portfolio-item:hover .details h4, .portfolio-item:hover .details span {
   opacity: 1;
@@ -1567,8 +1567,32 @@ body.dark footer.footer {
   transform: perspective(1px) translateZ(0);
   box-shadow: 0 0 1px rgba(0, 0, 0, 0);
 }
+.btn-secondary {
+  color: #FFF;
+  background: #FF7F55;
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+  -webkit-transform: perspective(1px) translateZ(0);
+  transform: perspective(1px) translateZ(0);
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+}
+
 .btn-default:hover {
   color: #FFF;
+  background: #F2BA30;
+  -webkit-animation-name: button-push;
+  animation-name: button-push;
+  -webkit-animation-duration: 0.3s;
+  animation-duration: 0.3s;
+  -webkit-animation-timing-function: linear;
+  animation-timing-function: linear;
+  -webkit-animation-iteration-count: 1;
+  animation-iteration-count: 1;
+}
+.btn-secondary:hover {
+  color: #FFF;
+  background: #F2BA30;
   -webkit-animation-name: button-push;
   animation-name: button-push;
   -webkit-animation-duration: 0.3s;
@@ -1766,7 +1790,7 @@ body.dark footer.footer {
 
 .pagination > li > a:focus, .pagination > li > a:hover, .pagination > li > span:focus, .pagination > li > span:hover {
   z-index: 2;
-  color: #FFF;
+  color: #F2BA30;
   background-color: #454360;
   border-color: transparent;
 }
