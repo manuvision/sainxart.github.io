@@ -848,7 +848,9 @@ section.home.light .social-icons li a {
 section.home.light .social-icons li a:hover {
   color: #F2BA30;
 }
-
+.social-icons li a {
+  color: #FFF;
+}
 .section-title {
   font-size: 36px;
   margin: 0;

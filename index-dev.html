@@ -52,7 +52,11 @@
 			<defs>
 				<filter id="goo">
 					<feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
-					<feColorMatrix in="blur" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
+					<feColorMatrix in="blur" values="	
+														1 0 0 0 0
+														0 1 0 0 0  
+														0 0 1 0 0  
+														0 0 0 1 0" result="goo" />
 					<feBlend in="SourceGraphic" in2="goo" />
 				</filter>
 			</defs>
@@ -122,8 +126,8 @@
 				<img src="images/108x108.png" alt="Manu.Vision" class="mb-4" />
 
 				<!-- info -->
-				<h1 class="mb-2 mt-0">Manuel Sainsily</h1>
-				<span class="text-rotating">I'm a Sr. UI/UX designer &nbsp; ✨, I'm a AR/VR Expert &nbsp; 🥽, I'm from Guadeloupe &nbsp; 🌴, I live in Montreal &nbsp; 🇨🇦</span>
+				<h1 class="mb-2 mt-0">Hi, my name is Manuel Sainsily</h1>
+				<span class="text-rotating">I'm a Sr. UI/UX Designer &nbsp; ✨, I'm a AR/VR Expert &nbsp; 🥽, I'm also a Freelance Consultant &nbsp; ♾, I'm from Guadeloupe &nbsp; 🌴, I live in Montreal &nbsp; 🇨🇦</span>
 
 				<!-- social icons -->
 				<ul class="social-icons light list-inline mb-0 mt-4">
@@ -218,8 +222,8 @@
 					<div class="fact-item">
 						<span class="icon icon-fire"></span>
 						<div class="details">
-							<h3 class="mb-0 mt-0 number"><em class="count">144</em></h3>
-							<p class="mb-0">Projects</p>
+							<a href="#works"><h3 class="mb-0 mt-0 number"><em class="count">144</em></h3>
+							<p class="mb-0">Projects</p></a>
 						</div>
 					</div>
 					<div class="spacer d-md-none d-lg-none" data-height="30"></div>
@@ -242,8 +246,8 @@
 					<div class="fact-item">
 						<span class="icon icon-music-tone-alt"></span>
 						<div class="details">
-							<h3 class="mb-0 mt-0 number"><em class="count">1001</em></h3>
-							<p class="mb-0">Playlists</p>
+							<a href="https://open.spotify.com/user/sainxart" target="_blank"><h3 class="mb-0 mt-0 number"><em class="count">1001</em></h3>
+							<p class="mb-0">Playlists</p></a>
 						</div>
 					</div>
 					<div class="spacer d-md-none d-lg-none" data-height="30"></div>
@@ -254,8 +258,45 @@
 					<div class="fact-item">
 						<span class="icon icon-event"></span>
 						<div class="details">
-							<h3 class="mb-0 mt-0 number"><em class="count">15</em></h3>
-							<p class="mb-0">Conferences</p>
+							<a href="#small-dialog3" class="work-content"><h3 class="mb-0 mt-0 number"><em class="count">15</em></h3>
+							<p class="mb-0">Conferences</p></a>
+						</div>
+						<div id="small-dialog3" class="white-popup zoom-anim-dialog mfp-hide">
+							<img src="images/proj1.png" alt="Title" />
+							<h2>Recent conferences</h2>
+							<div class="row">
+
+								<div class="col-md-4 col-sm-6">
+									<h4 class="mb-3 mt-0">TEI</h4>
+									<a href="https://tei.acm.org/2020/"><p>Sydney 2020</p></a>
+								</div>
+
+								<div class="col-md-4 col-sm-6">
+									<h4 class="mb-3 mt-0">CHI</h4></a>
+									<a href="https://chi2018.acm.org/"><p>Montreal 2018</p></a>
+								</div>
+								
+								<div class="col-md-4 col-sm-6">
+									<h4 class="mb-3 mt-0">C2</h4>
+									<p><a href="https://www.c2montreal.com/speakers-2018/#/">Montreal 2018</a>
+									<br/><a href="https://www.c2montreal.com/speakers-2019/#/">Montreal 2019</p></a>
+								</div>
+
+								<div class="col-md-4 col-sm-6">
+									<h4 class="mb-3 mt-0">Concordia University</h4>
+									<a href="https://conuhacks.io/"><p>Conuhacks Montreal 2018 & 2019</a>
+								</div>
+
+								<div class="col-md-4 col-sm-6">
+									<h4 class="mb-3 mt-0">Unity</h4>
+									<a href="https://unite.unity.com/2018/los-angeles"><p>Unite Los Angeles 2018</p></a>
+								</div>
+
+								<div class="col-md-4 col-sm-6">
+									<h4 class="mb-3 mt-0">E3</h4>
+									<a href="https://www.theverge.com/2018/6/12/17451588/e3-2018-games-trailers-xbox-playstation-ea-bethesda-nintendo"><p>Los Angeles 2018</p></a>
+								</div>
+							</div>
 						</div>
 					</div>
 					<div class="spacer d-md-none d-lg-none" data-height="30"></div>
@@ -279,63 +320,54 @@
 
 			<div class="row">
 
-				<div class="col-md-4">
+					<div class="col-md-4 col-sm-6">
 					<!-- service box -->
-					<div class="service-box rounded data-background padding-30 text-center text-light" data-color="#232F45">
+					<div class="service-box rounded data-background padding-30 text-center text-light" data-color="#232F45"> 
 						<img src="images/80x80-observe.png" alt="Observe" />
-						<h3 class="mb-3 mt-0">Exploration</h3>
-						<p><b>Research & Empathise</b>
-							<br/>• &nbsp;Get to know users
+						<h3>Information</h3>
+						<p><b><i>Research & Empathise</i></b>
+							<br/>• &nbsp;Explore users journeys
 							<br/>• &nbsp;Frame design challenge
 							<br/>• &nbsp;Identify needs & biases
 							<br/>• &nbsp;Validate assumptions
 							</p>
 					</div>
-				</div>
-			
-				<div class="col-md-4">
+					</div>
+
+					<div class="col-md-4 col-sm-6">
 					<!-- service box -->
 					<div class="service-box rounded data-background padding-30 text-center text-light" data-color="#232F45">
 						<img src="images/80x80-reflect.png" alt="Reflect" />
-						<h3 class="mb-3 mt-0">Ideation</h3>
-						<p><b>Diverge & Brainstorm</b>
+						<h3>Imagination</h3>
+						<p><b><i>Diverge & Brainstorm</i></b>
 							<br/>• &nbsp;Align on intent
 							<br/>• &nbsp;Share inspiring stories 
 							<br/>• &nbsp;Generate & bundle wild ideas
 							<br/>• &nbsp;Co-create insights
 							</p>
-						<p class="mb-0"></p>
 					</div>
-				</div>
-			
-				<div class="col-md-4">
-					<!-- service box -->
-					<div class="service-box rounded data-background padding-30 text-center text-light" data-color="#232F45">
-						<img src="images/80x80-make.png" alt="Make" />
-						<h3 class="mb-3 mt-0">Iteration</h3>
-						<p><b>Plan & Prototype</b>
-							<br/>• &nbsp;Define success & roadmap
-							<br/>• &nbsp;Build partnerships
-							<br/>• &nbsp;Integrate feedback
-							<br/>• &nbsp;Measure & evaluate 
-							</p>
-						<p class="mb-0"></p>
 					</div>
-				</div>
+				
+					<div class="col-md-4 col-sm-6">
+						<!-- service box -->
+						<div class="service-box rounded data-background padding-30 text-center text-light" data-color="#232F45">
+							<img src="images/80x80-make.png" alt="Make" />
+							<h3>Iteration</h3>
+							<p><b><i>Plan & Prototype</i></b>
+								<br/>• &nbsp;Define success & roadmap
+								<br/>• &nbsp;Build partnerships
+								<br/>• &nbsp;Integrate feedback
+								<br/>• &nbsp;Measure & evaluate 
+								</p>
+						</div>
+					</div>
 			</div>
 
-			<div class="mt-5 text-center">
-				<!-- info -->
-				<span>“Design thinking is to have a bias toward action and empathy toward who you are designing for … to not have a fear of failure.”
-					<br/>— Bernie Roth, Director Hasso Plattner Institute of Design at Stanford University</span>
-					<br/>
-					<br/>
-					<h3>Read about the different frameworks</h3>
-
-				<div class="mt-3">
-					<a href="https://designthinking.ideo.com/" target="_blank" class="btn btn-default">IDEO DT</a>
-					&nbsp;
-					<a href="https://www.ibm.com/design/thinking/" target="_blank" class="btn btn-secondary">IBM Enterprise DT</a>
+			
+				<div class="mt-5 text-center">
+					<!-- info -->
+					<span><i>“Design thinking is to have a bias toward action and empathy toward who you are designing for … to not have a fear of failure.”</i>
+						<br/>— Bernie Roth, Director Hasso Plattner Institute of Design at Stanford University</span>
 				</div>
 			</div>
 		</div>
@@ -564,7 +596,9 @@
 			</div>
 			<div class="mt-5 text-center">
 				<div class="mt-3">
-					<a href="https://www.linkedin.com/in/sainxart/" target="_blank" class="btn btn-default">View on LinkedIn</a>
+					<a href="https://www.linkedin.com/in/sainxart/" target="_blank" class="btn btn-default">Download CV</a>
+					&nbsp;
+					<a href="https://www.linkedin.com/in/sainxart/" target="_blank" class="btn btn-secondary">Connect on LinkedIn</a>
 				</div>
 			</div>
 			
@@ -761,13 +795,27 @@
 
 			<div class="mt-5 text-center">
 				<!-- info -->
-				<span class="text-rotating">Thanks for scrolling 7560 pixels &nbsp; 👾, Please don't print my CV if you don't need to &nbsp; ♻️, Made with &nbsp; ♥️ during quarantine &nbsp; ☣️</span>
+				<div class="mt-3">
+					<span class="text-rotating">
+						Thanks for scrolling 7560 pixels &nbsp; 👾, Please don't print my CV if you don't need to &nbsp; ♻️, Made with &nbsp; ♥️ during quarantine &nbsp; ☣️
+					</span>
+				</div>	
+				
+				<!-- social icons -->
+				<ul class="social-icons light list-inline mb-0 mt-4">
+					<li class="list-inline-item"><a href="https://www.linkedin.com/in/sainxart/" target="_blank"><i class="fab fa-linkedin"></i></a></li>
+					<li class="list-inline-item"><a href="https://www.instagram.com/manu.vision" target="_blank"><i class="fab fa-instagram"></i></a></li>
+				</ul>
 
 				<div class="mt-3">
 					<a href="https://www.linkedin.com/in/sainxart/" target="_blank" class="btn btn-default">Download CV</a>
 					&nbsp;
 					<a href="mailto:manuel.sainsily@gmail.com?Subject=Contact%20from%20Manu.Vision%20Website" target="_blank" class="btn btn-secondary">Send Email</a>
 				</div>
+
+				
+
+				
 			</div>
 			
 			
