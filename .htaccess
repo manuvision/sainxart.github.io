@@ -1,3 +1,7 @@
+# 404 Error Blurry.Vision
+
+ErrorDocument 404 /blurry.html
+
 # mod_rewrite starts here
 
 RewriteEngine on
