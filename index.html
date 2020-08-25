@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-	<!--
-		<meta http-equiv="Refresh" content="0; url=https://sainxart.com/coming-soon" />
-	-->
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<title>Manu.Vision</title>
 	<meta name="description" content="A website by Manuel Sainsily">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-	<link rel="shortcut icon" type="image/x-icon" href="images/32x32.ico">
+	<link rel="shortcut icon" type="image/x-icon" src="images/32x32.ico">
 
 	<!-- STYLESHEETS -->
 	<link rel="stylesheet" href="css/bootstrap.min.css" type="text/css" media="all">
@@ -24,7 +21,6 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 
-	
 	<!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-173648178-1"></script>
 <script>
@@ -35,8 +31,7 @@
   gtag('config', 'UA-173648178-1');
 </script>
 	<!-- End of GOOGLE ANALYTICS -->
-
-
+	
 </head>
 
 <body class="dark">
@@ -64,12 +59,15 @@
 			</div>
 		</div>
 		<!-- Stuff -->
-		
 		<svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="goo-outer">
 			<defs>
 				<filter id="goo">
 					<feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
-					<feColorMatrix in="blur" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
+					<feColorMatrix in="blur" values="	
+														1 0 0 0 0
+														0 1 0 0 0  
+														0 0 1 0 0  
+														0 0 0 1 0" result="goo" />
 					<feBlend in="SourceGraphic" in2="goo" />
 				</filter>
 			</defs>
@@ -85,6 +83,12 @@
 			<button>
 				<span></span>
 			</button>
+		</div>
+		<!-- logo image -->
+		<div class="site-logo">
+			<a href="/">
+				<img src="images/logo.png" alt="Manu.Vision" />
+			</a>
 		</div>
 	</div>
 </header>
@@ -102,9 +106,13 @@
 	<!-- main menu -->
 	<nav>
 		<ul class="vertical-menu scrollspy">
-			<li class="active"><a href="https://manu.vision"><i class="icon-home"></i>Home</a></li>
-			<li><a href="https://manu.vision/career"><i class="icon-briefcase"></i>My Career</a></li>
-			<li><a href="https://manu.vision/lab"><i class="icon-chemistry"></i>The Lab</a></li>
+			<li class="active"><a href="#home"><i class="icon-home"></i>Home</a></li>
+			<li><a href="#about"><i class="icon-briefcase"></i>Why</a></li>
+			<li><a href="#services"><i class="icon-layers"></i>How</a></li>
+			<li><a href="#works"><i class="icon-note"></i>What</a></li>
+			<li><a href="#experience"><i class="icon-graduation"></i>When & Where</a></li>
+			<li><a href="#testimonials"><i class="icon-user-following"></i>Who</a></li>
+			<li><a href="#contact"><i class="icon-bubbles"></i>Contact</a></li>
 			<li><a href="https://manu.vision/feedback"><i class="icon-speech"></i>Feedback</a></li>
 		</ul>
 	</nav>
@@ -130,18 +138,14 @@
 				<img src="images/108x108.png" alt="Manu.Vision" class="mb-4" />
 
 				<!-- info -->
-				<h1 class="mb-2 mt-0">Hi, my name is Manuel Sainsily</h1>
-				<span class="text-rotating">I'm a Sr. UI/UX Designer&nbsp; ✨, I'm a UX Researcher in Haptics &nbsp; 👾, I'm an AR/VR Expert & 3D Artist &nbsp; 🥽, I'm from Karukera (Guadeloupe) &nbsp; 🌴, I live in Montreal (Canada) &nbsp; 🇨🇦</span>
+				<h1 class="mb-2 mt-0">Hi, I'm Manuel Sainsily</h1>
+				<span class="text-rotating">Product Designer based in Montreal, Sr. UX Design Researcher in Haptics @ Immersion.com, AR/VR Expert & 3D Artist, Born in Guadeloupe (French West Indies) </span>
 				
 				<span><i><h6>I turn every idea into a prototype.</h6></i></span>
 				
 				<!-- buttons -->
 				<div class="mt-4">
-					<a href="https://manu.vision/career" class="btn btn-default">Explore My Career</a> 
-					<br/>
-					<br/>
-					<a href="https://manu.vision/lab" class="btn btn-secondary">Visit The Lab</a>
-					<br/>
+					<a href="#contact" class="btn btn-default">Get in touch</a>
 				</div>
 
 				<!-- social icons -->
@@ -150,6 +154,16 @@
 					<li class="list-inline-item"><a href="mailto:manuel.sainsily@gmail.com?Subject=Contact%20from%20Manu.Vision%20Website" target="_blank"><i class="icon-envelope"></i></a></li>
 					<li class="list-inline-item"><a href="https://www.instagram.com/manu.vision"><i class="fab fa-instagram"></i></a></li>
 				</ul>
+			</div>
+			
+			<!-- scroll down mouse wheel -->
+			<div class="scroll-down">
+				<a href="#about" class="mouse-wrapper">
+					<span>Scroll Down</span>
+					<span class="mouse">
+						<span class="wheel"></span>
+					</span>
+				</a>
 			</div>
 
 			<!-- parallax layers -->
@@ -180,6 +194,1140 @@
 			</div>
 		</div>
 		
+	</section>
+
+	<!-- section about -->
+	<section id="about">
+
+		<div class="container">
+			
+			<!-- section title -->
+			<h2 class="section-title wow fadeInUp">Start With Why</h2>
+			<div class="spacer" data-height="60"></div>
+			<br/> 
+			
+			<div class="row">
+				<div class="col-md-12 triangle-left-md triangle-top-sm">
+					<div class="rounded bg-dark shadow-light padding-30">
+						<div class="row">
+							<div class="col-md-12">
+								<!-- about text -->
+								<p>
+									<i>
+										"People don't buy 'WHAT' you do, they buy 'WHY' you do it."
+										<br/>
+										- Simon Sinek, <a href="https://www.youtube.com/watch?v=IPYeCltXpxw" target="_blank">Start With Why</a>.
+									</i>
+									
+									<br/>
+									<br/>
+									
+									<img src="images/manu-selfie.png" alt="Reflect" />
+									<br/>
+									<br/>
+
+									
+									<b>
+									<i>
+										I am a designer, researcher and teacher on the topics of User eXperience (UX), Human-Computer Interaction (HCI) and eXtended Reality (XR).
+									</i>
+									</b>
+
+									<br/>
+									<br/>
+
+										Currently <b>Sr. UX Design Researcher in Haptic Technology</b> @ <a href="www.immersion.com" target="_blank">Immersion Corporation</a>, I have spent the last decade designing websites, apps, marketing campaigns, games, IoT devices, wearables, XR interfaces, and embodied communications through multisensory & immersive technologies.
+									<br/>
+									<br/>
+										Since, I have helped small & large businesses from various industries (entertainment, finance sector, public services, automotive and adult to name a few) by leading agile teams and co-creating with multiple clients to design human-centered products that have changed the life of millions of users.
+									<br/>
+									<br/>
+										A recent example is my <b>Sr. UI/UX Consulting</b> career @ <a href="https://www.ibm.com/" target="_blank">IBM Corporation</a>, where I had the opportunity to create and <b>Lead the Canada XR Design Department</b>. Aside from my main clients projects, I also physically & digitally (even more since COVID-19) spoke at conferences, grew communities, created courses, and conducted innovative & tailored workshops to train employees & partners.
+										
+									
+									
+								</p>
+							</div>
+						</div>
+						<div class="mt-3">
+							<a href="#experience" class="btn btn-default">View Resume</a>
+						</div>
+					</div>
+				</div>
+
+			</div>
+			<!-- row end -->
+
+			<div class="spacer" data-height="60"></div>
+			
+			<br/>
+			<br/>
+
+			<div class="row">
+				
+
+
+				<div class="col-md-3 col-sm-6">
+					<!-- fact item -->
+					<div class="fact-item">
+						<span class="icon icon-calendar"></span>
+						<div class="details">
+							<a href="#small-dialog-conf" class="work-content"><h3 class="mb-0 mt-0 number"><em class="count">9</em></h3>
+							<p class="mb-0">Recent Conferences</p></a>
+						</div>
+						<div id="small-dialog-conf" class="white-popup zoom-anim-dialog mfp-hide">
+							<h2 class="mb-0 mt-0 number"><span class="icon icon-calendar"></span> &nbsp; <em class="count">9</em></h2>
+							<h2>Recent conferences</h2>
+							<br/>
+							<div class="row">
+								<div class="col-md-4 col-sm-6">
+									<h4 class="mb-3 mt-0">Unity Artist Digital Developer Day: 2020</h4>
+									<a href="https://artistdigitaldeveloperday2020.splashthat.com/"><p>Online 2020</p></a>
+								</div>
+
+								<div class="col-md-4 col-sm-6">
+									<h4 class="mb-3 mt-0">Punchcut + Immersion: Free Live Webinar (Design for Multisensory Experiences)</h4>
+									<a href="https://punchcut.com/multisensory-experience-design-webinar/"><p>Online 2020</p></a>
+								</div>
+
+								<div class="col-md-4 col-sm-6">
+									<h4 class="mb-3 mt-0">Circuitstream: AR/VR Learning & Training</h4>
+									<a href="https://circuitstream.com/"><p>Online 2020</p></a>
+								</div>
+
+								<div class="col-md-4 col-sm-6">
+									<h4 class="mb-3 mt-0">TEI</h4>
+									<a href="https://tei.acm.org/2020/"><p>Sydney 2020</p></a>
+								</div>
+
+								<div class="col-md-4 col-sm-6">
+									<h4 class="mb-3 mt-0">CHI</h4></a>
+									<a href="https://chi2018.acm.org/"><p>Montreal 2018</p></a>
+								</div>
+								
+								<div class="col-md-4 col-sm-6">
+									<h4 class="mb-3 mt-0">C2</h4>
+									<p><a href="https://www.c2montreal.com/speakers-2018/#/">Montreal 2018</a>
+									<br/><a href="https://www.c2montreal.com/speakers-2019/#/">Montreal 2019</p></a>
+								</div>
+
+								<div class="col-md-4 col-sm-6">
+									<h4 class="mb-3 mt-0">Concordia University</h4>
+									<a href="https://conuhacks.io/"><p>Conuhacks Montreal 2018 & 2019</a>
+								</div>
+
+								<div class="col-md-4 col-sm-6">
+									<h4 class="mb-3 mt-0">Unity Unite LA</h4>
+									<a href="https://unite.unity.com/2018/los-angeles"><p>Los Angeles 2018</p></a>
+								</div>
+
+								<div class="col-md-4 col-sm-6">
+									<h4 class="mb-3 mt-0">E3</h4>
+									<a href="https://www.theverge.com/2018/6/12/17451588/e3-2018-games-trailers-xbox-playstation-ea-bethesda-nintendo"><p>Los Angeles 2018</p></a>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="spacer d-md-none d-lg-none" data-height="30"></div>
+				</div>
+
+				
+				<div class="col-md-3 col-sm-6">
+					<!-- fact item -->
+					<div class="fact-item">
+						<span class="icon icon-badge"></span>
+						<div class="details">
+							<a href="#small-dialog-certif" class="work-content"><h3 class="mb-0 mt-0 number"><em class="count">8</em></h3>
+								<p class="mb-0">Recent Certifications</p></a>
+						</div>
+						<div id="small-dialog-certif" class="white-popup zoom-anim-dialog mfp-hide">
+								<h2 class="mb-0 mt-0 number"><span class="icon icon-badge"></span> &nbsp; <em class="count">8</em></h2>
+								<h2>Recent Certifications</h2>
+								<br/>
+								<div class="row">
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">Domestika</h4>
+										<i>Issued May 2020</i>
+										<a href="https://www.domestika.org/en/certificates/c12a28010db4a1126a0a517bef4b4665?utm_campaign=sharer&utm_content=share-https%3A%2F%2Fwww.domestika.org%2Fen%2Fcertificates%2Fc12a28010db4a1126a0a517bef4b4665&utm_medium=referral"><p>Low Poly Character Modeling for Video Games</p></a>
+									</div>
+									
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">Cooper</h4>
+										<i>Issued May 2020</i>
+										<a href="https://www.interaction-design.org/manuel-sainsily/certificate/course/fltqnHSHvHhf5LF1vV"><p>Remote Facilitation</p></a>
+									</div>
+
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">The Interaction Design Foundation</h4>
+										<i>Issued Aug. 2019</i>
+										<a href="https://www.credential.net/59e1fd7a-1be8-4a92-9df1-16691f20788f"><p>How to Design for Augmented and Virtual Reality?</p></a>
+									</div>
+	
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">IBM</h4>
+										<i>Issued Jul. 2019</i>
+										<a href="https:/https://www.youracclaim.com/badges/c5968d4a-876a-4082-9fc7-b673f33ac274/linked_in_profile"><p>Enterprise Design Thinking - Team Essentials for AI</p></a>
+									</div>
+	
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">IBM</h4>
+										<i>Issued Feb. 2019</i>
+										<a href="https://www.youracclaim.com/badges/fef4a483-9457-4e8a-a367-d7e8f05f2cc7/linked_in_profile"><p>iOS Design Foundation</p></a>
+									</div>
+	
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">IBM</h4>
+										<i>Issued Jul. 2018</i>
+										<a href="https://www.youracclaim.com/badges/88041b2d-ce06-46c0-9f90-020261147610/linked_in_profile"><p>Enterprise Design Thinking Co-Creator</p></a>
+									</div>
+	
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">IBM</h4>
+										<i>Issued May. 2017</i>
+										<a href="https://www.youracclaim.com/badges/77c58162-742b-4e02-ad0b-727de2c6b8fc"><p>IBM Design Thinking Practitioner</p></a>
+									</div>
+
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">The Interaction Design Foundation</h4>
+										<i>Credential ID 65911</i>
+										<a href="https://www.interaction-design.org/manuel-sainsily-1/certificate/membership"><p>Certificate of Membership</p></a>
+									</div>
+								</div>
+						</div>
+						</div>
+						<div class="spacer d-md-none d-lg-none" data-height="30"></div>
+				</div>
+
+				<div class="col-md-3 col-sm-6">
+					<!-- fact item -->
+					<div class="fact-item">
+						<span class="icon icon-book-open"></span>
+						<div class="details">
+							<a href="#small-dialog-book" class="work-content"><h3 class="mb-0 mt-0 number"><em class="count">10</em></h3>
+								<p class="mb-0">Recent Reads</p></a>
+						</div>
+						<div id="small-dialog-book" class="white-popup zoom-anim-dialog mfp-hide">
+								<h2 class="mb-0 mt-0 number"><span class="icon icon-book-open"></span> &nbsp; <em class="count">10</em></h2>
+								<h2>Recent Reads</h2>
+								<br/>
+								<div class="row">
+	
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">Syd Mead</h4>
+										<a href="https://www.amazon.ca/Movie-Art-Syd-Mead-Futurist/dp/1785651188"><p>The Movie Art of Syd Mead: Visual Futurist</p></a>
+									</div>
+
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">Warren Berger</h4>
+										<a href="https://www.amazon.ca/More-Beautiful-Question-Inquiry-Breakthrough-ebook/dp/B00GC53AG8"><p>A More Beautiful Question: The Power of Inquiry to Spark Breakthrough Ideas</p></a>
+									</div>
+
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">Mike Walsh</h4>
+										<a href="https://www.amazon.ca/More-Beautiful-Question-Inquiry-Breakthrough-ebook/dp/B00GC53AG8"><p>The Algorithmic Leader: How to Be Smart When Machines Are Smarter Than You</p></a>
+									</div>
+									
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">Wang Shaoqiang</h4>
+										<a href="https://www.amazon.ca/Infographics-Designing-Visualizing-Wang-Shaoqiang/dp/841650492X"><p>Infographics: Designing & Visualizing Data</p></a>
+									</div>
+
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">Edward R. Tufte</h4>
+										<a href="https://www.amazon.ca/Visual-Display-Quantitative-Information/dp/1930824130"><p>The Visual Display of Quantitative Information</p></a>
+									</div>
+
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">Frank Thomas</h4>
+										<a href="https://www.amazon.ca/Illusion-Life-Disney-Animation/dp/0786860707"><p>The Illusion of Life: Disney Animation</p></a>
+									</div>
+
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">Jean-Paul Sartre</h4>
+										<a href="https://www.amazon.com/Existentialisme-Est-Humanisme-essai-French/dp/2070329135"><p>L' Existentialisme Est Un Humanisme (essai)</p></a>
+									</div>
+									
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">Brad Frost</h4>
+										<a href="https://atomicdesign.bradfrost.com/"><p>Atomic Design</p></a>
+									</div>
+
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">Jeff Gothelf with Josh Seiden</h4>
+										<a href="https://jeffgothelf.com/books/#lean-ux"><p>Lean UX - Designing Great Products with Agile Teams</p></a>
+									</div>
+									
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">Meng To</h4>
+										<a href="https://designcode.io/"><p>Design + Code</p></a>
+									</div>
+	
+								</div>
+						</div>
+						</div>
+						<div class="spacer d-md-none d-lg-none" data-height="30"></div>
+				</div>
+
+				<div class="col-md-3 col-sm-6">
+					<!-- fact item -->
+					<div class="fact-item">
+						<span class="icon icon-microphone"></span>
+						<div class="details">
+							<a href="#small-dialog-podcast" class="work-content"><h3 class="mb-0 mt-0 number"><em class="count">4</em></h3>
+								<p class="mb-0">Recent Podcasts</p></a>
+						</div>
+						<div id="small-dialog-podcast" class="white-popup zoom-anim-dialog mfp-hide">
+								<h2 class="mb-0 mt-0 number"><span class="icon icon-microphone"></span> &nbsp; <em class="count">4</em></h2>
+								<h2>Recent Podcasts</h2>
+								<br/>
+								<div class="row">
+	
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">Alan Smithson</h4>
+										<i>CEO @ MetaVRse</i>
+										<a href="https://xrforbusiness.io/"><p>XR for Business</p></a>
+									</div>
+
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">David Birnbaum</h4>
+										<i>Head of Design & UX Director @ Immersion</i>
+										<a href="https://open.spotify.com/show/1nhQYTYTMLhWfgLA1KEuq3"><p>INIT</p></a>
+									</div>
+									
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">Michelle Obama</h4>
+										<i>First Lady of the USA</i>
+										<a href="https://open.spotify.com/show/71mvGXupfKcmO6jlmOJQTP?si=RXNCeS5DR-2WQYGfWFrh5A"><p>The Michelle Obama Podcast</p></a>
+									</div>
+									
+									<div class="col-md-4 col-sm-6">
+										<h4 class="mb-3 mt-0">Manuel Sainsily</h4>
+										<i>Manu.Vision</i>
+										<a href="https://open.spotify.com/show/006Qh1RMrkd2mDiVGgTZsv?si=wQ_uXwotTDm_xMPqH1lPCQ"><p>Manu.Vision/podcast</p></a>
+									</div>
+	
+								</div>
+						</div>
+						</div>
+						<div class="spacer d-md-none d-lg-none" data-height="30"></div>
+				</div>
+			</div>
+		</div>
+		
+	</section>
+	
+	<!-- section services -->
+	<section id="services">
+
+		<div class="container">
+			
+			<!-- section title -->
+			<h2 class="section-title wow fadeInUp">Human-Centered Design Methodology</h2>
+			<div class="spacer" data-height="60"></div>
+			<br/> 
+			
+			<div class="row">
+
+					<div class="col-md-4">
+					<!-- service box -->
+						<div class="service-box rounded data-background padding-30 text-center text-light" data-color="#232F45"> 
+							<img src="images/80x80-observe.png" alt="Observe" />
+							<h3 class="mb-3 mt-0">Information</h3>
+							<p class="mb-0"><b><i>Research & Empathise</i></b>
+								<br/>• &nbsp;Explore users journeys
+								<br/>• &nbsp;Frame design challenge
+								<br/>• &nbsp;Identify needs & biases
+								<br/>• &nbsp;Validate assumptions
+								</p>
+						</div>
+
+						<div class="spacer d-md-none d-lg-none" data-height="30"></div>
+					</div>
+
+					<div class="col-md-4">
+					<!-- service box -->
+						<div class="service-box rounded data-background padding-30 text-center text-light" data-color="#232F45">
+							<img src="images/80x80-reflect.png" alt="Reflect" />
+							<h3 class="mb-3 mt-0">Imagination</h3>
+							<p class="mb-0"><b><i>Diverge & Converge</i></b>
+								<br/>• &nbsp;Align on intent
+								<br/>• &nbsp;Share inspiring stories 
+								<br/>• &nbsp;Brainstorm wild ideas
+								<br/>• &nbsp;Co-create insights
+								</p>
+						</div>
+
+						<div class="spacer d-md-none d-lg-none" data-height="30"></div>
+					</div>
+				
+					<div class="col-md-4">
+						<!-- service box -->
+						<div class="service-box rounded data-background padding-30 text-center text-light" data-color="#232F45">
+							<img src="images/80x80-make.png" alt="Make" />
+							<h3 class="mb-3 mt-0">Iteration</h3>
+							<p class="mb-0"><b><i>Plan & Prototype</i></b>
+								<br/>• &nbsp;Define success & roadmap
+								<br/>• &nbsp;Build partnerships
+								<br/>• &nbsp;Implement feedback
+								<br/>• &nbsp;Measure & evaluate 
+								</p>
+						</div>
+
+						<div class="spacer d-md-none d-lg-none" data-height="30"></div>
+					</div>
+			</div>
+
+				
+				<div class="mt-5 text-center">
+					<!-- info -->
+					<span><i>“Design thinking is to have a bias toward action and empathy toward who you are designing for … to not have a fear of failure.”</i>
+						<br/>— <a href="https://profiles.stanford.edu/bernard-roth#:~:text=Roth%20is%20one%20of%20the,and%20the%20problem%20solving%20process.">Bernie Roth</a>, Director Hasso Plattner Institute of Design at Stanford University</span>
+				</div>
+			</div>
+		</div>
+	</section>
+	
+	<!-- section works -->
+	<section id="works">
+
+	<div class="container">
+		
+		<!-- section title -->
+		<h2 class="section-title wow fadeInUp">Case Studies & Side Projects</h2>
+		<div class="spacer" data-height="60"></div>
+		<br/>
+		<!-- portfolio filter (desktop) 
+		<ul class="portfolio-filter list-inline wow fadeInUp">
+			<li class="current list-inline-item" data-filter="*">All industries</li>
+			<li class="list-inline-item" data-filter=".bank">Banking & Financial Markets</li>
+			<li class="list-inline-item" data-filter=".gov">Government</li>
+			<li class="list-inline-item" data-filter=".insu">Insurance</li>
+			<li class="list-inline-item" data-filter=".tele">Telecomunications</li>
+		-->
+			<!-- Additional Industries -->
+		<!--
+				<li class="list-inline-item" data-filter=".auto">Automotive</li>
+				<li class="list-inline-item" data-filter=".ent">Media & Entertainment</li>
+				<li class="list-inline-item" data-filter=".edu">Education</li>
+				<li class="list-inline-item" data-filter=".elec">Electronics</li>
+				<li class="list-inline-item" data-filter=".nrj">Energy & Utilities</li>
+				<li class="list-inline-item" data-filter=".reta">Retail & Consumer Products</li>
+				<li class="list-inline-item" data-filter=".trav">Travel & Transportation</li>
+
+		-->
+
+		</ul>
+		
+		<!-- portfolio filter (mobile) -->
+		<div class="pf-filter-wrapper">
+			<select class="portfolio-filter-mobile">
+				<option value="*">Everything</option>
+				<option value=".bank">Banking & Financial Markets</option>
+				<option value=".gov">Government</option>
+				<option value=".insu">Insurance</option>
+				<option value=".tele">Telecomunications</option>
+
+				<!-- Additional Industries
+
+					<option value=".auto">Automotive</option>
+					<option value=".ent">Media & Entertainment</option>
+					<option value=".edu">Education</option>
+					<option value=".elec">Electronics</option>
+					<option value=".nrj">Energy & Utilities</option>
+					<option value=".reta">Retail & Consumer Products</option>
+					<option value=".trav">Travel & Transportation</option>
+
+				-->
+
+			</select>
+		</div>
+		
+		
+		<p>
+			This is a non-exhaustive list of the most recent projects I had the opportunity to lead or contribute to:
+		</p>
+
+		<!-- portolio wrapper -->
+		<div class="row portfolio-wrapper">
+			<!-- portfolio item -->
+			<div class="col-md-4 col-sm-6 grid-item gov insu">
+				<a href="#small-dialog4" class="work-content">
+					<div class="portfolio-item rounded shadow-dark">
+						<div class="details">
+							<span class="term">2019-2020</span>
+							<h4 class="title">Haptic Technology</h4>
+						</div>
+						<div class="thumb">
+							<img src="images/proj4.png" alt="Portfolio-title" />
+							<div class="mask"></div>
+						</div>
+					</div>
+				</a>
+				<div id="small-dialog4" class="white-popup zoom-anim-dialog mfp-hide">
+					<img src="images/proj4.png" alt="Title" />
+					<h2>Immersion 5G Haptic Cuff</h2>
+					<p>Work in progress.
+						<br/>Meanwhile, you can read more about this case study <a href="https://punchcut.com/immersion/">here</a>.
+					</p>
+						
+					<!-- buttons -->
+					<div class="text-center mt-4">
+						<a href="https://manu.vision" class="btn btn-default">See More Case Studies</a>
+					</div>
+				</div>
+			</div>
+
+			<!-- portfolio item -->
+			<div class="col-md-4 col-sm-6 grid-item bank gov">
+				<a href="#small-dialog1" class="work-content">
+					<div class="portfolio-item rounded shadow-dark">
+						<div class="details">
+							<span class="term">2018-2019</span>
+							<h4 class="title">Design System</h4>
+						</div>
+						<div class="thumb">
+							<img src="images/proj1.png" alt="Portfolio-title" />
+							<div class="mask"></div>
+						</div>
+					</div>
+				</a>
+				<div id="small-dialog1" class="white-popup zoom-anim-dialog mfp-hide">
+					<img src="images/proj1.png" alt="Title" />
+					<h2>Coming soon</h2>
+					<p>This case study is still under construction.
+						<br/>
+						Banking & Financial Markets - Design System.</p>
+					
+					<!-- 
+					<br/>
+					<img src="images/case-study/context.png" alt="context"/>
+					<h3>How it started and some context</h3>
+					<p>The circumstances of the project.</p>
+					<p>What was the product we worked on?</p>
+					<p>Who was the target audience? What problems do the product solve for them?</p>
+					<p>What was the business challenge my team wanted to solve with this project?</p>
+					<p>What was my role? Who did I work with?</p>
+					
+					<br/>
+					<img src="images/case-study/surveys.png" alt="surveys"/>
+					<h3>Surveys</h3>
+					<p>Example</p>
+					<p><i>After we launched the MVP, we wanted to gather feedback from the existing users. We set up an online survey and asked them to fill it out.</i></p>
+					<p>What type of surveys did we use? (in dept, short, on-site, external)</p>
+					<p>How many people have filled the survey?</p>
+					<p>What results did we get?</p>
+					<p>What decisions did we make based on the results?</p>
+
+					<br/>
+					<img src="images/case-study/personas.png" alt="personas"/>
+					<h3>Personas</h3>
+					<p>Example</p>
+					<p><i>Based on the interviews/workshop we set up three personas. We referred to them throughout the entire product development process.</i></p>
+					<p>What kind of methods did we use while developing the personas? (User research, or involving stakeholders?)</p>
+					<p>What information did we provide about each of the personas? (context, problems, motivations, etc)</p>
+					<p>How did we present this information to the product team?</p>
+					<p>How did the personas affect design? What new features or design changes came from the personas?</p>
+					<p>At which points of the design process did we reflect back on our personas?</p>
+
+					<br/>
+					<img src="images/case-study/user-journey.png" alt="user-journey"/>
+					<h3>User Journey</h3>
+					<p>Example</p>
+					<p><i>I mapped out the users’ steps to see how I could simplify their journey to help them reach their most important goals with the product.</i></p>
+					<p>Guiding Questions</p>
+					<p>Why did we decide to do user journey mapping?</p>
+					<p>How did we choose the most important user goal to map?</p>
+					<p>How did we determine the steps of the user journey?</p>
+					<p>How do the users feel and what do they think at each step of the user journey?</p>
+					<p>What ideas emerged to improve the experience in certain steps?</p>
+					<p>How did the user journey mapping help us to design a better product?</p>
+
+					<br/>
+					<img src="images/case-study/customer-journey.png" alt="customer-journey"/>
+					<h3>Customer Journey</h3>
+					<p>Example</p>
+					<p><i>To understand how customers find and interact with the service we created a Customer Journey Map.</i></p>
+					<p>Guiding Questions</p>
+					<p>What were the steps of the customer journey?</p>
+					<p>At what point did the user realize the need for a solution?</p>
+					<p>How do they search for a solution and how does the user find the service?</p>
+					<p>How do they interact with the service?</p>
+					<p>What happens after using the service?</p>
+					<p>What were the main touchpoints at each step where the user contacted with the service?</p>
+					<p>What were the main pain points for the user during the customer journey?</p>
+					<p>What solutions did we find to treat these pain points?</p>
+					<p>What new features or design changes came from mapping the customer journey?</p>
+					
+					<br/>
+					<img src="images/case-study/card-sorting.png" alt="card-sorting"/>
+					<h3>Card Sorting</h3>
+					<p>Example</p>
+					<p><i>I decided on the main categories of the webshop with a Card Sorting session.</i></p>
+					<p>Guiding Questions</p>
+					<p>What was our main purpose? What navigation problems did the website have?</p>
+					<p>What type of card sorting method did we work with? (Closed or reversed, online or in-person)</p>
+					<p>How did the participants group the information?</p>
+					<p>What have we learnt about their mental model?</p>
+					<p>What kind of new navigation structure did we suggest?</p>
+					<p>What changes did we propose based on the card sorting?</p>
+
+					<br/>
+					<img src="images/case-study/sketches.png" alt="sketches"/>
+					<h3>Sketches</h3>
+					<p>Example</p>
+					<p><i>I usually start the design process with low fidelity wireframes. This is the way I iterate through many design options quickly.</i></p>
+					<p>Guiding Questions</p>
+					<p>What was the main purpose of our sketches? (presenting, testing, brainstorming?)</p>
+					<p>How did our knowledge about our users and their goals influenced our sketches?</p>
+					<p>How many different versions we made?</p>
+					<p>What were the main differences among these versions?</p>
+					<p>Which version did we choose and why?</p>
+					<p>Explain the layout and the arrangement of the elements!</p>
+					<p>Why did we put the elements to a certain place?</p>
+					<p>How did our sketches helped us more forward?</p>
+
+					<br/>
+					<img src="images/case-study/wireframes.png" alt="wireframes"/>
+					<h3>Wireframes</h3>
+					<p>Example</p>
+					<p><i>At the beginning of my design process I created wireframes for testing purposes.</i></p>
+					<p>Guiding Questions</p>
+					<p>Why was it useful to do this?</p>
+					<p>What kind of wireframes did we make?</p>
+					<p>Low fidelity or high fidelity?</p>
+					<p>What tool did we use for this?</p>
+					<p>Did we use them for testing?</p>
+					<p>How many iterations did we have?</p>
+
+					<br/>
+					<img src="images/case-study/user-testing.png" alt="user-testing"/>
+					<h3>User Testing</h3>
+					<p>Example</p>
+					<p><i>Before launching the product, I did a testing round in order to reveal possible usability problems.</i></p>
+					<p>Guiding Questions</p>
+					<p>What were we aiming to find out with the user tests?</p>
+					<p>At which phase of the project did we test?</p>
+					<p>Who were the test subjects? Did they meet the target group?</p>
+					<p>What method did we use for testing? (Remote, moderated, etc?)</p>
+					<p>What user insights did we get from the tests?</p>
+					<p>How these user insights impacted the design or the next version?</p>
+
+					<br/>
+					<img src="images/case-study/ui-design.png" alt="ui-design"/>
+					<h3>UI Design</h3>
+					<p>Example</p>
+					<p><i>Once I tested out all usability mistakes, I started designing the final screens in Sketch.</i></p>
+					<p>Guiding Questions</p>
+					<p>What kind of visual style did we follow? (Fresh, corporate, dark, light?)</p>
+					<p>What inspired us to use this style?</p>
+					<p>Did we follow any guidelines? (Material Design, iOS Styleguide, etc?)</p>
+					<p>What platforms did we design for?</p>
+					<p>Which details really fill us with pride?</p>
+					<p>How does our final design reflect our learnings about our users?</p>
+					<p>How does this design help achieve business or user goals?</p>
+
+					<br/>
+					<img src="images/case-study/lessons-learned.png" alt="lessons-learned"/>
+					<h3>Lessons Learned</h3>
+					<p>What we had learned, experienced, or simply how we felt during the project. </p>
+					<p>What were our biggest fears, problems, struggles? </p>
+					<p>How did we overcome them?</p>
+					<p>Being honest is a good thing, it means that we are aware of what we're doing.</p>
+
+					<br/>
+					<img src="images/case-study/testimonial.png" alt="testimonial"/>
+					<br/>
+					<br/>
+					<div class="testimonial-item text-center mx-auto">
+						<div class="thumb mb-3 mx-auto">
+							<img src="images/review2.png" alt="customer-name" />						
+						</div>
+						<h4 class="mt-3 mb-0">Client Name</h4>
+						<span class="subtitle">Job Role</span>
+						<div class="bg-dark padding-30 shadow-light rounded triangle-top position-relative mt-4">
+							<p class="mb-0">Testimonial.</p>
+						</div>
+					</div>
+					-->
+
+					<!-- buttons -->
+					<div class="text-center mt-4">
+						<a href="https://manu.vision" class="btn btn-default">See More Case Studies</a>
+					</div>
+				</div>
+			</div>
+
+			<!-- portfolio item -->
+			<div class="col-md-4 col-sm-6 grid-item tele">
+				<a href="#small-dialog2" class="work-content">
+					<div class="portfolio-item rounded shadow-dark">
+						<div class="details">
+							<span class="term">2019</span>
+							<h4 class="title">Augmented Reality</h4>
+						</div>
+						<div class="thumb">
+							<img src="images/proj2.png" alt="Portfolio-title" />
+							<div class="mask"></div>
+						</div>
+					</div>
+				</a>
+				<div id="small-dialog2" class="white-popup zoom-anim-dialog mfp-hide">
+					<img src="images/proj2.png" alt="Title" />
+					<h2>Coming soon</h2>
+					<p>This case study is still under construction.
+						<br/>
+						Telecomunications, Media & Entertainment - Augmented Reality.</p>
+					<!-- buttons -->
+					<div class="text-center mt-4">
+						<a href="https://manu.vision" class="btn btn-default">See More Case Studies</a>
+					</div>
+				</div>
+			</div>
+
+			<!-- portfolio item -->
+			<div class="col-md-4 col-sm-6 grid-item gov insu">
+				<a href="#small-dialog3" class="work-content">
+					<div class="portfolio-item rounded shadow-dark">
+						<div class="details">
+							<span class="term">2017-2019</span>
+							<h4 class="title">Digital Transformation</h4>
+						</div>
+						<div class="thumb">
+							<img src="images/proj3.png" alt="Portfolio-title" />
+							<div class="mask"></div>
+						</div>
+					</div>
+				</a>
+				<div id="small-dialog3" class="white-popup zoom-anim-dialog mfp-hide">
+					<img src="images/proj3.png" alt="Title" />
+					<h2>Coming soon</h2>
+					<p>This case study is still under construction.
+						<br/>
+						Public Services - Digital Transformation.</p>
+					<!-- buttons -->
+					<div class="text-center mt-4">
+						<a href="https://manu.vision" class="btn btn-default">See More Case Studies</a>
+					</div>
+				</div>
+			</div>
+
+			<!-- portfolio item -->
+			<div class="col-md-4 col-sm-6 grid-item gov insu">
+				<a href="#small-dialog5" class="work-content">
+					<div class="portfolio-item rounded shadow-dark">
+						<div class="details">
+							<span class="term">2016-2017</span>
+							<h4 class="title">Delivery App</h4>
+						</div>
+						<div class="thumb">
+							<img src="images/proj5.png" alt="Portfolio-title" />
+							<div class="mask"></div>
+						</div>
+					</div>
+				</a>
+				<div id="small-dialog5" class="white-popup zoom-anim-dialog mfp-hide">
+					<img src="images/proj5.png" alt="Title" />
+					<h2>Coming Soon</h2>
+					<p>Design System for the <a href="golo.io">GOLO.io</a> delivery app.
+					</p>
+						
+					<!-- buttons -->
+					<div class="text-center mt-4">
+						<a href="https://manu.vision" class="btn btn-default">See More Case Studies</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		
+		<!-- buttons -->
+		<div class="text-center mt-4">
+			I'm constantly prototyping and working on new ideas, you can browse all my side projects in "The Lab".
+			<br/>
+			One rule, stay open-minded:
+			<br/>
+			<br/>
+			<a href="https://manu.vision/lab" class="btn btn-default" target="_blank">Access The Lab</a>
+		</div>
+
+	</div>
+
+	</section>
+
+	<!-- section experience -->
+	<section id="experience">
+
+		<div class="container">
+			
+			<!-- section title -->
+			<h2 class="section-title wow fadeInUp">Recent Experiences</h2>
+
+			<div class="spacer" data-height="60"></div>
+			<br/>
+
+			<div class="row">
+
+				<div class="col-md-6">
+					
+					<!-- timeline wrapper -->
+					<div class="timeline edu bg-dark rounded shadow-light padding-30 overflow-hidden">
+
+						<!-- timeline item -->
+						<div class="timeline-container wow fadeInUp">
+							<div class="content">
+								<span class="time">2008 - 2013</span>
+								<h3 class="title">Master of Computer Science</h3>
+								<p>Started in SUPINFO Guadeloupe (France) and completed in SUPINFO Montreal (Canada). 
+									<br/>SUPINFO Teacher Assistant (2 bilingual classes of 80 students in Web, Oracle & Apple Technologies) and community president.</p>
+							</div>
+						</div>
+
+						<!-- timeline item -->
+						<div class="timeline-container wow fadeInUp" data-wow-delay="0.1s">
+							<div class="content">
+								<span class="time">2005 - 2008</span>
+								<h3 class="title">Secondary-school Diploma</h3> 
+								<p>Baccalauréat Scientifique @ Lycée Faustin-Fleret. 
+									<br/>Diploma with honors (Field Of Study: Physics & Chemistry).</p>
+							</div>
+						</div>
+
+						<!-- main line -->
+						<span class="line"></span>
+
+					</div>
+
+				</div>
+
+				<div class="col-md-6">
+					
+					<!-- responsive spacer -->
+					<div class="spacer d-md-none d-lg-none" data-height="30"></div>
+
+					<!-- timeline wrapper -->
+					<div class="timeline exp bg-dark rounded shadow-light padding-30 overflow-hidden">
+
+						<!-- timeline item -->
+						<div class="timeline-container wow fadeInUp">
+							<div class="content">
+								<span class="time">Sep. 2019 - Present</span>
+								<h4 class="title"><a href="https://www.immersion.com/" target="_blank">Immersion</a></h4>
+								<h3 class="title">Sr. UX Designer, specialized in AR/VR & Haptics</h3>
+								<p>I joined the Montreal research lab to help define the computer-human interactions of tomorrow by growing the UX design philosophy within the company and our clients, as well as helping increase the worldwide awareness around haptics.</p>
+							</div>
+						</div>
+
+						<!-- timeline item -->
+						<div class="timeline-container wow fadeInUp" data-wow-delay="0.1s">
+							<div class="content">
+								<span class="time">Apr. 2017 - Aug. 2019</span>
+								<h4 class="title"><a href="https://www.ibm.com/services/ibmix/" target="_blank">IBM</a></h4>
+								<h3 class="title">Sr. UI/UX Consultant & Canada XR Design Lead</h3>
+								
+								<p>I worked at the intersection of progressive strategy, creative vision, and transformational technology, designing interactions across digital channels for both consumers and employees alike. 
+								<br/>Developped the Canadian Design practice around Extended Realities (XR) and helped educate clients and employees across various industries</p>
+							</div>
+						</div>
+
+						<!-- ADDITIONAL WORK EXPERIENCE
+
+						<div class="timeline-container wow fadeInUp" data-wow-delay="0.2s">
+							<div class="content">
+								<span class="time">May. 2016 - Mar. 2017</span>
+								<h4 class="title"><a href="https://www.paysafe.com/" target="_blank">Paysafe Group</a></h4>
+								<h3 class="title">Lead UI/UX Designer</h3>
+								
+								<p>Lead a multidisciplinary design team, adding new ground breaking features and improving the UX of a suite of Mobile & Web Ordering Apps (3 iOS & Android Mobile/Tablet Apps + 1 Responsive Website + 1 CMS). Successfully implemented projects at Bell Centre, home to the Montreal Canadiens ice hockey team, and one of the highest-traffic venues in the world with more than 1.5M spectators annually.</p>
+							</div>
+						</div>
+
+						<div class="timeline-container wow fadeInUp" data-wow-delay="0.3s">
+							<div class="content">
+								<span class="time">May. 2014 - Apr. 2016</span>
+								<h4 class="title"><a href="https://www.mindgeek.com/" target="_blank">MindGeek</a></h4>
+								<h3 class="title">Lead UI/UX Designer</h3>
+								
+								<p>Lead a team of talented UI/UX Designers, and worked on high-traffic websites, by designing pixel-perfect UI & enhancing the UX of more than 100M daily visitors. Designed a consistent ecosystem of experiences on Tablet, Mobile, Desktop, TV & Console, Watch, AR/VR apps for globally known brands. Took care of the Art Direction of various marketing campaigns, including a PR Stunt showcased on Times Square for a month.</p>
+							</div>
+						</div>
+
+						<div class="timeline-container wow fadeInUp" data-wow-delay="0.4s">
+							<div class="content">
+								<span class="time">Apr. 2013 - Mar. 2014</span>
+								<h4 class="title"><a href="https://www.eye-in.com/home" target="_blank">Eye-In Media</a></h4>
+								<h3 class="title">Sr. UI/UX Designer</h3>
+								
+								<p>Designed & implemented dynamic interfaces for clients like McDonald’s, STM, L’Oréal, Desjardins, Ivanhoé Cambridge, Eaton Center, The Voice, CliniqueOVO, Montreal Jewish Hospital, and more...</p>
+							</div>
+						</div>
+
+						<div class="timeline-container wow fadeInUp" data-wow-delay="0.5s">
+							<div class="content">
+								<span class="time">Jul. 2012 - Jul. 2013</span>
+								<h4 class="title"><a href="https://www.supinfo.com/" target="_blank">SUPINFO International University</a></h4>
+								<h3 class="title">Teacher of Web, Oracle & Apple Technologies</h3>
+								<p>Gave Computer Sciences courses to over 150 students of varying skill levels (FR & EN) from Bachelor of Science (BSc. 1, 2 & 3) to Master of Science (MSc. 1 & 2).</p>
+							</div>
+						</div>
+
+						<div class="timeline-container wow fadeInUp" data-wow-delay="0.6s">
+							<div class="content">
+								<span class="time">Nov. 2011 - Jun. 2012</span>
+								<h4 class="title"><a href="https://www.greencopper.com/" target="_blank">Greencopper</a></h4>
+								<h3 class="title">UI/UX Designer</h3>
+								
+								<p>Designed and published 120+ iOS & Android apps on their respective stores for the most renowned festivals in the world (including most of Evenko lineups like Osheaga, Piknic Electronik, Igloofest, Nuit Blanche, Francofolies, and Mural, SXSW, Lollapalooza, etc.).</p>
+							</div>
+						</div>
+
+					-->
+
+
+						<!-- main line -->
+						<span class="line"></span>
+
+					</div>
+
+					
+
+				</div>
+
+			</div>
+			
+			
+			<div class="mt-5 text-center">
+				<div class="mt-3">
+					<a href="https://manu.vision/career" target="_blank" class="btn btn-default">Download Full Resume</a>
+					&nbsp;
+					<a href="https://www.linkedin.com/in/manuvision/" target="_blank" class="btn btn-secondary">Connect on LinkedIn</a>
+				</div>
+			</div>
+			
+		</div>
+		
+	</section>
+	
+	<!-- section testimonials -->
+	<section id="testimonials">
+
+		<div class="container">
+			
+			<!-- section title -->
+			<h2 class="section-title wow fadeInUp">Clients & Partners</h2>
+
+			<div class="spacer" data-height="60"></div>
+			<br/>
+			<!-- testimonials wrapper -->
+			<div class="testimonials-wrapper">
+				
+				<!-- testimonial item -->
+				<div class="testimonial-item text-center mx-auto">
+					<div class="thumb mb-3 mx-auto">
+						<img src="images/review1.png" alt="customer-name" />						
+					</div>
+					<h4 class="mt-3 mb-0">Antoine Mazenot</h4>
+					<span class="subtitle">UX Designer @ IBM</span>
+					<div class="bg-dark padding-30 shadow-light rounded triangle-top position-relative mt-4">
+						<p class="mb-0">Manu was my mentor at IBM. I see him as a very talented designer who can deliver at speed on a daily basis without loosing track of the bigger picture: being connected to people. Which makes him extremely smart at understanding processes and breaking gaps between communities. Not many people are as passionate about design. On his free time, he is always experiencing new things, building prototypes, and sharing his findings, which allows him to always know what's happening in the industry. I also see him as a charismatic and inspiring leader who constantly opens doors for people and guides them towards achieving their personal goals.</p>
+					</div>
+				</div>
+				
+				<br/>
+				<!-- testimonial item -->
+				<div class="testimonial-item text-center mx-auto">
+					<div class="thumb mb-3 mx-auto">
+						<img src="images/review2.png" alt="customer-name" />						
+					</div>
+					<h4 class="mt-3 mb-0">Benjamin Maunier</h4>
+					<span class="subtitle">UX Researcher @ IBM</span>
+					<div class="bg-dark padding-30 shadow-light rounded triangle-top position-relative mt-4">
+						<p class="mb-0">Manuel a été un véritable exemple pour moi durant ma première année à IBM. Travailler à ses côtés m’a permis d’apprendre énormément, pas seulement d’un point de vue professionnel mais aussi d’un point de vue humain. Il a été une rencontre charnière dans ma carrière et je n’ai aucun doute qu’il aura du succès partout où il passera. Sa passion et son dévouement pour le design et le XR lui permettent d’être un leader dans son domaine et une personne auprès duquel on apprend constamment. Merci pour tout.</p>
+					</div>
+				</div>
+
+				<br/>
+				<!-- testimonial item -->
+				<div class="testimonial-item text-center mx-auto">
+					<div class="thumb mb-3 mx-auto">
+						<img src="images/review3.png" alt="customer-name" />						
+					</div>
+					<h4 class="mt-3 mb-0">Hamza Mghafri</h4>
+					<span class="subtitle">Directeur E-Commerce et Technologies Numériques</span>
+					<div class="bg-dark padding-30 shadow-light rounded triangle-top position-relative mt-4">
+						<p class="mb-0">Manuel fut un excellent professeur. Pédagogue et possédant de solides connaissances dans les technologies web, il a su motiver sa classe et transmettre à son groupe une partie de ses connaissances tout en faisant en sorte que le cours soit intéressant. En plus de ses explications très claires, il a toujours été disponible pour répondre aux questions de ses élèves et leurs apporter de l'aide de manière individuelle. J'espère avoir une nouvelle occasion de travailler avec lui.</p>
+					</div>
+				</div>
+
+				<br/>
+				<!-- testimonial item -->
+				<div class="testimonial-item text-center mx-auto">
+					<div class="thumb mb-3 mx-auto">
+						<img src="images/review4.png" alt="customer-name" />						
+					</div>
+					<h4 class="mt-3 mb-0">Julien Marchal</h4>
+					<span class="subtitle">Senior BW/BI Consultant @ Beyond Technologies</span>
+					<div class="bg-dark padding-30 shadow-light rounded triangle-top position-relative mt-4">
+						<p class="mb-0">Lors de la formation Business Intelligence, Manuel Sainsily a été un élève exemplaire, prêt à prendre les commandes d'une équipe pour mener à bien un projet. En dehors de cette formation, j'ai souvent sollicité Manuel pour connaître son avis, et son expertise possède une qualité digne de grandes entreprises. Je n'hésiterai pas à revenir vers lui.</p>
+					</div>
+				</div>
+
+				<br/>
+				<!-- testimonial item -->
+				<div class="testimonial-item text-center mx-auto">
+					<div class="thumb mb-3 mx-auto">
+						<img src="images/review5.png" alt="customer-name" />						
+					</div>
+					<h4 class="mt-3 mb-0">Julien SEBIRE</h4>
+					<span class="subtitle">IoT Security Researcher</span>
+					<div class="bg-dark padding-30 shadow-light rounded triangle-top position-relative mt-4">
+						<p class="mb-0">Ce fut un véritable plaisir d'avoir travaillé avec Manuel au cours des deux dernières années. Il est particulièrement doué dans les technologies Apple, Oracle et Web Strategy, ce qui lui a valut le statut de professeur depuis 2011 au sein de SUPINFO International University. J'espère avoir l'occasion de travailler de nouveau avec lui.</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-md-2 col-6">
+					<!-- client item -->
+					<div class="client-item">
+						<div class="inner">
+							<img src="images/client1.png" alt="client-name" />
+						</div>
+					</div>
+				</div>
+				<div class="col-md-2 col-6">
+					<!-- client item -->
+					<div class="client-item">
+						<div class="inner">
+							<img src="images/client2.png" alt="client-name" />
+						</div>
+					</div>
+				</div>
+				<div class="col-md-2 col-6">
+					<!-- client item -->
+					<div class="client-item">
+						<div class="inner">
+							<img src="images/client3.png" alt="client-name" />
+						</div>
+					</div>
+				</div>
+				<div class="col-md-2 col-6">
+					<!-- client item -->
+					<div class="client-item">
+						<div class="inner">
+							<img src="images/client4.png" alt="client-name" />
+						</div>
+					</div>
+				</div>
+				<div class="col-md-2 col-6">
+					<!-- client item -->
+					<div class="client-item">
+						<div class="inner">
+							<img src="images/client5.png" alt="client-name" />
+						</div>
+					</div>
+				</div>
+				<div class="col-md-2 col-6">
+					<!-- client item -->
+					<div class="client-item">
+						<div class="inner">
+							<img src="images/client6.png" alt="client-name" />
+						</div>
+					</div>
+				</div>
+				<div class="col-md-2 col-6">
+					<!-- client item -->
+					<div class="client-item">
+						<div class="inner">
+							<img src="images/client7.png" alt="client-name" />
+						</div>
+					</div>
+				</div>
+				<div class="col-md-2 col-6">
+					<!-- client item -->
+					<div class="client-item">
+						<div class="inner">
+							<img src="images/client8.png" alt="client-name" />
+						</div>
+					</div>
+				</div>
+				<div class="col-md-2 col-6">
+					<!-- client item -->
+					<div class="client-item">
+						<div class="inner">
+							<img src="images/client9.png" alt="client-name" />
+						</div>
+					</div>
+				</div>
+				<div class="col-md-2 col-6">
+					<!-- client item -->
+					<div class="client-item">
+						<div class="inner">
+							<img src="images/client10.png" alt="client-name" />
+						</div>
+					</div>
+				</div>
+				<div class="col-md-2 col-6">
+					<!-- client item -->
+					<div class="client-item">
+						<div class="inner">
+							<img src="images/client11.png" alt="client-name" />
+						</div>
+					</div>
+				</div>
+				<div class="col-md-2 col-6">
+					<!-- client item -->
+					<div class="client-item">
+						<div class="inner">
+							<img src="images/client12.png" alt="client-name" />
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</section>
+	
+	<!-- section contact -->
+	<section id="contact">
+
+		<div class="container">
+			
+			<!-- section title -->
+			<h2 class="section-title wow fadeInUp">Get In Touch</h2>
+
+			<div class="spacer" data-height="60"></div>
+			<br/>
+			<div class="mt-5 text-center">
+				<!-- info -->
+				<div class="mt-3">
+					<span class="text-rotating">
+						Thanks for scrolling &nbsp; 👾&nbsp; 7560 pixels , Made with &nbsp; ♥️ &nbsp; during quarantine.
+					</span>
+					<br/>
+					<br/>
+					
+					<a href="https://manu.vision/career" target="_blank" class="btn btn-default">Download Full Resume</a>
+					
+						<!-- social icons -->
+					<ul class="social-icons light list-inline mb-0 mt-4">
+						<li class="list-inline-item"><a href="https://www.linkedin.com/in/manuvision" target="_blank"><i class="fab fa-linkedin"></i></a></li>
+						<li class="list-inline-item"><a href="mailto:manuel.sainsily@gmail.com?Subject=Contact%20from%20Manu.Vision%20Website" target="_blank"><i class="icon-envelope"></i></a></li>
+						<li class="list-inline-item"><a href="https://www.instagram.com/manu.vision"><i class="fab fa-instagram"></i></a></li>
+					</ul>
+
+					<br/>
+					<br/>
+					<a href="#home" class="btn btn-secondary">Scroll Back Up</a>
+					<br/>
+					<br/>
+					Please help make this website better by sharing your <a href="https://us17.list-manage.com/survey?u=9cfe55254f3b30a9b191515da&id=f7dd685f58">feedback</a> or giving a <a href="https://manu-vision.myshopify.com/cart/34748653830307:1?channel=buy_button" target="_blank">1$ tip</a>.
+					<br/>
+					<br/>
+					<br/>
+				</div>
+			</div>
+		</div>
 	</section>
 
 	<div class="spacer" data-height="96"></div>
