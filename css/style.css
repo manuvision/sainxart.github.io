@@ -2049,6 +2049,7 @@ body.dark footer.footer {
   max-width: 650px;
   margin: 40px auto;
   position: relative;
+  overflow-x:auto;
 }
 
 /**
