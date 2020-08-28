@@ -363,7 +363,6 @@ header.desktop-header-1.open {
 header.desktop-header-1 .vertical-menu {
   list-style: none;
   padding: 0;
-  margin-bottom: 130px;
   margin-top: 130px;
 }
 header.desktop-header-1 .vertical-menu li.openmenu > a {
