@@ -1569,6 +1569,16 @@ body.dark footer.footer {
   transform: perspective(1px) translateZ(0);
   box-shadow: 0 0 1px rgba(0, 0, 0, 0);
 }
+.btn-black {
+  color: #FFF;
+  background: #000000;
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+  -webkit-transform: perspective(1px) translateZ(0);
+  transform: perspective(1px) translateZ(0);
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+}
 .btn-secondary {
   color: #FFF;
   background: #FF7F55;
