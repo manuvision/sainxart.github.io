@@ -3159,13 +3159,19 @@ table th:nth-child(1) {
 	}
 
 	.button,
-	input[type="submit"],
-	input[type="reset"],
-	input[type="button"],
-	button {
-	font-family: 'Playfair Display', Georgia, serif !important;
-	font-weight: 700 !important;
-	letter-spacing: 0.05em;
-	font-size: 1em;
-	text-transform: uppercase;
-	}
+input[type="submit"],
+input[type="reset"],
+input[type="button"],
+button {
+  display: inline-block;
+  padding: 1em 2.5em;        /* More horizontal space */
+  min-width: 10em;           /* Ensures wide enough base */
+  font-size: 1em;
+  box-sizing: border-box;    /* Prevent overflow */
+  white-space: nowrap;       /* Avoid text wrapping */
+  text-align: center;
+}
+
+.button {
+	line-height: 1em;
+  }
