@@ -2524,7 +2524,7 @@ table th:nth-child(1) {
 		}
 
 			table tbody tr:nth-child(2n + 1) {
-				background-color: rgba(144, 144, 144, 0.075);
+				background-color: rgba(0, 0, 0, 0.075);
 			}
 
 		table td {
@@ -2532,7 +2532,7 @@ table th:nth-child(1) {
 		}
 
 		table th {
-			color: #61686b;
+			color: #000000;
 			font-size: 0.9em;
 			font-weight: 700;
 			padding: 0 0.75em 0.75em 0.75em;
