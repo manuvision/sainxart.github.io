@@ -127,11 +127,32 @@ function renderDreamGallery() {
       const captionEl = document.getElementById("dream-caption");
       img.src = dream.src;
       img.alt = "Your dream image from " + dream.date;
-      captionEl.textContent = dream.caption || "";
+captionEl.textContent = (dream.caption || "") + ` (${dream.date})`;
+
     };
     container.appendChild(thumb);
   });
 }
+
+async function loadDreamByDate() {
+  const date = document.getElementById("date-picker").value;
+  if (!date) return;
+
+  const res = await fetch(`https://dreamviz-backend.onrender.com/fetch-dream?date=${date}`);
+  const data = await res.json();
+
+  if (data?.image_base64) {
+    const img = document.getElementById("dream-image");
+    const captionEl = document.getElementById("dream-caption");
+
+    img.src = data.image_base64;
+    img.alt = `Dream image from ${data.date}`;
+    captionEl.textContent = (data.caption || "") + ` (${data.date})`;
+  } else {
+    alert("No dream found for this date.");
+  }
+}
+
 
 // Load gallery on page load
 renderDreamGallery();
