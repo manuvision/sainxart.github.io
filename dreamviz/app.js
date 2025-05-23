@@ -141,20 +141,31 @@ async function loadDreamByDate() {
   const date = document.getElementById("date-picker").value;
   if (!date) return;
 
-  const res = await fetch(`https://dreamviz-backend.onrender.com/fetch-dream?date=${date}`);
+  const res = await fetch(`https://dreamviz-backend.onrender.com/fetch-dreams?date=${date}`);
   const data = await res.json();
 
-  if (data?.image_base64) {
-    const img = document.getElementById("dream-image");
-    const captionEl = document.getElementById("dream-caption");
+  const container = document.getElementById("gallery");
+  container.innerHTML = "";
 
-    img.src = data.image_base64;
-    img.alt = `Dream image from ${data.date}`;
-    captionEl.textContent = `${dream.caption || ""} (${new Date(dream.timestamp).toLocaleString()})`;
-
-  } else {
-    alert("No dream found for this date.");
+  if (!Array.isArray(data)) {
+    alert("No dreams found for this date.");
+    return;
   }
+
+  data.forEach(dream => {
+    const thumb = document.createElement("img");
+    thumb.src = dream.image_base64;
+    thumb.alt = dream.timestamp;
+    thumb.title = dream.timestamp;
+    thumb.onclick = () => {
+      const img = document.getElementById("dream-image");
+      const captionEl = document.getElementById("dream-caption");
+      img.src = dream.image_base64;
+      img.alt = `Dream from ${dream.timestamp}`;
+      captionEl.textContent = `${dream.caption} (${new Date(dream.timestamp).toLocaleString()})`;
+    };
+    container.appendChild(thumb);
+  });
 }
 
 
