@@ -90,15 +90,15 @@ document.getElementById("dream-caption").textContent = caption;
     const response2 = await fetch(url);
     const data = await response2.json();
 
-    if (!data.base64) throw new Error("No image data returned");
-    img.src = `data:image/png;base64,${data.base64}`;
-    img.alt = "Your dream image";
+    if (!data.url) throw new Error("No image URL returned");
+img.src = data.url;
+img.alt = "Your dream image";
 
-    // Save dream to localStorage
-    const date = new Date().toISOString().split("T")[0];
-    const savedDreams = JSON.parse(localStorage.getItem("dreamGallery") || "[]");
+const date = new Date().toISOString().split("T")[0];
+const savedDreams = JSON.parse(localStorage.getItem("dreamGallery") || "[]");
 
-    savedDreams.unshift({ date, src: `data:image/png;base64,${data.base64}`, caption });
+savedDreams.unshift({ date, src: data.url, caption });
+
 
     localStorage.setItem("dreamGallery", JSON.stringify(savedDreams.slice(0, 12)));
 
