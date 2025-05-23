@@ -100,9 +100,9 @@ button {
 }
 
 .gallery img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
+  width: 80px !important;
+  height: 80px !important;
+  object-fit: cover !important;
   border-radius: 6px;
   cursor: pointer;
   transition: transform 0.2s;
