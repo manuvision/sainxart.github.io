@@ -42,3 +42,36 @@ button {
   margin: 0 0 0.5rem 0;
   color: #00bfa5;
 }
+
+@media (max-width: 600px) {
+  .container {
+    padding: 1rem;
+    border-radius: 0;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    text-align: center;
+  }
+
+  button {
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  .cards {
+    gap: 1rem;
+  }
+
+  .card {
+    padding: 1rem;
+    font-size: 0.95rem;
+  }
+
+  #dream-image {
+    max-width: 100%;
+    width: 100%;
+    margin-top: 1rem;
+    border-radius: 8px;
+  }
+}
