@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dream Visualizer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Dream Visualizer</h1>
+    <button onclick="fetchData()">Load My Oura Data</button>
+    <div id="dashboard" class="cards">
+  <div class="card" id="sleep-card">Loading sleep...</div>
+  <div class="card" id="readiness-card">Loading readiness...</div>
+  <div class="card" id="activity-card">Loading activity...</div>
+  <button onclick="generateDreamImage()">Generate Dream Image</button>
+<img id="dream-image" style="margin-top: 20px; width: 100%; max-width: 300px;" />
+
+</div>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
