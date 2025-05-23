@@ -38,25 +38,6 @@ async function fetchData() {
   }
 }
 
-function generateCaption({ sleep, readiness, activity }) {
-  const sleepScore = sleep?.score ?? 70;
-  const readinessScore = readiness?.score ?? 75;
-  const activityScore = activity?.score ?? 80;
-
-  if (sleepScore > 85 && readinessScore > 80) {
-    return "A night of deep renewal flows into today’s vision.";
-  } else if (sleepScore > 70 && activityScore > 85) {
-    return "The body moves, but the mind drifts between worlds.";
-  } else if (sleepScore < 60) {
-    return "A restless night leaves echoes in the dreamlight.";
-  } else if (readinessScore < 65) {
-    return "Beneath the glow, tension weaves through sleep’s surface.";
-  } else {
-    return "A quiet pulse of clarity hums beneath the haze.";
-  }
-}
-
-
 async function generateDreamImage() {
   const img = document.getElementById("dream-image");
   const loader = document.getElementById("loader");
@@ -82,14 +63,11 @@ async function generateDreamImage() {
     const heartRate = readiness.contributors?.resting_heart_rate ?? 50;
     const activityScore = activity.score ?? 80;
 
-    const caption = generateCaption({ sleep, readiness, activity });
-document.getElementById("dream-caption").textContent = caption;
-
-
     const url = `https://dreamviz-backend.onrender.com/generate-image?sleep=${sleepScore}&readiness=${readinessScore}&tempDev=${tempDev}&hr=${heartRate}&activity=${activityScore}`;
     const response2 = await fetch(url);
     const data = await response2.json();
 
+<<<<<<< HEAD
     if (!data.url) throw new Error("No image URL returned");
 img.src = data.url;
 img.alt = "Your dream image";
@@ -104,6 +82,11 @@ savedDreams.unshift({ date, src: data.url, caption });
 
     renderDreamGallery();
 
+=======
+    if (!data.base64) throw new Error("No image data returned");
+    img.src = `data:image/png;base64,${data.base64}`;
+    img.alt = "Your dream image";
+>>>>>>> parent of 7f10c15 (poetic caption)
   } catch (err) {
     console.error(err);
     img.alt = "Failed to load image.";
@@ -113,33 +96,6 @@ savedDreams.unshift({ date, src: data.url, caption });
     button.textContent = "Generate Dream Image";
   }
 }
-
-function renderDreamGallery() {
-  const container = document.getElementById("gallery");
-  const dreams = JSON.parse(localStorage.getItem("dreamGallery") || "[]");
-
-  container.innerHTML = "";
-
-  dreams.forEach(dream => {
-    const thumb = document.createElement("img");
-    thumb.src = dream.src;
-    thumb.alt = dream.date;
-    thumb.title = dream.date;
-    thumb.onclick = () => {
-  const img = document.getElementById("dream-image");
-  const captionEl = document.getElementById("dream-caption");
-  img.src = dream.src;
-  img.alt = "Your dream image from " + dream.date;
-  captionEl.textContent = dream.caption || "";
-};
-
-    container.appendChild(thumb);
-  });
-}
-
-// Load gallery on page load
-renderDreamGallery();
-
 
 
 

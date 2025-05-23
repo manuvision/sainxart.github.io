@@ -91,31 +91,3 @@ button {
     transform: rotate(360deg);
   }
 }
-
-.gallery {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 1rem;
-}
-
-.gallery img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.gallery img:hover {
-  transform: scale(1.05);
-}
-
-.caption {
-  font-style: italic;
-  font-size: 0.95rem;
-  margin-top: 1rem;
-  text-align: center;
-  color: #ccc;
-}
