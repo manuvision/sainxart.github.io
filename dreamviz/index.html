@@ -8,8 +8,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Dream Viz</h1>
-    <p>A project by @Manu.Vision</p>
+    <h1>Dream Viz by Manu.Vision</h1>
     <br/>
     <button onclick="fetchData()">Load My Oura Data</button>
     <br/><br/>
@@ -19,6 +18,10 @@
   <div class="card" id="activity-card">Loading activity...</div>
   <button onclick="generateDreamImage()">Generate Dream Image</button>
 <img id="dream-image" style="margin-top: 20px; width: 100%; max-width: 300px;" />
+<div id="loader" style="display: none; text-align: center; margin-top: 1rem;">
+  <div class="spinner"></div>
+  <p>Generating your dream...</p>
+</div>
 
 </div>
 

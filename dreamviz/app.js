@@ -40,28 +40,32 @@ async function fetchData() {
 
 async function generateDreamImage() {
   const img = document.getElementById("dream-image");
+  const loader = document.getElementById("loader");
+  const button = document.querySelector("button[onclick='generateDreamImage()']");
+
   img.src = "";
-  img.alt = "Loading...";
+  img.alt = "";
+  loader.style.display = "block";
+  button.disabled = true;
+  button.textContent = "Generating...";
 
   try {
-    const response1 = await fetch("https://dreamviz-backend.onrender.com/oura-data")
-;
-const ouraData = await response1.json();
+    const response1 = await fetch("https://dreamviz-backend.onrender.com/oura-data");
+    const ouraData = await response1.json();
 
-const sleep = ouraData.sleep?.data?.[0] ?? {};
-const readiness = ouraData.readiness?.data?.[0] ?? {};
-const activity = ouraData.activity?.data?.[0] ?? {};
+    const sleep = ouraData.sleep?.data?.[0] ?? {};
+    const readiness = ouraData.readiness?.data?.[0] ?? {};
+    const activity = ouraData.activity?.data?.[0] ?? {};
 
-const sleepScore = sleep.score ?? 70;
-const readinessScore = readiness.score ?? 75;
-const tempDev = readiness.temperature_deviation ?? 0.0;
-const heartRate = readiness.contributors?.resting_heart_rate ?? 50;
-const activityScore = activity.score ?? 80;
+    const sleepScore = sleep.score ?? 70;
+    const readinessScore = readiness.score ?? 75;
+    const tempDev = readiness.temperature_deviation ?? 0.0;
+    const heartRate = readiness.contributors?.resting_heart_rate ?? 50;
+    const activityScore = activity.score ?? 80;
 
-const url = `https://dreamviz-backend.onrender.com/generate-image?sleep=${sleepScore}&readiness=${readinessScore}&tempDev=${tempDev}&hr=${heartRate}&activity=${activityScore}`;
-const response2 = await fetch(url);
-const data = await response2.json();
-
+    const url = `https://dreamviz-backend.onrender.com/generate-image?sleep=${sleepScore}&readiness=${readinessScore}&tempDev=${tempDev}&hr=${heartRate}&activity=${activityScore}`;
+    const response2 = await fetch(url);
+    const data = await response2.json();
 
     if (!data.base64) throw new Error("No image data returned");
     img.src = `data:image/png;base64,${data.base64}`;
@@ -69,6 +73,10 @@ const data = await response2.json();
   } catch (err) {
     console.error(err);
     img.alt = "Failed to load image.";
+  } finally {
+    loader.style.display = "none";
+    button.disabled = false;
+    button.textContent = "Generate Dream Image";
   }
 }
 
