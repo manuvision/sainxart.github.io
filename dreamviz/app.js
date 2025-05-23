@@ -68,6 +68,7 @@ async function generateDreamImage() {
     const data = await response2.json();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     if (!data.url) throw new Error("No image URL returned");
 img.src = data.url;
 img.alt = "Your dream image";
@@ -82,6 +83,11 @@ savedDreams.unshift({ date, src: data.url, caption });
 
     renderDreamGallery();
 
+=======
+    if (!data.base64) throw new Error("No image data returned");
+    img.src = `data:image/png;base64,${data.base64}`;
+    img.alt = "Your dream image";
+>>>>>>> parent of 7f10c15 (poetic caption)
 =======
     if (!data.base64) throw new Error("No image data returned");
     img.src = `data:image/png;base64,${data.base64}`;
