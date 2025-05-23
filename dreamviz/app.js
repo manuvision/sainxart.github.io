@@ -82,7 +82,9 @@ async function generateDreamImage() {
     const activityScore = activity.score ?? 80;
 
     const caption = generateCaption({ sleep, readiness, activity });
-    captionEl.textContent = caption;
+const timestamp = data.timestamp ?? new Date().toISOString();
+captionEl.textContent = `${caption} (${new Date(timestamp).toLocaleString()})`;
+
 
     const url = `https://dreamviz-backend.onrender.com/generate-image?sleep=${sleepScore}&readiness=${readinessScore}&tempDev=${tempDev}&hr=${heartRate}&activity=${activityScore}`;
     const response2 = await fetch(url);
@@ -95,7 +97,8 @@ async function generateDreamImage() {
     const date = new Date().toISOString().split("T")[0];
     const savedDreams = JSON.parse(localStorage.getItem("dreamGallery") || "[]");
 
-    savedDreams.unshift({ date, src: `data:image/png;base64,${data.base64}`, caption });
+    savedDreams.unshift({ date, src: `data:image/png;base64,${data.base64}`, caption, timestamp });
+
     localStorage.setItem("dreamGallery", JSON.stringify(savedDreams.slice(0, 12)));
 
     renderDreamGallery();
@@ -147,7 +150,8 @@ async function loadDreamByDate() {
 
     img.src = data.image_base64;
     img.alt = `Dream image from ${data.date}`;
-    captionEl.textContent = (data.caption || "") + ` (${data.date})`;
+    captionEl.textContent = `${dream.caption || ""} (${new Date(dream.timestamp).toLocaleString()})`;
+
   } else {
     alert("No dream found for this date.");
   }
