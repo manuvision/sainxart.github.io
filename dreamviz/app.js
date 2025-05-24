@@ -81,28 +81,29 @@ async function generateDreamImage() {
     const heartRate = readiness.contributors?.resting_heart_rate ?? 50;
     const activityScore = activity.score ?? 80;
 
-    const caption = generateCaption({ sleep, readiness, activity });
-const timestamp = data.timestamp ?? new Date().toISOString();
-captionEl.textContent = `${caption} (${new Date(timestamp).toLocaleString()})`;
+    
 
-
-    const url = `https://dreamviz-backend.onrender.com/generate-image?sleep=${sleepScore}&readiness=${readinessScore}&tempDev=${tempDev}&hr=${heartRate}&activity=${activityScore}`;
-    const response2 = await fetch(url);
-const data = await response2.json();  // ← this must come before any use of `data`
+const url = `https://dreamviz-backend.onrender.com/generate-image?sleep=${sleepScore}&readiness=${readinessScore}&tempDev=${tempDev}&hr=${heartRate}&activity=${activityScore}`;
+const response2 = await fetch(url);
+const data = await response2.json();
 
 if (!data.base64) throw new Error("No image data returned");
 
-    img.src = `data:image/png;base64,${data.base64}`;
-    img.alt = "Your dream image";
+const caption = generateCaption({ sleep, readiness, activity });
+const timestamp = data.timestamp ?? new Date().toISOString();
+captionEl.textContent = `${caption} (${new Date(timestamp).toLocaleString()})`;
 
-    const date = new Date().toISOString().split("T")[0];
-    const savedDreams = JSON.parse(localStorage.getItem("dreamGallery") || "[]");
+img.src = `data:image/png;base64,${data.base64}`;
+img.alt = "Your dream image";
 
-    savedDreams.unshift({ date, src: `data:image/png;base64,${data.base64}`, caption, timestamp });
+const date = new Date().toISOString().split("T")[0];
+const savedDreams = JSON.parse(localStorage.getItem("dreamGallery") || "[]");
 
-    localStorage.setItem("dreamGallery", JSON.stringify(savedDreams.slice(0, 12)));
+savedDreams.unshift({ date, src: `data:image/png;base64,${data.base64}`, caption, timestamp });
+localStorage.setItem("dreamGallery", JSON.stringify(savedDreams.slice(0, 12)));
 
-    renderDreamGallery();
+renderDreamGallery();
+
 
   } catch (err) {
     console.error(err);
