@@ -68,10 +68,12 @@ async function renderDreamGallery(dateOverride = null) {
 
       document.getElementById("readiness-card").innerHTML = `
         <h2>Readiness Score: ${dream.scores_json.readiness ?? 'N/A'}</h2>
-      `;
+      <small>From: ${dream.scores_json.source_dates?.readiness?.slice(0, 10) ?? 'N/A'}</small>
+        `;
       document.getElementById("activity-card").innerHTML = `
         <h2>Activity Score: ${dream.scores_json.activity ?? 'N/A'}</h2>
-      `;
+      <small>From: ${dream.scores_json.source_dates?.activity?.slice(0, 10) ?? 'N/A'}</small>
+        `;
     };
     container.appendChild(thumb);
   });
