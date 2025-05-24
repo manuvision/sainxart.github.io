@@ -1,27 +1,3 @@
-const token = "23YGF6YEKBOFNFHBAVTXDTXRITPMRNY6";
-const headers = {
-  "Authorization": `Bearer ${token}`
-};
-
-
-function generateCaption({ sleep, readiness, activity }) {
-  const sleepScore = sleep?.score ?? 70;
-  const readinessScore = readiness?.score ?? 75;
-  const activityScore = activity?.score ?? 80;
-
-  if (sleepScore > 85 && readinessScore > 80) {
-    return "A night of deep renewal flows into today’s vision.";
-  } else if (sleepScore > 70 && activityScore > 85) {
-    return "The body moves, but the mind drifts between worlds.";
-  } else if (sleepScore < 60) {
-    return "A restless night leaves echoes in the dreamlight.";
-  } else if (readinessScore < 65) {
-    return "Beneath the glow, tension weaves through sleep’s surface.";
-  } else {
-    return "A quiet pulse of clarity hums beneath the haze.";
-  }
-}
-
 async function generateDreamImage() {
   const img = document.getElementById("dream-image");
   const loader = document.getElementById("loader");
@@ -35,28 +11,13 @@ async function generateDreamImage() {
   button.textContent = "Generating...";
 
   try {
-    const response1 = await fetch("https://dreamviz-backend.onrender.com/oura-data");
-    const ouraData = await response1.json();
-
-    const sleep = ouraData.sleep?.data?.[0] ?? {};
-    const readiness = ouraData.readiness?.data?.[0] ?? {};
-    const activity = ouraData.activity?.data?.[0] ?? {};
-
-    const sleepScore = sleep.score ?? 70;
-    const readinessScore = readiness.score ?? 75;
-    const tempDev = readiness.temperature_deviation ?? 0.0;
-    const heartRate = readiness.contributors?.resting_heart_rate ?? 50;
-    const activityScore = activity.score ?? 80;
-
-    const url = `https://dreamviz-backend.onrender.com/generate-image?sleep=${sleepScore}&readiness=${readinessScore}&tempDev=${tempDev}&hr=${heartRate}&activity=${activityScore}`;
-    const response2 = await fetch(url);
-    const data = await response2.json();
+    const response = await fetch("https://dreamviz-backend.onrender.com/generate-image");
+    const data = await response.json();
 
     if (!data.base64) throw new Error("No image data returned");
 
-    const caption = generateCaption({ sleep, readiness, activity });
     const timestamp = data.timestamp ?? new Date().toISOString();
-    captionEl.textContent = `${caption} (${new Date(timestamp).toLocaleString()})`;
+    captionEl.textContent = `${data.caption} (${new Date(timestamp).toLocaleString()})`;
 
     img.src = `data:image/png;base64,${data.base64}`;
     img.alt = "Your dream image";
@@ -75,7 +36,7 @@ async function generateDreamImage() {
 }
 
 async function renderDreamGallery(dateOverride = null) {
-  const date = dateOverride ?? new Date().toISOString().split("T")[0];
+  const date = dateOverride ?? new Date().toLocaleDateString("sv-SE", { timeZone: "America/Toronto" });
 
   const res = await fetch(`https://dreamviz-backend.onrender.com/fetch-dreams?date=${date}`);
   const data = await res.json();
@@ -99,6 +60,16 @@ async function renderDreamGallery(dateOverride = null) {
       img.src = dream.image_base64;
       img.alt = `Dream from ${dream.timestamp}`;
       captionEl.textContent = `${dream.caption} (${new Date(dream.timestamp).toLocaleString()})`;
+
+      document.getElementById("sleep-card").innerHTML = `
+        <h2>Sleep Score: ${dream.scores_json.sleep ?? 'N/A'}</h2>
+      `;
+      document.getElementById("readiness-card").innerHTML = `
+        <h2>Readiness Score: ${dream.scores_json.readiness ?? 'N/A'}</h2>
+      `;
+      document.getElementById("activity-card").innerHTML = `
+        <h2>Activity Score: ${dream.scores_json.activity ?? 'N/A'}</h2>
+      `;
     };
     container.appendChild(thumb);
   });
@@ -112,11 +83,7 @@ async function loadDreamByDate() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toLocaleDateString("sv-SE", { timeZone: "America/Toronto" });
   document.getElementById("date-picker").value = today;
   loadDreamByDate();
 });
-
-
-// Load gallery on page load
-renderDreamGallery();
