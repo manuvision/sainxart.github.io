@@ -3,39 +3,6 @@ const headers = {
   "Authorization": `Bearer ${token}`
 };
 
-async function fetchData() {
-  try {
-    const response = await fetch("https://dreamviz-backend.onrender.com/oura-data");
-    const rawData = await response.json();
-
-    const sleep = rawData.sleep.data?.[0] ?? {};
-    const readiness = rawData.readiness.data?.[0] ?? {};
-    const activity = rawData.activity.data?.[0] ?? {};
-
-    document.getElementById("sleep-card").innerHTML = `
-      <h2>Sleep Score: ${sleep.score ?? 'N/A'}</h2>
-      <p><strong>Deep Sleep:</strong> ${sleep.contributors?.deep_sleep ?? 'N/A'}</p>
-      <p><strong>REM Sleep:</strong> ${sleep.contributors?.rem_sleep ?? 'N/A'}</p>
-      <p><strong>Efficiency:</strong> ${sleep.contributors?.efficiency ?? 'N/A'}</p>
-    `;
-
-    document.getElementById("readiness-card").innerHTML = `
-      <h2>Readiness Score: ${readiness.score ?? 'N/A'}</h2>
-      <p><strong>Recovery Index:</strong> ${readiness.contributors?.recovery_index ?? 'N/A'}</p>
-      <p><strong>Resting HR:</strong> ${readiness.contributors?.resting_heart_rate ?? 'N/A'}</p>
-      <p><strong>Body Temp:</strong> ${readiness.temperature_deviation ?? 'N/A'}</p>
-    `;
-
-    document.getElementById("activity-card").innerHTML = `
-      <h2>Activity Score: ${activity.score ?? 'N/A'}</h2>
-      <p><strong>Steps:</strong> ${activity.steps ?? 'N/A'}</p>
-      <p><strong>Calories:</strong> ${activity.total_calories ?? 'N/A'}</p>
-      <p><strong>Distance:</strong> ${activity.equivalent_walking_distance ?? 'N/A'} m</p>
-    `;
-  } catch (error) {
-    console.error(error);
-  }
-}
 
 function generateCaption({ sleep, readiness, activity }) {
   const sleepScore = sleep?.score ?? 70;
@@ -143,6 +110,13 @@ async function loadDreamByDate() {
 
   renderDreamGallery(date);
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("date-picker").value = today;
+  loadDreamByDate();
+});
+
 
 // Load gallery on page load
 renderDreamGallery();

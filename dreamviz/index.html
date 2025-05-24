@@ -11,8 +11,8 @@
   <div class="container">
     <h1>Dream Viz by Manu.Vision</h1>
     <br/>
-    <button onclick="fetchData()">Load My Oura Data</button>
-    <br/><br/>
+    <input type="date" id="date-picker" onchange="loadDreamByDate()" />
+<br/><br/>
     <div id="dashboard" class="cards">
   <div class="card" id="sleep-card">Loading sleep...</div>
   <div class="card" id="readiness-card">Loading readiness...</div>
@@ -28,8 +28,6 @@
 
 <h2>Dream Gallery</h2>
 <div id="gallery" class="gallery"></div>
-<label for="date-picker">Jump to Date:</label>
-<input type="date" id="date-picker" onchange="loadDreamByDate()" />
 
 
 
