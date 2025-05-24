@@ -81,22 +81,31 @@ async function generateDreamImage() {
     const heartRate = readiness.contributors?.resting_heart_rate ?? 50;
     const activityScore = activity.score ?? 80;
 
-    
+    const url = `https://dreamviz-backend.onrender.com/generate-image?sleep=${sleepScore}&readiness=${readinessScore}&tempDev=${tempDev}&hr=${heartRate}&activity=${activityScore}`;
+    const response2 = await fetch(url);
+    const data = await response2.json();
 
-const url = `https://dreamviz-backend.onrender.com/generate-image?sleep=${sleepScore}&readiness=${readinessScore}&tempDev=${tempDev}&hr=${heartRate}&activity=${activityScore}`;
-const response2 = await fetch(url);
-const data = await response2.json();
+    if (!data.base64) throw new Error("No image data returned");
 
-if (!data.base64) throw new Error("No image data returned");
+    const caption = generateCaption({ sleep, readiness, activity });
+    const timestamp = data.timestamp ?? new Date().toISOString();
+    captionEl.textContent = `${caption} (${new Date(timestamp).toLocaleString()})`;
 
-const caption = generateCaption({ sleep, readiness, activity });
-const timestamp = data.timestamp ?? new Date().toISOString();
-captionEl.textContent = `${caption} (${new Date(timestamp).toLocaleString()})`;
+    img.src = `data:image/png;base64,${data.base64}`;
+    img.alt = "Your dream image";
 
-img.src = `data:image/png;base64,${data.base64}`;
-img.alt = "Your dream image";
+    renderDreamGallery();
 
-const date = new Date().toISOString().split("T")[0];
+  } catch (err) {
+    console.error(err);
+    img.alt = "Failed to load image.";
+    captionEl.textContent = "";
+  } finally {
+    loader.style.display = "none";
+    button.disabled = false;
+    button.textContent = "Generate Dream Image";
+  }
+}
 
 async function renderDreamGallery(dateOverride = null) {
   const date = dateOverride ?? new Date().toISOString().split("T")[0];
@@ -128,61 +137,12 @@ async function renderDreamGallery(dateOverride = null) {
   });
 }
 
-
-function renderDreamGallery() {
-  const container = document.getElementById("gallery");
-  const dreams = JSON.parse(localStorage.getItem("dreamGallery") || "[]");
-
-  container.innerHTML = "";
-
-  dreams.forEach(dream => {
-    const thumb = document.createElement("img");
-    thumb.src = dream.src;
-    thumb.alt = dream.date;
-    thumb.title = dream.date;
-    thumb.onclick = () => {
-      const img = document.getElementById("dream-image");
-      const captionEl = document.getElementById("dream-caption");
-      img.src = dream.src;
-      img.alt = "Your dream image from " + dream.date;
-captionEl.textContent = (dream.caption || "") + ` (${dream.date})`;
-
-    };
-    container.appendChild(thumb);
-  });
-}
-
 async function loadDreamByDate() {
   const date = document.getElementById("date-picker").value;
   if (!date) return;
 
-  const res = await fetch(`https://dreamviz-backend.onrender.com/fetch-dreams?date=${date}`);
-  const data = await res.json();
-
-  const container = document.getElementById("gallery");
-  container.innerHTML = "";
-
-  if (!Array.isArray(data)) {
-    alert("No dreams found for this date.");
-    return;
-  }
-
-  data.forEach(dream => {
-    const thumb = document.createElement("img");
-    thumb.src = dream.image_base64;
-    thumb.alt = dream.timestamp;
-    thumb.title = dream.timestamp;
-    thumb.onclick = () => {
-      const img = document.getElementById("dream-image");
-      const captionEl = document.getElementById("dream-caption");
-      img.src = dream.image_base64;
-      img.alt = `Dream from ${dream.timestamp}`;
-      captionEl.textContent = `${dream.caption} (${new Date(dream.timestamp).toLocaleString()})`;
-    };
-    container.appendChild(thumb);
-  });
+  renderDreamGallery(date);
 }
-
 
 // Load gallery on page load
 renderDreamGallery();
