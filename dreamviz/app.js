@@ -88,9 +88,10 @@ captionEl.textContent = `${caption} (${new Date(timestamp).toLocaleString()})`;
 
     const url = `https://dreamviz-backend.onrender.com/generate-image?sleep=${sleepScore}&readiness=${readinessScore}&tempDev=${tempDev}&hr=${heartRate}&activity=${activityScore}`;
     const response2 = await fetch(url);
-    const data = await response2.json();
+const data = await response2.json();  // ← this must come before any use of `data`
 
-    if (!data.base64) throw new Error("No image data returned");
+if (!data.base64) throw new Error("No image data returned");
+
     img.src = `data:image/png;base64,${data.base64}`;
     img.alt = "Your dream image";
 
