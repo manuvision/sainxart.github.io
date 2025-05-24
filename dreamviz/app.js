@@ -62,8 +62,10 @@ async function renderDreamGallery(dateOverride = null) {
       captionEl.textContent = `${dream.caption} (${new Date(dream.timestamp).toLocaleString()})`;
 
       document.getElementById("sleep-card").innerHTML = `
-        <h2>Sleep Score: ${dream.scores_json.sleep ?? 'N/A'}</h2>
-      `;
+  <h2>Sleep Score: ${dream.scores_json.sleep ?? 'N/A'}</h2>
+  <small>From: ${dream.scores_json.source_dates?.sleep?.slice(0, 10) ?? 'N/A'}</small>
+`;
+
       document.getElementById("readiness-card").innerHTML = `
         <h2>Readiness Score: ${dream.scores_json.readiness ?? 'N/A'}</h2>
       `;
