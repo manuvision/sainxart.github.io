@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manuel Sainsily | 2025 Accomplishments</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Orbitron & Exo 2 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            DEFAULT: '#00f3ff',
+                            dim: 'rgba(0, 243, 255, 0.1)',
+                            dark: '#00bcd4'
+                        },
+                        void: '#050505',
+                        panel: 'rgba(15, 23, 42, 0.85)'
+                    },
+                    fontFamily: {
+                        display: ['Orbitron', 'sans-serif'],
+                        body: ['Exo 2', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Map Styles to Override Leaflet Defaults */
+        #map {
+            background: #050505;
+            z-index: 0;
+        }
+        
+        /* Futuristic Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00f3ff; 
+            border-radius: 3px;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+        }
+
+        /* Custom Marker Styles */
+        .custom-pin {
+            background: transparent;
+            border: none;
+        }
+        .pin-inner {
+            width: 20px;
+            height: 20px;
+            background-color: #00f3ff;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 10px #00f3ff, 0 0 20px #00f3ff;
+            transition: all 0.3s ease;
+        }
+        .pin-inner::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border: 1px solid #00f3ff;
+            border-radius: 50%;
+            opacity: 0;
+            animation: ripple 2s infinite;
+        }
+        .pin-inner:hover {
+            transform: scale(1.2);
+            background-color: #ffffff;
+            box-shadow: 0 0 15px #ffffff, 0 0 30px #00f3ff;
+        }
+
+        @keyframes ripple {
+            0% { width: 20px; height: 20px; opacity: 1; border-width: 2px; }
+            100% { width: 60px; height: 60px; opacity: 0; border-width: 0px; }
+        }
+    </style>
+</head>
+<body class="bg-void text-slate-200 font-body overflow-hidden h-screen w-screen relative">
+
+    <!-- HEADER -->
+    <header class="absolute top-0 left-0 w-full z-20 p-4 md:p-6 flex justify-between items-center pointer-events-none">
+        
+        <!-- LEFT SIDE: List Button, Title, and Metrics -->
+        <div class="flex items-start gap-4 pointer-events-auto"> 
+            
+            <!-- List Button (New Position - Top Left) -->
+            <button id="openListButton" onclick="toggleEventList()" class="mt-1 p-2 rounded-full bg-slate-800/70 hover:bg-slate-700/80 text-cyber transition-colors shadow-lg border border-cyber/30">
+                <i class="ph ph-list text-xl"></i>
+            </button>
+
+            <div>
+                <!-- Title -->
+                <h1 class="font-display text-2xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-cyber tracking-widest uppercase drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">
+                    2025 <span class="text-sm md:text-lg text-cyber block md:inline font-normal opacity-80">Accomplishments</span>
+                </h1>
+                
+                <!-- METRICS DISPLAY (Updated) -->
+                <div id="metricsDisplay" class="flex flex-wrap gap-x-4 gap-y-1 text-xs mt-2 glass-panel px-3 py-1 rounded-lg">
+                    <div class="flex items-center gap-1">
+                        <i class="ph ph-airplane-tilt text-cyber"></i>
+                        <span id="metric-flights" class="font-bold">56</span> 
+                        <span class="text-slate-400">Flights</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <i class="ph ph-buildings text-cyber"></i>
+                        <span id="metric-cities" class="font-bold">25</span> 
+                        <span class="text-slate-400">Cities</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <i class="ph ph-flag text-cyber"></i>
+                        <span id="metric-events" class="font-bold">36</span> 
+                        <span class="text-slate-400">Events</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE: Bio Button (Profile Picture Updated) -->
+        <div class="flex items-center gap-3 pointer-events-auto cursor-pointer group" onclick="toggleBio()">
+            <div class="text-right hidden md:block">
+                <p class="font-display font-bold text-white text-lg group-hover:text-cyber transition-colors">Manuel Sainsily</p>
+                <p class="text-xs text-cyber/70 uppercase tracking-widest">Creative Director / Speaker</p>
+            </div>
+            <div class="relative w-12 h-12 md:w-14 md:h-14 rounded-full p-[2px] bg-gradient-to-br from-cyber to-purple-600 shadow-[0_0_15px_rgba(0,243,255,0.4)]">
+                <!-- Profile Picture (Using uploaded image) -->
+                <img src="pp.jpg" alt="Manuel Sainsily" class="w-full h-full rounded-full object-cover bg-slate-900">
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900 animate-pulse"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAP CONTAINER -->
+    <div id="map" class="h-full w-full"></div>
+
+    <!-- FOOTER / CTA -->
+    <footer class="absolute bottom-0 w-full z-20 p-4 md:p-6 pointer-events-none">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
+            
+            <!-- Socials (Updated with all requested icons/links) -->
+            <div class="flex gap-4 glass-panel px-4 py-2 rounded-full pointer-events-auto">
+                <!-- Instagram -->
+                <a href="https://instagram.com/manuvision" target="_blank" class="text-slate-400 hover:text-pink-400 transition-colors transform hover:scale-110" aria-label="Instagram"><i class="ph ph-instagram-logo text-2xl"></i></a>
+                <!-- Threads (Using Phosophor's chats icon as a clean substitute) -->
+                <a href="https://threads.net/@manuvision" target="_blank" class="text-slate-400 hover:text-white transition-colors transform hover:scale-110" aria-label="Threads"><i class="ph ph-chats text-2xl"></i></a>
+                <!-- Twitter/X -->
+                <a href="https://x.com/manuvision" target="_blank" class="text-slate-400 hover:text-white transition-colors transform hover:scale-110" aria-label="Twitter/X"><i class="ph ph-x-logo text-2xl"></i></a>
+                <!-- TikTok -->
+                <a href="https://tiktok.com/@manuvision" target="_blank" class="text-slate-400 hover:text-red-500 transition-colors transform hover:scale-110" aria-label="TikTok"><i class="ph ph-tiktok-logo text-2xl"></i></a>
+                <!-- LinkedIn -->
+                <a href="https://linkedin.com/in/manuelsainsily" target="_blank" class="text-slate-400 hover:text-blue-400 transition-colors transform hover:scale-110" aria-label="LinkedIn"><i class="ph ph-linkedin-logo text-2xl"></i></a>
+                <!-- YouTube -->
+                <a href="https://youtube.com/c/manuvision" target="_blank" class="text-slate-400 hover:text-red-500 transition-colors transform hover:scale-110" aria-label="YouTube"><i class="ph ph-youtube-logo text-2xl"></i></a>
+                <!-- Twitch -->
+                <a href="https://twitch.tv/manuvision" target="_blank" class="text-slate-400 hover:text-purple-400 transition-colors transform hover:scale-110" aria-label="Twitch"><i class="ph ph-twitch-logo text-2xl"></i></a>
+                <!-- Website -->
+                <a href="https://manuelsainsily.com" target="_blank" class="text-slate-400 hover:text-cyber transition-colors transform hover:scale-110" aria-label="Website"><i class="ph ph-globe text-2xl"></i></a>
+                <!-- Email -->
+                <a href="mailto:hello@manuelsainsily.com" class="text-slate-400 hover:text-cyber transition-colors transform hover:scale-110" aria-label="Email"><i class="ph ph-envelope-simple text-2xl"></i></a>
+            </div>
+
+            <!-- CTA (Text updated to "Get in touch") -->
+            <a href="mailto:hello@manuelsainsily.com" class="pointer-events-auto group relative overflow-hidden bg-cyber text-void font-display font-bold uppercase tracking-wider py-3 px-8 rounded hover:bg-white transition-all duration-300 shadow-[0_0_20px_rgba(0,243,255,0.4)] hover:shadow-[0_0_30px_rgba(255,255,255,0.6)]">
+                <span class="relative z-10 flex items-center gap-2">
+                    Get in touch <i class="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                </span>
+            </a>
+        </div>
+    </footer>
+
+    <!-- BIO MODAL (Updated Content and Image) -->
+    <div id="bioModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-opacity duration-300" onclick="toggleBio()">
+        <div class="glass-panel max-w-lg w-full p-8 rounded-2xl relative transform transition-all duration-300" onclick="event.stopPropagation()">
+            <button onclick="toggleBio()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="ph-bold ph-x text-2xl"></i></button>
+            
+            <div class="flex flex-col items-center text-center mb-6">
+                <div class="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-cyber to-blue-600 mb-4 shadow-[0_0_20px_rgba(0,243,255,0.3)]">
+                    <!-- Profile Picture (Using uploaded image) -->
+                    <img src="pp.jpg" alt="Manuel" class="w-full h-full rounded-full bg-slate-900 object-cover">
+                </div>
+                <h2 class="font-display text-2xl font-bold text-white">Manuel Sainsily</h2>
+                <p class="text-cyber text-sm uppercase tracking-widest mt-1">Creative Director & Lead Product Designer</p>
+            </div>
+            
+            <!-- Updated Bio -->
+            <p class="text-slate-300 leading-relaxed mb-6">
+                Manuel Sainsily is an award-winning Creative Director and Lead Product Designer with over 15 years of experience. TEDx Speaker and lecturer at Harvard, MIT, Oxford, and Stanford, his work is at the intersection of human-centered design, emerging technology, and immersive experiences.
+                <br/><br/>Recognized with the Mozilla Rise25 Award and an XR Guild Ethical Values nomination, Manuel co-created the first-ever Generative AI course on MasterClass, ranked among the platform’s top five of 2024. 
+                <br/><br/>Born in Guadeloupe and based in Montreal, he has traveled across 30+ countries and delivered over 100 in-person talks, including live demos and keynotes for crowds of 20 to 2000+ people. 
+                <br/><br/>He has collaborated with Adobe, Dell, IBM, Lightspeed, Meta, NVIDIA, OpenAI, Skillshare, and more. 
+                His work has been exhibited at VIFF, Sonar, and ARTECHOUSE, and featured in Fast Company, CBC, and Business Insider.
+            </p>
+
+            <div class="flex flex-col gap-3">
+                 <a href="https://beacons.ai/manuvision" target="_blank" class="w-full py-3 bg-purple-600 text-white font-display font-bold text-sm uppercase tracking-wider rounded text-center hover:bg-purple-700 transition-colors shadow-lg">
+                    Connect
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- EVENT LIST SIDEBAR -->
+    <div id="eventListModal" class="fixed inset-0 z-30 flex justify-end transition-opacity duration-300 pointer-events-none hidden">
+        <!-- Overlay -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" onclick="toggleEventList()"></div>
+        
+        <!-- Sidebar Content -->
+        <div id="eventListContent" class="glass-panel w-full max-w-sm md:w-[400px] h-full p-6 flex flex-col transform translate-x-full transition-transform duration-500 ease-out pointer-events-auto">
+            
+            <div class="flex justify-between items-center mb-6 border-b border-cyber/20 pb-4">
+                <h2 class="font-display text-2xl font-bold text-white">Global Itinerary (<span id="totalEventsCount">7</span>)</h2>
+                <button onclick="toggleEventList()" class="text-slate-400 hover:text-white bg-slate-800/50 rounded-full p-2">
+                    <i class="ph-bold ph-x text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="mb-6 space-y-4">
+                <div class="relative">
+                    <input type="text" id="eventSearchInput" oninput="filterEvents()" placeholder="Search by city or title..." class="w-full bg-slate-800/50 text-white border border-cyber/30 rounded-lg py-2 pl-10 pr-4 focus:ring-cyber focus:border-cyber transition-all font-body text-sm">
+                    <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                </div>
+                
+                <div id="eventFilterButtons" class="flex flex-wrap gap-2 text-xs">
+                    <!-- Filter buttons populated by JS -->
+                </div>
+            </div>
+
+            <!-- Event List -->
+            <div id="eventListContainer" class="flex-1 overflow-y-auto space-y-3 pr-2">
+                <!-- Events populated by JS -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- EVENT DETAILS DRAWER/MODAL (CENTERED ON DESKTOP) -->
+    <div id="eventModal" class="hidden fixed inset-0 z-40 flex items-end md:items-center md:justify-center p-0 md:p-6 pointer-events-none transition-opacity duration-300">
+        <!-- Backdrop (Visible on both mobile and desktop now to focus attention) -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" onclick="closeEvent()"></div>
+
+        <!-- Content Panel -->
+        <div id="eventContent" class="pointer-events-auto glass-panel w-full md:w-[500px] h-[70vh] md:h-auto md:max-h-[85vh] rounded-t-3xl md:rounded-2xl p-6 flex flex-col transform transition-all duration-300 ease-out shadow-2xl border-t border-cyber/30 md:border md:border-cyber/30 translate-y-full md:translate-y-0 md:scale-90 md:opacity-0">
+            
+            <div class="flex justify-between items-start mb-4">
+                <span id="eventType" class="px-3 py-1 rounded bg-cyber/10 text-cyber text-xs font-bold uppercase tracking-wider border border-cyber/20">Keynote</span>
+                <button onclick="closeEvent()" class="text-slate-400 hover:text-white bg-slate-800/50 rounded-full p-1"><i class="ph-bold ph-x text-lg"></i></button>
+            </div>
+
+            <h2 id="eventTitle" class="font-display text-2xl font-bold text-white leading-tight mb-2">Future of AI Summit</h2>
+            
+            <div class="flex items-center gap-2 text-slate-400 text-sm mb-4">
+                <i class="ph-fill ph-map-pin text-cyber"></i>
+                <span id="eventLocation">Tokyo, Japan</span>
+                <span class="w-1 h-1 bg-slate-600 rounded-full mx-1"></span>
+                <i class="ph-fill ph-calendar-blank text-cyber"></i>
+                <span id="eventDate">Oct 12, 2025</span>
+            </div>
+
+            <div class="flex-1 overflow-y-auto pr-2 space-y-4">
+                <!-- Fallback image source if the main image fails -->
+                <img id="eventImage" src="" alt="Event" class="w-full h-80 object-cover rounded-lg border border-slate-700 brightness-90 hover:brightness-110 transition-all" onerror="this.onerror=null;this.src='https://placehold.co/800x400/0f172a/00f3ff?text=Project+Image+Unavailable'">
+                
+                <p id="eventDesc" class="text-slate-300 leading-relaxed text-sm">
+                    Delivered the opening keynote on "Generative Interfaces" to an audience of 2,000 developers and designers.
+                </p>
+
+                <!-- Mock Gallery Grid 
+                <div class="grid grid-cols-3 gap-2 mt-4">
+                    <div class="aspect-square bg-slate-800 rounded flex items-center justify-center border border-slate-700/50 hover:border-cyber/50 transition-colors group cursor-pointer">
+                        <i class="ph ph-image text-slate-600 group-hover:text-cyber transition-colors"></i>
+                    </div>
+                    <div class="aspect-square bg-slate-800 rounded flex items-center justify-center border border-slate-700/50 hover:border-cyber/50 transition-colors group cursor-pointer">
+                        <i class="ph ph-image text-slate-600 group-hover:text-cyber transition-colors"></i>
+                    </div>
+                    <div class="aspect-square bg-slate-800 rounded flex items-center justify-center border border-slate-700/50 hover:border-cyber/50 transition-colors group cursor-pointer">
+                        <i class="ph ph-image text-slate-600 group-hover:text-cyber transition-colors"></i>
+                    </div>
+                </div>
+                -->
+            </div>
+
+            <!--
+            <div class="mt-6 pt-4 border-t border-slate-700/50">
+                <button class="w-full py-3 border border-cyber text-cyber hover:bg-cyber hover:text-black font-display font-bold text-sm uppercase tracking-wider rounded transition-colors shadow-[0_0_10px_rgba(0,243,255,0.1)] hover:shadow-[0_0_20px_rgba(0,243,255,0.3)]">
+                    View Project Details
+                </button>
+            </div>
+            -->
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // --- CONSTANTS ---
+        const FLIGHT_COUNT = 56;
+
+        // --- DATASET: 2025 Events ---
+        const events = [
+            {
+                id: 1,
+                title: "Unity Developers Meetup",
+                location: "Montreal, Canada",
+                lat: 45.50884,
+                lng: -73.58781,
+                date: "Mar 25, 2025",
+                type: "Live Demo",
+                desc: "Delivered a talk as well as a live demo on the future of artificial intelligence in game development, using Unity 6 and beyond.",
+                image: 'montreal.jpeg'
+            },
+            {
+                id: 2,
+                title: "Placeholder Event",
+                location: "Paris, France",
+                lat: 48.8566,
+                lng: 2.3522,
+                date: "Mar 10, 2025",
+                type: "Exhibition",
+                desc: "Placeholder Event.",
+                image: 'montreal.jpeg'
+            },
+            {
+                id: 3,
+                title: "Placeholder Event",
+                location: "Austin, USA",
+                lat: 30.2672,
+                lng: -97.7431,
+                date: "Mar 14, 2025",
+                type: "Panel",
+                desc: "Placeholder Event.",
+                image: 'montreal.jpeg'
+            },
+            {
+                id: 4,
+                title: "Placeholder Event",
+                location: "Stockholm, Sweden",
+                lat: 59.3293,
+                lng: 18.0686,
+                date: "May 22, 2025",
+                type: "Workshop",
+                desc: "Placeholder Event.",
+                image: 'montreal.jpeg'
+            },
+            {
+                id: 5,
+                title: "Placeholder Event",
+                location: "San Francisco, USA",
+                lat: 37.7749,
+                lng: -122.4194,
+                date: "Sep 05, 2025",
+                type: "Conference",
+                desc: "Placeholder Event.",
+                image: 'montreal.jpeg'
+            },
+            {
+                id: 6,
+                title: "Placeholder Event",
+                location: "Dubai, UAE",
+                lat: 25.2048,
+                lng: 55.2708,
+                date: "Nov 12, 2025",
+                type: "Keynote",
+                desc: "Placeholder Event.",
+                image: 'montreal.jpeg'
+            },
+             {
+                id: 7,
+                title: "Placeholder Event",
+                location: "Cape Town, SA",
+                lat: -33.9249,
+                lng: 18.4241,
+                date: "Dec 02, 2025",
+                type: "Mentorship",
+                desc: "Placeholder Event.",
+                image: 'montreal.jpeg'
+            },
+            {
+                id: 8,
+                title: "Placeholder Event",
+                location: "Tokyo, Japan",
+                lat: 35.6762,
+                lng: 139.6503,
+                date: "Jan 15, 2025",
+                type: "Keynote",
+                desc: "Placeholder Event.",
+                image: 'montreal.jpeg'
+            },
+        ];
+
+        // --- GLOBAL STATE ---
+        let currentFilter = 'all'; // 'all' or an event type string
+        let currentSearch = '';
+
+        // --- MAP INITIALIZATION ---
+        // Initialize map focused on a neutral global view
+        const map = L.map('map', {
+            zoomControl: false,
+            attributionControl: false
+        }).setView([20, 0], 3);
+
+        // Move zoom control to bottom right to not conflict with header
+        L.control.zoom({
+            position: 'bottomright'
+        }).addTo(map);
+
+        // Add Dark Matter Tiles (CartoDB) - Perfect for futuristic look
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+
+        // --- MARKER LOGIC ---
+        const markers = new Map(); // Use a Map to easily retrieve markers by event ID
+
+        events.forEach(event => {
+            // Create custom HTML marker (Glowing Dot)
+            const icon = L.divIcon({
+                className: 'custom-pin',
+                html: `<div class="pin-inner"></div>`,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+
+            const marker = L.marker([event.lat, event.lng], { icon: icon }).addTo(map);
+
+            // Add click event
+            marker.on('click', () => {
+                openEvent(event);
+                
+                // Pan map to marker
+                map.flyTo([event.lat, event.lng], 5, {
+                    animate: true,
+                    duration: 1.5
+                });
+            });
+
+            markers.set(event.id, marker);
+        });
+
+        // --- UI LOGIC - BIO MODAL ---
+
+        function toggleBio() {
+            const modal = document.getElementById('bioModal');
+            modal.classList.toggle('hidden');
+        }
+
+        // --- UI LOGIC - EVENT DETAIL MODAL ---
+
+        function openEvent(data) {
+            const modal = document.getElementById('eventModal');
+            const content = document.getElementById('eventContent');
+            
+            // Populate Data
+            document.getElementById('eventTitle').textContent = data.title;
+            document.getElementById('eventLocation').textContent = data.location;
+            document.getElementById('eventDate').textContent = data.date;
+            document.getElementById('eventDesc').textContent = data.desc;
+            document.getElementById('eventType').textContent = data.type;
+            document.getElementById('eventImage').src = data.image;
+
+            // Show UI
+            modal.classList.remove('hidden');
+            
+            // Animation handling
+            requestAnimationFrame(() => {
+                // Mobile: Slide up 
+                content.classList.remove('translate-y-full');
+                
+                // Desktop: Fade & Scale In 
+                content.classList.remove('md:scale-90', 'md:opacity-0');
+                content.classList.add('md:scale-100', 'md:opacity-100');
+            });
+        }
+
+        function closeEvent() {
+            const modal = document.getElementById('eventModal');
+            const content = document.getElementById('eventContent');
+            
+            // Trigger Close Animations
+            content.classList.add('translate-y-full');
+            content.classList.remove('md:scale-100', 'md:opacity-100');
+            content.classList.add('md:scale-90', 'md:opacity-0');
+            
+            // Wait for transition to finish before hiding
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // --- UI LOGIC - EVENT LIST SIDEBAR ---
+
+        function toggleEventList() {
+            const modal = document.getElementById('eventListModal');
+            const content = document.getElementById('eventListContent');
+            
+            if (modal.classList.contains('hidden')) {
+                // Open
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    content.classList.remove('translate-x-full');
+                }, 10);
+                
+                // Initial render/filter when opening
+                filterEvents();
+            } else {
+                // Close
+                content.classList.add('translate-x-full');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 500); // Match transition duration
+            }
+        }
+
+        function renderEventList(filteredEvents) {
+            const container = document.getElementById('eventListContainer');
+            container.innerHTML = ''; // Clear existing list
+
+            if (filteredEvents.length === 0) {
+                 container.innerHTML = `<div class="text-center p-8 text-slate-400">No events found matching the criteria.</div>`;
+                 return;
+            }
+
+            filteredEvents.forEach(event => {
+                const item = document.createElement('div');
+                item.className = 'glass-panel p-4 rounded-lg cursor-pointer hover:bg-slate-700/60 transition-colors';
+                item.innerHTML = `
+                    <p class="text-xs text-cyber uppercase font-semibold">${event.type}</p>
+                    <h4 class="font-display font-bold text-white text-lg mt-1 leading-tight">${event.title}</h4>
+                    <div class="flex items-center gap-2 text-slate-400 text-sm mt-1">
+                        <i class="ph ph-map-pin"></i> <span>${event.location}</span>
+                        <span class="w-1 h-1 bg-slate-600 rounded-full"></span>
+                        <i class="ph ph-calendar-blank"></i> <span>${event.date}</span>
+                    </div>
+                `;
+                item.onclick = () => {
+                    openEvent(event);
+                    map.flyTo([event.lat, event.lng], 5, { animate: true, duration: 1.5 });
+                    // Optional: Close the list sidebar after clicking an event
+                    toggleEventList(); 
+                };
+                container.appendChild(item);
+            });
+        }
+
+        function setFilter(type) {
+            currentFilter = type;
+            // Update button styles
+            document.querySelectorAll('#eventFilterButtons .filter-btn').forEach(btn => {
+                if (btn.dataset.filter === type) {
+                    btn.className = 'filter-btn active bg-cyber text-void px-3 py-1 rounded-full font-semibold transition-colors';
+                } else {
+                    btn.className = 'filter-btn bg-slate-700/50 text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-1 rounded-full transition-colors';
+                }
+            });
+            filterEvents();
+        }
+
+        function filterEvents() {
+            currentSearch = document.getElementById('eventSearchInput').value.toLowerCase();
+            
+            const filtered = events.filter(event => {
+                const matchesFilter = currentFilter === 'all' || event.type === currentFilter;
+                const matchesSearch = event.title.toLowerCase().includes(currentSearch) || event.location.toLowerCase().includes(currentSearch);
+                
+                return matchesFilter && matchesSearch;
+            });
+
+            renderEventList(filtered);
+        }
+
+        // --- INITIALIZATION ---
+        
+        function calculateAndDisplayMetrics() {
+            // Calculate metrics from the dataset
+            const metrics = events.reduce((acc, event) => {
+                // Cities (unique locations)
+                if (!acc.cities.includes(event.location)) {
+                    acc.cities.push(event.location);
+                }
+                return acc;
+            }, { cities: [] });
+
+            // Update Header Metrics Display
+            document.getElementById('metric-flights').textContent = FLIGHT_COUNT;
+            document.getElementById('metric-cities').textContent = metrics.cities.length;
+            document.getElementById('metric-events').textContent = events.length;
+            document.getElementById('totalEventsCount').textContent = events.length;
+
+            // Setup Filter Buttons
+            const uniqueTypes = [...new Set(events.map(e => e.type))].sort();
+            const filterContainer = document.getElementById('eventFilterButtons');
+            filterContainer.innerHTML = '';
+            
+            // All button
+            const allBtn = document.createElement('button');
+            allBtn.className = 'filter-btn active bg-cyber text-void px-3 py-1 rounded-full font-semibold transition-colors';
+            allBtn.textContent = `All (${events.length})`;
+            allBtn.dataset.filter = 'all';
+            allBtn.onclick = () => setFilter('all');
+            filterContainer.appendChild(allBtn);
+
+            // Type buttons
+            uniqueTypes.forEach(type => {
+                const count = events.filter(e => e.type === type).length;
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn bg-slate-700/50 text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-1 rounded-full transition-colors';
+                // Use "Exhibit" if type is "Exhibition" for cleaner UI
+                const displayType = type === 'Exhibition' ? 'Exhibit' : type; 
+                btn.textContent = `${displayType} (${count})`;
+                btn.dataset.filter = type;
+                btn.onclick = () => setFilter(type);
+                filterContainer.appendChild(btn);
+            });
+        }
+
+        // --- STARTUP ANIMATION ---
+        window.addEventListener('load', () => {
+            // Slight delay to ensure layout is complete in iframe environments
+            setTimeout(() => {
+                // Critical fix for Leaflet in iframes/resizable containers
+                map.invalidateSize(); 
+                map.flyTo([25, 10], 3, { duration: 2 });
+            }, 500);
+            
+            // Run initial population logic
+            calculateAndDisplayMetrics();
+            renderEventList(events); // Initial render of the full list
+        });
+
+    </script>
+</body>
+</html>
