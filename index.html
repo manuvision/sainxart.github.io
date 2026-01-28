@@ -10,6 +10,9 @@
     <meta property="og:description" content="Preserving cultural heritage through spatial intelligence.">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://manu.vision/images/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
     <meta property="og:url" content="https://manu.vision" />
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
@@ -44,6 +47,14 @@
         }
 
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        /* Hide all scrollbars except on body for main page scroll */
+        *:not(body):not(html) {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
+        *:not(body):not(html)::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
         html {
             scroll-behavior: smooth;
             font-size: 16px;
@@ -72,9 +83,13 @@
         .reveal-scale.active { opacity: 1; transform: scale(1); }
         .delay-1 { transition-delay: 0.1s; } .delay-2 { transition-delay: 0.2s; } .delay-3 { transition-delay: 0.3s; }
         .delay-4 { transition-delay: 0.4s; } .delay-5 { transition-delay: 0.5s; }
+        @media (max-width: 768px) {
+            .reveal-left { transform: translateX(-20px); }
+            .reveal-right { transform: translateX(20px); }
+        }
 
         /* Layout */
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; overflow-x: hidden; }
         section { position: relative; padding: 120px 0; }
         @media (max-width: 768px) { section { padding: 80px 0; } }
 
@@ -145,7 +160,7 @@
         @media (max-width: 768px) { .nav-links, .nav-cta { display: none; } .nav-toggle { display: block; } .mobile-menu { display: flex; } }
 
         /* Hero */
-        .hero { min-height: 100vh; display: flex; align-items: center; position: relative; padding-top: 80px; }
+        .hero { min-height: 100vh; display: flex; align-items: center; position: relative; padding-top: 80px; overflow-x: clip; }
         .hero-bg { position: absolute; inset: 0; z-index: -1; }
         .hero-gradient {
             position: absolute; width: 150%; height: 150%; top: -25%; left: -25%;
@@ -268,22 +283,28 @@
         @keyframes scrollPulse { 0%, 100% { opacity: 1; transform: translateX(-50%) translateY(0); } 50% { opacity: 0.5; transform: translateX(-50%) translateY(8px); } }
 
         /* About Section */
-        .about { background: var(--dark-surface); position: relative; }
+        .about { background: var(--dark-surface); position: relative; overflow-x: clip; }
         .about::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent); }
         .about-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 80px; align-items: center; }
         @media (max-width: 968px) {
-            .about-grid { grid-template-columns: 1fr; gap: 48px; }
-            .about-image-container { text-align: center; }
+            .about-grid { grid-template-columns: 1fr; gap: 32px; }
         }
 
         /* Rotating Photo Card */
-        .about-image-container { text-align: center; }
+        .about-image-container { text-align: center; width: 100%; padding-top: 20px; }
         .rotating-photo {
-            position: relative; width: 400px; max-width: 90%; aspect-ratio: 1;
+            position: relative; width: 400px; max-width: 85%; aspect-ratio: 1;
             border-radius: 24px; overflow: hidden;
             box-shadow: 0 20px 60px rgba(139, 92, 246, 0.2), 0 40px 80px rgba(0, 0, 0, 0.3);
             background: var(--dark-surface);
-            display: inline-block;
+            margin: 0 auto;
+        }
+        @media (max-width: 968px) {
+            .rotating-photo { width: 360px; }
+        }
+        @media (max-width: 640px) {
+            .rotating-photo { width: 320px; }
+            .about-image-container { padding-top: 30px; }
         }
         .rotating-photo-img {
             display: block; width: 100%; height: 100%;
@@ -383,7 +404,7 @@
         .highlights-footer svg { width: 20px; height: 20px; }
 
         /* Brands Section */
-        .brands { background: var(--dark-surface); position: relative; overflow: hidden; padding: 80px 0; }
+        .brands { background: var(--dark-surface); position: relative; overflow-x: clip; padding: 80px 0; }
         .brands::before, .brands::after { content: ''; position: absolute; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent); }
         .brands::before { top: 0; } .brands::after { bottom: 0; }
         .brands-track-wrapper {
@@ -403,7 +424,7 @@
 
         /* World Map Section - 3D Globe */
         .world-map-section {
-            position: relative; padding: 120px 0; overflow: hidden;
+            position: relative; padding: 120px 0; overflow-x: clip;
             background: var(--dark-bg);
         }
         .globe-container {
@@ -507,7 +528,7 @@
         .video-modal-close:hover { opacity: 1; }
 
         /* Press & Testimonials Section */
-        .press-testimonials { padding: 120px 0; background: var(--dark-elevated); overflow: hidden; }
+        .press-testimonials { padding: 120px 0; background: var(--dark-elevated); overflow-x: clip; }
         .press-testimonials .section-header { margin-bottom: 48px; }
 
         /* Press Logos Strip - matches Brands style */
@@ -588,13 +609,15 @@
         footer a { color: var(--primary-violet); text-decoration: none; }
 
         @media (max-width: 640px) {
-            .about-stats { grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
-            .about-stats .stat { padding: 8px 4px; }
+            .container { padding: 0 20px; }
+            .about-stats { gap: 8px; }
+            .stat-number { font-size: 1.75rem; }
+            .stat-label { font-size: 0.7rem; }
             .hero-ctas { flex-direction: column; }
             .btn { width: 100%; justify-content: center; }
-            .about-content { display: flex; flex-direction: column; align-items: center; }
+            .about-content { text-align: left; }
+            .about-content p { font-size: 0.95rem; }
             .career-link { display: flex; justify-content: center; width: fit-content; margin-left: auto; margin-right: auto; }
-            .explore-link { justify-content: center; }
         }
     </style>
 </head>
