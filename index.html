@@ -44,14 +44,23 @@
         }
 
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; font-size: 16px; }
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+            overflow-x: hidden;
+            overscroll-behavior-x: none;
+        }
         body {
             font-family: var(--font-body);
             background: var(--dark-bg);
             color: var(--text-primary);
             line-height: 1.6;
             overflow-x: hidden;
+            overscroll-behavior-x: none;
             -webkit-font-smoothing: antialiased;
+            position: relative;
+            width: 100%;
+            max-width: 100vw;
         }
         ::selection { background: var(--primary-purple); color: white; }
 
@@ -68,8 +77,8 @@
         .delay-4 { transition-delay: 0.4s; } .delay-5 { transition-delay: 0.5s; }
 
         /* Layout */
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-        section { position: relative; padding: 120px 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; overflow: hidden; }
+        section { position: relative; padding: 120px 0; overflow-x: hidden; }
         @media (max-width: 768px) { section { padding: 80px 0; } }
 
         /* Navigation */
@@ -398,14 +407,15 @@
         .brand-item img { height: 100%; width: auto; object-fit: contain; }
 
         /* World Map Section - 3D Globe */
-        .world-map-section { position: relative; padding: 120px 0; overflow: hidden; }
+        .world-map-section { position: relative; padding: 120px 0; overflow: visible; }
         .globe-container {
             position: relative; max-width: 720px; margin: 48px auto 0; height: 495px;
-            overflow: hidden;
+            overflow: visible;
         }
         #globeCanvas {
             width: 100%; height: 100%; cursor: grab;
             border-radius: 50%;
+            touch-action: none; /* Prevent default touch behaviors like scroll/zoom */
         }
         #globeCanvas:active { cursor: grabbing; }
         .globe-glow {
@@ -492,7 +502,7 @@
         .video-modal-close:hover { opacity: 1; }
 
         /* Press & Testimonials Section */
-        .press-testimonials { padding: 120px 0; background: var(--dark-elevated); }
+        .press-testimonials { padding: 120px 0; background: var(--dark-elevated); overflow: hidden; }
         .press-testimonials .section-header { margin-bottom: 48px; }
 
         /* Press Logos Strip - matches Brands style */
@@ -547,6 +557,7 @@
         .testimonial-author-title { color: var(--text-muted); font-size: 0.875rem; }
         .testimonial-nav {
             display: flex; justify-content: center; gap: 12px; margin-top: 32px;
+            padding: 8px 0; /* Extra space for scaled dots */
         }
         .testimonial-dot {
             width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.2);
@@ -658,7 +669,7 @@
                 <div class="about-image-container reveal-left">
                     <div class="flip-card">
                         <div class="flip-card-face flip-card-front">
-                            <img src="images/manu-speaking.jpg" alt="Manuel Sainsily Speaking" loading="lazy">
+                            <img src="images/manuvisionpp.png" alt="Manuel Sainsily" loading="lazy">
                         </div>
                         <div class="flip-card-face flip-card-back">
                             <img src="images/manu3d.jpeg" alt="Manuel Sainsily 3D Avatar" loading="lazy">
@@ -1129,17 +1140,43 @@
             if (e.key === 'Escape') closeVideoModal();
         });
 
-        // Testimonials Carousel
+        // Testimonials Carousel with seamless loop (fade on wrap)
         const testimonialCards = document.getElementById('testimonialCards');
         const testimonialDots = document.querySelectorAll('.testimonial-dot');
         const prevBtn = document.getElementById('prevTestimonial');
         const nextBtn = document.getElementById('nextTestimonial');
         let currentTestimonial = 0;
         const totalTestimonials = 5;
+        let isTransitioning = false;
 
-        function updateTestimonial(index) {
+        function updateTestimonial(index, isLooping = false) {
+            if (isTransitioning) return;
+            isTransitioning = true;
+
             currentTestimonial = index;
-            testimonialCards.style.transform = `translateX(-${index * 100}%)`;
+
+            // When looping (last to first or first to last), use instant jump with fade
+            if (isLooping) {
+                testimonialCards.style.transition = 'opacity 0.3s ease';
+                testimonialCards.style.opacity = '0';
+
+                setTimeout(() => {
+                    testimonialCards.style.transition = 'none';
+                    testimonialCards.style.transform = `translateX(-${index * 100}%)`;
+
+                    requestAnimationFrame(() => {
+                        testimonialCards.style.transition = 'opacity 0.3s ease';
+                        testimonialCards.style.opacity = '1';
+                        setTimeout(() => { isTransitioning = false; }, 300);
+                    });
+                }, 300);
+            } else {
+                // Normal slide transition
+                testimonialCards.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                testimonialCards.style.transform = `translateX(-${index * 100}%)`;
+                setTimeout(() => { isTransitioning = false; }, 500);
+            }
+
             testimonialDots.forEach((dot, i) => {
                 dot.classList.toggle('active', i === index);
             });
@@ -1147,33 +1184,39 @@
 
         testimonialDots.forEach(dot => {
             dot.addEventListener('click', () => {
-                updateTestimonial(parseInt(dot.dataset.index));
+                updateTestimonial(parseInt(dot.dataset.index), false);
             });
         });
 
         prevBtn.addEventListener('click', () => {
-            updateTestimonial((currentTestimonial - 1 + totalTestimonials) % totalTestimonials);
+            const newIndex = (currentTestimonial - 1 + totalTestimonials) % totalTestimonials;
+            const isLooping = currentTestimonial === 0; // Going from first to last
+            updateTestimonial(newIndex, isLooping);
         });
 
         nextBtn.addEventListener('click', () => {
-            updateTestimonial((currentTestimonial + 1) % totalTestimonials);
+            const newIndex = (currentTestimonial + 1) % totalTestimonials;
+            const isLooping = currentTestimonial === totalTestimonials - 1; // Going from last to first
+            updateTestimonial(newIndex, isLooping);
         });
 
         // Auto-advance testimonials every 9 seconds
         setInterval(() => {
-            updateTestimonial((currentTestimonial + 1) % totalTestimonials);
+            const newIndex = (currentTestimonial + 1) % totalTestimonials;
+            const isLooping = currentTestimonial === totalTestimonials - 1;
+            updateTestimonial(newIndex, isLooping);
         }, 9000);
 
         // 3D Globe with Three.js - University Lectures Only
         const universityLocations = [
-            { lat: 32.8801, lng: -117.2340, city: 'San Diego, CA', event: 'UC San Diego', date: 'March 2025', desc: 'HackXR', logo: 'images/universities/ucsd.png' },
-            { lat: 37.4275, lng: -122.1697, city: 'Stanford, CA', event: 'd.school, Stanford', date: 'May 2025', desc: 'XR Prototyping with AI', logo: 'images/universities/stanford.png' },
-            { lat: 43.6532, lng: -79.3832, city: 'Toronto, Canada', event: 'OCAD University', date: 'February 2024', desc: 'Protopica lecture', logo: 'images/universities/ocad.png', invertLogo: true },
-            { lat: 45.5048, lng: -73.5772, city: 'Montreal, Canada', event: 'McGill University', date: 'September 2023', desc: 'Learn AR/VR Curriculum', logo: 'images/universities/mcgill.png' },
-            { lat: 42.3736, lng: -71.1097, city: 'Cambridge, MA', event: 'Harvard University', date: 'April 2025', desc: 'HarvardXR 2025', logo: 'images/universities/harvard.png' },
-            { lat: 40.8075, lng: -73.9626, city: 'New York, NY', event: 'Columbia University', date: 'November 2025', desc: 'Disrupt the narrative', logo: 'images/universities/columbia.png' },
-            { lat: 42.3145, lng: -71.0387, city: 'Boston, MA', event: 'UMass Boston', date: 'Nov 2023 & Oct 2024', desc: 'AI & XR Cultural Heritage', logo: 'images/universities/umass-boston.png' },
-            { lat: 51.7548, lng: -1.2544, city: 'Oxford, UK', event: 'Oxford University', date: 'April 2025', desc: 'OpenAI Sora Breakdown', logo: 'images/universities/oxford.png' }
+            { lat: 32.8801, lng: -117.2340, city: 'San Diego, CA', event: 'UC San Diego', date: 'March 2025', desc: 'HackXR (XR Hackathon)', logo: 'images/universities/ucsd.png' },
+            { lat: 37.4275, lng: -122.1697, city: 'Stanford, CA', event: 'Stanford d.school', date: 'May 2025', desc: 'XR Prototyping with AI (Lecture)', logo: 'images/universities/stanford.png' },
+            { lat: 43.6532, lng: -79.3832, city: 'Toronto, Canada', event: 'OCAD University', date: 'February 2024', desc: 'Protopica: Challenging mainstream narratives through world building (Lecture)', logo: 'images/universities/ocad.png', invertLogo: true },
+            { lat: 45.5048, lng: -73.5772, city: 'Montreal, Canada', event: 'McGill University', date: 'September 2023', desc: 'Learn AR/VR (Curriculum)', logo: 'images/universities/mcgill.png' },
+            { lat: 42.3736, lng: -71.1097, city: 'Cambridge, MA', event: 'Harvard University', date: 'April 2025', desc: 'HarvardXR 2025: The Augmented Self (Lecture)', logo: 'images/universities/harvard.png' },
+            { lat: 40.8075, lng: -73.9626, city: 'New York, NY', event: 'Columbia University', date: 'November 2025', desc: 'Disrupt the narrative: Conversations that shape community (Lecture)', logo: 'images/universities/columbia.png' },
+            { lat: 42.3145, lng: -71.0387, city: 'Boston, MA', event: 'UMass Boston', date: 'November 2023 & October 2024', desc: 'AI & XR for Cultural Heritage Preservation (Lectures)', logo: 'images/universities/umass-boston.png' },
+            { lat: 51.7548, lng: -1.2544, city: 'Oxford, UK', event: 'Oxford University', date: 'April 2025', desc: 'OpenAI Sora Project & Workflow Breakdown (Lecture)', logo: 'images/universities/oxford.png' }
         ];
 
         // Globe setup
@@ -1355,13 +1398,15 @@
 
         // Touch support
         canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
             isDragging = true;
             resetAutoRotateTimer();
             previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        });
+        }, { passive: false });
 
         canvas.addEventListener('touchmove', (e) => {
             if (isDragging) {
+                e.preventDefault();
                 const deltaX = e.touches[0].clientX - previousMousePosition.x;
                 const deltaY = e.touches[0].clientY - previousMousePosition.y;
                 targetRotationY += deltaX * 0.005;
@@ -1369,7 +1414,7 @@
                 targetRotationX = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, targetRotationX));
                 previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
             }
-        });
+        }, { passive: false });
 
         canvas.addEventListener('touchend', () => {
             isDragging = false;
@@ -1455,36 +1500,79 @@
             renderer.setSize(globeWidth, globeHeight);
         });
 
-        // Infinite scroll marquee for brands and press
-        function initMarquee(trackSelector, speed = 50) {
+        // Infinite scroll marquee for brands and press - improved implementation
+        function initMarquee(trackSelector, speed = 1) {
             const track = document.querySelector(trackSelector);
             if (!track) return;
 
-            let position = 0;
-            const contentWidth = track.scrollWidth / 2;
-            let isPaused = false;
-            let animationId;
+            // Wait for images to load before calculating width
+            const images = track.querySelectorAll('img');
+            let loadedCount = 0;
+            const totalImages = images.length;
 
-            function animate() {
-                if (!isPaused) {
-                    position -= speed / 60;
-                    if (Math.abs(position) >= contentWidth) {
-                        position = 0;
-                    }
-                    track.style.transform = `translateX(${position}px)`;
+            function startAnimation() {
+                let position = 0;
+                // Calculate the width of just the first half (original content)
+                const items = track.querySelectorAll('.brand-item, .press-item');
+                const halfCount = items.length / 2;
+                let contentWidth = 0;
+                for (let i = 0; i < halfCount; i++) {
+                    contentWidth += items[i].offsetWidth + 80; // 80 = margin (40px each side)
                 }
-                animationId = requestAnimationFrame(animate);
+
+                let isPaused = false;
+                let lastTime = performance.now();
+
+                function animate(currentTime) {
+                    const deltaTime = currentTime - lastTime;
+                    lastTime = currentTime;
+
+                    if (!isPaused) {
+                        position -= speed * deltaTime * 0.06;
+
+                        // Seamless reset when first set scrolls out
+                        if (Math.abs(position) >= contentWidth) {
+                            position += contentWidth;
+                        }
+
+                        track.style.transform = `translate3d(${position}px, 0, 0)`;
+                    }
+                    requestAnimationFrame(animate);
+                }
+
+                track.addEventListener('mouseenter', () => isPaused = true);
+                track.addEventListener('mouseleave', () => isPaused = false);
+
+                requestAnimationFrame(animate);
             }
 
-            track.addEventListener('mouseenter', () => isPaused = true);
-            track.addEventListener('mouseleave', () => isPaused = false);
-
-            animate();
+            // Start after all images load or after a timeout
+            if (totalImages === 0) {
+                startAnimation();
+            } else {
+                images.forEach(img => {
+                    if (img.complete) {
+                        loadedCount++;
+                        if (loadedCount === totalImages) startAnimation();
+                    } else {
+                        img.addEventListener('load', () => {
+                            loadedCount++;
+                            if (loadedCount === totalImages) startAnimation();
+                        });
+                        img.addEventListener('error', () => {
+                            loadedCount++;
+                            if (loadedCount === totalImages) startAnimation();
+                        });
+                    }
+                });
+                // Fallback timeout in case images don't fire load events
+                setTimeout(startAnimation, 2000);
+            }
         }
 
-        // Initialize both marquees with consistent speed (pixels per second)
-        initMarquee('.brands-track', 60);
-        initMarquee('.press-track', 60);
+        // Initialize both marquees
+        initMarquee('.brands-track', 1);
+        initMarquee('.press-track', 1);
     </script>
 </body>
 </html>
