@@ -148,7 +148,7 @@
         @media (max-width: 768px) { .nav-links, .nav-cta { display: none; } .nav-toggle { display: block; } .mobile-menu { display: flex; } }
 
         /* Hero */
-        .hero { min-height: 100vh; display: flex; align-items: center; position: relative; overflow: hidden; padding-top: 80px; }
+        .hero { min-height: 100vh; display: flex; align-items: center; position: relative; overflow-x: hidden; padding-top: 80px; }
         .hero-bg { position: absolute; inset: 0; z-index: -1; }
         .hero-gradient {
             position: absolute; width: 150%; height: 150%; top: -25%; left: -25%;
@@ -199,7 +199,7 @@
         .hero-eyebrow {
             display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
             background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2);
-            border-radius: 100px; font-size: 0.875rem; margin-bottom: 24px;
+            border-radius: 100px; font-size: 0.875rem; margin-top: 10px; margin-bottom: 24px;
             animation: eyebrowFloat 2s ease-in-out infinite; cursor: pointer;
             transition: all 0.3s ease; text-decoration: none;
         }
@@ -435,11 +435,11 @@
             filter: blur(25px);
         }
         .globe-tooltip {
-            position: absolute; padding: 20px; background: rgba(20, 20, 28, 0.98);
-            border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 16px;
+            position: absolute; padding: 16px; background: rgba(20, 20, 28, 0.98);
+            border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 12px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); pointer-events: auto;
             opacity: 0; visibility: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 100; min-width: 260px; max-width: 300px;
+            z-index: 100; min-width: 220px; max-width: 280px;
         }
         .globe-tooltip.active { opacity: 1; visibility: visible; }
         .globe-tooltip-close {
@@ -449,23 +449,23 @@
         }
         .globe-tooltip-close:hover { color: white; }
         .tooltip-logo {
-            width: 100%; max-width: 140px; height: auto; margin-bottom: 16px;
+            width: 100%; max-width: 80px; height: auto; margin-bottom: 12px;
         }
         .tooltip-logo.invert-white {
             filter: brightness(0) invert(1); opacity: 0.9;
         }
         .tooltip-city {
-            font-family: var(--font-display); font-size: 1.125rem; font-weight: 600;
-            color: white; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;
+            font-family: var(--font-display); font-size: 1rem; font-weight: 600;
+            color: white; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
             padding-right: 24px;
         }
         .tooltip-city::before {
-            content: ''; width: 8px; height: 8px; background: var(--primary-violet);
+            content: ''; width: 6px; height: 6px; background: var(--primary-violet);
             border-radius: 50%; box-shadow: 0 0 8px rgba(139, 92, 246, 0.6); flex-shrink: 0;
         }
-        .tooltip-event { font-weight: 500; color: var(--text-primary); margin-bottom: 6px; font-size: 0.9375rem; }
-        .tooltip-date { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
-        .tooltip-desc { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; }
+        .tooltip-event { font-weight: 500; color: var(--text-primary); margin-bottom: 4px; font-size: 0.875rem; }
+        .tooltip-date { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .tooltip-desc { font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; }
 
         /* Contact Section */
         .contact { position: relative; text-align: center; background: var(--dark-surface); }
@@ -1210,7 +1210,7 @@
         const universityLocations = [
             { lat: 32.8801, lng: -117.2340, city: 'San Diego, CA', event: 'UC San Diego', date: 'March 2025', desc: 'HackXR (XR Hackathon)', logo: 'images/universities/ucsd.png' },
             { lat: 37.4275, lng: -122.1697, city: 'Stanford, CA', event: 'Stanford d.school', date: 'May 2025', desc: 'XR Prototyping with AI (Lecture)', logo: 'images/universities/stanford.png' },
-            { lat: 43.6532, lng: -79.3832, city: 'Toronto, Canada', event: 'OCAD University', date: 'February 2024', desc: 'Protopica: Challenging mainstream narratives through world building (Lecture)', logo: 'images/universities/ocad.png', invertLogo: true },
+            { lat: 43.6532, lng: -79.3832, city: 'Toronto, Canada', event: 'OCAD University', date: 'February 2024', desc: 'Protopica: Challenging mainstream narratives through world building (Lecture)', logo: 'images/universities/ocad.png' },
             { lat: 45.5048, lng: -73.5772, city: 'Montreal, Canada', event: 'McGill University', date: 'September 2023', desc: 'Learn AR/VR (Curriculum)', logo: 'images/universities/mcgill.png' },
             { lat: 42.3736, lng: -71.1097, city: 'Cambridge, MA', event: 'Harvard University', date: 'April 2025', desc: 'HarvardXR 2025: The Augmented Self (Lecture)', logo: 'images/universities/harvard.png' },
             { lat: 40.8075, lng: -73.9626, city: 'New York, NY', event: 'Columbia University', date: 'November 2025', desc: 'Disrupt the narrative: Conversations that shape community (Lecture)', logo: 'images/universities/columbia.png' },
@@ -1395,31 +1395,7 @@
             isDragging = false;
         });
 
-        // Touch support
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            isDragging = true;
-            resetAutoRotateTimer();
-            previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        }, { passive: false });
-
-        canvas.addEventListener('touchmove', (e) => {
-            if (isDragging) {
-                e.preventDefault();
-                const deltaX = e.touches[0].clientX - previousMousePosition.x;
-                const deltaY = e.touches[0].clientY - previousMousePosition.y;
-                targetRotationY += deltaX * 0.005;
-                targetRotationX += deltaY * 0.005;
-                targetRotationX = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, targetRotationX));
-                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            }
-        }, { passive: false });
-
-        canvas.addEventListener('touchend', () => {
-            isDragging = false;
-        });
-
-        // Click on markers
+        // Raycaster for clicking on markers (needed for both mouse and touch)
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
 
@@ -1428,6 +1404,81 @@
         }
         window.closeGlobeTooltip = closeGlobeTooltip;
 
+        // Touch support with tap detection for pins
+        let touchStartPos = { x: 0, y: 0 };
+        let touchStartTime = 0;
+        let touchMoved = false;
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isDragging = true;
+            touchMoved = false;
+            touchStartTime = Date.now();
+            touchStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            resetAutoRotateTimer();
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                e.preventDefault();
+                const deltaX = e.touches[0].clientX - previousMousePosition.x;
+                const deltaY = e.touches[0].clientY - previousMousePosition.y;
+
+                // Check if moved significantly (more than 10px from start)
+                const totalMoveX = Math.abs(e.touches[0].clientX - touchStartPos.x);
+                const totalMoveY = Math.abs(e.touches[0].clientY - touchStartPos.y);
+                if (totalMoveX > 10 || totalMoveY > 10) {
+                    touchMoved = true;
+                }
+
+                targetRotationY += deltaX * 0.005;
+                targetRotationX += deltaY * 0.005;
+                targetRotationX = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, targetRotationX));
+                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', (e) => {
+            isDragging = false;
+
+            // Detect tap: short duration and minimal movement
+            const touchDuration = Date.now() - touchStartTime;
+            if (!touchMoved && touchDuration < 300) {
+                // This was a tap - check for pin click
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = ((touchStartPos.x - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((touchStartPos.y - rect.top) / rect.height) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(markers);
+
+                if (intersects.length > 0) {
+                    const marker = intersects[0].object;
+                    const data = marker.userData;
+
+                    const logoEl = tooltip.querySelector('.tooltip-logo');
+                    logoEl.src = data.logo;
+                    logoEl.alt = data.event;
+                    logoEl.classList.toggle('invert-white', data.invertLogo === true);
+                    tooltip.querySelector('.tooltip-city').textContent = data.city;
+                    tooltip.querySelector('.tooltip-event').textContent = data.event;
+                    tooltip.querySelector('.tooltip-date').textContent = data.date;
+                    tooltip.querySelector('.tooltip-desc').textContent = data.desc;
+
+                    // Position tooltip near the tap
+                    const tooltipX = Math.min(touchStartPos.x - rect.left + 20, rect.width - 320);
+                    const tooltipY = Math.min(touchStartPos.y - rect.top - 100, rect.height - 280);
+                    tooltip.style.left = `${Math.max(20, tooltipX)}px`;
+                    tooltip.style.top = `${Math.max(20, tooltipY)}px`;
+                    tooltip.classList.add('active');
+                } else {
+                    closeGlobeTooltip();
+                }
+            }
+        });
+
+        // Click on markers (desktop)
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect();
             mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
