@@ -407,21 +407,32 @@
         .brand-item img { height: 100%; width: auto; object-fit: contain; }
 
         /* World Map Section - 3D Globe */
-        .world-map-section { position: relative; padding: 120px 0; overflow: hidden; }
+        .world-map-section {
+            position: relative; padding: 120px 0; overflow: hidden;
+            background: var(--dark-bg);
+        }
         .globe-container {
             position: relative; max-width: 720px; margin: 48px auto 0; height: 495px;
-            overflow: visible;
+            overflow: hidden;
+        }
+        @media (max-width: 768px) {
+            .world-map-section { padding: 80px 0; }
+            .globe-container {
+                max-width: 85vw;
+                height: 85vw;
+                margin: 24px auto 0;
+            }
         }
         #globeCanvas {
             width: 100%; height: 100%; cursor: grab;
-            touch-action: none; /* Prevent default touch behaviors like scroll/zoom */
+            touch-action: none;
         }
         #globeCanvas:active { cursor: grabbing; }
         .globe-glow {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 100%; height: 100%; border-radius: 50%; pointer-events: none;
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 60%);
-            filter: blur(30px);
+            width: 85%; height: 85%; border-radius: 50%; pointer-events: none;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, transparent 55%);
+            filter: blur(25px);
         }
         .globe-tooltip {
             position: absolute; padding: 20px; background: rgba(20, 20, 28, 0.98);
