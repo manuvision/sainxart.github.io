@@ -47,20 +47,13 @@
         html {
             scroll-behavior: smooth;
             font-size: 16px;
-            overflow-x: hidden;
-            overscroll-behavior-x: none;
         }
         body {
             font-family: var(--font-body);
             background: var(--dark-bg);
             color: var(--text-primary);
             line-height: 1.6;
-            overflow-x: hidden;
-            overscroll-behavior-x: none;
             -webkit-font-smoothing: antialiased;
-            position: relative;
-            width: 100%;
-            max-width: 100vw;
         }
         ::selection { background: var(--primary-purple); color: white; }
 
@@ -77,8 +70,8 @@
         .delay-4 { transition-delay: 0.4s; } .delay-5 { transition-delay: 0.5s; }
 
         /* Layout */
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; overflow: hidden; }
-        section { position: relative; padding: 120px 0; overflow-x: hidden; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+        section { position: relative; padding: 120px 0; }
         @media (max-width: 768px) { section { padding: 80px 0; } }
 
         /* Navigation */
@@ -148,7 +141,7 @@
         @media (max-width: 768px) { .nav-links, .nav-cta { display: none; } .nav-toggle { display: block; } .mobile-menu { display: flex; } }
 
         /* Hero */
-        .hero { min-height: 100vh; display: flex; align-items: center; position: relative; overflow-x: hidden; padding-top: 80px; }
+        .hero { min-height: 100vh; display: flex; align-items: center; position: relative; padding-top: 80px; }
         .hero-bg { position: absolute; inset: 0; z-index: -1; }
         .hero-gradient {
             position: absolute; width: 150%; height: 150%; top: -25%; left: -25%;
@@ -276,27 +269,23 @@
         .about-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 80px; align-items: center; }
         @media (max-width: 968px) { .about-grid { grid-template-columns: 1fr; gap: 48px; } }
 
-        /* Fade Card for Avatar/Photo */
+        /* Rotating Photo Card */
         .about-image-container { width: fit-content; }
-        .flip-card {
+        .rotating-photo {
             position: relative; width: 400px; max-width: 100%; aspect-ratio: 1;
-            cursor: pointer;
-        }
-        .flip-card-face {
-            position: absolute; inset: 0;
             border-radius: 24px; overflow: hidden;
             box-shadow: 0 40px 80px rgba(0, 0, 0, 0.3);
-            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .flip-card-face img { width: 100%; height: 100%; object-fit: cover; }
-        .flip-card-front { background: var(--dark-elevated); opacity: 1; z-index: 2; }
-        .flip-card-back { background: var(--dark-elevated); opacity: 0; z-index: 1; }
-        .flip-card:hover .flip-card-front { opacity: 0; }
-        .flip-card:hover .flip-card-back { opacity: 1; }
-        .flip-card::before {
+        .rotating-photo::before {
             content: ''; position: absolute; inset: -20px; background: var(--gradient-purple);
             border-radius: 32px; z-index: -1; opacity: 0.15; filter: blur(40px);
         }
+        .rotating-photo-img {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            object-fit: cover; object-position: center top;
+            opacity: 0; transition: opacity 1s ease-in-out;
+        }
+        .rotating-photo-img.active { opacity: 1; }
         .about-content h2 { font-family: var(--font-display); font-size: clamp(2rem, 4vw, 2.75rem); font-weight: 600; margin-bottom: 24px; letter-spacing: -0.02em; }
         .about-content p { color: var(--text-secondary); font-size: 1.0625rem; margin-bottom: 16px; line-height: 1.8; }
         .career-link {
@@ -677,13 +666,13 @@
         <div class="container">
             <div class="about-grid">
                 <div class="about-image-container reveal-left">
-                    <div class="flip-card">
-                        <div class="flip-card-face flip-card-front">
-                            <img src="images/manuvisionpp.png" alt="Manuel Sainsily" loading="lazy">
-                        </div>
-                        <div class="flip-card-face flip-card-back">
-                            <img src="images/manu3d.jpeg" alt="Manuel Sainsily 3D Avatar" loading="lazy">
-                        </div>
+                    <div class="rotating-photo" id="aboutPhoto">
+                        <img src="images/manu-pps/manuvisionpp1.jpg" alt="Manuel Sainsily" class="rotating-photo-img active" loading="lazy">
+                        <img src="images/manu-pps/manuvisionpp2.jpg" alt="Manuel Sainsily speaking" class="rotating-photo-img" loading="lazy">
+                        <img src="images/manu-pps/manuvisionpp3.jpg" alt="Manuel Sainsily presenting" class="rotating-photo-img" loading="lazy">
+                        <img src="images/manu-pps/manuvisionpp4.jpg" alt="Manuel Sainsily at event" class="rotating-photo-img" loading="lazy">
+                        <img src="images/manu-pps/manuvisionpp5.jpg" alt="Manuel Sainsily at conference" class="rotating-photo-img" loading="lazy">
+                        <img src="images/manu-pps/manuvisionpp6.jpg" alt="Manuel Sainsily on stage" class="rotating-photo-img" loading="lazy">
                     </div>
                 </div>
                 <div class="about-content">
@@ -1084,6 +1073,22 @@
                 cursorGlow.style.left = e.clientX + 'px';
                 cursorGlow.style.top = e.clientY + 'px';
             });
+        }
+
+        // About Section Photo Rotation
+        const aboutPhotos = document.querySelectorAll('.rotating-photo-img');
+        let currentAboutPhoto = 0;
+        const totalAboutPhotos = aboutPhotos.length;
+
+        function rotateAboutPhoto() {
+            aboutPhotos[currentAboutPhoto].classList.remove('active');
+            currentAboutPhoto = (currentAboutPhoto + 1) % totalAboutPhotos;
+            aboutPhotos[currentAboutPhoto].classList.add('active');
+        }
+
+        // Auto-rotate every 4 seconds
+        if (aboutPhotos.length > 0) {
+            setInterval(rotateAboutPhoto, 4000);
         }
 
         // Animated counter for stats
