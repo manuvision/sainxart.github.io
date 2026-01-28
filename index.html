@@ -407,22 +407,21 @@
         .brand-item img { height: 100%; width: auto; object-fit: contain; }
 
         /* World Map Section - 3D Globe */
-        .world-map-section { position: relative; padding: 120px 0; overflow: visible; }
+        .world-map-section { position: relative; padding: 120px 0; overflow: hidden; }
         .globe-container {
             position: relative; max-width: 720px; margin: 48px auto 0; height: 495px;
             overflow: visible;
         }
         #globeCanvas {
             width: 100%; height: 100%; cursor: grab;
-            border-radius: 50%;
             touch-action: none; /* Prevent default touch behaviors like scroll/zoom */
         }
         #globeCanvas:active { cursor: grabbing; }
         .globe-glow {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: min(430px, 80vw); height: min(430px, 80vw); border-radius: 50%; pointer-events: none;
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
-            filter: blur(40px);
+            width: 100%; height: 100%; border-radius: 50%; pointer-events: none;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 60%);
+            filter: blur(30px);
         }
         .globe-tooltip {
             position: absolute; padding: 20px; background: rgba(20, 20, 28, 0.98);
@@ -538,7 +537,7 @@
         /* Testimonials Carousel */
         .testimonials-carousel { position: relative; max-width: 800px; margin: 0 auto; }
         .testimonials-track { overflow: hidden; }
-        .testimonial-cards { display: flex; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .testimonial-cards { display: flex; opacity: 1; }
         .testimonial-card {
             flex: 0 0 100%; padding: 48px; text-align: center;
             background: var(--dark-surface); border-radius: 24px;
@@ -1140,7 +1139,7 @@
             if (e.key === 'Escape') closeVideoModal();
         });
 
-        // Testimonials Carousel with seamless loop (fade on wrap)
+        // Testimonials Carousel - always fade between slides for smooth experience
         const testimonialCards = document.getElementById('testimonialCards');
         const testimonialDots = document.querySelectorAll('.testimonial-dot');
         const prevBtn = document.getElementById('prevTestimonial');
@@ -1149,62 +1148,51 @@
         const totalTestimonials = 5;
         let isTransitioning = false;
 
-        function updateTestimonial(index, isLooping = false) {
-            if (isTransitioning) return;
+        function goToTestimonial(index) {
+            if (isTransitioning || index === currentTestimonial) return;
             isTransitioning = true;
 
-            currentTestimonial = index;
+            // Always use fade transition for smooth experience
+            testimonialCards.style.transition = 'opacity 0.35s ease-out';
+            testimonialCards.style.opacity = '0';
 
-            // When looping (last to first or first to last), use instant jump with fade
-            if (isLooping) {
-                testimonialCards.style.transition = 'opacity 0.3s ease';
-                testimonialCards.style.opacity = '0';
-
-                setTimeout(() => {
-                    testimonialCards.style.transition = 'none';
-                    testimonialCards.style.transform = `translateX(-${index * 100}%)`;
-
-                    requestAnimationFrame(() => {
-                        testimonialCards.style.transition = 'opacity 0.3s ease';
-                        testimonialCards.style.opacity = '1';
-                        setTimeout(() => { isTransitioning = false; }, 300);
-                    });
-                }, 300);
-            } else {
-                // Normal slide transition
-                testimonialCards.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+            setTimeout(() => {
+                // Move instantly while faded out
+                testimonialCards.style.transition = 'none';
                 testimonialCards.style.transform = `translateX(-${index * 100}%)`;
-                setTimeout(() => { isTransitioning = false; }, 500);
-            }
+                currentTestimonial = index;
 
-            testimonialDots.forEach((dot, i) => {
-                dot.classList.toggle('active', i === index);
-            });
+                // Update dots
+                testimonialDots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+
+                // Small delay then fade back in
+                setTimeout(() => {
+                    testimonialCards.style.transition = 'opacity 0.35s ease-in';
+                    testimonialCards.style.opacity = '1';
+                    setTimeout(() => { isTransitioning = false; }, 350);
+                }, 50);
+            }, 350);
         }
 
         testimonialDots.forEach(dot => {
             dot.addEventListener('click', () => {
-                updateTestimonial(parseInt(dot.dataset.index), false);
+                goToTestimonial(parseInt(dot.dataset.index));
             });
         });
 
         prevBtn.addEventListener('click', () => {
-            const newIndex = (currentTestimonial - 1 + totalTestimonials) % totalTestimonials;
-            const isLooping = currentTestimonial === 0; // Going from first to last
-            updateTestimonial(newIndex, isLooping);
+            goToTestimonial((currentTestimonial - 1 + totalTestimonials) % totalTestimonials);
         });
 
         nextBtn.addEventListener('click', () => {
-            const newIndex = (currentTestimonial + 1) % totalTestimonials;
-            const isLooping = currentTestimonial === totalTestimonials - 1; // Going from last to first
-            updateTestimonial(newIndex, isLooping);
+            goToTestimonial((currentTestimonial + 1) % totalTestimonials);
         });
 
         // Auto-advance testimonials every 9 seconds
         setInterval(() => {
-            const newIndex = (currentTestimonial + 1) % totalTestimonials;
-            const isLooping = currentTestimonial === totalTestimonials - 1;
-            updateTestimonial(newIndex, isLooping);
+            goToTestimonial((currentTestimonial + 1) % totalTestimonials);
         }, 9000);
 
         // 3D Globe with Three.js - University Lectures Only
