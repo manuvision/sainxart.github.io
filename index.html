@@ -47,16 +47,15 @@
         }
 
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-        /* Hide all scrollbars except on body for main page scroll */
+        /* Hide scrollbars on internal elements */
         *:not(body):not(html) {
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
         *:not(body):not(html)::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera */
+            display: none;
         }
         html {
-            scroll-behavior: smooth;
             font-size: 16px;
             overflow-x: hidden;
         }
@@ -160,7 +159,7 @@
         @media (max-width: 768px) { .nav-links, .nav-cta { display: none; } .nav-toggle { display: block; } .mobile-menu { display: flex; } }
 
         /* Hero */
-        .hero { min-height: 100vh; display: flex; align-items: center; position: relative; padding-top: 80px; overflow-x: clip; }
+        .hero { min-height: 100vh; display: flex; align-items: center; position: relative; padding-top: 80px; }
         .hero-bg { position: absolute; inset: 0; z-index: -1; }
         .hero-gradient {
             position: absolute; width: 150%; height: 150%; top: -25%; left: -25%;
@@ -175,7 +174,7 @@
             50% { transform: translate(-1%, 3%) rotate(-1deg); }
             75% { transform: translate(1%, -2%) rotate(0.5deg); }
         }
-        .particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+        .particles { position: absolute; inset: 0; overflow: clip; pointer-events: none; }
         .particle {
             position: absolute; background: var(--primary-purple);
             border-radius: 50%; animation: float 15s infinite;
@@ -254,7 +253,7 @@
             display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px;
             border-radius: 12px; font-size: 1rem; font-weight: 500; text-decoration: none;
             transition: all 0.3s var(--transition-smooth); cursor: pointer; border: none;
-            position: relative; overflow: hidden;
+            position: relative; overflow: clip;
         }
         .btn::before {
             content: ''; position: absolute; top: 50%; left: 50%;
@@ -283,7 +282,7 @@
         @keyframes scrollPulse { 0%, 100% { opacity: 1; transform: translateX(-50%) translateY(0); } 50% { opacity: 0.5; transform: translateX(-50%) translateY(8px); } }
 
         /* About Section */
-        .about { background: var(--dark-surface); position: relative; overflow-x: clip; }
+        .about { background: var(--dark-surface); position: relative; }
         .about::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent); }
         .about-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 80px; align-items: center; }
         @media (max-width: 968px) {
@@ -294,7 +293,7 @@
         .about-image-container { text-align: center; width: 100%; padding-top: 20px; }
         .rotating-photo {
             position: relative; width: 400px; max-width: 85%; aspect-ratio: 1;
-            border-radius: 24px; overflow: hidden;
+            border-radius: 24px; overflow: clip;
             box-shadow: 0 20px 60px rgba(139, 92, 246, 0.2), 0 40px 80px rgba(0, 0, 0, 0.3);
             background: var(--dark-surface);
             margin: 0 auto;
@@ -351,7 +350,7 @@
         .highlight-card {
             background: var(--dark-surface); border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 20px; padding: 32px; transition: all 0.4s var(--transition-smooth);
-            position: relative; overflow: hidden; text-decoration: none; display: block;
+            position: relative; overflow: clip; text-decoration: none; display: block;
         }
         .highlight-card::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
@@ -404,11 +403,11 @@
         .highlights-footer svg { width: 20px; height: 20px; }
 
         /* Brands Section */
-        .brands { background: var(--dark-surface); position: relative; overflow-x: clip; padding: 80px 0; }
+        .brands { background: var(--dark-surface); position: relative; padding: 80px 0; }
         .brands::before, .brands::after { content: ''; position: absolute; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent); }
         .brands::before { top: 0; } .brands::after { bottom: 0; }
         .brands-track-wrapper {
-            overflow: hidden;
+            overflow: clip;
             mask-image: linear-gradient(90deg, transparent, white 5%, white 95%, transparent);
             -webkit-mask-image: linear-gradient(90deg, transparent, white 5%, white 95%, transparent);
         }
@@ -424,12 +423,12 @@
 
         /* World Map Section - 3D Globe */
         .world-map-section {
-            position: relative; padding: 120px 0; overflow-x: clip;
+            position: relative; padding: 120px 0;
             background: var(--dark-bg);
         }
         .globe-container {
             position: relative; max-width: 720px; margin: 48px auto 0; height: 495px;
-            overflow: hidden;
+            overflow: clip;
         }
         @media (max-width: 768px) {
             .world-map-section { padding: 80px 0; }
@@ -528,7 +527,7 @@
         .video-modal-close:hover { opacity: 1; }
 
         /* Press & Testimonials Section */
-        .press-testimonials { padding: 120px 0; background: var(--dark-elevated); overflow-x: clip; }
+        .press-testimonials { padding: 120px 0; background: var(--dark-elevated); }
         .press-testimonials .section-header { margin-bottom: 48px; }
 
         /* Press Logos Strip - matches Brands style */
@@ -538,7 +537,7 @@
             text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 24px;
         }
         .press-track-wrapper {
-            overflow: hidden;
+            overflow: clip;
             mask-image: linear-gradient(90deg, transparent, white 5%, white 95%, transparent);
             -webkit-mask-image: linear-gradient(90deg, transparent, white 5%, white 95%, transparent);
             /* Break out of container to full width */
@@ -563,7 +562,7 @@
 
         /* Testimonials Carousel */
         .testimonials-carousel { position: relative; max-width: 800px; margin: 0 auto; }
-        .testimonials-track { overflow: hidden; }
+        .testimonials-track { overflow: clip; }
         .testimonial-cards { display: flex; opacity: 1; }
         .testimonial-card {
             flex: 0 0 100%; padding: 48px; text-align: center;
