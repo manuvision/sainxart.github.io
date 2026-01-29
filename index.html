@@ -1363,6 +1363,19 @@
             markerGroup.add(point);
             markers.push(point);
 
+            // Invisible larger hitbox for easier tapping (3x larger)
+            const hitboxGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+            const hitboxMaterial = new THREE.MeshBasicMaterial({
+                transparent: true,
+                opacity: 0,
+                depthWrite: false
+            });
+            const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
+            hitbox.position.copy(pos);
+            hitbox.userData = { index, ...loc };
+            markerGroup.add(hitbox);
+            markers.push(hitbox);
+
             // Outer glow ring
             const ringGeometry = new THREE.RingGeometry(0.035, 0.05, 32);
             const ringMaterial = new THREE.MeshBasicMaterial({
@@ -1440,6 +1453,9 @@
             touchStartTime = Date.now();
             touchStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
             previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            // Stop momentum immediately - snap target to current rotation
+            targetRotationY = globe.rotation.y;
+            targetRotationX = globe.rotation.x;
             resetAutoRotateTimer();
         }, { passive: false });
 
@@ -1449,10 +1465,10 @@
                 const deltaX = e.touches[0].clientX - previousMousePosition.x;
                 const deltaY = e.touches[0].clientY - previousMousePosition.y;
 
-                // Check if moved significantly (more than 10px from start)
+                // Check if moved significantly (more than 20px from start - more forgiving for taps)
                 const totalMoveX = Math.abs(e.touches[0].clientX - touchStartPos.x);
                 const totalMoveY = Math.abs(e.touches[0].clientY - touchStartPos.y);
-                if (totalMoveX > 10 || totalMoveY > 10) {
+                if (totalMoveX > 20 || totalMoveY > 20) {
                     touchMoved = true;
                 }
 
