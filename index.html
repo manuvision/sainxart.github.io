@@ -32,6 +32,7 @@
     <style>
         :root {
             --primary-purple: #8B5CF6;
+            --primary-light-purple: #c9b2ff;
             --primary-violet: #A855F7;
             --primary-pink: #D946EF;
             --dark-bg: #0a0a0f;
@@ -41,6 +42,7 @@
             --text-secondary: rgba(255, 255, 255, 0.7);
             --text-muted: rgba(255, 255, 255, 0.5);
             --gradient-purple: linear-gradient(135deg, #8B5CF6 0%, #A855F7 50%, #D946EF 100%);
+            --gradient-yellow: linear-gradient(135deg, #ffd900 0%, #ffb217 50%, #ff5f29 100%);
             --font-display: 'Space Grotesk', sans-serif;
             --font-body: 'Inter', sans-serif;
             --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
@@ -115,7 +117,7 @@
             position: absolute; bottom: 0; left: 0; height: 3px;
             background: var(--gradient-purple);
             width: 0%; transition: width 0.1s ease-out;
-            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+            box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);
         }
         .nav.scrolled {
             background: rgba(10, 10, 15, 0.9); backdrop-filter: blur(20px);
@@ -149,7 +151,7 @@
             text-decoration: none; font-size: 0.875rem; font-weight: 500;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3); }
+        .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 0px 16px rgba(139, 92, 246, 0.3); }
         .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 8px; z-index: 1001; }
         .nav-toggle span { display: block; width: 24px; height: 2px; background: var(--text-primary); margin: 6px 0; transition: all 0.3s ease; }
         .nav-toggle.active span:nth-child(1) { transform: rotate(45deg) translate(6px, 6px); }
@@ -288,8 +290,8 @@
             transition: width 0.6s ease, height 0.6s ease;
         }
         .btn:active::before { width: 300px; height: 300px; }
-        .btn-primary { background: var(--gradient-purple); color: white; box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3); }
-        .btn-primary:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4); }
+        .btn-primary { background: var(--gradient-purple); color: white; box-shadow: 0 0px 16px rgba(139, 92, 246, 0.3); }
+        .btn-primary:hover { transform: translateY(-3px) scale(1.02); box-shadow0px 16px rgba(139, 92, 246, 0.4); }
         .btn-secondary { background: rgba(255, 255, 255, 0.05); color: var(--text-primary); border: 1px solid rgba(255, 255, 255, 0.1); }
         .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-3px); }
         .btn svg { width: 18px; height: 18px; transition: transform 0.3s ease; }
@@ -322,7 +324,7 @@
         .rotating-photo {
             position: relative; width: 400px; max-width: 85%; aspect-ratio: 1;
             border-radius: 24px; overflow: clip;
-            box-shadow: 0 20px 60px rgba(139, 92, 246, 0.2), 0 40px 80px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0px 24px rgba(139, 92, 246, 0.2), 0 0px 36px rgba(0, 0, 0, 0.3);
             background: var(--dark-surface);
             margin: 0 auto;
         }
@@ -386,7 +388,7 @@
             background: var(--gradient-purple); transform: scaleX(0); transition: transform 0.4s var(--transition-smooth);
             z-index: 10;
         }
-        .highlight-card:hover { transform: translateY(-8px); border-color: rgba(139, 92, 246, 0.2); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); }
+        .highlight-card:hover { transform: translateY(-8px); border-color: rgba(139, 92, 246, 0.2); box-shadow: 0 0px 16px rgba(0, 0, 0, 0.3); }
         .highlight-card:hover::before { transform: scaleX(1); }
         .highlight-card-bg {
             position: absolute; inset: 0; opacity: 0.35; transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -410,7 +412,7 @@
         }
         .highlight-card:hover .highlight-icon {
             background: rgba(139, 92, 246, 0.3); transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+            box-shadow: 0 0px 16px rgba(139, 92, 246, 0.3);
         }
         .highlight-icon svg { width: 24px; height: 24px; }
         .highlight-card h3 {
@@ -443,7 +445,7 @@
         .skills-group:last-of-type { margin-bottom: 48px; }
         .skills-group-title {
             font-family: var(--font-display); font-size: 1.1rem; font-weight: 600;
-            color: var(--text-primary); margin-bottom: 16px; letter-spacing: -0.01em;
+            color: var(--primary-light-purple); margin-bottom: 16px; letter-spacing: -0.01em;
             text-align: center;
         }
         .skills-badges {
@@ -462,10 +464,10 @@
         }
         .skills.focus-mode .skill-badge.current-focus {
             opacity: 1; transform: scale(1);
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%);
-            border-color: rgba(245, 158, 11, 0.5);
-            color: white;
-            box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+            background: linear-gradient(135deg, rgba(255, 196, 0, 0.9) 0%, rgba(255, 77, 0, 0.9) 100%);
+            border-color: rgba(255, 170, 0, 0.65);
+            color: rgb(255, 255, 255);
+            box-shadow: 0 0 16px rgba(245, 158, 11, 0.3);
         }
         .focus-toggle-container { text-align: center; margin-top: 16px; position: relative; padding: 20px 0; }
         .focus-toggle {
@@ -473,17 +475,17 @@
             padding: 14px 28px; border-radius: 100px; font-size: 0.95rem; font-weight: 600;
             cursor: pointer; border: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             background: linear-gradient(135deg, #F59E0B 0%, #F97316 50%, #EF4444 100%);
-            color: white; box-shadow: 0 4px 30px rgba(245, 158, 11, 0.5);
+            color: white; box-shadow: 0 0px 16px rgba(245, 158, 11, 0.5);
         }
         .focus-toggle:hover {
-            transform: translateY(-2px); box-shadow: 0 10px 40px rgba(245, 158, 11, 0.6);
+            transform: translateY(-2px); box-shadow: 0 0px 16px rgba(245, 158, 11, 0.6);
         }
         .focus-toggle.active {
             background: var(--gradient-purple);
-            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+            box-shadow: 0 0px 16px rgba(139, 92, 246, 0.4);
         }
         .focus-toggle.active:hover {
-            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5);
+            box-shadow: 0 0px 16px rgba(139, 92, 246, 0.5);
         }
         .focus-toggle svg { width: 18px; height: 18px; transition: transform 0.3s ease; }
         .focus-toggle.active svg { transform: rotate(180deg); }
@@ -827,7 +829,7 @@
         .testimonial-author { display: flex; flex-direction: column; align-items: center; gap: 8px; }
         .testimonial-author-name {
             font-weight: 600; font-size: 1rem;
-            background: linear-gradient(90deg, #A78BFA, #C4B5FD);
+            background: linear-gradient(90deg, #8555ff, #f458ff);
             -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
         }
         .testimonial-author-title { color: var(--text-muted); font-size: 0.875rem; }
@@ -1069,29 +1071,24 @@
                 <div class="skills-group">
                     <h3 class="skills-group-title reveal">Areas of Expertise</h3>
                     <div class="skills-badges reveal delay-1">
-                        <span class="skill-badge current-focus">AI/ML</span>
+                        <span class="skill-badge current-focus">AI</span>
                         <span class="skill-badge current-focus">XR</span>
                         <span class="skill-badge current-focus">Real-Time 3D</span>
-                        <span class="skill-badge">VFX</span>
-                        <span class="skill-badge current-focus">UI/UX Design</span>
-                        <span class="skill-badge">Haptics</span>
-                        <span class="skill-badge current-focus">Brain-Computer Interfaces</span>
-                        <span class="skill-badge current-focus">Ethics</span>
-                        <span class="skill-badge">Web Development</span>
                         <span class="skill-badge current-focus">3D Scanning</span>
-                        <span class="skill-badge">Executive Advisory</span>
-                        <span class="skill-badge">Change Management</span>
-                        <span class="skill-badge current-focus">Education</span>
+                        <span class="skill-badge">Haptics</span>
+                        <span class="skill-badge current-focus">BCI/EEG</span>
+                        <span class="skill-badge current-focus">UI/UX Design</span>
+                        <span class="skill-badge">Web Development</span>
                     </div>
                 </div>
                 <div class="skills-group">
-                    <h3 class="skills-group-title reveal">Tools</h3>
+                    <h3 class="skills-group-title reveal">Software Programs</h3>
                     <div class="skills-badges reveal delay-1">
-                        <span class="skill-badge current-focus">TouchDesigner</span>
                         <span class="skill-badge">Unity</span>
                         <span class="skill-badge current-focus">Blender</span>
-                        <span class="skill-badge">Adobe Creative Suite</span>
-                        <span class="skill-badge">Notion</span>
+                        <span class="skill-badge current-focus">TouchDesigner</span>
+                        <span class="skill-badge current-focus">Adobe Ecosystem</span>
+                        <span class="skill-badge current-focus">Figma</span>
                         <span class="skill-badge">Procreate</span>
                     </div>
                 </div>
