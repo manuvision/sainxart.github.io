@@ -481,6 +481,95 @@
         .tooltip-event { font-weight: 500; color: var(--text-primary); margin-bottom: 4px; font-size: 0.875rem; }
         .tooltip-date { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
         .tooltip-desc { font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; }
+        .tooltip-link {
+            display: inline-block; margin-top: 10px; font-size: 0.75rem;
+            color: var(--primary-violet); text-decoration: none;
+            transition: opacity 0.2s ease;
+        }
+        .tooltip-link:hover { opacity: 0.8; }
+
+        /* University Modal */
+        .university-link {
+            cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+            transition: opacity 0.2s ease;
+        }
+        .university-link:hover { opacity: 0.8; }
+        .university-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            z-index: 1000; opacity: 0; visibility: hidden;
+            transition: all 0.3s ease; display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .university-modal-overlay.active { opacity: 1; visibility: visible; }
+        .university-modal {
+            background: rgba(20, 20, 28, 0.98); border: 1px solid rgba(139, 92, 246, 0.4);
+            border-radius: 20px; max-width: 600px; width: 100%; max-height: 85vh;
+            overflow-y: auto; padding: 32px; position: relative;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+            scrollbar-width: thin; scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
+        }
+        .university-modal::-webkit-scrollbar { width: 6px; }
+        .university-modal::-webkit-scrollbar-track { background: transparent; }
+        .university-modal::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 3px; }
+        .university-modal-close {
+            position: absolute; top: 16px; right: 16px; width: 32px; height: 32px;
+            background: rgba(255, 255, 255, 0.1); border: none; border-radius: 8px;
+            color: var(--text-muted); cursor: pointer; font-size: 20px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .university-modal-close:hover { background: rgba(255, 255, 255, 0.15); color: white; }
+        .university-modal-header { margin-bottom: 24px; padding-right: 40px; }
+        .university-modal-title {
+            font-family: var(--font-display); font-size: 1.5rem; font-weight: 600;
+            color: white; margin-bottom: 8px;
+        }
+        .university-modal-subtitle { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; }
+        .university-modal-hint {
+            display: inline-flex; align-items: center; gap: 6px; margin-top: 12px;
+            font-size: 0.8rem; color: var(--primary-violet); background: rgba(139, 92, 246, 0.1);
+            padding: 8px 12px; border-radius: 8px;
+        }
+        .university-list { display: flex; flex-direction: column; gap: 16px; }
+        .university-item {
+            display: flex; align-items: flex-start; gap: 16px; padding: 16px;
+            background: rgba(255, 255, 255, 0.03); border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
+        }
+        .university-item:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(139, 92, 246, 0.2); }
+        .university-item-logo {
+            width: 48px; height: 48px; object-fit: contain; flex-shrink: 0;
+        }
+        .university-item-logo.invert-white { filter: brightness(0) invert(1); opacity: 0.9; }
+        .university-item-content { flex: 1; min-width: 0; }
+        .university-item-city {
+            font-family: var(--font-display); font-size: 0.95rem; font-weight: 600;
+            color: white; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+        }
+        .university-item-city::before {
+            content: ''; width: 6px; height: 6px; background: var(--primary-violet);
+            border-radius: 50%; box-shadow: 0 0 8px rgba(139, 92, 246, 0.6); flex-shrink: 0;
+        }
+        .university-item-name {
+            font-weight: 500; color: var(--text-primary); margin-bottom: 4px; font-size: 0.875rem;
+        }
+        .university-item-date {
+            font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px;
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .university-item-desc { font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 10px; }
+        .university-item-link {
+            display: inline-block; font-size: 0.75rem; color: var(--primary-violet); text-decoration: none;
+            transition: opacity 0.2s ease;
+        }
+        .university-item-link:hover { opacity: 0.7; }
+        @media (max-width: 640px) {
+            .university-modal { padding: 24px 20px; }
+            .university-item { flex-direction: column; gap: 12px; }
+            .university-item-logo { width: 40px; height: 40px; }
+        }
 
         /* Contact Section */
         .contact { position: relative; text-align: center; background: var(--dark-surface); }
@@ -851,7 +940,7 @@
             <div class="section-header">
                 <div class="section-eyebrow reveal">Global Events</div>
                 <h2 class="section-title reveal delay-1">Where I've Spoken</h2>
-                <p class="section-tagline reveal delay-2">100+ talks across 30+ countries.<br><span style="color: var(--primary-violet); font-weight: 500;">9 university lectures.</span></p>
+                <p class="section-tagline reveal delay-2">100+ talks across 30+ countries.<br><span class="university-link" onclick="openUniversityModal()" style="color: var(--primary-violet); font-weight: 500;">9 university lectures.</span></p>
             </div>
             <div class="globe-container reveal delay-3">
                 <div class="globe-glow"></div>
@@ -863,6 +952,7 @@
                     <div class="tooltip-event"></div>
                     <div class="tooltip-date"></div>
                     <div class="tooltip-desc"></div>
+                    <a class="tooltip-link" href="" target="_blank">See more →</a>
                 </div>
             </div>
         </div>
@@ -1022,6 +1112,24 @@
         </div>
     </div>
 
+    <!-- University Modal -->
+    <div class="university-modal-overlay" id="universityModal" onclick="closeUniversityModal(event)">
+        <div class="university-modal" onclick="event.stopPropagation()">
+            <button class="university-modal-close" onclick="closeUniversityModal()">&times;</button>
+            <div class="university-modal-header">
+                <h3 class="university-modal-title">University Lectures</h3>
+                <p class="university-modal-subtitle">From Stanford to Oxford, sharing insights on AI, XR, and cultural heritage preservation with the next generation of creators.</p>
+                <div class="university-modal-hint">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    Tap the pins on the globe to explore each location
+                </div>
+            </div>
+            <div class="university-list" id="universityList">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer>
         <div class="container">
@@ -1171,8 +1279,54 @@
             if (e.target === this) closeVideoModal();
         });
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeVideoModal();
+            if (e.key === 'Escape') {
+                closeVideoModal();
+                closeUniversityModal();
+            }
         });
+
+        // University Modal Functions
+        // Chronological order (most recent first)
+        const universityData = [
+            { event: 'Columbia University', city: 'New York, NY', date: 'November 2025', desc: 'Disrupt the narrative: Conversations that shape community (Lecture)', logo: 'images/universities/columbia.png', link: 'https://www.instagram.com/p/DQ4Y_oAEQMx/?img_index=1' },
+            { event: 'Stanford d.school', city: 'Stanford, CA', date: 'May 2025', desc: 'XR Prototyping with AI (Lecture)', logo: 'images/universities/stanford.png', link: 'https://www.linkedin.com/in/manuvision/details/recommendations/?detailScreenTabIndex=1' },
+            { event: 'Oxford University', city: 'Oxford, UK', date: 'April 2025', desc: 'OpenAI Sora Project & Workflow Breakdown (Lecture)', logo: 'images/universities/oxford.png', link: 'https://lifelong-learning.ox.ac.uk/courses/generative-ai-for-creative-professionals' },
+            { event: 'Harvard University', city: 'Cambridge, MA', date: 'April 2025', desc: 'HarvardXR 2025: The Augmented Self (Lecture)', logo: 'images/universities/harvard.png', link: 'https://www.youtube.com/watch?v=9ozmGsu9g3o' },
+            { event: 'UC San Diego', city: 'San Diego, CA', date: 'March 2025', desc: 'HackXR (XR Hackathon)', logo: 'images/universities/ucsd.png', link: 'https://www.youtube.com/shorts/juuCQhf9_MY' },
+            { event: 'MIT', city: 'Cambridge, MA', date: 'January 2025', desc: 'AI & Creative Technology (Lecture)', logo: 'images/universities/mit.png', link: 'https://www.instagram.com/p/DFXsojMRgtf/' },
+            { event: 'OCAD University', city: 'Toronto, Canada', date: 'February 2024', desc: 'Protopica: Challenging mainstream narratives through world building (Lecture)', logo: 'images/universities/ocad.png', link: 'https://www.instagram.com/p/C3X5hKvAHQg/' },
+            { event: 'UMass Boston', city: 'Boston, MA', date: 'November 2023 & October 2024', desc: 'AI & XR for Cultural Heritage Preservation (Lectures)', logo: 'images/universities/umass-boston.png', link: 'https://www.instagram.com/p/DBRZFSUAicg/?img_index=1' },
+            { event: 'McGill University', city: 'Montreal, Canada', date: 'September 2023', desc: 'Learn AR/VR (Curriculum)', logo: 'images/universities/mcgill.png', link: 'https://www.instagram.com/p/Cu5VPnRgPvw/' }
+        ];
+
+        function openUniversityModal() {
+            const modal = document.getElementById('universityModal');
+            const list = document.getElementById('universityList');
+
+            // Populate list - matching globe tooltip hierarchy
+            list.innerHTML = universityData.map(uni => `
+                <div class="university-item">
+                    <img src="${uni.logo}" alt="${uni.event}" class="university-item-logo">
+                    <div class="university-item-content">
+                        <div class="university-item-city">${uni.city}</div>
+                        <div class="university-item-name">${uni.event}</div>
+                        <div class="university-item-date">${uni.date}</div>
+                        <div class="university-item-desc">${uni.desc}</div>
+                        <a href="${uni.link}" target="_blank" class="university-item-link">See more →</a>
+                    </div>
+                </div>
+            `).join('');
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeUniversityModal(e) {
+            if (e && e.target !== e.currentTarget) return;
+            const modal = document.getElementById('universityModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
 
         // Testimonials Carousel - always fade between slides for smooth experience
         const testimonialCards = document.getElementById('testimonialCards');
@@ -1230,16 +1384,17 @@
             goToTestimonial((currentTestimonial + 1) % totalTestimonials);
         }, 9000);
 
-        // 3D Globe with Three.js - University Lectures Only
+        // 3D Globe with Three.js - University Lectures Only (most recent first)
         const universityLocations = [
-            { lat: 32.8801, lng: -117.2340, city: 'San Diego, CA', event: 'UC San Diego', date: 'March 2025', desc: 'HackXR (XR Hackathon)', logo: 'images/universities/ucsd.png' },
-            { lat: 37.4275, lng: -122.1697, city: 'Stanford, CA', event: 'Stanford d.school', date: 'May 2025', desc: 'XR Prototyping with AI (Lecture)', logo: 'images/universities/stanford.png' },
-            { lat: 43.6532, lng: -79.3832, city: 'Toronto, Canada', event: 'OCAD University', date: 'February 2024', desc: 'Protopica: Challenging mainstream narratives through world building (Lecture)', logo: 'images/universities/ocad.png' },
-            { lat: 45.5048, lng: -73.5772, city: 'Montreal, Canada', event: 'McGill University', date: 'September 2023', desc: 'Learn AR/VR (Curriculum)', logo: 'images/universities/mcgill.png' },
-            { lat: 42.3736, lng: -71.1097, city: 'Cambridge, MA', event: 'Harvard University', date: 'April 2025', desc: 'HarvardXR 2025: The Augmented Self (Lecture)', logo: 'images/universities/harvard.png' },
-            { lat: 40.8075, lng: -73.9626, city: 'New York, NY', event: 'Columbia University', date: 'November 2025', desc: 'Disrupt the narrative: Conversations that shape community (Lecture)', logo: 'images/universities/columbia.png' },
-            { lat: 42.3145, lng: -71.0387, city: 'Boston, MA', event: 'UMass Boston', date: 'November 2023 & October 2024', desc: 'AI & XR for Cultural Heritage Preservation (Lectures)', logo: 'images/universities/umass-boston.png' },
-            { lat: 51.7548, lng: -1.2544, city: 'Oxford, UK', event: 'Oxford University', date: 'April 2025', desc: 'OpenAI Sora Project & Workflow Breakdown (Lecture)', logo: 'images/universities/oxford.png' }
+            { lat: 40.8075, lng: -73.9626, city: 'New York, NY', event: 'Columbia University', date: 'November 2025', desc: 'Disrupt the narrative: Conversations that shape community (Lecture)', logo: 'images/universities/columbia.png', link: 'https://www.instagram.com/p/DQ4Y_oAEQMx/?img_index=1' },
+            { lat: 37.4275, lng: -122.1697, city: 'Stanford, CA', event: 'Stanford d.school', date: 'May 2025', desc: 'XR Prototyping with AI (Lecture)', logo: 'images/universities/stanford.png', link: 'https://www.linkedin.com/in/manuvision/details/recommendations/?detailScreenTabIndex=1' },
+            { lat: 51.7548, lng: -1.2544, city: 'Oxford, UK', event: 'Oxford University', date: 'April 2025', desc: 'OpenAI Sora Project & Workflow Breakdown (Lecture)', logo: 'images/universities/oxford.png', link: 'https://lifelong-learning.ox.ac.uk/courses/generative-ai-for-creative-professionals' },
+            { lat: 42.3736, lng: -71.1097, city: 'Cambridge, MA', event: 'Harvard University', date: 'April 2025', desc: 'HarvardXR 2025: The Augmented Self (Lecture)', logo: 'images/universities/harvard.png', link: 'https://www.youtube.com/watch?v=9ozmGsu9g3o' },
+            { lat: 32.8801, lng: -117.2340, city: 'San Diego, CA', event: 'UC San Diego', date: 'March 2025', desc: 'HackXR (XR Hackathon)', logo: 'images/universities/ucsd.png', link: 'https://www.youtube.com/shorts/juuCQhf9_MY' },
+            { lat: 42.3601, lng: -71.0942, city: 'Cambridge, MA', event: 'MIT', date: 'January 2025', desc: 'AI & Creative Technology (Lecture)', logo: 'images/universities/mit.png', link: 'https://www.instagram.com/p/DFXsojMRgtf/' },
+            { lat: 43.6532, lng: -79.3832, city: 'Toronto, Canada', event: 'OCAD University', date: 'February 2024', desc: 'Protopica: Challenging mainstream narratives through world building (Lecture)', logo: 'images/universities/ocad.png', link: 'https://www.instagram.com/p/C3X5hKvAHQg/' },
+            { lat: 42.3145, lng: -71.0387, city: 'Boston, MA', event: 'UMass Boston', date: 'November 2023 & October 2024', desc: 'AI & XR for Cultural Heritage Preservation (Lectures)', logo: 'images/universities/umass-boston.png', link: 'https://www.instagram.com/p/DBRZFSUAicg/?img_index=1' },
+            { lat: 45.5048, lng: -73.5772, city: 'Montreal, Canada', event: 'McGill University', date: 'September 2023', desc: 'Learn AR/VR (Curriculum)', logo: 'images/universities/mcgill.png', link: 'https://www.instagram.com/p/Cu5VPnRgPvw/' }
         ];
 
         // Globe setup
@@ -1417,8 +1572,8 @@
             if (isDragging) {
                 const deltaX = e.clientX - previousMousePosition.x;
                 const deltaY = e.clientY - previousMousePosition.y;
-                targetRotationY += deltaX * 0.005;
-                targetRotationX += deltaY * 0.005;
+                targetRotationY += deltaX * 0.012;
+                targetRotationX += deltaY * 0.012;
                 targetRotationX = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, targetRotationX));
                 previousMousePosition = { x: e.clientX, y: e.clientY };
             }
@@ -1472,8 +1627,8 @@
                     touchMoved = true;
                 }
 
-                targetRotationY += deltaX * 0.005;
-                targetRotationX += deltaY * 0.005;
+                targetRotationY += deltaX * 0.012;
+                targetRotationX += deltaY * 0.012;
                 targetRotationX = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, targetRotationX));
                 previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
             }
@@ -1505,6 +1660,7 @@
                     tooltip.querySelector('.tooltip-event').textContent = data.event;
                     tooltip.querySelector('.tooltip-date').textContent = data.date;
                     tooltip.querySelector('.tooltip-desc').textContent = data.desc;
+                    tooltip.querySelector('.tooltip-link').href = data.link;
 
                     // Position tooltip near the tap
                     const tooltipX = Math.min(touchStartPos.x - rect.left + 20, rect.width - 320);
@@ -1540,6 +1696,7 @@
                 tooltip.querySelector('.tooltip-event').textContent = data.event;
                 tooltip.querySelector('.tooltip-date').textContent = data.date;
                 tooltip.querySelector('.tooltip-desc').textContent = data.desc;
+                tooltip.querySelector('.tooltip-link').href = data.link;
 
                 // Position tooltip near the click
                 const tooltipX = Math.min(e.clientX - rect.left + 20, rect.width - 320);
@@ -1560,8 +1717,8 @@
                 targetRotationY += 0.002;
             }
 
-            globe.rotation.y += (targetRotationY - globe.rotation.y) * 0.05;
-            globe.rotation.x += (targetRotationX - globe.rotation.x) * 0.05;
+            globe.rotation.y += (targetRotationY - globe.rotation.y) * 0.15;
+            globe.rotation.x += (targetRotationX - globe.rotation.x) * 0.15;
             wireframe.rotation.y = globe.rotation.y;
             wireframe.rotation.x = globe.rotation.x;
             markerGroup.rotation.y = globe.rotation.y;
