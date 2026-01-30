@@ -476,7 +476,7 @@
         }
         .tooltip-city {
             font-family: var(--font-display); font-size: 1rem; font-weight: 600;
-            color: white; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+            color: white; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
             padding-right: 24px;
         }
         .tooltip-city::before {
@@ -492,6 +492,51 @@
             transition: opacity 0.2s ease;
         }
         .tooltip-link:hover { opacity: 0.8; }
+
+        /* Multiple universities tooltip - Carousel */
+        .tooltip-single { display: block; }
+        .tooltip-multiple { display: none; }
+        .globe-tooltip.multiple-view .tooltip-single { display: none; }
+        .globe-tooltip.multiple-view .tooltip-multiple { display: block; }
+        .tooltip-multiple-header {
+            font-family: var(--font-display); font-size: 1rem; font-weight: 600;
+            color: white; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+            padding-right: 24px;
+        }
+        .tooltip-multiple-header::before {
+            content: ''; width: 6px; height: 6px; background: var(--primary-violet);
+            border-radius: 50%; box-shadow: 0 0 8px rgba(139, 92, 246, 0.6); flex-shrink: 0;
+        }
+        .tooltip-carousel { position: relative; }
+        .tooltip-carousel-track { position: relative; }
+        .tooltip-carousel-slide {
+            opacity: 0; position: absolute; top: 0; left: 0; width: 100%;
+            transition: opacity 0.4s ease; pointer-events: none;
+        }
+        .tooltip-carousel-slide.active { opacity: 1; position: relative; pointer-events: auto; }
+        .tooltip-multi-logo { width: 70px; height: auto; margin-bottom: 8px; }
+        .tooltip-multi-logo.invert-white { filter: brightness(0) invert(1); opacity: 0.9; }
+        .tooltip-multi-event { font-weight: 500; color: var(--text-primary); margin-bottom: 4px; font-size: 0.875rem; }
+        .tooltip-multi-date { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .tooltip-multi-desc { font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; }
+        .tooltip-multi-link {
+            display: inline-block; margin-top: 8px; font-size: 0.75rem;
+            color: var(--primary-violet); text-decoration: none; transition: opacity 0.2s ease;
+        }
+        .tooltip-multi-link:hover { opacity: 0.8; }
+        .tooltip-carousel-nav {
+            display: flex; justify-content: center; gap: 8px; margin-top: 12px;
+            padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .tooltip-carousel-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3); border: none;
+            cursor: pointer; transition: all 0.2s ease; padding: 0;
+        }
+        .tooltip-carousel-dot.active {
+            background: var(--primary-violet); box-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
+        }
+        .tooltip-carousel-dot:hover:not(.active) { background: rgba(255, 255, 255, 0.5); }
 
         /* University Modal */
         .university-link {
@@ -954,12 +999,17 @@
                 <canvas id="globeCanvas"></canvas>
                 <div class="globe-tooltip" id="globeTooltip">
                     <button class="globe-tooltip-close" onclick="closeGlobeTooltip()">&times;</button>
-                    <img class="tooltip-logo" src="" alt="">
-                    <div class="tooltip-city"></div>
-                    <div class="tooltip-event"></div>
-                    <div class="tooltip-date"></div>
-                    <div class="tooltip-desc"></div>
-                    <a class="tooltip-link" href="" target="_blank">See more →</a>
+                    <!-- Single university view -->
+                    <div class="tooltip-single">
+                        <div class="tooltip-city"></div>
+                        <img class="tooltip-logo" src="" alt="">
+                        <div class="tooltip-event"></div>
+                        <div class="tooltip-date"></div>
+                        <div class="tooltip-desc"></div>
+                        <a class="tooltip-link" href="" target="_blank">See more →</a>
+                    </div>
+                    <!-- Multiple universities view -->
+                    <div class="tooltip-multiple"></div>
                 </div>
             </div>
         </div>
@@ -1396,11 +1446,14 @@
             { lat: 40.8075, lng: -73.9626, city: 'New York, NY', event: 'Columbia University', date: 'November 2025', desc: 'Disrupt the narrative: Conversations that shape community (Lecture)', logo: 'images/universities/columbia.png', link: 'https://www.instagram.com/p/DQ4Y_oAEQMx/?img_index=1' },
             { lat: 37.4275, lng: -122.1697, city: 'Stanford, CA', event: 'Stanford d.school', date: 'May 2025', desc: 'XR Prototyping with AI (Lecture)', logo: 'images/universities/stanford.png', link: 'https://www.linkedin.com/in/manuvision/details/recommendations/?detailScreenTabIndex=1' },
             { lat: 51.7548, lng: -1.2544, city: 'Oxford, UK', event: 'Oxford University', date: 'April 2025', desc: 'OpenAI Sora Project & Workflow Breakdown (Lecture)', logo: 'images/universities/oxford.png', link: 'https://lifelong-learning.ox.ac.uk/courses/generative-ai-for-creative-professionals' },
-            { lat: 42.3736, lng: -71.1097, city: 'Cambridge, MA', event: 'Harvard University', date: 'April 2025', desc: 'HarvardXR 2025: The Augmented Self (Lecture)', logo: 'images/universities/harvard.png', link: 'https://www.youtube.com/watch?v=9ozmGsu9g3o' },
             { lat: 32.8801, lng: -117.2340, city: 'San Diego, CA', event: 'UC San Diego', date: 'March 2025', desc: 'HackXR (XR Hackathon)', logo: 'images/universities/ucsd.png', link: 'https://www.youtube.com/shorts/juuCQhf9_MY' },
-            { lat: 42.3601, lng: -71.0942, city: 'Cambridge, MA', event: 'MIT', date: 'January 2025', desc: 'AI & Creative Technology (Lecture)', logo: 'images/universities/mit.png', link: 'https://www.instagram.com/p/DFXsojMRgtf/' },
+            // Boston Area - Combined pin for Harvard, MIT, UMass Boston
+            { lat: 42.36, lng: -71.06, city: 'Boston Area', event: 'Harvard · MIT · UMass Boston', isMultiple: true, universities: [
+                { event: 'Harvard University', date: 'April 2025', desc: 'HarvardXR 2025: The Augmented Self', logo: 'images/universities/harvard.png', link: 'https://www.youtube.com/watch?v=9ozmGsu9g3o' },
+                { event: 'MIT', date: 'January 2025', desc: 'AI & Creative Technology', logo: 'images/universities/mit.png', link: 'https://www.instagram.com/p/DFXsojMRgtf/' },
+                { event: 'UMass Boston', date: 'Nov 2023 & Oct 2024', desc: 'AI & XR for Cultural Heritage', logo: 'images/universities/umass-boston.png', link: 'https://www.instagram.com/p/DBRZFSUAicg/?img_index=1' }
+            ]},
             { lat: 43.6532, lng: -79.3832, city: 'Toronto, Canada', event: 'OCAD University', date: 'February 2024', desc: 'Protopica: Challenging mainstream narratives through world building (Lecture)', logo: 'images/universities/ocad.png', link: 'https://www.instagram.com/p/C3X5hKvAHQg/' },
-            { lat: 42.3145, lng: -71.0387, city: 'Boston, MA', event: 'UMass Boston', date: 'November 2023 & October 2024', desc: 'AI & XR for Cultural Heritage Preservation (Lectures)', logo: 'images/universities/umass-boston.png', link: 'https://www.instagram.com/p/DBRZFSUAicg/?img_index=1' },
             { lat: 45.5048, lng: -73.5772, city: 'Montreal, Canada', event: 'McGill University', date: 'September 2023', desc: 'Learn AR/VR (Curriculum)', logo: 'images/universities/mcgill.png', link: 'https://www.instagram.com/p/Cu5VPnRgPvw/' }
         ];
 
@@ -1427,7 +1480,7 @@
 
         // Load world map texture (equirectangular projection)
         const textureLoader = new THREE.TextureLoader();
-        const worldTexture = textureLoader.load('https://unpkg.com/three-globe/example/img/earth-dark.jpg');
+        const worldTexture = textureLoader.load('images/earth.png');
 
         const globeMaterial = new THREE.MeshBasicMaterial({
             map: worldTexture,
@@ -1600,6 +1653,10 @@
 
         function closeGlobeTooltip() {
             tooltip.classList.remove('active');
+            if (window.carouselAutoPlay) {
+                clearInterval(window.carouselAutoPlay);
+                window.carouselAutoPlay = null;
+            }
         }
         window.closeGlobeTooltip = closeGlobeTooltip;
 
@@ -1659,15 +1716,77 @@
                     const marker = intersects[0].object;
                     const data = marker.userData;
 
-                    const logoEl = tooltip.querySelector('.tooltip-logo');
-                    logoEl.src = data.logo;
-                    logoEl.alt = data.event;
-                    logoEl.classList.toggle('invert-white', data.invertLogo === true);
-                    tooltip.querySelector('.tooltip-city').textContent = data.city;
-                    tooltip.querySelector('.tooltip-event').textContent = data.event;
-                    tooltip.querySelector('.tooltip-date').textContent = data.date;
-                    tooltip.querySelector('.tooltip-desc').textContent = data.desc;
-                    tooltip.querySelector('.tooltip-link').href = data.link;
+                    // Check if this is a combined pin with multiple universities
+                    if (data.isMultiple && data.universities) {
+                        tooltip.classList.add('multiple-view');
+                        const multipleContainer = tooltip.querySelector('.tooltip-multiple');
+                        multipleContainer.innerHTML = `
+                            <div class="tooltip-multiple-header">${data.city}</div>
+                            <div class="tooltip-carousel">
+                                <div class="tooltip-carousel-track">
+                                    ${data.universities.map((uni, i) => `
+                                        <div class="tooltip-carousel-slide${i === 0 ? ' active' : ''}">
+                                            <img class="tooltip-multi-logo${uni.invertLogo ? ' invert-white' : ''}" src="${uni.logo}" alt="${uni.event}">
+                                            <div class="tooltip-multi-event">${uni.event}</div>
+                                            <div class="tooltip-multi-date">${uni.date}</div>
+                                            <div class="tooltip-multi-desc">${uni.desc}</div>
+                                            <a class="tooltip-multi-link" href="${uni.link}" target="_blank">See more →</a>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <div class="tooltip-carousel-nav">
+                                    ${data.universities.map((_, i) => `<button class="tooltip-carousel-dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('')}
+                                </div>
+                            </div>
+                        `;
+                        // Set up carousel navigation with fade animation
+                        const dots = multipleContainer.querySelectorAll('.tooltip-carousel-dot');
+                        const slideEls = multipleContainer.querySelectorAll('.tooltip-carousel-slide');
+                        const track = multipleContainer.querySelector('.tooltip-carousel-track');
+                        let currentSlide = 0;
+                        const totalSlides = data.universities.length;
+
+                        const goToSlide = (idx) => {
+                            currentSlide = ((idx % totalSlides) + totalSlides) % totalSlides; // wrap around
+                            slideEls.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+                            dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+                        };
+
+                        dots.forEach(dot => {
+                            dot.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                goToSlide(parseInt(dot.dataset.index));
+                            });
+                        });
+
+                        // Swipe support
+                        let swipeStartX = 0;
+                        track.addEventListener('touchstart', (e) => {
+                            swipeStartX = e.touches[0].clientX;
+                        }, { passive: true });
+                        track.addEventListener('touchend', (e) => {
+                            const swipeEndX = e.changedTouches[0].clientX;
+                            const diff = swipeStartX - swipeEndX;
+                            if (Math.abs(diff) > 40) {
+                                goToSlide(currentSlide + (diff > 0 ? 1 : -1));
+                            }
+                        });
+
+                        // Auto-play every 2 seconds
+                        if (window.carouselAutoPlay) clearInterval(window.carouselAutoPlay);
+                        window.carouselAutoPlay = setInterval(() => goToSlide(currentSlide + 1), 2000);
+                    } else {
+                        tooltip.classList.remove('multiple-view');
+                        const logoEl = tooltip.querySelector('.tooltip-logo');
+                        logoEl.src = data.logo;
+                        logoEl.alt = data.event;
+                        logoEl.classList.toggle('invert-white', data.invertLogo === true);
+                        tooltip.querySelector('.tooltip-city').textContent = data.city;
+                        tooltip.querySelector('.tooltip-event').textContent = data.event;
+                        tooltip.querySelector('.tooltip-date').textContent = data.date;
+                        tooltip.querySelector('.tooltip-desc').textContent = data.desc;
+                        tooltip.querySelector('.tooltip-link').href = data.link;
+                    }
 
                     // Position tooltip near the tap
                     const tooltipX = Math.min(touchStartPos.x - rect.left + 20, rect.width - 320);
@@ -1695,15 +1814,77 @@
                 const marker = intersects[0].object;
                 const data = marker.userData;
 
-                const logoEl = tooltip.querySelector('.tooltip-logo');
-                logoEl.src = data.logo;
-                logoEl.alt = data.event;
-                logoEl.classList.toggle('invert-white', data.invertLogo === true);
-                tooltip.querySelector('.tooltip-city').textContent = data.city;
-                tooltip.querySelector('.tooltip-event').textContent = data.event;
-                tooltip.querySelector('.tooltip-date').textContent = data.date;
-                tooltip.querySelector('.tooltip-desc').textContent = data.desc;
-                tooltip.querySelector('.tooltip-link').href = data.link;
+                // Check if this is a combined pin with multiple universities
+                if (data.isMultiple && data.universities) {
+                    tooltip.classList.add('multiple-view');
+                    const multipleContainer = tooltip.querySelector('.tooltip-multiple');
+                    multipleContainer.innerHTML = `
+                        <div class="tooltip-multiple-header">${data.city}</div>
+                        <div class="tooltip-carousel">
+                            <div class="tooltip-carousel-track">
+                                ${data.universities.map((uni, i) => `
+                                    <div class="tooltip-carousel-slide${i === 0 ? ' active' : ''}">
+                                        <img class="tooltip-multi-logo${uni.invertLogo ? ' invert-white' : ''}" src="${uni.logo}" alt="${uni.event}">
+                                        <div class="tooltip-multi-event">${uni.event}</div>
+                                        <div class="tooltip-multi-date">${uni.date}</div>
+                                        <div class="tooltip-multi-desc">${uni.desc}</div>
+                                        <a class="tooltip-multi-link" href="${uni.link}" target="_blank">See more →</a>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="tooltip-carousel-nav">
+                                ${data.universities.map((_, i) => `<button class="tooltip-carousel-dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                    // Set up carousel navigation with fade animation
+                    const dots = multipleContainer.querySelectorAll('.tooltip-carousel-dot');
+                    const slideEls = multipleContainer.querySelectorAll('.tooltip-carousel-slide');
+                    const track = multipleContainer.querySelector('.tooltip-carousel-track');
+                    let currentSlide = 0;
+                    const totalSlides = data.universities.length;
+
+                    const goToSlide = (idx) => {
+                        currentSlide = ((idx % totalSlides) + totalSlides) % totalSlides; // wrap around
+                        slideEls.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+                        dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+                    };
+
+                    dots.forEach(dot => {
+                        dot.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            goToSlide(parseInt(dot.dataset.index));
+                        });
+                    });
+
+                    // Swipe support
+                    let swipeStartX = 0;
+                    track.addEventListener('touchstart', (e) => {
+                        swipeStartX = e.touches[0].clientX;
+                    }, { passive: true });
+                    track.addEventListener('touchend', (e) => {
+                        const swipeEndX = e.changedTouches[0].clientX;
+                        const diff = swipeStartX - swipeEndX;
+                        if (Math.abs(diff) > 40) {
+                            goToSlide(currentSlide + (diff > 0 ? 1 : -1));
+                        }
+                    });
+
+                    // Auto-play every 2 seconds
+                    if (window.carouselAutoPlay) clearInterval(window.carouselAutoPlay);
+                    window.carouselAutoPlay = setInterval(() => goToSlide(currentSlide + 1), 2000);
+                } else {
+                    tooltip.classList.remove('multiple-view');
+                    const logoEl = tooltip.querySelector('.tooltip-logo');
+                    logoEl.src = data.logo;
+                    logoEl.alt = data.event;
+                    logoEl.classList.toggle('invert-white', data.invertLogo === true);
+                    tooltip.querySelector('.tooltip-city').textContent = data.city;
+                    tooltip.querySelector('.tooltip-event').textContent = data.event;
+                    tooltip.querySelector('.tooltip-date').textContent = data.date;
+                    tooltip.querySelector('.tooltip-desc').textContent = data.desc;
+                    tooltip.querySelector('.tooltip-link').href = data.link;
+                }
 
                 // Position tooltip near the click
                 const tooltipX = Math.min(e.clientX - rect.left + 20, rect.width - 320);
