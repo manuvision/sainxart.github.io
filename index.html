@@ -340,7 +340,8 @@
         }
         .csat-number {
             font-family: var(--font-display); font-size: 3rem; font-weight: 700;
-            background: var(--gradient-purple); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            background: linear-gradient(135deg, #F59E0B 0%, #F97316 50%, #EF4444 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
         .csat-label { color: var(--text-muted); font-size: 0.875rem; letter-spacing: 0.02em; }
 
@@ -384,7 +385,11 @@
             box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
         }
         .highlight-icon svg { width: 24px; height: 24px; }
-        .highlight-card h3 { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; margin-bottom: 12px; color: var(--text-primary); }
+        .highlight-card h3 {
+            font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; margin-bottom: 12px;
+            background: linear-gradient(135deg, #F59E0B 0%, #F97316 50%, #EF4444 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
         .highlight-card p { color: var(--text-secondary); font-size: 0.9375rem; line-height: 1.6; }
         .highlight-link-hint {
             display: flex; align-items: center; gap: 6px; margin-top: 16px;
@@ -491,7 +496,9 @@
         /* University Modal */
         .university-link {
             cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.2s ease; font-weight: 500;
+            background: linear-gradient(135deg, #F59E0B 0%, #F97316 50%, #EF4444 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
         .university-link:hover { opacity: 0.8; }
         .university-modal-overlay {
@@ -940,7 +947,7 @@
             <div class="section-header">
                 <div class="section-eyebrow reveal">Global Events</div>
                 <h2 class="section-title reveal delay-1">Where I've Spoken</h2>
-                <p class="section-tagline reveal delay-2">100+ talks across 30+ countries.<br><span class="university-link" onclick="openUniversityModal()" style="color: var(--primary-violet); font-weight: 500;">9 university lectures.</span></p>
+                <p class="section-tagline reveal delay-2">100+ talks across 30+ countries.<br><span class="university-link" onclick="openUniversityModal()">9 university lectures.</span></p>
             </div>
             <div class="globe-container reveal delay-3">
                 <div class="globe-glow"></div>
