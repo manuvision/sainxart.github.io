@@ -71,6 +71,19 @@
         }
         ::selection { background: var(--primary-purple); color: white; }
 
+        /* Noise Texture Overlay */
+        body::before {
+            content: ''; position: fixed; inset: -10%; z-index: 9999; pointer-events: none;
+            width: 120%; height: 120%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.025;
+            animation: noiseAnim 0.3s steps(3) infinite;
+        }
+        @keyframes noiseAnim {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-1%, -1%); }
+        }
+
         /* Animations */
         .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s var(--transition-smooth), transform 0.8s var(--transition-smooth); }
         .reveal.active { opacity: 1; transform: translateY(0); }
@@ -95,11 +108,18 @@
         /* Navigation */
         .nav {
             position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-            padding: 20px 0; transition: all 0.3s var(--transition-smooth);
+            padding: 20px 0 30px; transition: all 0.3s var(--transition-smooth);
+        }
+        /* Scroll Progress Indicator - inside nav at bottom */
+        .scroll-progress {
+            position: absolute; bottom: 0; left: 0; height: 3px;
+            background: var(--gradient-purple);
+            width: 0%; transition: width 0.1s ease-out;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
         }
         .nav.scrolled {
             background: rgba(10, 10, 15, 0.9); backdrop-filter: blur(20px);
-            padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 12px 0 22px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         .nav-inner { display: flex; justify-content: space-between; align-items: center; }
         .nav-logo {
@@ -122,6 +142,8 @@
         }
         .nav-links a:hover { color: var(--text-primary); transform: translateY(-2px); }
         .nav-links a:hover::after { width: 100%; }
+        .nav-links a.active { color: var(--primary-violet); }
+        .nav-links a.active::after { width: 100%; }
         .nav-cta {
             background: var(--gradient-purple); color: white; padding: 10px 20px; border-radius: 8px;
             text-decoration: none; font-size: 0.875rem; font-weight: 500;
@@ -166,13 +188,17 @@
             background: radial-gradient(ellipse at 30% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
                         radial-gradient(ellipse at 70% 80%, rgba(217, 70, 239, 0.1) 0%, transparent 50%),
                         radial-gradient(ellipse at 50% 50%, rgba(168, 85, 247, 0.05) 0%, transparent 70%);
-            animation: gradientFloat 20s ease-in-out infinite;
+            animation: gradientFloat 20s ease-in-out infinite, gradientPulse 8s ease-in-out infinite;
         }
         @keyframes gradientFloat {
             0%, 100% { transform: translate(0, 0) rotate(0deg); }
             25% { transform: translate(2%, 2%) rotate(1deg); }
             50% { transform: translate(-1%, 3%) rotate(-1deg); }
             75% { transform: translate(1%, -2%) rotate(0.5deg); }
+        }
+        @keyframes gradientPulse {
+            0%, 100% { opacity: 1; filter: hue-rotate(0deg); }
+            50% { opacity: 0.8; filter: hue-rotate(15deg); }
         }
         .particles { position: absolute; inset: 0; overflow: clip; pointer-events: none; }
         .particle {
@@ -268,6 +294,8 @@
         .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-3px); }
         .btn svg { width: 18px; height: 18px; transition: transform 0.3s ease; }
         .btn:hover svg { transform: translateX(3px); }
+        .spark-btn { position: relative; }
+        .spark-btn .spark-container { position: absolute; top: 50%; left: 50%; pointer-events: none; }
         .scroll-indicator {
             position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
             display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -406,6 +434,71 @@
         }
         .highlights-footer a:hover { background: rgba(139, 92, 246, 0.1); border-color: var(--primary-violet); }
         .highlights-footer svg { width: 20px; height: 20px; }
+
+        /* Skills Section */
+        .skills { background: var(--dark-bg); position: relative; }
+        .skills::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent); }
+        .skills-content { max-width: 900px; margin: 0 auto; }
+        .skills-group { margin-bottom: 40px; }
+        .skills-group:last-of-type { margin-bottom: 48px; }
+        .skills-group-title {
+            font-family: var(--font-display); font-size: 1.1rem; font-weight: 600;
+            color: var(--text-primary); margin-bottom: 16px; letter-spacing: -0.01em;
+            text-align: center;
+        }
+        .skills-badges {
+            display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+        }
+        .skill-badge {
+            display: inline-flex; align-items: center; padding: 8px 16px;
+            background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 100px; font-size: 0.85rem; font-weight: 500;
+            color: var(--text-primary); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: default;
+        }
+        .skills.focus-mode .skill-badge {
+            opacity: 0.25; transform: scale(0.95);
+            border-color: rgba(139, 92, 246, 0.15);
+        }
+        .skills.focus-mode .skill-badge.current-focus {
+            opacity: 1; transform: scale(1);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%);
+            border-color: rgba(245, 158, 11, 0.5);
+            color: white;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+        }
+        .focus-toggle-container { text-align: center; margin-top: 16px; position: relative; padding: 20px 0; }
+        .focus-toggle {
+            position: relative; display: inline-flex; align-items: center; gap: 10px;
+            padding: 14px 28px; border-radius: 100px; font-size: 0.95rem; font-weight: 600;
+            cursor: pointer; border: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, #F59E0B 0%, #F97316 50%, #EF4444 100%);
+            color: white; box-shadow: 0 4px 30px rgba(245, 158, 11, 0.5);
+        }
+        .focus-toggle:hover {
+            transform: translateY(-2px); box-shadow: 0 10px 40px rgba(245, 158, 11, 0.6);
+        }
+        .focus-toggle.active {
+            background: var(--gradient-purple);
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+        }
+        .focus-toggle.active:hover {
+            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5);
+        }
+        .focus-toggle svg { width: 18px; height: 18px; transition: transform 0.3s ease; }
+        .focus-toggle.active svg { transform: rotate(180deg); }
+        .spark-container {
+            position: absolute; top: 50%; left: 50%; pointer-events: none;
+            width: 0; height: 0;
+        }
+        .spark {
+            position: absolute; width: 6px; height: 6px; border-radius: 50%;
+            animation: sparkAnim 0.6s ease-out forwards;
+        }
+        @keyframes sparkAnim {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); }
+        }
 
         /* Brands Section */
         .brands { background: var(--dark-surface); position: relative; padding: 80px 0; }
@@ -781,11 +874,13 @@
 <body>
     <!-- Navigation -->
     <nav class="nav" id="nav">
+        <div class="scroll-progress" id="scrollProgress"></div>
         <div class="container nav-inner">
             <a href="#home" class="nav-logo" onclick="window.scrollTo({top:0,behavior:'smooth'});"><img src="images/mv.svg" alt="">Manu.Vision</a>
             <ul class="nav-links">
                 <li><a href="#about">About</a></li>
                 <li><a href="#highlights">Highlights</a></li>
+                <li><a href="#skills">Skills</a></li>
                 <li><a href="#brands">Partners</a></li>
                 <li><a href="#speaking">Speaking</a></li>
                 <li><a href="#press">Press</a></li>
@@ -802,6 +897,7 @@
     <div class="mobile-menu" id="mobileMenu">
         <a href="#about" onclick="closeMobileMenu()">About</a>
         <a href="#highlights" onclick="closeMobileMenu()">Highlights</a>
+        <a href="#skills" onclick="closeMobileMenu()">Skills</a>
         <a href="#brands" onclick="closeMobileMenu()">Partners</a>
         <a href="#speaking" onclick="closeMobileMenu()">Speaking</a>
         <a href="#press" onclick="closeMobileMenu()">Press</a>
@@ -833,9 +929,10 @@
                     Founder, Award-winning Creative Director,<br>Lead Product Designer & Educator.
                 </p>
                 <div class="hero-ctas reveal delay-3">
-                    <a href="#contact" class="btn btn-primary">
+                    <a href="#contact" class="btn btn-primary spark-btn" id="heroContactBtn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                         Get in Touch
+                        <span class="spark-container"></span>
                     </a>
                     <a href="https://beacons.ai/manuvision" target="_blank" class="btn btn-secondary">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
@@ -957,6 +1054,54 @@
                     Explore All Projects & Highlights
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
                 </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section class="skills" id="skills">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-eyebrow reveal">What I Do</div>
+                <h2 class="section-title reveal delay-1">Skills</h2>
+            </div>
+            <div class="skills-content">
+                <div class="skills-group">
+                    <h3 class="skills-group-title reveal">Areas of Expertise</h3>
+                    <div class="skills-badges reveal delay-1">
+                        <span class="skill-badge current-focus">AI/ML</span>
+                        <span class="skill-badge current-focus">XR</span>
+                        <span class="skill-badge current-focus">Real-Time 3D</span>
+                        <span class="skill-badge">VFX</span>
+                        <span class="skill-badge current-focus">UI/UX Design</span>
+                        <span class="skill-badge">Haptics</span>
+                        <span class="skill-badge current-focus">Brain-Computer Interfaces</span>
+                        <span class="skill-badge current-focus">Ethics</span>
+                        <span class="skill-badge">Web Development</span>
+                        <span class="skill-badge current-focus">3D Scanning</span>
+                        <span class="skill-badge">Executive Advisory</span>
+                        <span class="skill-badge">Change Management</span>
+                        <span class="skill-badge current-focus">Education</span>
+                    </div>
+                </div>
+                <div class="skills-group">
+                    <h3 class="skills-group-title reveal">Tools</h3>
+                    <div class="skills-badges reveal delay-1">
+                        <span class="skill-badge current-focus">TouchDesigner</span>
+                        <span class="skill-badge">Unity</span>
+                        <span class="skill-badge current-focus">Blender</span>
+                        <span class="skill-badge">Adobe Creative Suite</span>
+                        <span class="skill-badge">Notion</span>
+                        <span class="skill-badge">Procreate</span>
+                    </div>
+                </div>
+                <div class="focus-toggle-container reveal delay-2">
+                    <button class="focus-toggle" id="focusToggle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+                        Current Focus
+                        <div class="spark-container" id="sparkContainer"></div>
+                    </button>
+                </div>
             </div>
         </div>
     </section>
@@ -1159,9 +1304,10 @@
                 <h2 class="reveal delay-1">Book Me</h2>
                 <p class="reveal delay-2">Available for speaking engagements, creative direction, workshops, and strategic consulting.</p>
                 <div class="reveal delay-3" style="margin-bottom: 32px;">
-                    <a href="mailto:manuel.sainsily@gmail.com" class="btn btn-primary">
+                    <a href="mailto:manuel.sainsily@gmail.com" class="btn btn-primary spark-btn" id="footerContactBtn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                         Contact Me
+                        <span class="spark-container"></span>
                     </a>
                 </div>
                 <div class="contact-links reveal delay-4">
@@ -1266,6 +1412,33 @@
         const nav = document.getElementById('nav');
         const handleNavScroll = () => {
             nav.classList.toggle('scrolled', window.scrollY > 50);
+
+            // Update scroll progress bar
+            const scrollProgress = document.getElementById('scrollProgress');
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            scrollProgress.style.width = scrollPercent + '%';
+
+            // Highlight active nav section
+            const sections = ['home', 'about', 'highlights', 'skills', 'brands', 'speaking', 'press', 'contact'];
+            const navLinks = document.querySelectorAll('.nav-links a');
+            let currentSection = 'home';
+
+            sections.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    const rect = section.getBoundingClientRect();
+                    if (rect.top <= 150 && rect.bottom > 150) {
+                        currentSection = sectionId;
+                    }
+                }
+            });
+
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href').replace('#', '');
+                link.classList.toggle('active', href === currentSection || (href === 'brands' && currentSection === 'brands'));
+            });
         };
 
         // Smooth scroll
@@ -1343,6 +1516,68 @@
                 entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
             }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
             revealElements.forEach(el => observer.observe(el));
+        }
+
+        // Skills Focus Toggle with Magnetic Effect and Sparks
+        const focusToggle = document.getElementById('focusToggle');
+        const skillsSection = document.querySelector('.skills');
+        const sparkContainer = document.getElementById('sparkContainer');
+
+        if (focusToggle) {
+            // Toggle focus mode
+            focusToggle.addEventListener('click', (e) => {
+                const isActive = focusToggle.classList.toggle('active');
+                skillsSection.classList.toggle('focus-mode', isActive);
+                createSparks(sparkContainer, isActive ? 'purple' : 'orange');
+            });
+
+            // Sparks animation
+            function createSparks(container, colorSet) {
+                const colors = colorSet === 'purple'
+                    ? ['#8B5CF6', '#A78BFA', '#7C3AED']
+                    : ['#F59E0B', '#F97316', '#EF4444'];
+
+                for (let i = 0; i < 12; i++) {
+                    const spark = document.createElement('div');
+                    spark.className = 'spark';
+                    const angle = (i / 12) * Math.PI * 2;
+                    const velocity = 50 + Math.random() * 50;
+                    const tx = Math.cos(angle) * velocity;
+                    const ty = Math.sin(angle) * velocity;
+                    spark.style.setProperty('--tx', `${tx}px`);
+                    spark.style.setProperty('--ty', `${ty}px`);
+                    spark.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    spark.style.boxShadow = `0 0 6px ${colors[Math.floor(Math.random() * colors.length)]}`;
+                    container.appendChild(spark);
+                    setTimeout(() => spark.remove(), 600);
+                }
+            }
+        }
+
+        // Sparks for CTA buttons (purple sparks)
+        document.querySelectorAll('.spark-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const container = btn.querySelector('.spark-container');
+                if (container) {
+                    createSparksCTA(container);
+                }
+            });
+        });
+
+        function createSparksCTA(container) {
+            const colors = ['#8B5CF6', '#A78BFA', '#7C3AED'];
+            for (let i = 0; i < 12; i++) {
+                const spark = document.createElement('div');
+                spark.className = 'spark';
+                const angle = (i / 12) * Math.PI * 2;
+                const velocity = 50 + Math.random() * 50;
+                spark.style.setProperty('--tx', `${Math.cos(angle) * velocity}px`);
+                spark.style.setProperty('--ty', `${Math.sin(angle) * velocity}px`);
+                spark.style.background = colors[Math.floor(Math.random() * colors.length)];
+                spark.style.boxShadow = `0 0 6px ${colors[Math.floor(Math.random() * colors.length)]}`;
+                container.appendChild(spark);
+                setTimeout(() => spark.remove(), 600);
+            }
         }
 
         // Video Modal Functions
