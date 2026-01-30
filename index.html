@@ -458,8 +458,9 @@
             position: absolute; padding: 16px; background: rgba(20, 20, 28, 0.98);
             border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 12px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); pointer-events: auto;
-            opacity: 0; visibility: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
             z-index: 100; min-width: 220px; max-width: 280px;
+            left: 50%; top: 50%; transform: translate(-50%, -50%);
         }
         .globe-tooltip.active { opacity: 1; visibility: visible; }
         .globe-tooltip-close {
@@ -477,13 +478,13 @@
         .tooltip-city {
             font-family: var(--font-display); font-size: 1rem; font-weight: 600;
             color: white; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
-            padding-right: 24px;
+            padding-right: 24px; flex-wrap: wrap;
         }
         .tooltip-city::before {
             content: ''; width: 6px; height: 6px; background: var(--primary-violet);
             border-radius: 50%; box-shadow: 0 0 8px rgba(139, 92, 246, 0.6); flex-shrink: 0;
         }
-        .tooltip-event { font-weight: 500; color: var(--text-primary); margin-bottom: 4px; font-size: 0.875rem; }
+        .tooltip-event { font-weight: 500; color: var(--text-primary); margin-bottom: 4px; font-size: 0.875rem; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
         .tooltip-date { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
         .tooltip-desc { font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; }
         .tooltip-link {
@@ -516,7 +517,7 @@
         .tooltip-carousel-slide.active { opacity: 1; position: relative; pointer-events: auto; }
         .tooltip-multi-logo { width: 70px; height: auto; margin-bottom: 8px; }
         .tooltip-multi-logo.invert-white { filter: brightness(0) invert(1); opacity: 0.9; }
-        .tooltip-multi-event { font-weight: 500; color: var(--text-primary); margin-bottom: 4px; font-size: 0.875rem; }
+        .tooltip-multi-event { font-weight: 500; color: var(--text-primary); margin-bottom: 4px; font-size: 0.875rem; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
         .tooltip-multi-date { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
         .tooltip-multi-desc { font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; }
         .tooltip-multi-link {
@@ -524,6 +525,17 @@
             color: var(--primary-violet); text-decoration: none; transition: opacity 0.2s ease;
         }
         .tooltip-multi-link:hover { opacity: 0.8; }
+        .tooltip-ivy-badge {
+            display: inline-flex; align-items: center; gap: 3px;
+            font-size: 0.55rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.04em; padding: 3px 6px 2px; border-radius: 3px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3); margin-left: 0;
+        }
+        .tooltip-ivy-badge span {
+            background: linear-gradient(135deg, #F59E0B 0%, #F97316 50%, #EF4444 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
         .tooltip-carousel-nav {
             display: flex; justify-content: center; gap: 8px; margin-top: 12px;
             padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -585,20 +597,20 @@
         }
         .university-list { display: flex; flex-direction: column; gap: 16px; }
         .university-item {
-            display: flex; align-items: flex-start; gap: 16px; padding: 16px;
+            display: flex; align-items: center; gap: 16px; padding: 16px;
             background: rgba(255, 255, 255, 0.03); border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.2s ease;
         }
         .university-item:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(139, 92, 246, 0.2); }
         .university-item-logo {
-            width: 48px; height: 48px; object-fit: contain; flex-shrink: 0;
+            width: 60px; height: 60px; object-fit: contain; flex-shrink: 0;
         }
         .university-item-logo.invert-white { filter: brightness(0) invert(1); opacity: 0.9; }
         .university-item-content { flex: 1; min-width: 0; }
         .university-item-city {
             font-family: var(--font-display); font-size: 0.95rem; font-weight: 600;
-            color: white; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+            color: white; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
         }
         .university-item-city::before {
             content: ''; width: 6px; height: 6px; background: var(--primary-violet);
@@ -606,6 +618,7 @@
         }
         .university-item-name {
             font-weight: 500; color: var(--text-primary); margin-bottom: 4px; font-size: 0.875rem;
+            display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
         }
         .university-item-date {
             font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px;
@@ -617,10 +630,25 @@
             transition: opacity 0.2s ease;
         }
         .university-item-link:hover { opacity: 0.7; }
+        .ivy-league-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 0.6rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.05em; padding: 4px 8px 3px; border-radius: 4px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            margin-left: 0; flex-shrink: 0;
+        }
+        .ivy-league-badge span {
+            background: linear-gradient(135deg, #F59E0B 0%, #F97316 50%, #EF4444 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .ivy-league-badge svg {
+            width: 10px; height: 10px; fill: url(#ivyGradient);
+        }
         @media (max-width: 640px) {
             .university-modal { padding: 24px 20px; }
-            .university-item { flex-direction: column; gap: 12px; }
-            .university-item-logo { width: 40px; height: 40px; }
+            .university-item { gap: 14px; }
+            .university-item-logo { width: 56px; height: 56px; align-self: center; }
         }
 
         /* Contact Section */
@@ -1345,10 +1373,10 @@
         // University Modal Functions
         // Chronological order (most recent first)
         const universityData = [
-            { event: 'Columbia University', city: 'New York, NY', date: 'November 2025', desc: 'Disrupt the narrative: Conversations that shape community (Lecture)', logo: 'images/universities/columbia.png', link: 'https://www.instagram.com/p/DQ4Y_oAEQMx/?img_index=1' },
+            { event: 'Columbia University', city: 'New York, NY', date: 'November 2025', desc: 'Disrupt the narrative: Conversations that shape community (Lecture)', logo: 'images/universities/columbia.png', link: 'https://www.instagram.com/p/DQ4Y_oAEQMx/?img_index=1', isIvyLeague: true },
             { event: 'Stanford d.school', city: 'Stanford, CA', date: 'May 2025', desc: 'XR Prototyping with AI (Lecture)', logo: 'images/universities/stanford.png', link: 'https://www.linkedin.com/in/manuvision/details/recommendations/?detailScreenTabIndex=1' },
             { event: 'Oxford University', city: 'Oxford, UK', date: 'April 2025', desc: 'OpenAI Sora Project & Workflow Breakdown (Lecture)', logo: 'images/universities/oxford.png', link: 'https://lifelong-learning.ox.ac.uk/courses/generative-ai-for-creative-professionals' },
-            { event: 'Harvard University', city: 'Cambridge, MA', date: 'April 2025', desc: 'HarvardXR 2025: The Augmented Self (Lecture)', logo: 'images/universities/harvard.png', link: 'https://www.youtube.com/watch?v=9ozmGsu9g3o' },
+            { event: 'Harvard University', city: 'Cambridge, MA', date: 'April 2025', desc: 'HarvardXR 2025: The Augmented Self (Lecture)', logo: 'images/universities/harvard.png', link: 'https://www.youtube.com/watch?v=9ozmGsu9g3o', isIvyLeague: true },
             { event: 'UC San Diego', city: 'San Diego, CA', date: 'March 2025', desc: 'HackXR (XR Hackathon)', logo: 'images/universities/ucsd.png', link: 'https://www.youtube.com/shorts/juuCQhf9_MY' },
             { event: 'MIT', city: 'Cambridge, MA', date: 'January 2025', desc: 'AI & Creative Technology (Lecture)', logo: 'images/universities/mit.png', link: 'https://www.instagram.com/p/DFXsojMRgtf/' },
             { event: 'OCAD University', city: 'Toronto, Canada', date: 'February 2024', desc: 'Protopica: Challenging mainstream narratives through world building (Lecture)', logo: 'images/universities/ocad.png', link: 'https://www.instagram.com/p/C3X5hKvAHQg/' },
@@ -1366,7 +1394,7 @@
                     <img src="${uni.logo}" alt="${uni.event}" class="university-item-logo">
                     <div class="university-item-content">
                         <div class="university-item-city">${uni.city}</div>
-                        <div class="university-item-name">${uni.event}</div>
+                        <div class="university-item-name">${uni.event}${uni.isIvyLeague ? '<span class="ivy-league-badge"><span>Ivy League</span></span>' : ''}</div>
                         <div class="university-item-date">${uni.date}</div>
                         <div class="university-item-desc">${uni.desc}</div>
                         <a href="${uni.link}" target="_blank" class="university-item-link">See more →</a>
@@ -1443,13 +1471,13 @@
 
         // 3D Globe with Three.js - University Lectures Only (most recent first)
         const universityLocations = [
-            { lat: 40.8075, lng: -73.9626, city: 'New York, NY', event: 'Columbia University', date: 'November 2025', desc: 'Disrupt the narrative: Conversations that shape community (Lecture)', logo: 'images/universities/columbia.png', link: 'https://www.instagram.com/p/DQ4Y_oAEQMx/?img_index=1' },
+            { lat: 40.8075, lng: -73.9626, city: 'New York, NY', event: 'Columbia University', date: 'November 2025', desc: 'Disrupt the narrative: Conversations that shape community (Lecture)', logo: 'images/universities/columbia.png', link: 'https://www.instagram.com/p/DQ4Y_oAEQMx/?img_index=1', isIvyLeague: true },
             { lat: 37.4275, lng: -122.1697, city: 'Stanford, CA', event: 'Stanford d.school', date: 'May 2025', desc: 'XR Prototyping with AI (Lecture)', logo: 'images/universities/stanford.png', link: 'https://www.linkedin.com/in/manuvision/details/recommendations/?detailScreenTabIndex=1' },
             { lat: 51.7548, lng: -1.2544, city: 'Oxford, UK', event: 'Oxford University', date: 'April 2025', desc: 'OpenAI Sora Project & Workflow Breakdown (Lecture)', logo: 'images/universities/oxford.png', link: 'https://lifelong-learning.ox.ac.uk/courses/generative-ai-for-creative-professionals' },
             { lat: 32.8801, lng: -117.2340, city: 'San Diego, CA', event: 'UC San Diego', date: 'March 2025', desc: 'HackXR (XR Hackathon)', logo: 'images/universities/ucsd.png', link: 'https://www.youtube.com/shorts/juuCQhf9_MY' },
             // Boston Area - Combined pin for Harvard, MIT, UMass Boston
             { lat: 42.36, lng: -71.06, city: 'Boston Area', event: 'Harvard · MIT · UMass Boston', isMultiple: true, universities: [
-                { event: 'Harvard University', date: 'April 2025', desc: 'HarvardXR 2025: The Augmented Self', logo: 'images/universities/harvard.png', link: 'https://www.youtube.com/watch?v=9ozmGsu9g3o' },
+                { event: 'Harvard University', date: 'April 2025', desc: 'HarvardXR 2025: The Augmented Self', logo: 'images/universities/harvard.png', link: 'https://www.youtube.com/watch?v=9ozmGsu9g3o', isIvyLeague: true },
                 { event: 'MIT', date: 'January 2025', desc: 'AI & Creative Technology', logo: 'images/universities/mit.png', link: 'https://www.instagram.com/p/DFXsojMRgtf/' },
                 { event: 'UMass Boston', date: 'Nov 2023 & Oct 2024', desc: 'AI & XR for Cultural Heritage', logo: 'images/universities/umass-boston.png', link: 'https://www.instagram.com/p/DBRZFSUAicg/?img_index=1' }
             ]},
@@ -1727,7 +1755,7 @@
                                     ${data.universities.map((uni, i) => `
                                         <div class="tooltip-carousel-slide${i === 0 ? ' active' : ''}">
                                             <img class="tooltip-multi-logo${uni.invertLogo ? ' invert-white' : ''}" src="${uni.logo}" alt="${uni.event}">
-                                            <div class="tooltip-multi-event">${uni.event}</div>
+                                            <div class="tooltip-multi-event">${uni.event}${uni.isIvyLeague ? '<span class="tooltip-ivy-badge"><span>Ivy League</span></span>' : ''}</div>
                                             <div class="tooltip-multi-date">${uni.date}</div>
                                             <div class="tooltip-multi-desc">${uni.desc}</div>
                                             <a class="tooltip-multi-link" href="${uni.link}" target="_blank">See more →</a>
@@ -1782,17 +1810,16 @@
                         logoEl.alt = data.event;
                         logoEl.classList.toggle('invert-white', data.invertLogo === true);
                         tooltip.querySelector('.tooltip-city').textContent = data.city;
-                        tooltip.querySelector('.tooltip-event').textContent = data.event;
+                        tooltip.querySelector('.tooltip-event').innerHTML = data.event + (data.isIvyLeague ? '<span class="tooltip-ivy-badge"><span>Ivy League</span></span>' : '');
                         tooltip.querySelector('.tooltip-date').textContent = data.date;
                         tooltip.querySelector('.tooltip-desc').textContent = data.desc;
                         tooltip.querySelector('.tooltip-link').href = data.link;
                     }
 
-                    // Position tooltip near the tap
-                    const tooltipX = Math.min(touchStartPos.x - rect.left + 20, rect.width - 320);
-                    const tooltipY = Math.min(touchStartPos.y - rect.top - 100, rect.height - 280);
-                    tooltip.style.left = `${Math.max(20, tooltipX)}px`;
-                    tooltip.style.top = `${Math.max(20, tooltipY)}px`;
+                    // Position tooltip centered on globe
+                    tooltip.style.left = '50%';
+                    tooltip.style.top = '50%';
+                    tooltip.style.transform = 'translate(-50%, -50%)';
                     tooltip.classList.add('active');
                 } else {
                     closeGlobeTooltip();
@@ -1825,7 +1852,7 @@
                                 ${data.universities.map((uni, i) => `
                                     <div class="tooltip-carousel-slide${i === 0 ? ' active' : ''}">
                                         <img class="tooltip-multi-logo${uni.invertLogo ? ' invert-white' : ''}" src="${uni.logo}" alt="${uni.event}">
-                                        <div class="tooltip-multi-event">${uni.event}</div>
+                                        <div class="tooltip-multi-event">${uni.event}${uni.isIvyLeague ? '<span class="tooltip-ivy-badge"><span>Ivy League</span></span>' : ''}</div>
                                         <div class="tooltip-multi-date">${uni.date}</div>
                                         <div class="tooltip-multi-desc">${uni.desc}</div>
                                         <a class="tooltip-multi-link" href="${uni.link}" target="_blank">See more →</a>
@@ -1880,17 +1907,16 @@
                     logoEl.alt = data.event;
                     logoEl.classList.toggle('invert-white', data.invertLogo === true);
                     tooltip.querySelector('.tooltip-city').textContent = data.city;
-                    tooltip.querySelector('.tooltip-event').textContent = data.event;
+                    tooltip.querySelector('.tooltip-event').innerHTML = data.event + (data.isIvyLeague ? '<span class="tooltip-ivy-badge"><span>Ivy League</span></span>' : '');
                     tooltip.querySelector('.tooltip-date').textContent = data.date;
                     tooltip.querySelector('.tooltip-desc').textContent = data.desc;
                     tooltip.querySelector('.tooltip-link').href = data.link;
                 }
 
-                // Position tooltip near the click
-                const tooltipX = Math.min(e.clientX - rect.left + 20, rect.width - 320);
-                const tooltipY = Math.min(e.clientY - rect.top - 100, rect.height - 280);
-                tooltip.style.left = `${Math.max(20, tooltipX)}px`;
-                tooltip.style.top = `${Math.max(20, tooltipY)}px`;
+                // Position tooltip centered on globe
+                tooltip.style.left = '50%';
+                tooltip.style.top = '50%';
+                tooltip.style.transform = 'translate(-50%, -50%)';
                 tooltip.classList.add('active');
             } else {
                 closeGlobeTooltip();
