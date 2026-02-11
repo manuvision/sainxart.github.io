@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bestiaire Guadeloupéen — ManuVision</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-deep: #050208;
+  --bg-card: #0c0a14;
+  --bg-card-hover: #110e1c;
+  --purple-dark: #2a1645;
+  --purple-mid: #6b3fa0;
+  --purple-bright: #a855f7;
+  --purple-glow: #c084fc;
+  --gold: #d4a847;
+  --gold-dim: #a8842f;
+  --text-primary: #e8e0f0;
+  --text-secondary: #9a8cb0;
+  --text-dim: #6b5f80;
+  --red-accent: #8b2030;
+  --green-spirit: #2a6b4a;
+  --border: rgba(107, 63, 160, 0.15);
+}
+
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--purple-mid) var(--bg-deep);
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(42, 22, 69, 0.4) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(139, 32, 48, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 50% at 50% 50%, rgba(107, 63, 160, 0.05) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ═══════════════ NAVIGATION ═══════════════ */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 1.2rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  backdrop-filter: blur(20px);
+  background: rgba(5, 2, 8, 0.7);
+  border-bottom: 1px solid var(--border);
+}
+
+nav .logo {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.15em;
+  color: var(--purple-glow);
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+nav .back-link {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  letter-spacing: 0.08em;
+  transition: color 0.3s;
+}
+nav .back-link:hover { color: var(--purple-glow); }
+
+/* ═══════════════ HERO ═══════════════ */
+.hero {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6rem 2rem 4rem;
+}
+
+.hero-symbol {
+  font-size: 3.5rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.7;
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+.hero h1 {
+  font-family: 'Cinzel Decorative', serif;
+  font-weight: 900;
+  font-size: clamp(2.2rem, 6vw, 4.5rem);
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--purple-glow) 50%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1.2rem;
+}
+
+.hero .subtitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  font-weight: 300;
+  font-style: italic;
+  color: var(--text-secondary);
+  max-width: 600px;
+  line-height: 1.6;
+  margin-bottom: 2.5rem;
+}
+
+/* ═══════════════ DICE ═══════════════ */
+.dice-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.dice-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.dice-wrapper {
+  perspective: 600px;
+  width: 72px;
+  height: 72px;
+  cursor: pointer;
+}
+
+.dice-cube {
+  width: 72px;
+  height: 72px;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(-15deg) rotateY(20deg);
+  transition: transform 0.15s ease;
+}
+
+.dice-cube.rolling {
+  animation: dice-roll 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes dice-roll {
+  0% { transform: rotateX(-15deg) rotateY(20deg); }
+  15% { transform: rotateX(180deg) rotateY(90deg) rotateZ(45deg); }
+  30% { transform: rotateX(360deg) rotateY(270deg) rotateZ(-30deg); }
+  45% { transform: rotateX(540deg) rotateY(180deg) rotateZ(90deg); }
+  60% { transform: rotateX(720deg) rotateY(450deg) rotateZ(-45deg); }
+  75% { transform: rotateX(900deg) rotateY(630deg) rotateZ(60deg); }
+  100% { transform: rotateX(1080deg) rotateY(720deg) rotateZ(0deg); }
+}
+
+.dice-face {
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  background: linear-gradient(145deg, rgba(42, 22, 69, 0.9), rgba(12, 10, 20, 0.95));
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  box-shadow: inset 0 0 20px rgba(168, 85, 247, 0.1);
+  backface-visibility: visible;
+}
+
+.dice-face:nth-child(1) { transform: rotateY(0deg) translateZ(36px); }
+.dice-face:nth-child(2) { transform: rotateY(180deg) translateZ(36px); }
+.dice-face:nth-child(3) { transform: rotateY(90deg) translateZ(36px); }
+.dice-face:nth-child(4) { transform: rotateY(-90deg) translateZ(36px); }
+.dice-face:nth-child(5) { transform: rotateX(90deg) translateZ(36px); }
+.dice-face:nth-child(6) { transform: rotateX(-90deg) translateZ(36px); }
+
+.dice-wrapper:hover .dice-cube:not(.rolling) {
+  transform: rotateX(-20deg) rotateY(30deg) scale(1.08);
+}
+
+.dice-wrapper:active .dice-cube:not(.rolling) {
+  transform: rotateX(-10deg) rotateY(15deg) scale(0.95);
+}
+
+.dice-result {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dice-result-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--purple-glow);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.dice-result-text:hover {
+  color: #fff;
+}
+
+.dice-result-text.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.dice-click-hint {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.dice-wrapper:hover ~ .dice-click-hint,
+.dice-click-hint.show {
+  opacity: 1;
+}
+
+.hero .scroll-hint {
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  animation: pulse-down 2s ease-in-out infinite;
+  margin-top: 1rem;
+}
+
+.hero .scroll-hint span {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 1.2rem;
+}
+
+@keyframes pulse-down {
+  0%, 100% { opacity: 0.4; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(6px); }
+}
+
+/* ═══════════════ SECTION HEADERS ═══════════════ */
+.section-header {
+  text-align: center;
+  padding: 5rem 2rem 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.section-header .label {
+  font-size: 0.65rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--purple-bright);
+  margin-bottom: 0.8rem;
+}
+
+.section-header h2 {
+  font-family: 'Cinzel Decorative', serif;
+  font-weight: 700;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  color: var(--text-primary);
+  letter-spacing: 0.03em;
+}
+
+.section-header .divider {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--purple-mid), transparent);
+  margin: 1.2rem auto 0;
+}
+
+/* ═══════════════ FILTER TABS ═══════════════ */
+.filter-bar {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem 2rem;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.filter-btn {
+  padding: 0.5rem 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+  border-color: var(--purple-mid);
+  color: var(--text-primary);
+}
+
+.filter-btn.active {
+  background: var(--purple-dark);
+  border-color: var(--purple-bright);
+  color: var(--purple-glow);
+}
+
+/* ═══════════════ CAROUSEL ═══════════════ */
+.carousel-container {
+  position: relative;
+  z-index: 1;
+  padding: 1rem 0 4rem;
+  overflow: hidden;
+}
+
+.carousel-track {
+  display: flex;
+  gap: 1.5rem;
+  padding: 2rem calc(50vw - 180px);
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.1s ease-out;
+  will-change: transform;
+}
+
+.carousel-track.dragging {
+  cursor: grabbing;
+  transition: none;
+}
+
+/* ═══════════════ CARDS ═══════════════ */
+.card {
+  flex-shrink: 0;
+  width: 340px;
+  height: 520px;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.5s ease, border-color 0.3s;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background: linear-gradient(180deg, transparent 40%, rgba(5, 2, 8, 0.95) 85%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 60px rgba(107, 63, 160, 0.2), 0 0 80px rgba(168, 85, 247, 0.08);
+  border-color: rgba(107, 63, 160, 0.35);
+}
+
+/* Highlighted card (from dice or cross-link) */
+.card.highlighted {
+  border-color: var(--purple-bright);
+  box-shadow: 0 0 40px rgba(168, 85, 247, 0.3), 0 0 100px rgba(168, 85, 247, 0.1);
+  animation: highlight-pulse 2s ease-out;
+}
+
+@keyframes highlight-pulse {
+  0% { box-shadow: 0 0 0px rgba(168, 85, 247, 0), border-color: var(--border); }
+  30% { box-shadow: 0 0 60px rgba(168, 85, 247, 0.5), 0 0 120px rgba(168, 85, 247, 0.2); }
+  100% { box-shadow: 0 0 40px rgba(168, 85, 247, 0.3), 0 0 100px rgba(168, 85, 247, 0.1); }
+}
+
+.card-image {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8rem;
+  opacity: 0.15;
+  filter: saturate(0.6);
+  transition: opacity 0.4s, transform 0.6s ease;
+}
+
+.card:hover .card-image {
+  opacity: 0.25;
+  transform: scale(1.05);
+}
+
+.card-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  padding: 1.8rem;
+}
+
+.card-tag {
+  display: inline-block;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--purple-bright);
+  background: rgba(107, 63, 160, 0.15);
+  border: 1px solid rgba(107, 63, 160, 0.25);
+  padding: 0.25rem 0.65rem;
+  border-radius: 100px;
+  margin-bottom: 0.75rem;
+}
+
+.card-tag.lieu {
+  color: var(--gold);
+  background: rgba(212, 168, 71, 0.1);
+  border-color: rgba(212, 168, 71, 0.25);
+}
+
+.card-name {
+  font-family: 'Cinzel Decorative', serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--text-primary);
+  margin-bottom: 0.2rem;
+  line-height: 1.3;
+}
+
+.card-alt-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  margin-bottom: 0.7rem;
+}
+
+.card-description {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--purple-glow);
+  text-decoration: none;
+  transition: gap 0.3s, color 0.3s;
+}
+
+.card-link:hover {
+  gap: 0.7rem;
+  color: #fff;
+}
+
+.card-link .arrow {
+  transition: transform 0.3s;
+}
+.card-link:hover .arrow { transform: translateX(3px); }
+
+/* Carousel navigation */
+.carousel-nav {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem 2rem 0;
+  position: relative;
+  z-index: 2;
+}
+
+.carousel-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: rgba(12, 10, 20, 0.8);
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.carousel-btn:hover {
+  border-color: var(--purple-mid);
+  color: var(--purple-glow);
+  background: var(--purple-dark);
+}
+
+.carousel-counter {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  letter-spacing: 0.15em;
+  padding-top: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══════════════ MODAL ═══════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(5, 2, 8, 0.92);
+  backdrop-filter: blur(30px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  padding: 2rem;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  max-width: 620px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 2.5rem;
+  transform: translateY(30px) scale(0.95);
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  scrollbar-width: thin;
+  scrollbar-color: var(--purple-dark) transparent;
+}
+
+.modal-overlay.active .modal-card {
+  transform: translateY(0) scale(1);
+}
+
+.modal-close {
+  float: right;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  border-color: var(--purple-mid);
+  color: var(--text-primary);
+}
+
+.modal-symbol {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.modal-tag {
+  display: inline-block;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--purple-bright);
+  background: rgba(107, 63, 160, 0.15);
+  border: 1px solid rgba(107, 63, 160, 0.25);
+  padding: 0.25rem 0.65rem;
+  border-radius: 100px;
+  margin-bottom: 0.8rem;
+}
+
+.modal-tag.lieu {
+  color: var(--gold);
+  background: rgba(212, 168, 71, 0.1);
+  border-color: rgba(212, 168, 71, 0.25);
+}
+
+.modal-name {
+  font-family: 'Cinzel Decorative', serif;
+  font-weight: 700;
+  font-size: 1.8rem;
+  margin-bottom: 0.3rem;
+}
+
+.modal-alt {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--text-dim);
+  margin-bottom: 1.2rem;
+}
+
+.modal-description {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.modal-story {
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: var(--text-dim);
+  border-left: 2px solid var(--purple-dark);
+  padding-left: 1.2rem;
+  margin-bottom: 1.2rem;
+  font-style: italic;
+}
+
+/* Cross-link tags in modal */
+.modal-relations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.modal-relation-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 100px;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 1px solid;
+  text-decoration: none;
+}
+
+.modal-relation-tag.creature-link {
+  color: var(--purple-glow);
+  border-color: rgba(168, 85, 247, 0.25);
+  background: rgba(107, 63, 160, 0.08);
+}
+
+.modal-relation-tag.creature-link:hover {
+  background: rgba(107, 63, 160, 0.2);
+  border-color: var(--purple-bright);
+}
+
+.modal-relation-tag.lieu-link {
+  color: var(--gold);
+  border-color: rgba(212, 168, 71, 0.25);
+  background: rgba(212, 168, 71, 0.06);
+}
+
+.modal-relation-tag.lieu-link:hover {
+  background: rgba(212, 168, 71, 0.15);
+  border-color: var(--gold);
+}
+
+.modal-relation-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.5rem;
+}
+
+.modal-links {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.modal-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  transition: all 0.3s;
+}
+
+.modal-link:hover {
+  border-color: var(--purple-bright);
+  color: var(--purple-glow);
+  background: rgba(107, 63, 160, 0.1);
+}
+
+/* ═══════════════ LIEUX SECTION ═══════════════ */
+.lieux-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.2rem;
+  padding: 1rem 2rem 5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.lieu-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.lieu-card:hover {
+  border-color: rgba(212, 168, 71, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(212, 168, 71, 0.08);
+}
+
+.lieu-card.highlighted {
+  border-color: var(--gold);
+  box-shadow: 0 0 40px rgba(212, 168, 71, 0.2), 0 0 80px rgba(212, 168, 71, 0.08);
+  animation: highlight-gold-pulse 2s ease-out;
+}
+
+@keyframes highlight-gold-pulse {
+  0% { box-shadow: 0 0 0px rgba(212, 168, 71, 0); }
+  30% { box-shadow: 0 0 60px rgba(212, 168, 71, 0.4), 0 0 120px rgba(212, 168, 71, 0.15); }
+  100% { box-shadow: 0 0 40px rgba(212, 168, 71, 0.2), 0 0 80px rgba(212, 168, 71, 0.08); }
+}
+
+.lieu-card .lieu-icon {
+  font-size: 2rem;
+  margin-bottom: 0.8rem;
+  opacity: 0.6;
+}
+
+.lieu-card h3 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1rem;
+  margin-bottom: 0.15rem;
+  color: var(--gold);
+}
+
+.lieu-card .lieu-alt {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin-bottom: 0.6rem;
+}
+
+.lieu-card p {
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* ═══════════════ FOOTER ═══════════════ */
+footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 3rem 2rem;
+  border-top: 1px solid var(--border);
+}
+
+footer .credit {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.5rem;
+}
+
+footer .credit a {
+  color: var(--purple-glow);
+  text-decoration: none;
+}
+
+footer .note {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  max-width: 500px;
+  margin: 0.5rem auto 0;
+}
+
+/* ═══════════════ SWIPE HINT ═══════════════ */
+.swipe-hint {
+  text-align: center;
+  padding: 0 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.swipe-hint span {
+  display: inline-block;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  animation: sway 3s ease-in-out infinite;
+}
+
+@keyframes sway {
+  0%, 100% { transform: translateX(-5px); opacity: 0.4; }
+  50% { transform: translateX(5px); opacity: 0.8; }
+}
+
+/* ═══════════════ RESPONSIVE ═══════════════ */
+@media (max-width: 768px) {
+  nav { padding: 1rem 1.2rem; }
+  .carousel-track { padding: 2rem calc(50vw - 155px); gap: 1rem; }
+  .card { width: 290px; height: 480px; }
+  .card-content { padding: 1.4rem; }
+  .modal-card { padding: 1.8rem; }
+  .modal-name { font-size: 1.4rem; }
+  .lieux-grid { padding: 1rem 1.2rem 5rem; }
+  .dice-cube, .dice-face { width: 60px; height: 60px; }
+  .dice-face { border-radius: 10px; font-size: 1.5rem; }
+  .dice-face:nth-child(1) { transform: rotateY(0deg) translateZ(30px); }
+  .dice-face:nth-child(2) { transform: rotateY(180deg) translateZ(30px); }
+  .dice-face:nth-child(3) { transform: rotateY(90deg) translateZ(30px); }
+  .dice-face:nth-child(4) { transform: rotateY(-90deg) translateZ(30px); }
+  .dice-face:nth-child(5) { transform: rotateX(90deg) translateZ(30px); }
+  .dice-face:nth-child(6) { transform: rotateX(-90deg) translateZ(30px); }
+}
+
+@media (max-width: 480px) {
+  .carousel-track { padding: 2rem calc(50vw - 140px); }
+  .card { width: 270px; height: 460px; }
+}
+
+/* ═══════════════ ANIMATIONS ═══════════════ */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in { animation: fade-up 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+.delay-5 { animation-delay: 0.5s; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="https://manu.vision" class="back-link">← manu.vision</a>
+  <a class="logo">Bestiaire</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-symbol animate-in">🕯️</div>
+  <h1 class="animate-in delay-1">Bestiaire<br>Guadeloupéen</h1>
+  <p class="subtitle animate-in delay-2">
+    Créatures, esprits et lieux hantés du folklore antillais. 
+    Un héritage oral transmis de génération en génération, 
+    entre peur et fascination.
+  </p>
+
+  <!-- DICE -->
+  <div class="dice-section animate-in delay-3">
+    <div class="dice-label">Découverte aléatoire</div>
+    <div class="dice-wrapper" id="diceWrapper" title="Lance le dé !">
+      <div class="dice-cube" id="diceCube">
+        <div class="dice-face">👠</div>
+        <div class="dice-face">🔥</div>
+        <div class="dice-face">🌑</div>
+        <div class="dice-face">🐺</div>
+        <div class="dice-face">🧜‍♀️</div>
+        <div class="dice-face">🥚</div>
+      </div>
+    </div>
+    <div class="dice-click-hint show">Clique pour lancer</div>
+    <div class="dice-result">
+      <a class="dice-result-text" id="diceResult" href="javascript:void(0)"></a>
+    </div>
+  </div>
+
+  <div class="scroll-hint animate-in delay-5">
+    Découvrir les créatures
+    <span>↓</span>
+  </div>
+</section>
+
+<!-- CREATURES SECTION -->
+<div class="section-header">
+  <div class="label">Chapitre I</div>
+  <h2>Les Créatures</h2>
+  <div class="divider"></div>
+</div>
+
+<div class="filter-bar">
+  <button class="filter-btn active" data-filter="all">Tous</button>
+  <button class="filter-btn" data-filter="esprit">Esprits</button>
+  <button class="filter-btn" data-filter="creature">Créatures</button>
+  <button class="filter-btn" data-filter="sorcellerie">Sorcellerie</button>
+  <button class="filter-btn" data-filter="figure">Figures</button>
+</div>
+
+<div class="swipe-hint">
+  <span>← Glisser pour explorer →</span>
+</div>
+
+<div class="carousel-container">
+  <div class="carousel-track" id="creatureCarousel"></div>
+</div>
+
+<div class="carousel-nav">
+  <button class="carousel-btn" id="prevBtn">←</button>
+  <button class="carousel-btn" id="nextBtn">→</button>
+</div>
+<div class="carousel-counter" id="carouselCounter"></div>
+
+<!-- LIEUX SECTION -->
+<div class="section-header" id="lieuxSection">
+  <div class="label">Chapitre II</div>
+  <h2>Lieux & Objets du Surnaturel</h2>
+  <div class="divider"></div>
+</div>
+
+<div class="lieux-grid" id="lieuxGrid"></div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="credit">Un projet de <a href="https://manu.vision" target="_blank">ManuVision</a></div>
+  <p class="note">« Le folklore n'est pas le passé — c'est la mémoire vivante d'un peuple. »</p>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-symbol" id="modalSymbol"></div>
+    <div class="modal-tag" id="modalTag"></div>
+    <h2 class="modal-name" id="modalName"></h2>
+    <p class="modal-alt" id="modalAlt"></p>
+    <p class="modal-description" id="modalDesc"></p>
+    <div class="modal-story" id="modalStory"></div>
+    <div id="modalRelations"></div>
+    <div class="modal-links" id="modalLinks"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════ DATA ═══════════════
+
+const creatures = [
+  {
+    id: "dyables",
+    name: "Dyablès",
+    altName: "La Diablesse",
+    category: "creature",
+    symbol: "👠",
+    description: "Femme d'une beauté envoûtante qui séduit les hommes pour les mener à leur perte. Elle apparaît la nuit aux carrefours, vêtue d'une longue robe dissimulant un pied fourchu — sa seule imperfection.",
+    story: "On dit que si tu croises une femme trop belle la nuit, regarde ses pieds. Si l'un d'eux est un sabot, cours sans te retourner. Beaucoup d'hommes se sont perdus dans les bois pour l'avoir suivie...",
+    relatedCreatures: [],
+    relatedLieux: ["kwaze"],
+    links: [
+      { label: "Court-métrage (bientôt)", url: "#", icon: "🎬" },
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "soukounyan",
+    name: "Soukounyan",
+    altName: "Soucouyant",
+    category: "creature",
+    symbol: "🔥",
+    description: "Personne — souvent une vieille femme — qui retire sa peau la nuit, la range dans un canari, et vole sous forme de boule de feu pour sucer le sang des dormeurs.",
+    story: "Pour s'en débarrasser, il faut trouver sa peau et la saler. Quand elle revient la remettre, le sel la brûle et elle ne peut plus reprendre forme humaine. Si tu vois une boule de feu traverser le ciel la nuit, rentre chez toi.",
+    relatedCreatures: ["volant", "lougawou"],
+    relatedLieux: ["kanari"],
+    links: [
+      { label: "Court-métrage (bientôt)", url: "#", icon: "🎬" },
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "mofwaze",
+    name: "Mofwazé",
+    altName: "Envoyé maléfique",
+    category: "sorcellerie",
+    symbol: "🦇",
+    description: "Être maléfique envoyé par un quimboiseur, capable de se métamorphoser en oiseau, chien ou chat noir. C'est un sort incarné, lancé contre quelqu'un pour lui nuire.",
+    story: "Si un animal te suit avec insistance la nuit, ou si un oiseau inconnu frappe à ta fenêtre sans relâche, méfie-toi : c'est peut-être un mofwazé envoyé contre toi.",
+    relatedCreatures: ["quimboiseur"],
+    relatedLieux: [],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "mankoko",
+    name: "Man Koko",
+    altName: "Twou a Man Koko",
+    category: "creature",
+    symbol: "🕳️",
+    description: "Créature terrifiante des bois vivant dans un trou profond. Man Koko est le croque-mitaine guadeloupéen : on menace les enfants désobéissants de les y envoyer. Le Twou a Man Koko se trouve à Porte d'Enfer.",
+    story: "Man Koko était une femme qui avait fait un pacte avec le diable pour obtenir beauté et richesse. En contrepartie, elle devait lui donner des âmes. Elle séduisait les hommes et les faisait tomber dans le trou. Un jour, un homme toucha sa croix au cou et reprit ses esprits au bord du gouffre. Il prévint le village, et le diable, voyant qu'elle ne pouvait plus honorer son pacte, la récupéra dans le trou.",
+    relatedCreatures: ["dyables"],
+    relatedLieux: ["twou-mankoko"],
+    links: [
+      { label: "Court-métrage (bientôt)", url: "#", icon: "🎬" },
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "dorlis",
+    name: "Dorlis",
+    altName: "L'incube créole",
+    category: "esprit",
+    symbol: "🌑",
+    description: "Entité nocturne qui se glisse dans les maisons par les trous de serrure et les fentes pour paralyser les dormeurs et les violer dans leur sommeil.",
+    story: "Pour se protéger du Dorlis, on place des grains de riz ou de sable devant la porte. Il est obligé de les compter un par un avant d'entrer — et le soleil se lève avant qu'il n'ait fini.",
+    relatedCreatures: [],
+    relatedLieux: ["mezon-hante"],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "volant",
+    name: "Volant",
+    altName: "Esprit volant",
+    category: "esprit",
+    symbol: "✨",
+    description: "Être volant nocturne associé à la sorcellerie. Il se déplace sous forme lumineuse dans le ciel, souvent confondu avec le soukounyan mais distinct dans la tradition orale.",
+    story: "Les anciens disent que quand tu vois une lumière se déplacer dans le ciel sans bruit, ce n'est ni un avion ni une étoile filante — c'est un volant en mission.",
+    relatedCreatures: ["soukounyan"],
+    relatedLieux: [],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "lougawou",
+    name: "Lougawou",
+    altName: "Loup-garou",
+    category: "creature",
+    symbol: "🐺",
+    description: "Lycanthrope antillais qui se transforme la nuit en animal — chien, bœuf ou cochon. Parfois confondu avec le soukounyan, mais le lougawou garde une enveloppe animale complète.",
+    story: "On raconte que certaines personnes dans le village menaient une double vie. Le jour, des voisins ordinaires. La nuit, des bêtes rôdant dans les rues sombres.",
+    relatedCreatures: ["soukounyan"],
+    relatedLieux: ["kwaze"],
+    links: [
+      { label: "Court-métrage (bientôt)", url: "#", icon: "🎬" }
+    ]
+  },
+  {
+    id: "manmandlo",
+    name: "Manman Dlo",
+    altName: "Maman de l'Eau",
+    category: "esprit",
+    symbol: "🧜‍♀️",
+    description: "Esprit féminin des eaux, sirène créole d'une grande beauté habitant les rivières, les bassins et la mer. Elle peut noyer ceux qui s'aventurent trop près de son domaine.",
+    story: "Les pêcheurs le savent : certains bassins sont interdits. Si l'eau est trop calme, trop belle, trop invitante — c'est que Manman Dlo t'attend dessous.",
+    relatedCreatures: ["papadlo"],
+    relatedLieux: ["je-dlo"],
+    links: [
+      { label: "Court-métrage (bientôt)", url: "#", icon: "🎬" },
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "papadlo",
+    name: "Papa Dlo",
+    altName: "Esprit masculin des eaux",
+    category: "esprit",
+    symbol: "🐍",
+    description: "Esprit masculin des eaux, souvent représenté mi-homme mi-serpent. Gardien des rivières et des sources, il punit ceux qui manquent de respect à la nature.",
+    story: null,
+    relatedCreatures: ["manmandlo"],
+    relatedLieux: ["je-dlo"],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "zombi",
+    name: "Zombi",
+    altName: "Mort-vivant / Esprit errant",
+    category: "sorcellerie",
+    symbol: "⚰️",
+    description: "Mort réanimé par un quimboiseur pour en faire son esclave, ou esprit errant d'un défunt qui n'a pas trouvé le repos. On distingue le zombi-cadavre du zombi-esprit.",
+    story: "Le zombi antillais n'est pas celui d'Hollywood. C'est une personne dont l'âme a été volée par un sorcier, condamnée à errer ou à servir. C'est l'une des peurs les plus profondes du folklore.",
+    relatedCreatures: ["quimboiseur", "anlespwi"],
+    relatedLieux: [],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "chouvaltwa",
+    name: "Chouval Twa Pat",
+    altName: "Cheval à trois pattes",
+    category: "creature",
+    symbol: "🐴",
+    description: "Cheval fantomatique à trois pattes qui apparaît la nuit aux carrefours. Le croiser est un présage de mort ou de grand malheur.",
+    story: "Tu entends le bruit de sabots, mais le rythme est faux — trois temps au lieu de quatre. Ne regarde pas. Ne t'arrête pas. Continue ton chemin.",
+    relatedCreatures: ["dyables"],
+    relatedLieux: ["kwaze"],
+    links: [
+      { label: "Court-métrage (bientôt)", url: "#", icon: "🎬" }
+    ]
+  },
+  {
+    id: "tibolom",
+    name: "Ti Bolom",
+    altName: "Esprit d'enfant non baptisé",
+    category: "esprit",
+    symbol: "👶",
+    description: "Esprit d'un enfant mort sans baptême. Apparaît sous forme d'un petit être nu et rachitique qui pleure la nuit. Particulièrement redouté.",
+    story: "Les pleurs d'un ti bolom ne ressemblent à rien d'autre. Si tu les entends dans la nuit, prie et ne sors pas. Il cherche quelqu'un pour l'emmener de l'autre côté.",
+    relatedCreatures: ["anlespwi"],
+    relatedLieux: [],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "tijean",
+    name: "Ti Jean",
+    altName: "Le trickster créole",
+    category: "figure",
+    symbol: "🎭",
+    description: "Figure de trickster des contes créoles. Petit mais rusé, Ti Jean triomphe toujours des plus forts par l'intelligence et la ruse. Héros populaire du conte oral antillais.",
+    story: "« Est-ce que la cour dort ? » — « Non, la cour ne dort pas ! » C'est ainsi que commencent les contes de Ti Jean, à la veillée, sous les étoiles.",
+    relatedCreatures: [],
+    relatedLieux: [],
+    links: [
+      { label: "Lire les contes", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "betamanibe",
+    name: "La Bèt a Man Ibè",
+    altName: "Créature légendaire",
+    category: "creature",
+    symbol: "👹",
+    description: "Créature monstrueuse liée à un lieu précis, utilisée dans les récits pour effrayer. Son nom seul suffit à faire taire les enfants la nuit.",
+    story: null,
+    relatedCreatures: [],
+    relatedLieux: [],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "gadedzafe",
+    name: "Gadèdzafè",
+    altName: "Voyant / Guérisseur",
+    category: "sorcellerie",
+    symbol: "👁️",
+    description: "Voyant capable de diagnostiquer les maux surnaturels, de voir les esprits et de défaire les sorts. Figure centrale de la médecine traditionnelle guadeloupéenne.",
+    story: "Quand la médecine ne peut rien, quand les malheurs s'enchaînent sans explication, c'est chez le gadèdzafè qu'on va chercher des réponses. Il voit ce que les autres ne voient pas.",
+    relatedCreatures: ["quimboiseur", "mofwaze"],
+    relatedLieux: ["je-dlo"],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "quimboiseur",
+    name: "Quimboiseur",
+    altName: "Tjenbwazè — Sorcier créole",
+    category: "sorcellerie",
+    symbol: "🧿",
+    description: "Sorcier ou guérisseur pratiquant le quimbois (magie créole). Peut être bienveillant — guérisseur, leveur de sorts — ou maléfique — jeteur de sorts, envoyeur de mofwazé.",
+    story: "Le quimboiseur connaît les plantes, les prières, les forces invisibles. On ne prononce pas son nom à la légère. On va le voir en secret, la nuit, par les chemins détournés.",
+    relatedCreatures: ["mofwaze", "gadedzafe", "zombi", "makanda"],
+    relatedLieux: ["kwaze", "pye-bwa", "je-dlo"],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "betafe",
+    name: "Bèt a Fé",
+    altName: "Lumière surnaturelle",
+    category: "esprit",
+    symbol: "💫",
+    description: "Lumière surnaturelle errante dans la nuit, manifestation d'un esprit ou d'une âme en peine cherchant le repos.",
+    story: null,
+    relatedCreatures: ["volant", "anlespwi"],
+    relatedLieux: [],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "tisapoti",
+    name: "Ti Sapoti Bwa",
+    altName: "Esprit farceur de la forêt",
+    category: "esprit",
+    symbol: "🌿",
+    description: "Petit esprit farceur vivant dans les bois. Il désoriente les marcheurs, cache les objets et joue des tours à ceux qui s'aventurent trop profond dans la forêt.",
+    story: "Si tu te perds en forêt alors que tu connais le chemin par cœur, c'est que Ti Sapoti bwa s'amuse avec toi. Retourne ton chapeau et tes poches — ça le perturbe.",
+    relatedCreatures: [],
+    relatedLieux: ["pye-bwa", "fromager"],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "betakon",
+    name: "Bèt à Kòn",
+    altName: "Bête à cornes",
+    category: "creature",
+    symbol: "🐂",
+    description: "Créature cornue terrifiante aperçue la nuit, liée aux forces obscures et à la sorcellerie. Son apparition est un signe de danger imminent.",
+    story: null,
+    relatedCreatures: ["lougawou"],
+    relatedLieux: ["kwaze"],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "makanda",
+    name: "Makanda",
+    altName: "Sort / Maléfice",
+    category: "sorcellerie",
+    symbol: "⛓️",
+    description: "Sort puissant ou maléfice jeté par un quimboiseur. Le terme désigne à la fois le sort lui-même et la pratique. Le nom viendrait de Makandal, célèbre empoisonneur de Saint-Domingue.",
+    story: "Quand quelqu'un dit « yo mété an makanda anlè'y », c'est qu'un sort a été jeté. Pour le lever, il faut consulter un gadèdzafè ou un quimboiseur plus puissant que celui qui l'a lancé.",
+    relatedCreatures: ["quimboiseur", "gadedzafe"],
+    relatedLieux: [],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "anlespwi",
+    name: "An Lèspwi",
+    altName: "Esprits errants / Revenants",
+    category: "esprit",
+    symbol: "👻",
+    description: "Esprits errants de défunts n'ayant pas trouvé le repos. Ils hantent les lieux de leur mort ou de leur vie, parfois pour transmettre un message, parfois par malveillance.",
+    story: "Les anciens laissent toujours un verre d'eau à la porte pour les lèspwi assoiffés. Un esprit apaisé laisse tranquille. Un esprit négligé revient.",
+    relatedCreatures: ["tibolom", "bolomsantet"],
+    relatedLieux: ["mezon-hante", "tchenn"],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "fanmanblan",
+    name: "Fanm an Blan",
+    altName: "La dame blanche créole",
+    category: "esprit",
+    symbol: "🤍",
+    description: "Apparition spectrale d'une femme en blanc, souvent aperçue au bord des routes la nuit ou près des cimetières. Version créole de la dame blanche.",
+    story: null,
+    relatedCreatures: ["anlespwi", "dyables"],
+    relatedLieux: ["kwaze"],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "bolomsantet",
+    name: "Bolom San Tèt",
+    altName: "Fantôme sans tête",
+    category: "esprit",
+    symbol: "💀",
+    description: "Fantôme sans tête errant la nuit. Figure terrifiante du folklore liée aux victimes d'exécution ou de violence pendant l'esclavage.",
+    story: null,
+    relatedCreatures: ["anlespwi"],
+    relatedLieux: ["tchenn"],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  },
+  {
+    id: "bebedyab",
+    name: "Bébé Dyab",
+    altName: "Le bébé diable / Tilous en Martinique",
+    category: "sorcellerie",
+    symbol: "🥚",
+    description: "Petit monstre né d'un rituel : on couve un œuf sous son bras pendant un nombre de jours précis. La créature qui en sort exauce tous tes souhaits — richesse, succès — mais il faut la nourrir. Chaque jour, elle demande le double de la veille.",
+    story: "Quand tu n'arrives plus à le nourrir, le bébé dyab se nourrit des gens autour de toi — tes amis, ta sœur, ton frère. Pour l'éliminer, tu dois l'emmener en mer et le jeter dans l'eau sans te retourner. Mais il prend la voix de tes proches pour te rappeler : « Viens me chercher, je me noie ! » Si tu te retournes, il te mange.",
+    relatedCreatures: ["quimboiseur"],
+    relatedLieux: [],
+    links: [
+      { label: "Court-métrage (bientôt)", url: "#", icon: "🎬" },
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
+  }
+];
+
+const lieux = [
+  {
+    id: "fromager",
+    name: "Fromager",
+    altName: "Mapou",
+    icon: "🌳",
+    description: "Arbre sacré et redouté, considéré comme demeure des esprits. On ne le coupe jamais sans précautions rituelles. Le fromager est le seuil entre les mondes.",
+    relatedCreatures: ["tisapoti", "anlespwi", "quimboiseur"],
+    category: "lieu"
+  },
+  {
+    id: "kwaze",
+    name: "Kwazé",
+    altName: "Carrefour",
+    icon: "✝️",
+    description: "Lieu de rencontre entre le monde des vivants et celui des esprits. C'est là qu'on dépose les travaux de quimbois et qu'apparaissent la Dyablès et le Chouval twa pat.",
+    relatedCreatures: ["dyables", "chouvaltwa", "lougawou", "quimboiseur"],
+    category: "lieu"
+  },
+  {
+    id: "kanari",
+    name: "Kanari",
+    altName: "Jarre en terre cuite",
+    icon: "🏺",
+    description: "Récipient dans lequel le soukounyan range sa peau avant de s'envoler. Trouver le kanari et saler la peau, c'est le seul moyen de le vaincre.",
+    relatedCreatures: ["soukounyan"],
+    category: "lieu"
+  },
+  {
+    id: "mezon-hante",
+    name: "Mèzon Hanté",
+    altName: "Maison hantée",
+    icon: "🏚️",
+    description: "Maisons habitées par des esprits, souvent liées à un drame passé ou à un trésor enterré. Chaque quartier en Guadeloupe a la sienne.",
+    relatedCreatures: ["anlespwi", "dorlis"],
+    category: "lieu"
+  },
+  {
+    id: "tchenn",
+    name: "Tchenn",
+    altName: "Chaînes",
+    icon: "⛓️",
+    description: "Bruit de chaînes traînées la nuit, signe de la présence d'esprits tourmentés — souvent liés à la mémoire de l'esclavage.",
+    relatedCreatures: ["anlespwi", "bolomsantet"],
+    category: "lieu"
+  },
+  {
+    id: "je-dlo",
+    name: "Jé Dlo",
+    altName: "Bains rituels",
+    icon: "💧",
+    description: "Purifications par l'eau et les plantes pour se protéger des entités maléfiques ou lever un sort. Pratique centrale de la médecine traditionnelle.",
+    relatedCreatures: ["gadedzafe", "quimboiseur", "manmandlo"],
+    category: "lieu"
+  },
+  {
+    id: "pye-bwa",
+    name: "Pyé Bwa",
+    altName: "Arbres habités",
+    icon: "🌴",
+    description: "Certains arbres — le fromager, le figuier maudit — sont considérés comme habités par des esprits. On ne s'y adosse pas la nuit.",
+    relatedCreatures: ["tisapoti", "quimboiseur"],
+    category: "lieu"
+  },
+  {
+    id: "twou-mankoko",
+    name: "Twou a Man Koko",
+    altName: "Porte d'Enfer, Anse-Bertrand",
+    icon: "🕳️",
+    description: "Le gouffre de Porte d'Enfer, considéré comme une des portes vers les enfers. C'est là que Man Koko faisait tomber les hommes séduits par sa beauté.",
+    relatedCreatures: ["mankoko", "dyables"],
+    category: "lieu"
+  }
+];
+
+// ═══════════════ HELPERS ═══════════════
+
+function getAllEntries() {
+  return [
+    ...creatures.map(c => ({ ...c, type: 'creature' })),
+    ...lieux.map(l => ({ ...l, symbol: l.icon, type: 'lieu' }))
+  ];
+}
+
+function findCreature(id) { return creatures.find(c => c.id === id); }
+function findLieu(id) { return lieux.find(l => l.id === id); }
+
+function getCategoryLabel(cat) {
+  return { esprit: 'Esprit', creature: 'Créature', sorcellerie: 'Sorcellerie', figure: 'Figure', lieu: 'Lieu' }[cat] || cat;
+}
+
+// ═══════════════ RENDER CREATURE CARDS ═══════════════
+
+const track = document.getElementById('creatureCarousel');
+let currentFilter = 'all';
+
+function renderCards(filter = 'all') {
+  const filtered = filter === 'all' ? creatures : creatures.filter(c => c.category === filter);
+  track.innerHTML = '';
+  
+  filtered.forEach((c) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.creatureId = c.id;
+    card.innerHTML = `
+      <div class="card-image">${c.symbol}</div>
+      <div class="card-content">
+        <span class="card-tag">${getCategoryLabel(c.category)}</span>
+        <h3 class="card-name">${c.name}</h3>
+        <p class="card-alt-name">${c.altName}</p>
+        <p class="card-description">${c.description}</p>
+        <a class="card-link" href="javascript:void(0)">
+          Découvrir <span class="arrow">→</span>
+        </a>
+      </div>
+    `;
+    card.addEventListener('click', () => {
+      if (!track.classList.contains('dragging') && !hasDragged) openModal(c, 'creature');
+    });
+    track.appendChild(card);
+  });
+  
+  updateCounter(filtered.length);
+}
+
+// ═══════════════ RENDER LIEUX ═══════════════
+
+const lieuxGrid = document.getElementById('lieuxGrid');
+
+function renderLieux() {
+  lieuxGrid.innerHTML = '';
+  lieux.forEach(l => {
+    const card = document.createElement('div');
+    card.className = 'lieu-card';
+    card.dataset.lieuId = l.id;
+    card.innerHTML = `
+      <div class="lieu-icon">${l.icon}</div>
+      <h3>${l.name}</h3>
+      <p class="lieu-alt">${l.altName}</p>
+      <p>${l.description}</p>
+    `;
+    card.addEventListener('click', () => openModal(l, 'lieu'));
+    lieuxGrid.appendChild(card);
+  });
+}
+
+renderLieux();
+
+// ═══════════════ MODAL WITH CROSS-LINKS ═══════════════
+
+const modal = document.getElementById('modal');
+
+function openModal(data, type) {
+  document.getElementById('modalSymbol').textContent = data.symbol || data.icon;
+  const tag = document.getElementById('modalTag');
+  tag.textContent = type === 'lieu' ? 'Lieu' : getCategoryLabel(data.category);
+  tag.className = type === 'lieu' ? 'modal-tag lieu' : 'modal-tag';
+  document.getElementById('modalName').textContent = data.name;
+  document.getElementById('modalAlt').textContent = data.altName;
+  document.getElementById('modalDesc').textContent = data.description;
+  
+  const storyEl = document.getElementById('modalStory');
+  if (data.story) {
+    storyEl.textContent = data.story;
+    storyEl.style.display = 'block';
+  } else {
+    storyEl.style.display = 'none';
+  }
+  
+  // Cross-links
+  const relationsEl = document.getElementById('modalRelations');
+  relationsEl.innerHTML = '';
+  
+  const relatedCreatures = (data.relatedCreatures || []).map(id => findCreature(id)).filter(Boolean);
+  const relatedLieux = (data.relatedLieux || []).map(id => findLieu(id)).filter(Boolean);
+  
+  if (relatedCreatures.length || relatedLieux.length) {
+    const label = document.createElement('div');
+    label.className = 'modal-relation-label';
+    label.textContent = 'Connexions';
+    relationsEl.appendChild(label);
+    
+    const tagsWrap = document.createElement('div');
+    tagsWrap.className = 'modal-relations';
+    
+    relatedCreatures.forEach(rc => {
+      const tag = document.createElement('a');
+      tag.className = 'modal-relation-tag creature-link';
+      tag.href = 'javascript:void(0)';
+      tag.innerHTML = `${rc.symbol} ${rc.name}`;
+      tag.addEventListener('click', (e) => {
+        e.preventDefault();
+        openModal(rc, 'creature');
+      });
+      tagsWrap.appendChild(tag);
+    });
+    
+    relatedLieux.forEach(rl => {
+      const tag = document.createElement('a');
+      tag.className = 'modal-relation-tag lieu-link';
+      tag.href = 'javascript:void(0)';
+      tag.innerHTML = `${rl.icon} ${rl.name}`;
+      tag.addEventListener('click', (e) => {
+        e.preventDefault();
+        openModal(rl, 'lieu');
+      });
+      tagsWrap.appendChild(tag);
+    });
+    
+    relationsEl.appendChild(tagsWrap);
+  }
+  
+  // Action links
+  const linksEl = document.getElementById('modalLinks');
+  linksEl.innerHTML = '';
+  if (data.links && data.links.length) {
+    data.links.forEach(l => {
+      const a = document.createElement('a');
+      a.className = 'modal-link';
+      a.href = l.url;
+      a.innerHTML = `${l.icon} ${l.label}`;
+      linksEl.appendChild(a);
+    });
+  }
+  
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+function closeModal() {
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// ═══════════════ FILTERS ═══════════════
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderCards(currentFilter);
+    scrollPos = 0;
+    track.style.transform = `translateX(0px)`;
+  });
+});
+
+// ═══════════════ CAROUSEL DRAG ═══════════════
+
+let isDragging = false;
+let startX = 0;
+let scrollPos = 0;
+let dragDelta = 0;
+let hasDragged = false;
+
+track.addEventListener('mousedown', startDrag);
+track.addEventListener('touchstart', startDrag, { passive: true });
+window.addEventListener('mousemove', moveDrag);
+window.addEventListener('touchmove', moveDrag, { passive: true });
+window.addEventListener('mouseup', endDrag);
+window.addEventListener('touchend', endDrag);
+
+function startDrag(e) {
+  isDragging = true;
+  hasDragged = false;
+  startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+  track.classList.add('dragging');
+}
+
+function moveDrag(e) {
+  if (!isDragging) return;
+  const x = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+  dragDelta = x - startX;
+  if (Math.abs(dragDelta) > 5) hasDragged = true;
+  track.style.transform = `translateX(${scrollPos + dragDelta}px)`;
+}
+
+function endDrag() {
+  if (!isDragging) return;
+  isDragging = false;
+  track.classList.remove('dragging');
+  scrollPos += dragDelta;
+  const trackWidth = track.scrollWidth - track.parentElement.clientWidth;
+  scrollPos = Math.max(-trackWidth, Math.min(0, scrollPos));
+  track.style.transition = 'transform 0.4s cubic-bezier(0.23, 1, 0.32, 1)';
+  track.style.transform = `translateX(${scrollPos}px)`;
+  setTimeout(() => { track.style.transition = 'none'; }, 400);
+  dragDelta = 0;
+}
+
+track.addEventListener('click', (e) => {
+  if (hasDragged) { e.stopPropagation(); e.preventDefault(); }
+}, true);
+
+// Nav buttons
+const cardWidth = 356;
+document.getElementById('prevBtn').addEventListener('click', () => {
+  scrollPos = Math.min(0, scrollPos + cardWidth);
+  track.style.transition = 'transform 0.5s cubic-bezier(0.23, 1, 0.32, 1)';
+  track.style.transform = `translateX(${scrollPos}px)`;
+  setTimeout(() => { track.style.transition = 'none'; }, 500);
+});
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+  const trackWidth = track.scrollWidth - track.parentElement.clientWidth;
+  scrollPos = Math.max(-trackWidth, scrollPos - cardWidth);
+  track.style.transition = 'transform 0.5s cubic-bezier(0.23, 1, 0.32, 1)';
+  track.style.transform = `translateX(${scrollPos}px)`;
+  setTimeout(() => { track.style.transition = 'none'; }, 500);
+});
+
+function updateCounter(total) {
+  document.getElementById('carouselCounter').textContent = `${total} créature${total > 1 ? 's' : ''}`;
+}
+
+// ═══════════════ DICE ═══════════════
+
+const diceCube = document.getElementById('diceCube');
+const diceWrapper = document.getElementById('diceWrapper');
+const diceResult = document.getElementById('diceResult');
+const diceHint = document.querySelector('.dice-click-hint');
+let diceRolling = false;
+let lastDiceResult = null;
+
+// Put random emojis on dice faces
+function updateDiceFaces() {
+  const all = getAllEntries();
+  const faces = diceCube.querySelectorAll('.dice-face');
+  const shuffled = [...all].sort(() => Math.random() - 0.5);
+  faces.forEach((face, i) => {
+    face.textContent = shuffled[i % shuffled.length].symbol;
+  });
+}
+
+updateDiceFaces();
+
+diceWrapper.addEventListener('click', () => {
+  if (diceRolling) return;
+  diceRolling = true;
+  
+  // Hide previous result
+  diceResult.classList.remove('visible');
+  diceHint.textContent = '...';
+  
+  // Roll animation
+  diceCube.classList.add('rolling');
+  updateDiceFaces();
+  
+  // Pick random entry
+  const all = getAllEntries();
+  let pick;
+  do {
+    pick = all[Math.floor(Math.random() * all.length)];
+  } while (lastDiceResult && pick.id === lastDiceResult.id && all.length > 1);
+  lastDiceResult = pick;
+  
+  setTimeout(() => {
+    diceCube.classList.remove('rolling');
+    
+    // Show result
+    diceResult.textContent = `${pick.symbol} ${pick.name}`;
+    diceResult.classList.add('visible');
+    diceHint.textContent = 'Clique le nom pour découvrir';
+    
+    // Click result to open modal
+    diceResult.onclick = () => {
+      if (pick.type === 'lieu') {
+        openModal(pick, 'lieu');
+      } else {
+        openModal(pick, 'creature');
+      }
+    };
+    
+    diceRolling = false;
+  }, 1300);
+});
+
+// ═══════════════ SCROLL-TO HELPER (for cross-links from modal) ═══════════════
+
+function scrollToCreature(id) {
+  closeModal();
+  // Reset filter to 'all' to ensure the card is visible
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('[data-filter="all"]').classList.add('active');
+  currentFilter = 'all';
+  renderCards('all');
+  scrollPos = 0;
+  track.style.transform = 'translateX(0px)';
+  
+  setTimeout(() => {
+    const card = track.querySelector(`[data-creature-id="${id}"]`);
+    if (card) {
+      const cardRect = card.getBoundingClientRect();
+      const containerRect = track.parentElement.getBoundingClientRect();
+      const targetScroll = -(card.offsetLeft - containerRect.width / 2 + card.offsetWidth / 2);
+      const trackWidth = track.scrollWidth - track.parentElement.clientWidth;
+      scrollPos = Math.max(-trackWidth, Math.min(0, targetScroll));
+      
+      track.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
+      track.style.transform = `translateX(${scrollPos}px)`;
+      
+      card.classList.add('highlighted');
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      setTimeout(() => {
+        track.style.transition = 'none';
+        setTimeout(() => card.classList.remove('highlighted'), 3000);
+      }, 600);
+    }
+  }, 100);
+}
+
+function scrollToLieu(id) {
+  closeModal();
+  setTimeout(() => {
+    const card = lieuxGrid.querySelector(`[data-lieu-id="${id}"]`);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.classList.add('highlighted');
+      setTimeout(() => card.classList.remove('highlighted'), 3000);
+    }
+  }, 100);
+}
+
+// ═══════════════ INIT ═══════════════
+renderCards();
+</script>
+</body>
+</html>
