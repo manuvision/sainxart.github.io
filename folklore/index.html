@@ -23,6 +23,8 @@
   --text-dim: #6b5f80;
   --red-accent: #8b2030;
   --green-spirit: #2a6b4a;
+  --teal-mythe: #2dd4bf;
+  --teal-mythe-dark: #0d6b5e;
   --border: rgba(107, 63, 160, 0.15);
 }
 
@@ -464,6 +466,12 @@ nav .back-link:hover { color: var(--purple-glow); }
   border-color: rgba(212, 168, 71, 0.25);
 }
 
+.card-tag.mythe {
+  color: var(--teal-mythe);
+  background: rgba(45, 212, 191, 0.1);
+  border-color: rgba(45, 212, 191, 0.25);
+}
+
 .card-name {
   font-family: 'Cinzel Decorative', serif;
   font-weight: 700;
@@ -578,6 +586,7 @@ nav .back-link:hover { color: var(--purple-glow); }
 }
 
 .modal-card {
+  position: relative;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 24px;
@@ -597,8 +606,11 @@ nav .back-link:hover { color: var(--purple-glow); }
 }
 
 .modal-close {
-  float: right;
-  background: none;
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 10;
+  background: rgba(12, 10, 20, 0.8);
   border: 1px solid var(--border);
   color: var(--text-dim);
   width: 36px;
@@ -640,6 +652,12 @@ nav .back-link:hover { color: var(--purple-glow); }
   color: var(--gold);
   background: rgba(212, 168, 71, 0.1);
   border-color: rgba(212, 168, 71, 0.25);
+}
+
+.modal-tag.mythe {
+  color: var(--teal-mythe);
+  background: rgba(45, 212, 191, 0.1);
+  border-color: rgba(45, 212, 191, 0.25);
 }
 
 .modal-name {
@@ -717,6 +735,23 @@ nav .back-link:hover { color: var(--purple-glow); }
 .modal-relation-tag.lieu-link:hover {
   background: rgba(212, 168, 71, 0.15);
   border-color: var(--gold);
+}
+
+.modal-relation-tag.mythe-link {
+  color: var(--teal-mythe);
+  border-color: rgba(45, 212, 191, 0.25);
+  background: rgba(45, 212, 191, 0.08);
+}
+
+.modal-relation-tag.mythe-link:hover {
+  background: rgba(45, 212, 191, 0.2);
+  border-color: var(--teal-mythe);
+}
+
+.filter-btn.mythe-active {
+  background: rgba(13, 107, 94, 0.3);
+  border-color: var(--teal-mythe);
+  color: var(--teal-mythe);
 }
 
 .modal-relation-label {
@@ -971,6 +1006,7 @@ footer .note {
   <button class="filter-btn" data-filter="creature">Créatures</button>
   <button class="filter-btn" data-filter="sorcellerie">Sorcellerie</button>
   <button class="filter-btn" data-filter="figure">Figures</button>
+  <button class="filter-btn" data-filter="mythe">Mythes</button>
 </div>
 
 <div class="swipe-hint">
@@ -1361,6 +1397,20 @@ const creatures = [
       { label: "Court-métrage (bientôt)", url: "#", icon: "🎬" },
       { label: "Lire l'histoire", url: "#", icon: "📖" }
     ]
+  },
+  {
+    id: "sese",
+    name: "🌙 Le Mythe de Sésé",
+    altName: "Mythe fondateur Kalinago — L'origine de la Lune et du Colibri",
+    category: "mythe",
+    symbol: "🌙",
+    description: "Mythe fondateur amérindien racontant l'histoire de Sésé, une jeune fille Kalinago. Dans une version, son frère est chassé du village et devient la Lune ; un oiseau porte l'enfant de Sésé jusqu'aux cieux, et la Lune lui offre ses couleurs — c'est le Colibri. Dans la seconde version, Sésé prend pour amant un grand serpent de la rivière. Quand son frère le tue, elle enterre les morceaux. De la terre naissent des enfants qui se séparent en deux villages — l'origine de la séparation entre Arawaks et Kalinagos. On dit que lorsque la Caraïbe sera réunie, le serpent — l'arc antillais — retrouvera sa puissance.",
+    story: "Version 1 — Le frère de Sésé lui rendait visite dans son hamac, la nuit, en secret. Pour découvrir son identité, elle lui enduisit le visage de génipa. Au matin, les marques trahirent le frère. Banni du village, il s'enfuit vers le ciel et devint la Lune — et les taches qu'on y voit sont les traces de génipa. Sésé, enceinte, donna naissance à un enfant. Un colibri porta le bébé jusqu'à la Lune, qui lui offrit ses couleurs iridescentes en remerciement.\n\nVersion 2 — Sésé découvrit une rivière interdite au fond de la forêt. Un grand serpent y vivait et devint son amant. Chaque jour elle allait le retrouver, prétextant cueillir des fruits. Son frère, soupçonneux, la suivit et tua le serpent. Sésé, dévastée, enterra les morceaux du corps. De chaque morceau naquit un enfant. Les enfants se séparèrent en deux groupes qui fondèrent deux villages — les Arawaks et les Kalinagos. La prophétie dit que le jour où les peuples de la Caraïbe seront réunis, le serpent — l'arc des Antilles — retrouvera toute sa puissance.",
+    relatedCreatures: ["papadlo"],
+    relatedLieux: ["pye-bwa", "je-dlo"],
+    links: [
+      { label: "Lire l'histoire", url: "#", icon: "📖" }
+    ]
   }
 ];
 
@@ -1452,7 +1502,7 @@ function findCreature(id) { return creatures.find(c => c.id === id); }
 function findLieu(id) { return lieux.find(l => l.id === id); }
 
 function getCategoryLabel(cat) {
-  return { esprit: 'Esprit', creature: 'Créature', sorcellerie: 'Sorcellerie', figure: 'Figure', lieu: 'Lieu' }[cat] || cat;
+  return { esprit: 'Esprit', creature: 'Créature', sorcellerie: 'Sorcellerie', figure: 'Figure', lieu: 'Lieu', mythe: 'Mythe' }[cat] || cat;
 }
 
 // ═══════════════ RENDER CREATURE CARDS ═══════════════
@@ -1468,10 +1518,11 @@ function renderCards(filter = 'all') {
     const card = document.createElement('div');
     card.className = 'card';
     card.dataset.creatureId = c.id;
+    const tagClass = c.category === 'mythe' ? 'card-tag mythe' : 'card-tag';
     card.innerHTML = `
       <div class="card-image">${c.symbol}</div>
       <div class="card-content">
-        <span class="card-tag">${getCategoryLabel(c.category)}</span>
+        <span class="${tagClass}">${getCategoryLabel(c.category)}</span>
         <h3 class="card-name">${c.name}</h3>
         <p class="card-alt-name">${c.altName}</p>
         <p class="card-description">${c.description}</p>
@@ -1520,7 +1571,7 @@ function openModal(data, type) {
   document.getElementById('modalSymbol').textContent = data.symbol || data.icon;
   const tag = document.getElementById('modalTag');
   tag.textContent = type === 'lieu' ? 'Lieu' : getCategoryLabel(data.category);
-  tag.className = type === 'lieu' ? 'modal-tag lieu' : 'modal-tag';
+  tag.className = type === 'lieu' ? 'modal-tag lieu' : (data.category === 'mythe' ? 'modal-tag mythe' : 'modal-tag');
   document.getElementById('modalName').textContent = data.name;
   document.getElementById('modalAlt').textContent = data.altName;
   document.getElementById('modalDesc').textContent = data.description;
@@ -1593,7 +1644,10 @@ function openModal(data, type) {
   document.body.style.overflow = 'hidden';
 }
 
-document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalClose').addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeModal();
+});
 modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
@@ -1606,8 +1660,15 @@ function closeModal() {
 
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.remove('active');
+      b.classList.remove('mythe-active');
+    });
+    if (btn.dataset.filter === 'mythe') {
+      btn.classList.add('mythe-active');
+    } else {
+      btn.classList.add('active');
+    }
     currentFilter = btn.dataset.filter;
     renderCards(currentFilter);
     scrollPos = 0;
@@ -1680,7 +1741,8 @@ document.getElementById('nextBtn').addEventListener('click', () => {
 });
 
 function updateCounter(total) {
-  document.getElementById('carouselCounter').textContent = `${total} créature${total > 1 ? 's' : ''}`;
+  const label = currentFilter === 'mythe' ? 'mythe' : 'créature';
+  document.getElementById('carouselCounter').textContent = `${total} ${label}${total > 1 ? 's' : ''}`;
 }
 
 // ═══════════════ DICE ═══════════════
