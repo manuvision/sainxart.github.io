@@ -232,8 +232,8 @@ nav .back-link:hover { color: var(--purple-glow); }
 
 .dice-result-text {
   font-family: 'Cormorant Garamond', serif;
-  font-style: italic;
-  font-size: 1rem;
+  font-style: normal;
+  font-size: 1.6rem;
   color: var(--purple-glow);
   opacity: 0;
   transform: translateY(8px);
@@ -915,22 +915,31 @@ footer .note {
 <!-- NAV -->
 <nav>
   <a href="https://manu.vision" class="back-link">← manu.vision</a>
-  <a class="logo">Bestiaire</a>
+  <a class="logo">Folklore</a>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
   <div class="hero-symbol animate-in">🕯️</div>
-  <h1 class="animate-in delay-1">Bestiaire<br>Guadeloupéen</h1>
+  <h1 class="animate-in delay-1">Folklore<br>Antillais</h1>
   <p class="subtitle animate-in delay-2">
     Créatures, esprits et lieux hantés du folklore antillais. 
     Un héritage oral transmis de génération en génération, 
     entre peur et fascination.
   </p>
 
+  <div class="scroll-hint animate-in delay-5">
+    Découvrir les créatures
+    <span>↓</span>
+  </div>
+
+  <br/>
+  <br/>
+  <br/>
+  
   <!-- DICE -->
   <div class="dice-section animate-in delay-3">
-    <div class="dice-label">Découverte aléatoire</div>
+    <!-- <div class="dice-label">Découverte aléatoire</div> -->
     <div class="dice-wrapper" id="diceWrapper" title="Lance le dé !">
       <div class="dice-cube" id="diceCube">
         <div class="dice-face">👠</div>
@@ -941,15 +950,11 @@ footer .note {
         <div class="dice-face">🥚</div>
       </div>
     </div>
+    <br/>
     <div class="dice-click-hint show">Clique pour lancer</div>
     <div class="dice-result">
       <a class="dice-result-text" id="diceResult" href="javascript:void(0)"></a>
     </div>
-  </div>
-
-  <div class="scroll-hint animate-in delay-5">
-    Découvrir les créatures
-    <span>↓</span>
   </div>
 </section>
 
