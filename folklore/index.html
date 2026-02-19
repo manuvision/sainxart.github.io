@@ -100,6 +100,64 @@ nav .back-link {
 }
 nav .back-link:hover { color: var(--purple-glow); }
 
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.lang-switch .lang-chip {
+  opacity: 0.7;
+  transition: color 0.25s ease, opacity 0.25s ease;
+}
+
+.lang-switch .lang-chip.active {
+  opacity: 1;
+  color: var(--text-primary);
+}
+
+.lang-toggle {
+  width: 32px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(12, 10, 20, 0.9);
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.25s ease, background 0.25s ease;
+  padding: 0;
+}
+
+.lang-toggle:hover {
+  border-color: var(--purple-mid);
+}
+
+.lang-toggle .thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--purple-glow);
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.lang-toggle[aria-checked="true"] .thumb {
+  transform: translateX(14px);
+  background: var(--gold);
+}
+
 /* ═══════════════ HERO ═══════════════ */
 .hero {
   position: relative;
@@ -859,6 +917,11 @@ footer .note {
 /* ═══════════════ RESPONSIVE ═══════════════ */
 @media (max-width: 768px) {
   nav { padding: 1rem 1.2rem; }
+  .nav-right { gap: 0.5rem; }
+  .lang-switch { font-size: 0.52rem; letter-spacing: 0.1em; }
+  .lang-toggle { width: 30px; height: 16px; }
+  .lang-toggle .thumb { width: 10px; height: 10px; top: 2px; left: 2px; }
+  .lang-toggle[aria-checked="true"] .thumb { transform: translateX(14px); }
   .card-grid {
     grid-template-columns: 1fr;
     padding: 1.5rem 1.2rem 4rem;
@@ -905,21 +968,30 @@ footer .note {
 
 <!-- NAV -->
 <nav>
-  <a href="https://manu.vision" class="back-link">← manu.vision</a>
-  <a class="logo">Folklore</a>
+  <a href="https://manu.vision" class="back-link" id="backLink">← manu.vision</a>
+  <div class="nav-right">
+    <div class="lang-switch" id="langSwitch">
+      <span class="lang-chip active" id="langFr">FR</span>
+      <button class="lang-toggle" id="langToggle" type="button" role="switch" aria-checked="false" aria-label="Switch language">
+        <span class="thumb"></span>
+      </button>
+      <span class="lang-chip" id="langEn">EN</span>
+    </div>
+    <a class="logo" id="siteLogo">Folklore</a>
+  </div>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
   <div class="hero-symbol animate-in">🕯️</div>
-  <h1 class="animate-in delay-1">Folklore<br>Antillais</h1>
-  <p class="subtitle animate-in delay-2">
+  <h1 class="animate-in delay-1" id="heroTitle">Folklore<br>Antillais</h1>
+  <p class="subtitle animate-in delay-2" id="heroSubtitle">
     Créatures, esprits et lieux hantés du folklore antillais. 
     Un héritage oral transmis de génération en génération, 
     entre peur et fascination.
   </p>
 
-  <div class="scroll-hint animate-in delay-5">
+  <div class="scroll-hint animate-in delay-5" id="scrollHint">
     Découvrir les créatures
     <span>↓</span>
   </div>
@@ -942,7 +1014,7 @@ footer .note {
       </div>
     </div>
     <br/>
-    <div class="dice-click-hint show">Clique pour lancer</div>
+    <div class="dice-click-hint show" id="diceHintText">Clique pour lancer</div>
     <div class="dice-result">
       <a class="dice-result-text" id="diceResult" href="javascript:void(0)"></a>
     </div>
@@ -951,8 +1023,8 @@ footer .note {
 
 <!-- CREATURES SECTION -->
 <div class="section-header">
-  <div class="label">Chapitre I</div>
-  <h2>Les Créatures</h2>
+  <div class="label" id="chapterOneLabel">Chapitre I</div>
+  <h2 id="chapterOneTitle">Les Créatures</h2>
   <div class="divider"></div>
 </div>
 
@@ -969,8 +1041,8 @@ footer .note {
 
 <!-- MYTHS SECTION -->
 <div class="section-header" id="mythsSection">
-  <div class="label">Chapitre II</div>
-  <h2>Les Mythes</h2>
+  <div class="label" id="chapterTwoLabel">Chapitre II</div>
+  <h2 id="chapterTwoTitle">Les Mythes</h2>
   <div class="divider"></div>
 </div>
 
@@ -979,8 +1051,8 @@ footer .note {
 
 <!-- LIEUX SECTION -->
 <div class="section-header" id="lieuxSection">
-  <div class="label">Chapitre III</div>
-  <h2>Lieux & Objets du Surnaturel</h2>
+  <div class="label" id="chapterThreeLabel">Chapitre III</div>
+  <h2 id="chapterThreeTitle">Lieux & Objets du Surnaturel</h2>
   <div class="divider"></div>
 </div>
 
@@ -988,8 +1060,8 @@ footer .note {
 
 <!-- FOOTER -->
 <footer>
-  <div class="credit">Un projet de <a href="https://manu.vision" target="_blank">ManuVision</a></div>
-  <p class="note">« Le folklore n'est pas le passé — c'est la mémoire vivante d'un peuple. »</p>
+  <div class="credit" id="footerCredit">Un projet de <a href="https://manu.vision" target="_blank">ManuVision</a></div>
+  <p class="note" id="footerNote">« Le folklore n'est pas le passé — c'est la mémoire vivante d'un peuple. »</p>
 </footer>
 
 <!-- MODAL -->
@@ -1446,6 +1518,242 @@ const lieux = [
 const creatureEntries = creatures.filter(c => c.category !== 'mythe');
 const myths = creatures.filter(c => c.category === 'mythe');
 
+const i18n = {
+  fr: {
+    pageTitle: "Bestiaire Guadeloupéen — ManuVision",
+    heroTitle: "Folklore<br>Antillais",
+    heroSubtitle: "Créatures, esprits et lieux hantés du folklore antillais. Un héritage oral transmis de génération en génération, entre peur et fascination.",
+    scrollHint: "Découvrir les créatures",
+    diceTitle: "Lance le dé !",
+    diceHintIdle: "Clique pour lancer",
+    diceHintAfter: "Clique le nom pour découvrir",
+    chapterOneLabel: "Chapitre I",
+    chapterOneTitle: "Les Créatures",
+    chapterTwoLabel: "Chapitre II",
+    chapterTwoTitle: "Les Mythes",
+    chapterThreeLabel: "Chapitre III",
+    chapterThreeTitle: "Lieux & Objets du Surnaturel",
+    filterAll: "Tous",
+    filterEsprit: "Esprits",
+    filterCreature: "Créatures",
+    filterSorcellerie: "Sorcellerie",
+    filterFigure: "Figures",
+    discover: "Découvrir",
+    connections: "Connexions",
+    counterEntryOne: "entrée",
+    counterEntryMany: "entrées",
+    counterMythOne: "mythe",
+    counterMythMany: "mythes",
+    footerCredit: "Un projet de <a href=\"https://manu.vision\" target=\"_blank\">ManuVision</a>",
+    footerNote: "« Le folklore n'est pas le passé — c'est la mémoire vivante d'un peuple. »",
+    categories: { esprit: "Esprit", creature: "Créature", sorcellerie: "Sorcellerie", figure: "Figure", lieu: "Lieu", mythe: "Mythe" },
+    linkLabels: {
+      "Court-métrage (bientôt)": "Court-métrage (bientôt)",
+      "Lire l'histoire": "Lire l'histoire",
+      "Lire les contes": "Lire les contes"
+    }
+  },
+  en: {
+    pageTitle: "Guadeloupean Bestiary — ManuVision",
+    heroTitle: "Caribbean<br>Folklore",
+    heroSubtitle: "Creatures, spirits, and haunted places from Caribbean folklore. A living oral heritage passed down across generations, between fear and fascination.",
+    scrollHint: "Discover the creatures",
+    diceTitle: "Roll the die!",
+    diceHintIdle: "Click to roll",
+    diceHintAfter: "Click the name to discover",
+    chapterOneLabel: "Chapter I",
+    chapterOneTitle: "Creatures",
+    chapterTwoLabel: "Chapter II",
+    chapterTwoTitle: "Myths",
+    chapterThreeLabel: "Chapter III",
+    chapterThreeTitle: "Places & Supernatural Objects",
+    filterAll: "All",
+    filterEsprit: "Spirits",
+    filterCreature: "Creatures",
+    filterSorcellerie: "Witchcraft",
+    filterFigure: "Figures",
+    discover: "Discover",
+    connections: "Connections",
+    counterEntryOne: "entry",
+    counterEntryMany: "entries",
+    counterMythOne: "myth",
+    counterMythMany: "myths",
+    footerCredit: "A project by <a href=\"https://manu.vision\" target=\"_blank\">ManuVision</a>",
+    footerNote: "“Folklore is not the past — it is the living memory of a people.”",
+    categories: { esprit: "Spirit", creature: "Creature", sorcellerie: "Witchcraft", figure: "Figure", lieu: "Place", mythe: "Myth" },
+    linkLabels: {
+      "Court-métrage (bientôt)": "Short film (coming soon)",
+      "Lire l'histoire": "Read the story",
+      "Lire les contes": "Read the tales"
+    }
+  }
+};
+
+const entryTranslations = {
+  en: {
+    dyables: {
+      altName: "The Diablesse",
+      description: "A bewitching woman who seduces men and leads them to ruin. She appears at night at crossroads, wearing a long dress that hides a cloven hoof.",
+      story: "If you meet a woman who seems too beautiful at night, look at her feet. If one is a hoof, run and do not look back. Many men have vanished into the woods after following her."
+    },
+    soukounyan: {
+      description: "A person, often an old woman, who removes her skin at night, stores it in a clay jar, and flies as a ball of fire to feed on sleeping people.",
+      story: "To stop her, you must find the skin and salt it. When she returns to put it back on, the salt burns her and she cannot become human again. If you see a fireball crossing the night sky, go home."
+    },
+    mofwaze: {
+      altName: "Malevolent sender",
+      description: "A harmful being sent by a quimboiseur, able to transform into a bird, dog, or black cat. It is an embodied curse sent to hurt someone.",
+      story: "If an animal keeps following you at night, or a strange bird keeps striking your window, beware: it may be a mofwaze sent against you."
+    },
+    mankoko: {
+      description: "A terrifying forest creature living in a deep hole. Man Koko is Guadeloupe's bogey figure used to frighten disobedient children.",
+      story: "Man Koko was said to be a woman who made a pact with the devil for beauty and wealth. In return she had to deliver souls, luring men to the abyss."
+    },
+    dorlis: {
+      altName: "The Creole incubus",
+      description: "A night entity that slips into homes through keyholes and cracks, paralyzing sleepers and assaulting them in their sleep.",
+      story: "People place rice or sand at the door. Dorlis must count every grain before entering, and dawn comes before he can finish."
+    },
+    volant: {
+      altName: "Flying spirit",
+      description: "A nocturnal flying being associated with witchcraft, seen as a moving light in the sky.",
+      story: "Elders say that a silent light moving in the sky is not a plane or a shooting star. It is a volant on a mission."
+    },
+    lougawou: {
+      altName: "Werewolf",
+      description: "A Caribbean lycanthrope that transforms at night into an animal such as a dog, ox, or pig.",
+      story: "Some people were said to live two lives: ordinary neighbors by day, prowling beasts at night."
+    },
+    manmandlo: {
+      altName: "Mother of Water",
+      description: "A female water spirit, a Creole mermaid of great beauty living in rivers, pools, and the sea.",
+      story: "Fishermen know some pools are forbidden. If water looks too calm and too inviting, Manman Dlo may be waiting below."
+    },
+    papadlo: {
+      altName: "Male spirit of the waters",
+      description: "A male water spirit, often half-man half-serpent, guardian of rivers and springs.",
+      story: null
+    },
+    zombi: {
+      altName: "Undead / wandering spirit",
+      description: "A dead person reanimated by a quimboiseur as a servant, or a restless spirit of the dead.",
+      story: "The Caribbean zombi is not Hollywood's zombie. It is a person whose soul has been stolen by sorcery."
+    },
+    chouvaltwa: {
+      altName: "Three-legged horse",
+      description: "A ghostly three-legged horse that appears at crossroads at night, seen as an omen of death or disaster.",
+      story: "You hear hoofbeats, but the rhythm is wrong: three beats instead of four. Do not stop. Keep walking."
+    },
+    tibolom: {
+      altName: "Spirit of an unbaptized child",
+      description: "The spirit of a child who died unbaptized, appearing as a small frail being crying in the night.",
+      story: "If you hear the cry of a ti bolom at night, pray and stay inside."
+    },
+    tijean: {
+      altName: "The Creole trickster",
+      description: "A trickster figure from Creole tales. Small but clever, Ti Jean defeats the strong through wit.",
+      story: "“Is the courtyard asleep?” — “No, the courtyard is not asleep!” This is how Ti Jean stories begin during night gatherings."
+    },
+    betamanibe: {
+      altName: "Legendary beast",
+      description: "A monstrous creature tied to a specific place, used in tales to scare people.",
+      story: null
+    },
+    gadedzafe: {
+      altName: "Seer / Healer",
+      description: "A seer able to diagnose supernatural harm, perceive spirits, and break curses.",
+      story: "When medicine has no answer and misfortune keeps coming, people seek a gadedzafe."
+    },
+    quimboiseur: {
+      altName: "Creole sorcerer-healer",
+      description: "A practitioner of quimbois (Creole magic), sometimes benevolent and sometimes harmful.",
+      story: "A quimboiseur knows plants, prayers, and unseen forces. People consult one discreetly."
+    },
+    betafe: {
+      altName: "Supernatural light",
+      description: "A wandering supernatural light in the night, seen as a spirit manifestation.",
+      story: null
+    },
+    tisapoti: {
+      altName: "Mischievous forest spirit",
+      description: "A small prankster spirit of the woods that disorients walkers and hides objects.",
+      story: "If you get lost in a forest you know well, Ti Sapoti Bwa may be toying with you."
+    },
+    betakon: {
+      altName: "Horned beast",
+      description: "A terrifying horned creature seen at night and linked to dark forces and witchcraft.",
+      story: null
+    },
+    makanda: {
+      altName: "Curse / spell",
+      description: "A powerful curse cast by a quimboiseur.",
+      story: "When people say someone has been struck by a makanda, they seek a stronger healer to lift it."
+    },
+    anlespwi: {
+      altName: "Wandering spirits / revenants",
+      description: "Restless spirits of the dead who have not found peace.",
+      story: "Elders leave a glass of water at the door for thirsty spirits. A soothed spirit leaves you in peace."
+    },
+    fanmanblan: {
+      altName: "The Creole white lady",
+      description: "A spectral woman in white often seen on roads at night or near graveyards.",
+      story: null
+    },
+    bolomsantet: {
+      altName: "Headless ghost",
+      description: "A headless ghost roaming at night, tied to violent memories from slavery times.",
+      story: null
+    },
+    bebedyab: {
+      altName: "Devil baby / Tilous in Martinique",
+      description: "A small monster born from a ritual egg incubation, granting wishes but demanding ever-increasing food.",
+      story: "When you can no longer feed it, it feeds on people around you. To get rid of it, throw it into the sea without looking back."
+    },
+    sese: {
+      name: "🌙 The Myth of Sese",
+      altName: "Kalinago founding myth — origin of the Moon and the Hummingbird",
+      description: "An Indigenous founding myth about Sese, a young Kalinago girl, linking the Moon, the hummingbird, and the separation of peoples.",
+      story: "Version 1: Sese marks her secret night visitor with genipa and discovers it is her brother, who is banished and becomes the Moon.\n\nVersion 2: Sese loves a great river serpent killed by her brother. She buries its pieces, and children are born from them, later forming two peoples."
+    },
+    fromager: {
+      description: "A sacred and feared tree considered a dwelling place for spirits.",
+      altName: "Mapou tree"
+    },
+    kwaze: {
+      name: "Kwaze",
+      altName: "Crossroads",
+      description: "A meeting place between the world of the living and spirits."
+    },
+    kanari: {
+      altName: "Clay jar",
+      description: "The vessel where soukounyan stores her skin before flying."
+    },
+    "mezon-hante": {
+      altName: "Haunted house",
+      description: "Houses inhabited by spirits, often tied to old tragedies or buried treasures."
+    },
+    tchenn: {
+      altName: "Chains",
+      description: "The sound of dragging chains at night, sign of tormented spirits."
+    },
+    "je-dlo": {
+      altName: "Ritual baths",
+      description: "Purification with water and plants to protect from harm or remove curses."
+    },
+    "pye-bwa": {
+      altName: "Inhabited trees",
+      description: "Some trees are believed to be inhabited by spirits and are avoided at night."
+    },
+    "twou-mankoko": {
+      altName: "Hell's Gate, Anse-Bertrand",
+      description: "The abyss of Porte d'Enfer, considered one gateway to the underworld."
+    }
+  }
+};
+
+let currentLang = localStorage.getItem('folklore_lang') || 'fr';
+if (!['fr', 'en'].includes(currentLang)) currentLang = 'fr';
+
 // ═══════════════ HELPERS ═══════════════
 
 function getAllEntries() {
@@ -1458,8 +1766,22 @@ function getAllEntries() {
 function findCreature(id) { return creatures.find(c => c.id === id); }
 function findLieu(id) { return lieux.find(l => l.id === id); }
 
+function t(key) {
+  return i18n[currentLang][key] ?? i18n.fr[key] ?? key;
+}
+
+function getEntryText(entry, key) {
+  const localized = entryTranslations[currentLang]?.[entry.id]?.[key];
+  if (localized === null) return null;
+  return localized ?? entry[key];
+}
+
+function getLinkLabel(label) {
+  return i18n[currentLang].linkLabels[label] || label;
+}
+
 function getCategoryLabel(cat) {
-  return { esprit: 'Esprit', creature: 'Créature', sorcellerie: 'Sorcellerie', figure: 'Figure', lieu: 'Lieu', mythe: 'Mythe' }[cat] || cat;
+  return i18n[currentLang].categories[cat] || cat;
 }
 
 // ═══════════════ RENDER CREATURE CARDS ═══════════════
@@ -1476,16 +1798,15 @@ function renderCards(filter = 'all') {
     const card = document.createElement('div');
     card.className = 'card';
     card.dataset.creatureId = c.id;
-    const tagClass = c.category === 'mythe' ? 'card-tag mythe' : 'card-tag';
     card.innerHTML = `
       <div class="card-image">${c.symbol}</div>
       <div class="card-content">
-        <span class="${tagClass}">${getCategoryLabel(c.category)}</span>
-        <h3 class="card-name">${c.name}</h3>
-        <p class="card-alt-name">${c.altName}</p>
-        <p class="card-description">${c.description}</p>
+        <span class="card-tag">${getCategoryLabel(c.category)}</span>
+        <h3 class="card-name">${getEntryText(c, 'name')}</h3>
+        <p class="card-alt-name">${getEntryText(c, 'altName') || ''}</p>
+        <p class="card-description">${getEntryText(c, 'description')}</p>
         <a class="card-link" href="javascript:void(0)">
-          Découvrir <span class="arrow">→</span>
+          ${t('discover')} <span class="arrow">→</span>
         </a>
       </div>
     `;
@@ -1508,11 +1829,11 @@ function renderMyths() {
       <div class="card-image">${m.symbol}</div>
       <div class="card-content">
         <span class="card-tag mythe">${getCategoryLabel(m.category)}</span>
-        <h3 class="card-name">${m.name}</h3>
-        <p class="card-alt-name">${m.altName}</p>
-        <p class="card-description">${m.description}</p>
+        <h3 class="card-name">${getEntryText(m, 'name')}</h3>
+        <p class="card-alt-name">${getEntryText(m, 'altName') || ''}</p>
+        <p class="card-description">${getEntryText(m, 'description')}</p>
         <a class="card-link" href="javascript:void(0)">
-          Découvrir <span class="arrow">→</span>
+          ${t('discover')} <span class="arrow">→</span>
         </a>
       </div>
     `;
@@ -1520,7 +1841,7 @@ function renderMyths() {
     mythGrid.appendChild(card);
   });
 
-  document.getElementById('mythCounter').textContent = `${myths.length} mythe${myths.length > 1 ? 's' : ''}`;
+  document.getElementById('mythCounter').textContent = `${myths.length} ${myths.length > 1 ? t('counterMythMany') : t('counterMythOne')}`;
   observeCards(mythGrid);
 }
 
@@ -1555,33 +1876,36 @@ function renderLieux() {
     card.dataset.lieuId = l.id;
     card.innerHTML = `
       <div class="lieu-icon">${l.icon}</div>
-      <h3>${l.name}</h3>
-      <p class="lieu-alt">${l.altName}</p>
-      <p>${l.description}</p>
+      <h3>${getEntryText(l, 'name')}</h3>
+      <p class="lieu-alt">${getEntryText(l, 'altName') || ''}</p>
+      <p>${getEntryText(l, 'description')}</p>
     `;
     card.addEventListener('click', () => openModal(l, 'lieu'));
     lieuxGrid.appendChild(card);
   });
 }
 
-renderLieux();
-
 // ═══════════════ MODAL WITH CROSS-LINKS ═══════════════
 
 const modal = document.getElementById('modal');
+let activeModalData = null;
+let activeModalType = null;
 
 function openModal(data, type) {
+  activeModalData = data;
+  activeModalType = type;
   document.getElementById('modalSymbol').textContent = data.symbol || data.icon;
   const tag = document.getElementById('modalTag');
-  tag.textContent = type === 'lieu' ? 'Lieu' : getCategoryLabel(data.category);
+  tag.textContent = type === 'lieu' ? getCategoryLabel('lieu') : getCategoryLabel(data.category);
   tag.className = type === 'lieu' ? 'modal-tag lieu' : (data.category === 'mythe' ? 'modal-tag mythe' : 'modal-tag');
-  document.getElementById('modalName').textContent = data.name;
-  document.getElementById('modalAlt').textContent = data.altName;
-  document.getElementById('modalDesc').textContent = data.description;
+  document.getElementById('modalName').textContent = getEntryText(data, 'name');
+  document.getElementById('modalAlt').textContent = getEntryText(data, 'altName') || '';
+  document.getElementById('modalDesc').textContent = getEntryText(data, 'description');
   
   const storyEl = document.getElementById('modalStory');
-  if (data.story) {
-    storyEl.textContent = data.story;
+  const storyText = getEntryText(data, 'story');
+  if (storyText) {
+    storyEl.textContent = storyText;
     storyEl.style.display = 'block';
   } else {
     storyEl.style.display = 'none';
@@ -1597,7 +1921,7 @@ function openModal(data, type) {
   if (relatedCreatures.length || relatedLieux.length) {
     const label = document.createElement('div');
     label.className = 'modal-relation-label';
-    label.textContent = 'Connexions';
+    label.textContent = t('connections');
     relationsEl.appendChild(label);
     
     const tagsWrap = document.createElement('div');
@@ -1607,7 +1931,7 @@ function openModal(data, type) {
       const tag = document.createElement('a');
       tag.className = 'modal-relation-tag creature-link';
       tag.href = 'javascript:void(0)';
-      tag.innerHTML = `${rc.symbol} ${rc.name}`;
+      tag.innerHTML = `${rc.symbol} ${getEntryText(rc, 'name')}`;
       tag.addEventListener('click', (e) => {
         e.preventDefault();
         openModal(rc, 'creature');
@@ -1619,7 +1943,7 @@ function openModal(data, type) {
       const tag = document.createElement('a');
       tag.className = 'modal-relation-tag lieu-link';
       tag.href = 'javascript:void(0)';
-      tag.innerHTML = `${rl.icon} ${rl.name}`;
+      tag.innerHTML = `${rl.icon} ${getEntryText(rl, 'name')}`;
       tag.addEventListener('click', (e) => {
         e.preventDefault();
         openModal(rl, 'lieu');
@@ -1638,7 +1962,7 @@ function openModal(data, type) {
       const a = document.createElement('a');
       a.className = 'modal-link';
       a.href = l.url;
-      a.innerHTML = `${l.icon} ${l.label}`;
+      a.innerHTML = `${l.icon} ${getLinkLabel(l.label)}`;
       linksEl.appendChild(a);
     });
   }
@@ -1657,9 +1981,47 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal
 function closeModal() {
   modal.classList.remove('active');
   document.body.style.overflow = '';
+  activeModalData = null;
+  activeModalType = null;
 }
 
 // ═══════════════ FILTERS ═══════════════
+
+function applyLanguageUI() {
+  document.documentElement.lang = currentLang;
+  document.title = t('pageTitle');
+  document.getElementById('heroTitle').innerHTML = t('heroTitle');
+  document.getElementById('heroSubtitle').textContent = t('heroSubtitle');
+  document.getElementById('scrollHint').childNodes[0].textContent = `${t('scrollHint')} `;
+  document.getElementById('diceWrapper').title = t('diceTitle');
+  document.getElementById('diceHintText').textContent = t('diceHintIdle');
+  document.getElementById('chapterOneLabel').textContent = t('chapterOneLabel');
+  document.getElementById('chapterOneTitle').textContent = t('chapterOneTitle');
+  document.getElementById('chapterTwoLabel').textContent = t('chapterTwoLabel');
+  document.getElementById('chapterTwoTitle').textContent = t('chapterTwoTitle');
+  document.getElementById('chapterThreeLabel').textContent = t('chapterThreeLabel');
+  document.getElementById('chapterThreeTitle').textContent = t('chapterThreeTitle');
+  document.getElementById('footerCredit').innerHTML = t('footerCredit');
+  document.getElementById('footerNote').textContent = t('footerNote');
+
+  document.querySelector('[data-filter="all"]').textContent = t('filterAll');
+  document.querySelector('[data-filter="esprit"]').textContent = t('filterEsprit');
+  document.querySelector('[data-filter="creature"]').textContent = t('filterCreature');
+  document.querySelector('[data-filter="sorcellerie"]').textContent = t('filterSorcellerie');
+  document.querySelector('[data-filter="figure"]').textContent = t('filterFigure');
+
+  document.getElementById('langToggle').setAttribute('aria-checked', currentLang === 'en' ? 'true' : 'false');
+  document.getElementById('langFr').classList.toggle('active', currentLang === 'fr');
+  document.getElementById('langEn').classList.toggle('active', currentLang === 'en');
+}
+
+function applyLanguage() {
+  applyLanguageUI();
+  renderCards(currentFilter);
+  renderMyths();
+  renderLieux();
+  if (activeModalData && activeModalType) openModal(activeModalData, activeModalType);
+}
 
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -1674,7 +2036,7 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 });
 
 function updateCounter(total) {
-  document.getElementById('gridCounter').textContent = `${total} entrée${total > 1 ? 's' : ''}`;
+  document.getElementById('gridCounter').textContent = `${total} ${total > 1 ? t('counterEntryMany') : t('counterEntryOne')}`;
 }
 
 // ═══════════════ DICE ═══════════════
@@ -1682,7 +2044,7 @@ function updateCounter(total) {
 const diceCube = document.getElementById('diceCube');
 const diceWrapper = document.getElementById('diceWrapper');
 const diceResult = document.getElementById('diceResult');
-const diceHint = document.querySelector('.dice-click-hint');
+const diceHint = document.getElementById('diceHintText');
 let diceRolling = false;
 let lastDiceResult = null;
 
@@ -1722,9 +2084,9 @@ diceWrapper.addEventListener('click', () => {
     diceCube.classList.remove('rolling');
     
     // Show result
-    diceResult.textContent = `${pick.symbol} ${pick.name}`;
+    diceResult.textContent = `${pick.symbol} ${getEntryText(pick, 'name')}`;
     diceResult.classList.add('visible');
-    diceHint.textContent = 'Clique le nom pour découvrir';
+    diceHint.textContent = t('diceHintAfter');
     
     // Click result to open modal
     diceResult.onclick = () => {
@@ -1775,10 +2137,14 @@ function scrollToLieu(id) {
   }, 100);
 }
 
+document.getElementById('langToggle').addEventListener('click', () => {
+  currentLang = currentLang === 'fr' ? 'en' : 'fr';
+  localStorage.setItem('folklore_lang', currentLang);
+  applyLanguage();
+});
+
 // ═══════════════ INIT ═══════════════
-renderCards();
-renderMyths();
-renderLieux();
+applyLanguage();
 </script>
 </body>
 </html>
