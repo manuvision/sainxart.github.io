@@ -1001,7 +1001,8 @@
             .exhibition-item { flex-direction: column; align-items: stretch; }
             .exhibition-carousel { flex: none; width: 100%; aspect-ratio: 16/9; }
             .exhibition-content { height: auto; overflow: visible; }
-            .exhibition-desc-fade { display: none; }
+            .exhibition-desc-wrapper { max-height: 3.75rem; overflow: hidden; }
+            .exhibition-item.expanded .exhibition-desc-wrapper { max-height: none; overflow: visible; }
         }
     </style>
 </head>
