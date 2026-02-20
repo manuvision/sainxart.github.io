@@ -871,6 +871,138 @@
             .about-content p { font-size: 0.95rem; }
             .career-link { display: flex; justify-content: center; width: fit-content; margin-left: auto; margin-right: auto; }
         }
+
+        /* ── Museum Exhibitions Modal ── */
+        .museum-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            z-index: 1000; opacity: 0; visibility: hidden;
+            transition: all 0.3s ease; display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .museum-modal-overlay.active { opacity: 1; visibility: visible; }
+        .museum-modal {
+            background: rgba(20, 20, 28, 0.98); border: 1px solid rgba(139, 92, 246, 0.4);
+            border-radius: 20px; max-width: 780px; width: 100%; max-height: 85vh;
+            overflow-y: auto; padding: 32px; position: relative;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+            scrollbar-width: thin; scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
+        }
+        .museum-modal::-webkit-scrollbar { width: 6px; }
+        .museum-modal::-webkit-scrollbar-track { background: transparent; }
+        .museum-modal::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 3px; }
+        .museum-modal-close {
+            position: absolute; top: 16px; right: 16px; width: 32px; height: 32px;
+            background: rgba(255, 255, 255, 0.1); border: none; border-radius: 8px;
+            color: var(--text-muted); cursor: pointer; font-size: 20px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .museum-modal-close:hover { background: rgba(255, 255, 255, 0.15); color: white; }
+        .museum-modal-header { margin-bottom: 24px; padding-right: 40px; }
+        .museum-modal-title {
+            font-family: var(--font-display); font-size: 1.5rem; font-weight: 600;
+            color: white; margin-bottom: 8px;
+        }
+        .museum-modal-subtitle { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; }
+
+        /* Exhibition list */
+        .exhibition-list { display: flex; flex-direction: column; gap: 20px; }
+        .exhibition-item {
+            display: flex; gap: 0; align-items: flex-start;
+            background: rgba(255, 255, 255, 0.03); border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06); overflow: hidden;
+            transition: border-color 0.2s ease;
+        }
+        .exhibition-item:hover { border-color: rgba(139, 92, 246, 0.2); }
+
+        /* Carousel — 280px wide → height = 280×9/16 ≈ 157px */
+        .exhibition-carousel {
+            flex: 0 0 280px; width: 280px; aspect-ratio: 16/9;
+            position: relative; overflow: hidden; flex-shrink: 0;
+            /* align-self defaults to flex-start (from parent), so aspect-ratio is respected */
+        }
+        .exhibition-carousel-inner { position: absolute; inset: 0; }
+        .exhibition-slide {
+            position: absolute; inset: 0; opacity: 0; transition: opacity 0.8s ease;
+        }
+        .exhibition-slide.active { opacity: 1; }
+        .exhibition-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .exhibition-carousel-dots {
+            position: absolute; bottom: 8px; left: 0; right: 0;
+            display: flex; justify-content: center; gap: 5px; z-index: 2;
+        }
+        .exhibition-dot-btn {
+            width: 5px; height: 5px; border-radius: 50%; border: none; cursor: pointer;
+            background: rgba(255, 255, 255, 0.35); transition: all 0.2s ease; padding: 0;
+        }
+        .exhibition-dot-btn.active { background: white; transform: scale(1.3); }
+
+        /* Content — explicit height = carousel's 16:9 height, overflow clips the rest */
+        .exhibition-content {
+            flex: 1; padding: 14px 16px; display: flex; flex-direction: column; min-width: 0;
+            height: calc(280px * 9 / 16); /* 157.5px — matches carousel exactly */
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .exhibition-item.expanded .exhibition-content {
+            height: auto;
+            overflow: visible;
+        }
+        .exhibition-location {
+            font-size: 0.68rem; color: var(--primary-violet); text-transform: uppercase;
+            letter-spacing: 0.08em; margin-bottom: 5px; font-weight: 600; flex-shrink: 0;
+        }
+        .exhibition-title {
+            font-family: var(--font-display); font-size: 0.9rem; font-weight: 600;
+            color: white; margin-bottom: 4px; line-height: 1.3; flex-shrink: 0;
+        }
+        .exhibition-date-row {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 8px; margin-bottom: 8px; flex-shrink: 0;
+        }
+        .exhibition-date {
+            font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .exhibition-external-link {
+            font-size: 0.68rem; color: var(--primary-violet); text-decoration: none;
+            white-space: nowrap; opacity: 0.85; transition: opacity 0.2s ease; flex-shrink: 0;
+        }
+        .exhibition-external-link:hover { opacity: 1; }
+        .exhibition-desc-wrapper {
+            flex: 1; overflow: hidden; position: relative; min-height: 0;
+            /* fills remaining space — desc text clips at the bottom of this flex area */
+        }
+        .exhibition-item.expanded .exhibition-desc-wrapper { overflow: visible; flex: none; }
+        .exhibition-desc-fade {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 24px;
+            background: linear-gradient(transparent, rgba(20, 20, 28, 0.98));
+            pointer-events: none;
+        }
+        .exhibition-item.expanded .exhibition-desc-fade { display: none; }
+        .exhibition-desc {
+            font-size: 0.8rem; color: var(--text-secondary); line-height: 1.55;
+        }
+        .exhibition-desc-links {
+            flex-shrink: 0; margin-top: 7px; display: flex; align-items: center; gap: 12px;
+        }
+        .exhibition-see-more, .exhibition-see-less {
+            font-size: 0.75rem; color: var(--primary-violet); background: none; border: none;
+            cursor: pointer; padding: 0; transition: opacity 0.2s ease;
+        }
+        .exhibition-see-more:hover, .exhibition-see-less:hover { opacity: 0.7; }
+        .exhibition-see-less { display: none; }
+        .exhibition-item.expanded .exhibition-see-more { display: none; }
+        .exhibition-item.expanded .exhibition-see-less { display: inline; }
+
+        @media (max-width: 600px) {
+            .museum-modal { padding: 24px 16px; }
+            .exhibition-item { flex-direction: column; align-items: stretch; }
+            .exhibition-carousel { flex: none; width: 100%; aspect-ratio: 16/9; }
+            .exhibition-content { height: auto; overflow: visible; }
+            .exhibition-desc-fade { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -1032,7 +1164,7 @@
                         <div class="highlight-link-hint"><span>Learn more</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg></div>
                     </div>
                 </a>
-                <a href="https://www.instagram.com/p/DO8g7k8EZUS/?igsh=cjdpOXQzdTNiNTMy" target="_blank" class="highlight-card reveal-scale delay-4">
+                <a href="#" class="highlight-card reveal-scale delay-4" onclick="openMuseumModal(); return false;">
                     <div class="highlight-card-bg" style="background-image: url('images/highlights/museums.jpg');"></div>
                     <div class="highlight-card-content">
                         <div class="highlight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
@@ -1366,6 +1498,20 @@
         </div>
     </div>
 
+    <!-- Museum Exhibitions Modal -->
+    <div class="museum-modal-overlay" id="museumModal" onclick="closeMuseumModal(event)">
+        <div class="museum-modal" onclick="event.stopPropagation()">
+            <button class="museum-modal-close" onclick="closeMuseumModal()">&times;</button>
+            <div class="museum-modal-header">
+                <h3 class="museum-modal-title">Museum Exhibitions</h3>
+                <p class="museum-modal-subtitle">Work exhibited at ARTECHOUSE NYC, Sónar+D Barcelona, VIFF, and other renowned digital art venues worldwide.</p>
+            </div>
+            <div class="exhibition-list" id="exhibitionList">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer>
         <div class="container">
@@ -1607,6 +1753,7 @@
             if (e.key === 'Escape') {
                 closeVideoModal();
                 closeUniversityModal();
+                closeMuseumModal();
             }
         });
 
@@ -1651,6 +1798,125 @@
             const modal = document.getElementById('universityModal');
             modal.classList.remove('active');
             document.body.style.overflow = '';
+        }
+
+        // ── Museum Exhibitions Modal ──
+        const exhibitionData = [
+            {
+                id: 'artechouse',
+                location: 'ARTECHOUSE NYC, Chelsea Market',
+                title: 'Submerge: Beyond the Render',
+                date: 'September 2025 – March 2026',
+                images: [
+                    'images/exhibitions/artechouse/1.JPG',
+                    'images/exhibitions/artechouse/2.jpg',
+                    'images/exhibitions/artechouse/3.JPG'
+                ],
+                desc: '🦋 Protopica is an exploration of cultural memory, speculative futures, and ancestral technologies. It began as a short film with OpenAI\'s Sora and has grown into a platform blending generative AI, brain-computer interfaces, and immersive design to preserve heritage and community stories.\n\n🤝🏽 A cultural vessel for safeguarding endangered narratives, Protopica asks: How might our identities shift if we remembered differently?\n\n⏳ Sin Agua No Hay Tiempo creates an immersive chamber shaped by Caribbean cosmology, where the ocean emerges as both archive and oracle. Petroglyphs ripple across walls as ancestral memory dissolves into speculative futures.\n\n⸻\n👀 Fun Facts\n• 18K resolution (Sphere in Vegas is 16K)\n• 270° 100MP panoramic projection\n• Rendered in days with The Render Network\n• Spatial audio with multiple 3D layers\n• ARTECHOUSE NYC opened in 2015 in a century-old boiler room beneath Chelsea Market\n\n⸻\n👥 Artists\n• Will Selviz — Immersive designer & Afro-Caribbean technologist, co-founder of Protopica, with XR & AI works for Nike, Meta, Microsoft, and BCI shows at Sónar.\n• Manuel Sainsily — Guadeloupe-born Creative Director & TED speaker, co-founder of Protopica, lecturer at Harvard/MIT/Stanford/Oxford, co-created MasterClass\'s first GenAI course, collaborations with Adobe, NVIDIA, Lightspeed, OpenAI.\n\n⸻\n🗣️ Phillip Gara, VP of Strategy, OTOY:\n"These are some of the leading 3D artists of our generation, and Artechouse and The Render Network allowed them to express themselves in a transformative new way."\n\n⸻\n🙏🏽 Thank you for welcoming our art and culture in NYC. If you visit, tag us and share your reflections.\n— Will & Manu',
+                link: 'https://www.instagram.com/p/DO8g7k8EZUS/?img_index=1'
+            },
+            {
+                id: 'sonar',
+                location: 'Barcelona, Spain',
+                title: 'Sónar+D — Protopica: Neurogenesis',
+                date: 'June 2025',
+                images: [
+                    'images/exhibitions/sonar/1.jpg',
+                    'images/exhibitions/sonar/2.jpg',
+                    'images/exhibitions/sonar/3.jpg'
+                ],
+                desc: 'Protopica: Neurogenesis is an immersive installation, premiered at Sónar 2025 on June 12–14 2025.\n\nHeld annually in Barcelona, Sónar Festival is one of the world\'s leading festivals at the intersection of music, technology, and digital art. Its Project Area is the beating heart of Sónar+D: an open, interactive exhibition where radical ideas, bold design, and experimental tech collide in unforgettable ways.\n\nIt\'s here that Protopica: Neurogenesis came to life: a multi-sensorial, mind-responsive experience shaped by brain-computer interfaces and generative systems. Through a one-of-a-kind feedback loop between self and machine, visitors embarked on a nonlinear journey guided by memory, emotion, and ancestral echoes.\n\nCreated by Will Selviz & Manu Sainsily, with the help of Louise Lessel, and produced by Debi Wong.',
+                link: 'https://www.instagram.com/p/DJcrHXgucSe/?img_index=1'
+            },
+            {
+                id: 'viff',
+                location: 'Vancouver, Canada',
+                title: 'VIFF Signals — Protopica V2',
+                date: 'October 2024',
+                images: [
+                    'images/exhibitions/viff/1.jpg',
+                    'images/exhibitions/viff/2.png',
+                    'images/exhibitions/viff/3.jpg'
+                ],
+                desc: 'Protopica V2 premiered at Signals for VIFF × DigiBC.\n\nVisitors experienced our immersive AI art installation combining EEG (capturing brain waves) and interactive 3D. Protopica is a realm where you can envision future possibilities and explore forgotten pasts.\n\nEvolved from the OpenAI Sora short film by Manu Sainsily and Will Selviz, this experience deepened the narrative by engaging multiple senses and creating an interactive journey that resonated on a deeply personal level.\n\nOver 900 visitors were invited into the futuristic realm of Protopica, where they embodied ancestral souls on a quest to find their next vessel, evolving and morphing as they traversed this otherworldly space.\n\nProtopica is more than just a visual spectacle — it\'s a transformative exploration of identity, heritage, and belonging. By blending state-of-the-art technology with cultural storytelling, the exhibition invited participants to rediscover their roots and reflect on the ever-changing meaning of "home." This profound connection to ancestral legacy left visitors inspired, with a newfound sense of belonging that transcended the boundaries of time and space.\n\nSpecial thanks to Reality XR, Trevor Twells, and Made by Mots for their help. And a warm thank you to the DigiBC SIGNALS team — in particular Debi Wong — as well as our mentors such as Eric Cheng from Meta for their support and guidance.',
+                link: 'https://www.instagram.com/p/DAt2d3gykxN/'
+            }
+        ];
+
+        const carouselIntervals = {};
+        const carouselCurrentSlides = {};
+
+        function openMuseumModal() {
+            const modal = document.getElementById('museumModal');
+            const list = document.getElementById('exhibitionList');
+
+            list.innerHTML = exhibitionData.map(ex => {
+                const slidesHtml = ex.images.map((src, j) => `
+                    <div class="exhibition-slide${j === 0 ? ' active' : ''}">
+                        <img src="${src}" alt="${ex.title} — photo ${j + 1}" loading="lazy">
+                    </div>`).join('');
+                const dotsHtml = ex.images.map((_, j) => `
+                    <button class="exhibition-dot-btn${j === 0 ? ' active' : ''}" onclick="goToSlide('${ex.id}',${j})"></button>`).join('');
+                const descHtml = ex.desc.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+                return `
+                <div class="exhibition-item" id="exhibition-${ex.id}">
+                    <div class="exhibition-carousel" id="carousel-${ex.id}">
+                        <div class="exhibition-carousel-inner" id="carousel-inner-${ex.id}">${slidesHtml}</div>
+                        <div class="exhibition-carousel-dots" id="dots-${ex.id}">${dotsHtml}</div>
+                    </div>
+                    <div class="exhibition-content">
+                        <div class="exhibition-location">${ex.location}</div>
+                        <div class="exhibition-title">${ex.title}</div>
+                        <div class="exhibition-date-row">
+                            <span class="exhibition-date">${ex.date}</span>
+                            <a class="exhibition-external-link" href="${ex.link}" target="_blank" rel="noopener">See more ↗</a>
+                        </div>
+                        <div class="exhibition-desc-wrapper" id="desc-wrapper-${ex.id}">
+                            <div class="exhibition-desc">${descHtml}</div>
+                            <div class="exhibition-desc-fade"></div>
+                        </div>
+                        <div class="exhibition-desc-links">
+                            <button class="exhibition-see-more" onclick="toggleExhibitionDesc('${ex.id}',true)">Read more ↓</button>
+                            <button class="exhibition-see-less" onclick="toggleExhibitionDesc('${ex.id}',false)">Read less ↑</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            exhibitionData.forEach(ex => startCarousel(ex.id, ex.images.length));
+        }
+
+        function startCarousel(id, count) {
+            carouselCurrentSlides[id] = 0;
+            if (carouselIntervals[id]) clearInterval(carouselIntervals[id]);
+            carouselIntervals[id] = setInterval(() => {
+                goToSlide(id, (carouselCurrentSlides[id] + 1) % count);
+            }, 3500);
+        }
+
+        function goToSlide(id, index) {
+            const inner = document.getElementById('carousel-inner-' + id);
+            const dotsContainer = document.getElementById('dots-' + id);
+            if (!inner) return;
+            inner.querySelectorAll('.exhibition-slide').forEach((s, i) => s.classList.toggle('active', i === index));
+            dotsContainer.querySelectorAll('.exhibition-dot-btn').forEach((d, i) => d.classList.toggle('active', i === index));
+            carouselCurrentSlides[id] = index;
+        }
+
+        function toggleExhibitionDesc(id, expand) {
+            const item = document.getElementById('exhibition-' + id);
+            if (!item) return;
+            item.classList.toggle('expanded', expand);
+            if (!expand) item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function closeMuseumModal(e) {
+            if (e && e.target !== e.currentTarget) return;
+            document.getElementById('museumModal').classList.remove('active');
+            document.body.style.overflow = '';
+            Object.keys(carouselIntervals).forEach(id => clearInterval(carouselIntervals[id]));
         }
 
         // Testimonials Carousel - always fade between slides for smooth experience
