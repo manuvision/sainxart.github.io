@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Microbiomimicry v1.0 by Manu.Vision</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <h1>Microbiomimicry v1.0</h1>
+      <p>
+        Swarming micro-ecosystem sandbox where
+        <span class="red">red</span> eats <span class="green">green</span>,
+        <span class="green">green</span> eats <span class="blue">blue</span>, and
+        <span class="blue">blue</span> eats <span class="red">red</span>.
+        <br/>
+        Designed by <span class="yellow"><a href="http://manu.vision" target=“_blank">manu.vision</a></span>.
+      </p>
+    </header>
+
+    <section class="sim-card">
+      <canvas id="simCanvas" width="980" height="620"></canvas>
+      <div class="winner-overlay hidden" id="winnerOverlay">
+        <div class="winner-card">
+          <h2 id="winnerTitle">Winner</h2>
+          <div class="winner-stats" id="winnerStats"></div>
+          <button class="primary" id="restartBtn">Restart</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="hud below-map" id="hud"></div>
+
+    <section class="controls">
+      <div class="button-grid">
+        <button id="playPauseBtn" class="primary">Pause</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+      <div class="button-grid">
+        <button id="spawnBossBtn" class="warn">Spawn Boss</button>
+        <button id="spawnRedBtn" class="red-btn">Spawn 1 Red</button>
+      </div>
+      <div class="button-grid">
+        <button id="spawnBlueBtn" class="blue-btn">Spawn 1 Blue</button>
+        <button id="spawnGreenBtn" class="green-btn">Spawn 1 Green</button>
+      </div>
+
+      <div class="tri-buttons">
+        <button id="featuresToggleBtn">Features</button>
+        <button id="rulesToggleBtn">Rules</button>
+        <button id="tuningToggleBtn">Settings</button>
+      </div>
+
+      <div class="panel hidden" id="featuresPanel">
+        <h3>Features</h3>
+        <div class="feature-grid" id="featureGrid"></div>
+      </div>
+
+      <div class="panel hidden" id="rulesPanel">
+        <h3>Rules</h3>
+        <div class="rules">
+          <p>Designed by <span class="yellow"><a href="http://manu.vision" target=“_blank">manu.vision</a></span>.</p>
+          <p>• Red eats Green, Green eats Blue, Blue eats Red.</p>
+          <p>• RGB organisms flock, chase prey, flee predators, and eat matching food pellets.</p>
+          <p>• White food is gone in this export; food drops inherit the killed organism’s color.</p>
+          <p>• The yellow boss hunts everyone and decays over time.</p>
+          <p>• Static currents only move food pellets and are randomized on reset.</p>
+          <p>• Trails are long, shrinking, and fade with organism decay.</p>
+          <p>• The boss auto-spawns when too much food accumulates, or you can spawn it manually.</p>
+        </div>
+      </div>
+
+      <div class="panel hidden" id="tuningPanel">
+        <div class="panel-head">
+          <h3>Settings</h3>
+          <button id="resetTuningBtn">Reset</button>
+        </div>
+        <div class="slider-grid" id="sliderGrid"></div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
