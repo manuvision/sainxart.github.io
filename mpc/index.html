@@ -1,0 +1,507 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --orange: #E8520A;
+    --orange-light: #F4793A;
+    --orange-dim: #1a0e08;
+    --silver: #C8C8CC;
+    --silver-light: #E8E8EC;
+    --black: #0A0A0A;
+    --surface: #111111;
+    --surface2: #1A1A1A;
+    --surface3: #222222;
+    --surface4: #2A2A2A;
+    --text: #F0F0F0;
+    --text-dim: #888888;
+    --text-muted: #555555;
+    --border: rgba(255,255,255,0.08);
+    --border-orange: rgba(232,82,10,0.35);
+  }
+  body { background: var(--black); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif; -webkit-font-smoothing: antialiased; }
+  
+  #app { min-height: 100vh; max-width: 430px; margin: 0 auto; display: flex; flex-direction: column; }
+  
+  .header { padding: 20px 20px 0; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; color: var(--orange); text-transform: uppercase; }
+  .logo span { color: var(--silver); }
+  .header-badge { background: var(--surface3); border: 0.5px solid var(--border); border-radius: 20px; padding: 4px 10px; font-size: 11px; color: var(--text-dim); }
+  
+  .nav { display: flex; gap: 0; padding: 16px 20px 0; border-bottom: 0.5px solid var(--border); }
+  .nav-btn { flex: 1; padding: 8px 0 10px; font-size: 11px; font-weight: 500; color: var(--text-dim); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; letter-spacing: 0.05em; text-transform: uppercase; transition: color 0.2s; }
+  .nav-btn.active { color: var(--orange); border-bottom-color: var(--orange); }
+  
+  .content { flex: 1; padding: 20px; overflow: hidden; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  
+  .section-title { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; }
+  
+  .card { background: var(--surface2); border: 0.5px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+  .card.orange-accent { border-color: var(--border-orange); }
+  
+  .mission-card { background: var(--surface2); border: 0.5px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 10px; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; gap: 14px; }
+  .mission-card:active { background: var(--surface3); }
+  .mission-card.locked { opacity: 0.4; cursor: not-allowed; }
+  .mission-card.done .mission-icon { background: rgba(232,82,10,0.15); border-color: var(--border-orange); }
+  .mission-icon { width: 42px; height: 42px; border-radius: 12px; background: var(--surface3); border: 0.5px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px; }
+  .mission-info { flex: 1; min-width: 0; }
+  .mission-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+  .mission-sub { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mission-arrow { color: var(--text-muted); font-size: 16px; }
+  .mission-badge { font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 8px; }
+  .badge-done { background: rgba(232,82,10,0.15); color: var(--orange); }
+  .badge-new { background: rgba(200,200,204,0.12); color: var(--silver); }
+  
+  .progress-bar-wrap { background: var(--surface3); border-radius: 4px; height: 4px; margin: 10px 0 4px; }
+  .progress-bar { height: 4px; border-radius: 4px; background: var(--orange); transition: width 0.5s; }
+  
+  .hero-stat { display: flex; gap: 10px; margin-bottom: 20px; }
+  .stat-box { flex: 1; background: var(--surface2); border: 0.5px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; }
+  .stat-num { font-size: 22px; font-weight: 500; color: var(--text); }
+  .stat-lbl { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  
+  .ref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .ref-card { background: var(--surface2); border: 0.5px solid var(--border); border-radius: 14px; padding: 14px 12px; cursor: pointer; transition: background 0.15s; }
+  .ref-card:active { background: var(--surface3); }
+  .ref-icon { font-size: 20px; margin-bottom: 8px; }
+  .ref-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+  .ref-sub { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
+  
+  .lesson-view { display: none; }
+  .lesson-view.active { display: block; }
+  .screen-default { }
+  
+  .back-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--orange); font-size: 14px; cursor: pointer; padding: 0 0 16px; }
+  
+  .step-counter { font-size: 11px; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+  .lesson-title { font-size: 20px; font-weight: 500; color: var(--text); line-height: 1.3; margin-bottom: 6px; }
+  .lesson-producer { font-size: 12px; color: var(--orange); margin-bottom: 18px; }
+  
+  .step-card { background: var(--surface2); border: 0.5px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 12px; }
+  .step-num { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; }
+  .step-action { font-size: 15px; font-weight: 500; color: var(--text); line-height: 1.5; margin-bottom: 8px; }
+  .step-detail { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+  .step-tip { background: rgba(232,82,10,0.08); border: 0.5px solid var(--border-orange); border-radius: 10px; padding: 10px 12px; margin-top: 10px; font-size: 12px; color: var(--orange-light); line-height: 1.5; }
+  .step-tip b { color: var(--orange); font-weight: 500; }
+  
+  .btn-row { display: flex; gap: 10px; margin-top: 16px; }
+  .btn-prev { flex: 1; background: var(--surface3); border: 0.5px solid var(--border); border-radius: 12px; padding: 12px; font-size: 14px; font-weight: 500; color: var(--text-dim); cursor: pointer; }
+  .btn-next { flex: 2; background: var(--orange); border: none; border-radius: 12px; padding: 12px; font-size: 14px; font-weight: 500; color: #fff; cursor: pointer; transition: opacity 0.15s; }
+  .btn-next:active { opacity: 0.8; }
+  
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+  .chip { background: var(--surface3); border: 0.5px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 12px; color: var(--text-dim); cursor: pointer; transition: all 0.15s; }
+  .chip.active { background: rgba(232,82,10,0.15); border-color: var(--border-orange); color: var(--orange); }
+  
+  .ref-detail { display: none; }
+  .ref-detail.active { display: block; }
+  
+  .control-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 0.5px solid var(--border); }
+  .control-row:last-child { border-bottom: none; }
+  .control-icon { width: 34px; height: 34px; border-radius: 8px; background: var(--surface3); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .control-info { flex: 1; }
+  .control-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .control-desc { font-size: 11px; color: var(--text-dim); margin-top: 1px; line-height: 1.4; }
+  .control-tag { font-size: 10px; padding: 2px 8px; border-radius: 6px; background: var(--surface3); color: var(--text-dim); flex-shrink: 0; }
+  .control-tag.key { background: rgba(232,82,10,0.12); color: var(--orange); }
+  
+  .workflow-step { display: flex; gap: 12px; padding: 12px 0; border-bottom: 0.5px solid var(--border); align-items: flex-start; }
+  .workflow-step:last-child { border-bottom: none; }
+  .wf-num { width: 24px; height: 24px; border-radius: 50%; background: var(--orange); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: #fff; flex-shrink: 0; margin-top: 1px; }
+  .wf-text { flex: 1; }
+  .wf-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+  .wf-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+  
+  .pro-quote { background: var(--surface2); border-left: 2px solid var(--orange); border-radius: 0 12px 12px 0; padding: 12px 14px; margin: 12px 0; }
+  .pro-quote p { font-size: 13px; color: var(--text-dim); line-height: 1.6; font-style: italic; }
+  .pro-quote span { font-size: 11px; color: var(--orange); font-style: normal; display: block; margin-top: 6px; font-weight: 500; }
+  
+  .device-row { background: var(--surface3); border-radius: 10px; padding: 10px 12px; margin: 6px 0; display: flex; align-items: center; gap: 10px; }
+  .device-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); flex-shrink: 0; }
+  .device-text { font-size: 13px; color: var(--text); }
+  .device-sub { font-size: 11px; color: var(--text-dim); }
+
+  .tab-pills { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab-pill { background: var(--surface3); border: 0.5px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 12px; color: var(--text-dim); cursor: pointer; }
+  .tab-pill.active { background: rgba(232,82,10,0.15); border-color: var(--border-orange); color: var(--orange); }
+  
+  .fx-card { background: var(--surface2); border: 0.5px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 8px; cursor: pointer; }
+  .fx-card.expanded { border-color: var(--border-orange); }
+  .fx-header { display: flex; align-items: center; gap: 10px; }
+  .fx-name { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; }
+  .fx-toggle { font-size: 12px; color: var(--text-muted); }
+  .fx-desc { font-size: 12px; color: var(--text-dim); margin-top: 8px; line-height: 1.5; display: none; }
+  .fx-card.expanded .fx-desc { display: block; }
+  .pad-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 12px 0; }
+  .pad { background: var(--surface3); border: 0.5px solid var(--border); border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-muted); cursor: pointer; transition: all 0.1s; font-weight: 500; }
+  .pad:active, .pad.hit { background: var(--orange); color: #fff; border-color: var(--orange); }
+  .pad.assigned { background: var(--surface4); border-color: rgba(232,82,10,0.2); color: var(--text-dim); }
+</style>
+
+<div id="app">
+  <div class="header">
+    <div class="logo">MPC<span> Sample</span> Guide</div>
+    <div class="header-badge">Beginner</div>
+  </div>
+  
+  <div class="nav">
+    <button class="nav-btn active" onclick="switchTab('learn')">Learn</button>
+    <button class="nav-btn" onclick="switchTab('ref')">Controls</button>
+    <button class="nav-btn" onclick="switchTab('flow')">Workflow</button>
+    <button class="nav-btn" onclick="switchTab('fx')">FX</button>
+  </div>
+
+  <div class="content">
+
+    <div id="screen-learn" class="screen active">
+      <div class="screen-default" id="learn-home">
+        <div class="hero-stat">
+          <div class="stat-box"><div class="stat-num" id="done-count">0</div><div class="stat-lbl">Missions done</div></div>
+          <div class="stat-box"><div class="stat-num">4</div><div class="stat-lbl">Total missions</div></div>
+          <div class="stat-box"><div class="stat-num" id="pct">0%</div><div class="stat-lbl">Progress</div></div>
+        </div>
+        
+        <div class="section-title">Your missions</div>
+        
+        <div class="mission-card done" id="m1" onclick="openLesson(1)">
+          <div class="mission-icon">🎧</div>
+          <div class="mission-info">
+            <div class="mission-title">First sounds</div>
+            <div class="mission-sub">Power on, play the demo, explore pads</div>
+          </div>
+          <span class="mission-badge badge-new">Start</span>
+        </div>
+        
+        <div class="mission-card" id="m2" onclick="openLesson(2)">
+          <div class="mission-icon">🎙️</div>
+          <div class="mission-info">
+            <div class="mission-title">Record your first sample</div>
+            <div class="mission-sub">Phone audio + mic → pad → chop it</div>
+          </div>
+          <span class="mission-badge badge-new">Next</span>
+        </div>
+        
+        <div class="mission-card" id="m3" onclick="openLesson(3)">
+          <div class="mission-icon">🥁</div>
+          <div class="mission-info">
+            <div class="mission-title">Build a boom bap beat</div>
+            <div class="mission-sub">Kick, snare, chops → sequence it</div>
+          </div>
+          <span class="mission-badge badge-new">Next</span>
+        </div>
+        
+        <div class="mission-card" id="m4" onclick="openLesson(4)">
+          <div class="mission-icon">🎚️</div>
+          <div class="mission-info">
+            <div class="mission-title">The Madlib chop method</div>
+            <div class="mission-sub">Chop, tune, layer — make it breathe</div>
+          </div>
+          <span class="mission-badge badge-new">Next</span>
+        </div>
+      </div>
+
+      <div class="lesson-view" id="lesson-view">
+        <button class="back-btn" onclick="closeLesson()">← Back</button>
+        <div class="step-counter" id="step-counter">Step 1 of 5</div>
+        <div class="lesson-title" id="lesson-title">Loading...</div>
+        <div class="lesson-producer" id="lesson-producer"></div>
+        <div id="lesson-steps"></div>
+        <div class="btn-row">
+          <button class="btn-prev" id="btn-prev" onclick="prevStep()">Back</button>
+          <button class="btn-next" id="btn-next" onclick="nextStep()">Next step →</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-ref" class="screen">
+      <div id="ref-home">
+        <div class="section-title">Your setup</div>
+        <div class="card orange-accent" style="margin-bottom:16px;">
+          <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:10px;">Inputs connected</div>
+          <div class="device-row"><div class="device-dot"></div><div><div class="device-text">Phone (USB-C)</div><div class="device-sub">Main sample source — play audio & record</div></div></div>
+          <div class="device-row"><div class="device-dot"></div><div><div class="device-text">AirPods Max (3.5mm jack)</div><div class="device-sub">Connect to PHONES jack on rear panel</div></div></div>
+          <div class="device-row"><div class="device-dot"></div><div><div class="device-text">Built-in mic</div><div class="device-sub">Next to the Encoder knob — for live sounds</div></div></div>
+        </div>
+        
+        <div class="section-title">Key controls</div>
+        <div class="tab-pills">
+          <div class="tab-pill active" onclick="filterControls('all',this)">All</div>
+          <div class="tab-pill" onclick="filterControls('mode',this)">Modes</div>
+          <div class="tab-pill" onclick="filterControls('sample',this)">Sampling</div>
+          <div class="tab-pill" onclick="filterControls('seq',this)">Sequencing</div>
+        </div>
+        <div id="controls-list"></div>
+      </div>
+    </div>
+
+    <div id="screen-flow" class="screen">
+      <div class="section-title">The boom bap workflow</div>
+      <div class="pro-quote"><p>"I don't sample to be lazy. I sample to have a conversation with the past."</p><span>— Inspired by Madlib</span></div>
+      
+      <div class="card" style="margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:12px;">How Madlib / Dilla would use the MPC Sample</div>
+        <div class="workflow-step">
+          <div class="wf-num">1</div>
+          <div class="wf-text"><div class="wf-title">Find your source</div><div class="wf-desc">Play a vinyl-style track from your phone via USB into the MPC Sample. Jazz, soul, old funk records work best for lofi & boom bap.</div></div>
+        </div>
+        <div class="workflow-step">
+          <div class="wf-num">2</div>
+          <div class="wf-text"><div class="wf-title">Sample Record → grab it</div><div class="wf-desc">Hit SAMPLE RECORD. Set Source to USB. Let it play, hit a pad to start recording. Grab 4–8 bars of something that feels right.</div></div>
+        </div>
+        <div class="workflow-step">
+          <div class="wf-num">3</div>
+          <div class="wf-text"><div class="wf-title">Chop it up</div><div class="wf-desc">In Sample Mode, press CHOP. Use Regions 4 or 8 to auto-slice. Each pad now plays one piece. Play them out of order — that's the art.</div></div>
+        </div>
+        <div class="workflow-step">
+          <div class="wf-num">4</div>
+          <div class="wf-text"><div class="wf-title">Tune & filter each slice</div><div class="wf-desc">Press B2 for Tune. Dial Semi Tune on K1. Press B3 for Filter — add a Classic LPF with some resonance. This gives that warm, dusty MPC sound.</div></div>
+        </div>
+        <div class="workflow-step">
+          <div class="wf-num">5</div>
+          <div class="wf-text"><div class="wf-title">Add drums on other pads</div><div class="wf-desc">Press PAD BANK to switch banks. Load a kick on A1, snare on A2, hi-hat on A3. Use the built-in boom bap kits or record your own.</div></div>
+        </div>
+        <div class="workflow-step">
+          <div class="wf-num">6</div>
+          <div class="wf-text"><div class="wf-title">Record a sequence</div><div class="wf-desc">Press SEQ → SEQ RECORD → PLAY. Tap your drums first (1 bar), then add chops on the next loop. Keep adding. Stop when it feels right.</div></div>
+        </div>
+        <div class="workflow-step">
+          <div class="wf-num">7</div>
+          <div class="wf-text"><div class="wf-title">Apply the compressor</div><div class="wf-desc">SHIFT + PAD 5 (COMPRESSOR). Turn Amount up to ~60%. This "glues" everything together — the signature boom bap punch.</div></div>
+        </div>
+        <div class="workflow-step">
+          <div class="wf-num">8</div>
+          <div class="wf-text"><div class="wf-title">Export your beat</div><div class="wf-desc">SHIFT + PAD 12 (SONG). Add your sequence. Press Export → Audio Mixdown. Save to name. Transfer via USB to your phone.</div></div>
+        </div>
+      </div>
+      
+      <div class="section-title">Pad layout template</div>
+      <div class="card">
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:10px;">Bank A — classic boom bap setup</div>
+        <div class="pad-grid" id="pad-demo"></div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Tap any pad to see what it does</div>
+      </div>
+    </div>
+
+    <div id="screen-fx" class="screen">
+      <div class="section-title">Effects guide</div>
+      <div class="tab-pills">
+        <div class="tab-pill active" onclick="filterFX('pad',this)">Pad FX</div>
+        <div class="tab-pill" onclick="filterFX('knob',this)">Knob FX</div>
+        <div class="tab-pill" onclick="filterFX('flex',this)">Flex Beat</div>
+      </div>
+      <div id="fx-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const lessons = {
+  1: {
+    title: "First sounds — let's start",
+    producer: "Like Nujabes discovering a new record",
+    steps: [
+      { num: "Step 1", action: "Power on your MPC Sample", detail: "Press the POWER button. The device boots and automatically loads a demo project. You'll hear a beat when you press PLAY.", tip: "<b>Tip:</b> Make sure your AirPods Max are connected to the PHONES jack (3.5mm) on the rear panel before powering on. This deactivates the speaker and gives you clean monitoring." },
+      { num: "Step 2", action: "Connect your AirPods Max", detail: "Plug the 3.5mm cable into the PHONES jack on the rear panel. The built-in speaker shuts off automatically — all audio goes to your headphones.", tip: "<b>Why headphones?</b> When sampling from the built-in mic, the speaker is auto-muted to prevent feedback. Good habit to always have cans on." },
+      { num: "Step 3", action: "Turn up the Main Volume", detail: "The MAIN VOLUME knob is on the top-left of the device. Turn it clockwise. This controls both the speaker and headphone output level.", tip: "<b>Dilla secret:</b> Start with volume at about 70%. You can always go up — but clipping a signal is harder to fix." },
+      { num: "Step 4", action: "Press PLAY and listen", detail: "Hit the PLAY button (bottom-right area). A pre-loaded beat starts playing. Watch the pads light up as each sound triggers — that's each hit in the sequence.", tip: "<b>Notice:</b> Each lit pad = one sound in the beat. Kick, snare, hi-hat, and sample chops all on different pads." },
+      { num: "Step 5", action: "Tap the pads yourself", detail: "Press STOP, then tap any lit pad. The sample on that pad plays. Tap harder or softer — the volume changes. That's velocity sensitivity, the same feel as classic MPC pads.", tip: "<b>The MPC feel:</b> Madlib and J Dilla were obsessed with how hard they hit pads. Soft hits = quiet, delicate notes. Hard hits = full velocity. This gives your beat human feel." },
+    ]
+  },
+  2: {
+    title: "Record your first sample",
+    producer: "The Alchemist: 'Anything can be a sample'",
+    steps: [
+      { num: "Step 1", action: "Connect your phone via USB-C", detail: "Plug your phone into the USB-C port on the right side of the rear panel. Your phone becomes a live audio source — play any track from Spotify, SoundCloud, or your music library.", tip: "<b>Phone setup:</b> On your phone, just press play on any song. The MPC Sample receives your phone's audio output in real time." },
+      { num: "Step 2", action: "Enter Sample Record mode", detail: "Press the SAMPLE RECORD button (bottom-right section). The display shows a recording screen with a microphone icon and 'Tap pad to record'.", tip: "<b>Source options you have:</b> USB (phone), Rear (line-in), Mic (built-in). We're using USB first." },
+      { num: "Step 3", action: "Set source to USB", detail: "Turn the K1 knob to select USB as your input source. This routes your phone's audio directly into the MPC Sample at full quality.", tip: "<b>Lofi tip:</b> If you want that gritty vinyl feel, try the built-in Mic instead — hold your phone speaker near the MPC mic for that lo-fi recorded sound Madlib loved." },
+      { num: "Step 4", action: "Tap a pad to start recording", detail: "When the moment in the song you want to sample arrives — tap any empty pad. Recording begins immediately. The display shows the waveform growing in real time.", tip: "<b>What to sample:</b> Look for a chord hit, a horn stab, a break where the drums drop out, or a 2-bar melodic loop. 4–8 seconds is a perfect sample length." },
+      { num: "Step 5", action: "Stop and trim your sample", detail: "Tap the same pad again to stop recording. Press SAMPLE button to enter Sample Mode. You'll see your waveform. Turn K1 to adjust the start point, K2 for the end point.", tip: "<b>Trim tight:</b> Dilla would trim right to the first transient and right before it loops awkwardly. A tight trim = a clean loop. Use headphones to hear exactly where to cut." },
+      { num: "Step 6", action: "Chop it into pieces", detail: "While in Sample Mode with your sample selected, press the CHOP button. The display switches to chop view. Turn K3 to select 'Regions 4' — this divides your sample into 4 equal slices across 4 pads.", tip: "<b>The Madlib move:</b> Don't just loop the whole thing. Chop it and play the pieces out of order — that's how you build something new from something old." },
+    ]
+  },
+  3: {
+    title: "Build a boom bap beat",
+    producer: "Kanye & Pete Rock layered approach",
+    steps: [
+      { num: "Step 1", action: "Load your drum kit", detail: "In Sample Mode, tap PAD 1, then press SAMPLE SELECT. Browse to Samples → BBB or Kicks folder. Use the Encoder to navigate, press it to load. Load: Kick → PAD 1, Snare → PAD 2, Hi-Hat → PAD 3.", tip: "<b>Classic boom bap hits:</b> Kick on the 1 and 3, snare on the 2 and 4. That's the foundation of every Dilla, Pete Rock, and Kanye beat." },
+      { num: "Step 2", action: "Load your chop sample", detail: "Switch to PAD BANK B by pressing PAD BANK. Now your drum pads (Bank A) are safe. Load your chopped sample onto Bank B pads — each slice from your chop is already assigned if you did Mission 2.", tip: "<b>Bank trick:</b> Drums live in Bank A. Chops/melodic elements in Bank B. This is how pros organize their kits — pads don't conflict during performance." },
+      { num: "Step 3", action: "Enter Sequence Mode", detail: "Press the SEQ button. The display shows Sequence A01, BPM (try 85 BPM for boom bap), and length. Press and hold B1 then turn the Encoder to set BPM to 85.", tip: "<b>Boom bap tempo range:</b> 85–95 BPM. Nujabes worked around 85. Dilla often went slower. Faster than 100 starts feeling more like trap or hip-hop." },
+      { num: "Step 4", action: "Record your drums first", detail: "Press SEQ RECORD, then PLAY. You have a count-in. Tap PAD 1 (Kick) on beats 1 and 3. Tap PAD 2 (Snare) on beats 2 and 4. The sequence loops — keep adding hi-hats on PAD 3 every 1/8th note.", tip: "<b>Don't be perfect:</b> Dilla was famous for slightly off-grid drums. That human imprecision is the soul of boom bap. Turn off Record Quantize (B3 in SEQ mode) to keep the feel raw." },
+      { num: "Step 5", action: "Overdub your chops", detail: "While the drum loop plays, switch to Bank B. The loop keeps running. Now tap your chop slices — find a 2-bar phrase that vibes. Don't stop recording. Keep adding until it feels full.", tip: "<b>The layer method:</b> First loop = just kick and snare. Second loop = add hi-hats. Third loop = add your first chop slice. Fourth = add another. Build it up like Kanye in the studio." },
+      { num: "Step 6", action: "Check your sequence in Step Edit", detail: "Press SHIFT + SEQ (STEP EDIT). You can see every event. Use the Encoder to scroll through steps. Turn K3 to adjust velocity of any hit. Move the Fader to nudge timing on specific notes.", tip: "<b>Dilla's secret weapon:</b> He'd slightly delay snares by nudging them forward in step edit. Even just 5ms late gives that dragging, heavy feel that made his beats legendary." },
+    ]
+  },
+  4: {
+    title: "The Madlib chop method",
+    producer: "Madlib: 'Make it dusty, make it move'",
+    steps: [
+      { num: "Step 1", action: "Find a chord-heavy source", detail: "Play a jazz, soul, or bossa nova track from your phone via USB. Look for a moment where the full band hits together — strings, horns, piano. That's your chop material.", tip: "<b>Madlib's crates:</b> He loved obscure Brazilian jazz, Ethiopian funk, and old soul 45s. You can find similar sounds on YouTube channels like 'Funky 16 Corners' or 'Awesome Tapes From Africa'." },
+      { num: "Step 2", action: "Record 4–8 bars of the peak moment", detail: "Enter Sample Record (USB source). Wait for the part that moves you most — then tap a pad to capture it. Let it run for exactly 4 bars if possible.", tip: "<b>The 'peak moment' rule:</b> Alchemist says he samples the 2 seconds that give him chills. If the whole thing is good, grab it all. If only one moment hits — just grab that." },
+      { num: "Step 3", action: "Chop into 8 slices (Regions 8)", detail: "Enter Sample Mode → CHOP → turn K3 to select Regions 8. You now have 8 slices across 8 pads. Play each one. Which ones sound musical? Which sound like noise? Remember the good ones.", tip: "<b>Madlib method:</b> He doesn't use every slice. He picks 2–4 that sound interesting together and throws the rest away. Quality over quantity." },
+      { num: "Step 4", action: "Tune your best slices", detail: "Select your favorite slice (tap its pad). Press B2 for the Tune page. Turn K1 (Semi Tune) to transpose it in semitones. Try going +5, +7, +12 — those are musical intervals that complement each other.", tip: "<b>Why tune?</b> Your chops might be in different keys. By tuning slices to harmonize, you create something that sounds intentionally composed — not just randomly cut." },
+      { num: "Step 5", action: "Add a low-pass filter", detail: "With a slice selected, press B3 for the Filter page. Set K3 (Type) to Classic — this is based on the MPC3000's classic filter, the same sound from 90s hip-hop. Turn K1 (Cutoff) to about 60–70. Add a tiny bit of K2 (Resonance) for warmth.", tip: "<b>The lofi filter trick:</b> Rolling off the high frequencies makes a sample sound like it came from vinyl. Cutoff at 80 = slightly warm. Cutoff at 40 = proper dusty. That's the Madlib/Nujabes sound." },
+      { num: "Step 6", action: "Record the chop pattern as a sequence", detail: "Go to SEQ → SEQ RECORD → PLAY. Now improvise — play your tuned, filtered chop slices like a mini keyboard. Don't think, just play what feels right. Let the loop cycle 2–3 times, building the phrase.", tip: "<b>The improvise rule:</b> All the greats say the best sequences come from not thinking. Set up your sounds, press record, and play with your gut. You can edit later in Step Edit — but you can't manufacture feel." },
+    ]
+  }
+};
+
+const controls = [
+  { name: "SAMPLE button", icon: "●", desc: "Main mode — view and edit samples. Always start here.", tag: "mode", key: true },
+  { name: "SEQ button", icon: "≡", desc: "Sequence Mode — record and arrange note patterns.", tag: "mode", key: true },
+  { name: "SAMPLE RECORD", icon: "⏺", desc: "Opens recording screen. Tap a pad to begin capturing audio.", tag: "sample", key: true },
+  { name: "K1, K2, K3 Knobs", icon: "◎", desc: "Context-sensitive — control different params per screen. Check display labels.", tag: "sample", key: false },
+  { name: "ENCODER", icon: "↺", desc: "Navigate menus and browse samples. Push to select.", tag: "sample", key: false },
+  { name: "CHOP button", icon: "✂", desc: "Auto-slices your sample. Turn K3 to pick Regions 4, 8, or 16.", tag: "sample", key: true },
+  { name: "SHIFT + PAD 5", icon: "⊕", desc: "Opens Compressor — adds punch and glue to your mix.", tag: "seq", key: true },
+  { name: "SEQ RECORD", icon: "⏺", desc: "Arms recording in Sequence Mode. Hit PLAY to begin.", tag: "seq", key: true },
+  { name: "PAD BANK", icon: "⊞", desc: "Cycles between banks A-H. Drums in A, chops in B.", tag: "seq", key: false },
+  { name: "SHIFT + PAD 12", icon: "♪", desc: "Opens Song Mode — chain sequences, export audio.", tag: "seq", key: false },
+  { name: "B1, B2, B3 buttons", icon: "□", desc: "Three buttons above the display. Cycle through parameter pages.", tag: "sample", key: false },
+  { name: "TAP TEMPO", icon: "⬡", desc: "Tap repeatedly to set BPM. Or hold + turn Encoder.", tag: "seq", key: false },
+];
+
+const padLayout = [
+  { label: "Kick", bank: "A1" }, { label: "Snare", bank: "A2" },
+  { label: "Hi-hat", bank: "A3" }, { label: "Open HH", bank: "A4" },
+  { label: "Chop 1", bank: "B1" }, { label: "Chop 2", bank: "B2" },
+  { label: "Chop 3", bank: "B3" }, { label: "Chop 4", bank: "B4" },
+  { label: "Bass", bank: "A5" }, { label: "Perc", bank: "A6" },
+  { label: "—", bank: "" }, { label: "—", bank: "" },
+  { label: "FX", bank: "" }, { label: "—", bank: "" },
+  { label: "—", bank: "" }, { label: "—", bank: "" },
+];
+
+const fxData = {
+  pad: [
+    { name: "Beat Repeat", desc: "Loops and stutters a slice of your audio. Great for intro builds and transitions. K1 = Division (1/8, 1/16, 1/32). The shorter, the more frantic.", genre: "Boom bap transition trick" },
+    { name: "Half Speed", desc: "Slows your audio to half speed. Gives a dreamy, druggy feel to chops. Dilla used pitch-slowed sounds constantly.", genre: "Lofi/psychedelic" },
+    { name: "Reverb", desc: "Adds space and room to a sound. K1 = Pre-delay, K2 = Decay. Small amounts = depth. Large = washed out. Nujabes loved long reverbs on piano chops.", genre: "Lofi & ambient" },
+    { name: "Delay", desc: "Echo repeats. Set K1 Time to 1/8 or 1/16 to sync with your beat. Adds bounce and width. K2 Feedback controls how many repeats fade out.", genre: "Hip-hop space" },
+    { name: "LP Filter", desc: "Cuts high frequencies. Hold pad lightly for subtle warmth. Press hard for a full-on muffled effect. Perfect for filter sweeps.", genre: "Classic lofi move" },
+    { name: "Granulator", desc: "Breaks audio into tiny grains and reshapes it. Experimental and unpredictable — exactly the kind of thing Madlib loves for texture.", genre: "Madlib-style texture" },
+  ],
+  knob: [
+    { name: "LP Filter (Knob FX)", desc: "Assign to all pads. Now K1 sweeps the filter across your whole beat live — like a DJ EQ. K2 = Resonance for that resonant sweep sound.", genre: "DJ-style performance" },
+    { name: "Reverb Large", desc: "Use this between sections — crank K3 Mix to wash out your beat, then bring it back. Classic Kanye/No ID intro effect.", genre: "Section transitions" },
+    { name: "Pumper", desc: "Simulates sidechain compression. K1 = Speed (set to 1/4). K3 = Depth. Creates that pulsing, breathing feel under your chops. Modern but works with boom bap.", genre: "Groove feel" },
+  ],
+  flex: [
+    { name: "Flex Beat (overview)", desc: "16 time-based effects that warp your beat while it plays. Think of these as DJ scratch effects. PAD 1 = Empty (normal). PAD 2+ = effects.", genre: "Live performance" },
+    { name: "Snare Repeat", desc: "Takes your snare hit and loops it rapidly. Use this at the end of a bar for a snare roll buildup. Classic hip-hop hype move.", genre: "Transitions" },
+    { name: "Loop mode", desc: "When K1 Loop is active, the effect keeps repeating until you choose another pad or return to PAD 1. Use for extended breakdowns.", genre: "Extended performance" },
+  ],
+};
+
+let currentLesson = null;
+let currentStep = 0;
+let doneMissions = new Set();
+let currentFXTab = 'pad';
+let currentRefTab = 'all';
+
+function switchTab(tab) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function openLesson(id) {
+  currentLesson = id;
+  currentStep = 0;
+  const lesson = lessons[id];
+  document.getElementById('learn-home').style.display = 'none';
+  document.getElementById('lesson-view').classList.add('active');
+  document.getElementById('lesson-title').textContent = lesson.title;
+  document.getElementById('lesson-producer').textContent = lesson.producer;
+  renderStep();
+}
+
+function closeLesson() {
+  document.getElementById('learn-home').style.display = 'block';
+  document.getElementById('lesson-view').classList.remove('active');
+  currentLesson = null;
+}
+
+function renderStep() {
+  const lesson = lessons[currentLesson];
+  const step = lesson.steps[currentStep];
+  const total = lesson.steps.length;
+  document.getElementById('step-counter').textContent = 'Step ' + (currentStep+1) + ' of ' + total;
+  document.getElementById('btn-prev').style.opacity = currentStep === 0 ? '0.3' : '1';
+  document.getElementById('btn-next').textContent = currentStep === total - 1 ? 'Complete mission ✓' : 'Next step →';
+  document.getElementById('lesson-steps').innerHTML = '<div class="step-card"><div class="step-num">' + step.num + '</div><div class="step-action">' + step.action + '</div><div class="step-detail">' + step.detail + '</div>' + (step.tip ? '<div class="step-tip">' + step.tip + '</div>' : '') + '</div>';
+}
+
+function nextStep() {
+  const lesson = lessons[currentLesson];
+  if (currentStep < lesson.steps.length - 1) {
+    currentStep++;
+    renderStep();
+  } else {
+    doneMissions.add(currentLesson);
+    updateProgress();
+    closeLesson();
+  }
+}
+
+function prevStep() {
+  if (currentStep > 0) { currentStep--; renderStep(); }
+}
+
+function updateProgress() {
+  const n = doneMissions.size;
+  document.getElementById('done-count').textContent = n;
+  document.getElementById('pct').textContent = Math.round(n/4*100) + '%';
+  [1,2,3,4].forEach(id => {
+    const card = document.getElementById('m' + id);
+    const badge = card.querySelector('.mission-badge');
+    if (doneMissions.has(id)) { card.classList.add('done'); badge.textContent = '✓ Done'; badge.className = 'mission-badge badge-done'; }
+  });
+}
+
+function filterControls(tag, el) {
+  currentRefTab = tag;
+  document.querySelectorAll('#screen-ref .tab-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderControls();
+}
+
+function renderControls() {
+  const filtered = currentRefTab === 'all' ? controls : controls.filter(c => c.tag === currentRefTab);
+  document.getElementById('controls-list').innerHTML = '<div class="card">' + filtered.map(c => '<div class="control-row"><div class="control-icon">' + c.icon + '</div><div class="control-info"><div class="control-name">' + c.name + '</div><div class="control-desc">' + c.desc + '</div></div><div class="control-tag ' + (c.key ? 'key' : '') + '">' + (c.key ? 'Key' : c.tag) + '</div></div>').join('') + '</div>';
+}
+
+function renderPads() {
+  const grid = document.getElementById('pad-demo');
+  const display = ['Kick A1','Snare A2','HH A3','Perc A4','Chop 1','Chop 2','Chop 3','Chop 4','Bass','—','—','—','FX','Export','—','—'];
+  const assigned = [true,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false];
+  grid.innerHTML = display.map((label,i) => '<div class="pad ' + (assigned[i] ? 'assigned' : '') + '" onclick="padTap(this, ' + i + ')">' + label + '</div>').join('');
+}
+
+function padTap(el, i) {
+  el.classList.add('hit');
+  setTimeout(() => el.classList.remove('hit'), 200);
+}
+
+function filterFX(tab, el) {
+  currentFXTab = tab;
+  document.querySelectorAll('#screen-fx .tab-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderFX();
+}
+
+function renderFX() {
+  const list = fxData[currentFXTab];
+  document.getElementById('fx-list').innerHTML = list.map((fx,i) => '<div class="fx-card" onclick="toggleFX(this)"><div class="fx-header"><div style="width:30px;height:30px;border-radius:8px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">FX</div><div class="fx-name">' + fx.name + '</div><div class="fx-toggle">▾</div></div><div class="fx-desc"><div style="margin-bottom:6px;">' + fx.desc + '</div><div style="font-size:11px;color:var(--orange);font-weight:500;">' + fx.genre + '</div></div></div>').join('');
+}
+
+function toggleFX(el) {
+  el.classList.toggle('expanded');
+}
+
+renderControls();
+renderPads();
+renderFX();
+</script>
