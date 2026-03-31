@@ -427,7 +427,7 @@ function renderSliderPanel() {
 function updateHUD() {
   const population = countByTribe(state.organisms);
   hud.innerHTML = `
-    <div class="badge"><span class="label">Dead/Alive</span></div>
+    <div class="badge"><span class="label">Alive/Dead</span></div>
     <div class="badge"><span class="dot blue"></span><span>${population.blue}</span><span class="muted">/</span><span>${state.deaths.blue}</span></div>
     <div class="badge"><span class="dot red"></span><span>${population.red}</span><span class="muted">/</span><span>${state.deaths.red}</span></div>
     <div class="badge"><span class="dot green"></span><span>${population.green}</span><span class="muted">/</span><span>${state.deaths.green}</span></div>
