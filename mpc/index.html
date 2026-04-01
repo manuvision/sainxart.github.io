@@ -26,6 +26,10 @@ html,body{height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-syst
 .credit{font-size:11px;font-weight:600}
 .credit a{color:var(--or);text-decoration:none}
 .credit a:hover{text-decoration:underline}
+.donate-bar{background:rgba(232,82,10,.08);border-bottom:.5px solid var(--bdo);padding:7px 20px;display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0}
+.donate-bar a{font-size:11px;font-weight:700;color:var(--or);text-decoration:none;letter-spacing:.02em}
+.donate-bar a:active{opacity:.7}
+.donate-heart{font-size:12px}
 
 .scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;padding:20px 18px calc(var(--sb) + 88px)}
 
@@ -170,6 +174,10 @@ html,body{height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-syst
   <div class="logo"><span class="lo">MPC</span><span class="lr"> SAMPLE GUIDE</span></div>
   <div class="credit">by <a href="https://manu.vision" target="_blank">Manu.Vision</a></div>
 </div>
+<div class="donate-bar">
+  <span class="donate-heart">♥</span>
+  <a href="http://paypal.me/manuelsainsily" target="_blank" rel="noopener">Support this guide — donate via PayPal</a>
+</div>
 
 <div class="scroll" id="scrl">
 
@@ -184,7 +192,7 @@ html,body{height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-syst
       <div class="prog-wrap"><div class="prog-fill" id="pfill" style="width:0%"></div></div>
       <div class="slbl">Your missions</div>
       <div class="mc cur" id="mc1" onclick="openL(1)"><div class="mi">🎧</div><div style="flex:1;min-width:0"><div class="mt">First sounds</div><div class="ms">Power on · play demo · explore pads</div></div><div class="mb bs">Start</div></div>
-      <div class="mc" id="mc2" onclick="openL(2)"><div class="mi">🎙️</div><div style="flex:1;min-width:0"><div class="mt">Record your first sample</div><div class="ms">Phone via USB → grab · trim → chop</div></div><div class="mb bn">Next</div></div>
+      <div class="mc" id="mc2" onclick="openL(2)"><div class="mi">🎙️</div><div style="flex:1;min-width:0"><div class="mt">Record your first sample</div><div class="ms">USB source → grab · trim → chop</div></div><div class="mb bn">Next</div></div>
       <div class="mc" id="mc3" onclick="openL(3)"><div class="mi">✂️</div><div style="flex:1;min-width:0"><div class="mt">Chop like Madlib</div><div class="ms">Slice · tune · filter — make it yours</div></div><div class="mb bn">Next</div></div>
       <div class="mc" id="mc4" onclick="openL(4)"><div class="mi">🥁</div><div style="flex:1;min-width:0"><div class="mt">Build a boom bap beat</div><div class="ms">Drums + chops → sequence → glue</div></div><div class="mb bn">Next</div></div>
       <div class="mc" id="mc5" onclick="openL(5)"><div class="mi">🎚️</div><div style="flex:1;min-width:0"><div class="mt">Note Repeat &amp; live feel</div><div class="ms">Hi-hat rolls · swing · Dilla timing</div></div><div class="mb bn">Next</div></div>
@@ -210,8 +218,8 @@ html,body{height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-syst
     <div class="slbl">Your setup</div>
     <div class="card accent" style="margin-bottom:20px">
       <div style="font-size:13px;font-weight:700;color:var(--tx);margin-bottom:12px">Inputs connected</div>
-      <div class="dev-row"><div class="devdot"></div><div><div class="devn">Phone via USB-C</div><div class="devs">Rear USB port — play any app, MPC Sample receives audio live</div></div></div>
-      <div class="dev-row"><div class="devdot"></div><div><div class="devn">AirPods Max (3.5mm)</div><div class="devs">PHONES jack on rear panel — built-in speaker turns off automatically</div></div></div>
+      <div class="dev-row"><div class="devdot"></div><div><div class="devn">Audio source via USB-C</div><div class="devs">Rear USB port — phone, tablet, or computer. Play any app, MPC Sample receives audio live</div></div></div>
+      <div class="dev-row"><div class="devdot"></div><div><div class="devn">Headphones (3.5mm)</div><div class="devs">PHONES jack on rear panel — built-in speaker turns off automatically when connected</div></div></div>
       <div class="dev-row"><div class="devdot"></div><div><div class="devn">Built-in mic</div><div class="devs">Next to Encoder — lo-fi sampling, live sounds, Madlib-style room recordings</div></div></div>
     </div>
     <div class="slbl">Quickstart cards — from the box</div>
@@ -298,16 +306,16 @@ html,body{height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-syst
 /* ── Lesson data ── */
 const LS={
   1:{t:"First sounds",k:"Like Nujabes discovering a new record",s:[
-    {a:"Power on and connect AirPods Max",d:"Press POWER on the rear panel. Plug AirPods Max into the 3.5mm PHONES jack on the rear. Built-in speaker shuts off automatically.",tip:"<strong>Why headphones first:</strong> When you later use the built-in mic to sample, the speaker must be off to prevent feedback. Always start with cans on."},
+    {a:"Power on and connect your headphones",d:"Press POWER on the rear panel. Plug your headphones into the 3.5mm PHONES jack on the rear. The built-in speaker shuts off automatically.",tip:"<strong>Why headphones first:</strong> When you later use the built-in mic to sample, the speaker must be off to prevent feedback. Always have cans on before you start."},
     {a:"Turn up the Main Volume",d:"MAIN VOLUME knob is top-left. Turn clockwise to about 70%. Controls headphones and speaker output level.",tip:"<strong>Start at 70%, not max.</strong> You can always go louder — but you can't un-clip a signal you've recorded too hot."},
     {a:"Press PLAY — hear the demo beat",d:"Hit PLAY (bottom-right). A pre-loaded beat starts. Watch pads light up as each sound triggers. Every lit pad = one sound in the sequence.",tip:"<strong>What you're hearing:</strong> Kick, snare, hi-hat, and chopped samples — each on its own pad. That's the foundation of every Madlib, Dilla, and Kanye beat."},
     {a:"Tap the pads — feel the velocity",d:"Press STOP, then tap any lit pad. The sample plays. Tap harder, then softer — the volume changes. That's velocity sensitivity, same feel as the original MPC3000.",tip:"<strong>The MPC feel:</strong> Soft hits = quiet notes. Hard hits = full punch. This human dynamic is what separates an MPC beat from a flat laptop sequence."},
     {a:"Double-press STOP to kill all sound",d:"If sounds get stuck or layers pile up weirdly, quickly press STOP twice in rapid succession. Everything cuts instantly. Your emergency reset.",tip:"<strong>Essential:</strong> Single STOP = stop playback. Double STOP = kill everything, including stuck notes and looping samples. Memorise this before anything else."},
   ]},
   2:{t:"Record your first sample",k:"The Alchemist: 'Anything can be a sample'",s:[
-    {a:"Connect your phone via USB-C",d:"Plug your phone into the USB-C port on the rear panel. Open Spotify, Apple Music, or YouTube. MPC Sample receives your phone's audio in real time.",tip:"<strong>Best source material:</strong> Search for 'rare grooves', 'Brazilian jazz 1970s', or 'soul 45s'. Madlib and Alchemist built careers on exactly this kind of material."},
+    {a:"Connect an audio source via USB-C",d:"Plug a phone, tablet, or computer into the USB-C port on the rear panel. Play any audio app — Spotify, SoundCloud, YouTube. MPC Sample receives the audio in real time.",tip:"<strong>Best source material:</strong> Search for 'rare grooves', 'Brazilian jazz 1970s', or 'soul 45s'. Madlib and Alchemist built careers on exactly this kind of material."},
     {a:"Enter Sample Record mode",d:"Press SAMPLE RECORD. Display shows a mic icon and 'Tap pad to record'. You're in recording mode, ready to capture.",tip:"<strong>Pro move:</strong> Before recording, just listen through the track and find the exact moment. Don't record randomly — wait for the 2 seconds that give you chills."},
-    {a:"Turn K1 to select USB source",d:"Turn K1 until 'USB' appears. This routes your phone's audio directly into MPC Sample at full quality. The level meter reacts when music plays.",tip:"<strong>Lo-fi alternative:</strong> Select 'Mic' and hold your phone speaker near the MPC's built-in mic. The room sound and slight degradation is a feature — Madlib loved this."},
+    {a:"Turn K1 to select USB source",d:"Turn K1 until 'USB' appears. This routes your connected device's audio directly into MPC Sample at full quality. The level meter reacts when music plays.",tip:"<strong>Lo-fi alternative:</strong> Select 'Mic' and hold a speaker near the MPC's built-in mic. The room sound and slight degradation is a feature — Madlib loved this imperfect quality."},
     {a:"Tap a pad to start recording",d:"When the moment arrives — tap any empty pad. Recording starts immediately. Waveform grows on screen in real time. Capture 4–8 seconds, tap again to stop.",tip:"<strong>What to grab:</strong> A chord hit, a horn stab, where drums drop out, or a 2-bar melodic loop. Shorter is better — you'll chop it anyway."},
     {a:"Trim: K1 start, K2 end → SHIFT+PAD 13",d:"Press SAMPLE to enter Sample Mode. K1 sets the start point (right at the first hit), K2 sets the end. Hold SHIFT + PAD 13 to permanently TRIM.",tip:"<strong>Trim tight:</strong> Start right at the initial transient. End just before the audio loops awkwardly. A tight trim = a clean, usable loop. This is half the craft of sampling."},
   ]},
@@ -340,12 +348,12 @@ const LS={
     {a:"Vintage Emulator — the MPC character",d:"In Knob FX mode, select Vintage Emulator. Choose MPC3000, MPC60, or SP1200. Add this after your compressor and you'll hear your whole beat take on the gritty, slightly degraded character of classic hardware.",tip:"<strong>SP1200 tip:</strong> The SP1200 setting is the rawest and most lo-fi — it's the sampler that made Wu-Tang, early Nas, and Pete Rock records. It reduces bit depth and adds character that no plugin fully replicates."},
   ]},
   7:{t:"Full beat — start to export",k:"The complete Madlib/Dilla workflow",s:[
-    {a:"Find your source and record it",d:"Play jazz, soul, or funk from your phone via USB. When the moment hits — SAMPLE RECORD → K1 → USB → tap a pad. Grab 4–8 seconds. Tap again to stop.",tip:"<strong>The crate digger mindset:</strong> Madlib would go through 50 records to find one 3-second moment. Don't settle for the first thing that sounds okay. Wait for the moment that genuinely moves you."},
+    {a:"Find your source and record it",d:"Connect an audio source via USB. When the moment hits — SAMPLE RECORD → K1 → USB → tap a pad. Grab 4–8 seconds. Tap again to stop.",tip:"<strong>The crate digger mindset:</strong> Madlib would go through 50 records to find one 3-second moment. Don't settle for the first thing that sounds okay. Wait for the moment that genuinely moves you."},
     {a:"Trim → Chop → Tune → Filter",d:"SAMPLE mode: K1 start, K2 end, SHIFT+PAD13 to trim. Press CHOP → Regions 4. Play slices, pick the best 2–4. B2 → Semi Tune each one (+5, +7, or +12). B3 → Classic filter, Cutoff 65, Resonance 20.",tip:"<strong>The full chop chain in order:</strong> Trim tight → Chop → Select musical slices → Tune them to relate harmonically → Filter each for warmth → Only then move to sequencing."},
     {a:"Build your drum kit on Bank A",d:"PAD BANK → A. Kick → PAD 1, Snare → PAD 2, Hi-hat → PAD 3. Load from Samples → Kicks/Snares/Hats or use recordings. Set BPM: SEQ → hold B1 → turn Encoder → 87 BPM.",tip:"<strong>Bank discipline:</strong> Drums always in Bank A. Chop slices in Bank B. Extra layers in Bank C+. Never mix them. This makes live performance intuitive and prevents confusion mid-session."},
     {a:"Record sequence in layers",d:"SEQ RECORD → PLAY. Pass 1: kick + snare on beats 1,2,3,4. Pass 2: hi-hat every 1/8 or use Note Repeat. Pass 3: Bank B → chop slices. Each overdub loop adds one new element.",tip:"<strong>K3 → RT Swing = 57%:</strong> Before you start recording, set this in SEQ mode. Every note you play lands with a slight human delay on off-beats. You'll hear the beat start breathing immediately."},
     {a:"Apply FX + Compressor",d:"KNOB FX → select LP Filter → All Pads. Slowly sweep K1 up during playback for a filter rise into the drop. Then SHIFT+PAD5 (Compressor) → Amount 60%, Color ON. Listen to the beat transform.",tip:"<strong>Order matters:</strong> Knob FX is applied per-pad before the main output. The Compressor is on the master bus — it glues everything together after all the individual sounds. FX first, then Compressor."},
-    {a:"Song Mode + export to phone",d:"SHIFT+PAD12 → SONG. Press B3 to insert your sequence. Press PLAY to hear it. Press B1 → Export → Audio Mixdown → name it → Do It! Then connect phone via USB → transfer the file.",tip:"<strong>Before you export:</strong> Listen back once on headphones at full volume. If anything is too loud or too quiet, go back to Sample Mode and adjust that pad's volume (K1 in Mix page). Fix it there, not later in another app."},
+    {a:"Song Mode + export your beat",d:"SHIFT+PAD12 → SONG. Press B3 to insert your sequence. Press PLAY to hear it. Press B1 → Export → Audio Mixdown → name it → Do It! Then connect your device via USB to transfer the file.",tip:"<strong>Before you export:</strong> Listen back once on headphones at full volume. If anything is too loud or too quiet, go back to Sample Mode and adjust that pad's volume (K1 in Mix page). Fix it there, not later in another app."},
   ]},
 };
 
