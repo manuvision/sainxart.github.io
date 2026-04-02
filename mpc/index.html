@@ -16,9 +16,9 @@
   --sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px);
   --max:480px
 }
-html,body{height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
-#app{min-height:100%;max-width:var(--max);margin:0 auto;display:flex;flex-direction:column;background:var(--blk)}
-@media(min-width:520px){body{background:#0A0A0A}#app{box-shadow:0 0 80px rgba(0,0,0,.9);min-height:100vh}}
+html,body{min-height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif;-webkit-font-smoothing:antialiased}
+#app{min-height:100vh;max-width:var(--max);margin:0 auto;display:flex;flex-direction:column;background:var(--blk)}
+@media(min-width:520px){body{background:#0A0A0A}#app{box-shadow:0 0 80px rgba(0,0,0,.9)}}
 
 .hdr{padding:calc(var(--st) + 14px) 20px 12px;display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:.5px solid var(--bd);flex-shrink:0;position:sticky;top:0;z-index:10}
 .logo{font-size:13px;font-weight:700;letter-spacing:.06em}
@@ -26,12 +26,12 @@ html,body{height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-syst
 .credit{font-size:11px;font-weight:600}
 .credit a{color:var(--or);text-decoration:none}
 .credit a:hover{text-decoration:underline}
-.donate-bar{background:rgba(232,82,10,.08);border-bottom:.5px solid var(--bdo);padding:7px 20px;display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0}
+.donate-bar{background:#000;border-bottom:.5px solid var(--bdo);padding:7px 20px;display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;position:sticky;top:calc(var(--st) + 48px);z-index:9}
 .donate-bar a{font-size:11px;font-weight:700;color:var(--or);text-decoration:none;letter-spacing:.02em}
 .donate-bar a:active{opacity:.7}
 .donate-heart{font-size:12px}
 
-.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;padding:20px 18px calc(var(--sb) + 88px)}
+.content{flex:1;padding:20px 18px calc(var(--sb) + 88px)}
 
 .bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:var(--max);background:rgba(6,6,6,.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:.5px solid var(--bd);padding:8px 0 calc(var(--sb) + 4px);display:flex;align-items:flex-end;z-index:100}
 .tb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;padding:4px 0}
@@ -171,7 +171,7 @@ html,body{height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-syst
 <div id="app">
 
 <div class="hdr">
-  <div class="logo"><span class="lo">MPC</span><span class="lr"> SAMPLE GUIDE</span></div>
+  <div class="logo"><a href="https://www.akaipro.com/mpc-sample/" target="_blank" rel="noopener" style="color:var(--or);text-decoration:none">MPC SAMPLE</a><span class="lr"> GUIDE</span></div>
   <div class="credit">by <a href="https://manu.vision" target="_blank">Manu.Vision</a></div>
 </div>
 <div class="donate-bar">
@@ -179,7 +179,7 @@ html,body{height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-syst
   <a href="http://paypal.me/manuelsainsily" target="_blank" rel="noopener">Support this guide — donate via PayPal</a>
 </div>
 
-<div class="scroll" id="scrl">
+<div class="content" id="content">
 
   <!-- LEARN -->
   <div class="sc active" id="sc-learn">
@@ -389,7 +389,7 @@ function swTab(name,el){
   document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
   document.getElementById('sc-'+name).classList.add('active');
   el.classList.add('active');
-  document.getElementById('scrl').scrollTop=0;
+  window.scrollTo(0,0);
 }
 
 function openL(id){
@@ -398,12 +398,12 @@ function openL(id){
   document.getElementById('lview').classList.add('on');
   document.getElementById('lh1').innerHTML=LS[id].t;
   document.getElementById('lkick').innerHTML=LS[id].k;
-  rStep();document.getElementById('scrl').scrollTop=0;
+  rStep();window.scrollTo(0,0);
 }
 function closeL(){
   document.getElementById('lhome').style.display='block';
   document.getElementById('lview').classList.remove('on');
-  curL=null;document.getElementById('scrl').scrollTop=0;
+  curL=null;window.scrollTo(0,0);
 }
 function rStep(){
   const l=LS[curL];const s=l.s[curS];const tot=l.s.length;
@@ -412,7 +412,7 @@ function rStep(){
   document.getElementById('bnxt').textContent=curS===tot-1?'Complete \u2713':'Next step \u2192';
   document.getElementById('ldots').innerHTML=l.s.map((_,i)=>'<div class="dot'+(i===curS?' cur':i<curS?' dn':'')+'"></div>').join('');
   document.getElementById('lstep').innerHTML='<div class="sc-card"><div class="snl">Step '+(curS+1)+'</div><div class="sa">'+s.a+'</div><div class="sd">'+s.d+'</div>'+(s.tip?'<div class="tip">'+s.tip+'</div>':'')+'</div>';
-  document.getElementById('scrl').scrollTop=0;
+  window.scrollTo(0,0);
 }
 function nextS(){
   const l=LS[curL];
