@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0053)file:///C:/Users/manue/Downloads/mpc-companion_2.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -30,6 +30,14 @@ html,body{min-height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-
 .donate-bar a{font-size:11px;font-weight:700;color:var(--or);text-decoration:none;letter-spacing:.02em}
 .donate-bar a:active{opacity:.7}
 .donate-heart{font-size:12px}
+.lang-wrap{position:relative}
+.lang-btn{background:var(--s3);border:.5px solid var(--bd);border-radius:8px;color:var(--tx);font-size:11px;font-weight:700;padding:5px 9px;cursor:pointer;letter-spacing:.02em}
+.lang-btn:active{opacity:.8}
+.lang-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--s2);border:.5px solid var(--bd);border-radius:12px;overflow:hidden;min-width:140px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.6)}
+.lang-menu.open{display:block}
+.lang-opt{padding:11px 14px;font-size:13px;font-weight:600;color:var(--td);cursor:pointer}
+.lang-opt:hover{background:var(--s3);color:var(--tx)}
+.lang-opt.active{color:var(--or)}
 
 .content{flex:1;padding:20px 18px calc(var(--sb) + 88px)}
 
@@ -172,7 +180,20 @@ html,body{min-height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-
 
 <div class="hdr">
   <div class="logo"><a href="https://www.akaipro.com/mpc-sample/" target="_blank" rel="noopener" style="color:var(--or);text-decoration:none">MPC SAMPLE</a><span class="lr"> GUIDE</span></div>
-  <div class="credit">by <a href="https://manu.vision" target="_blank">Manu.Vision</a></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="lang-wrap" id="lang-wrap">
+      <button class="lang-btn" onclick="toggleLang()" id="lang-btn">🇬🇧 EN</button>
+      <div class="lang-menu" id="lang-menu">
+        <div class="lang-opt active" onclick="setLang(&#39;en&#39;,this)">🇬🇧 English</div>
+        <div class="lang-opt" onclick="setLang(&#39;fr&#39;,this)">🇫🇷 Français</div>
+        <div class="lang-opt" onclick="setLang(&#39;es&#39;,this)">🇪🇸 Español</div>
+        <div class="lang-opt" onclick="setLang(&#39;de&#39;,this)">🇩🇪 Deutsch</div>
+        <div class="lang-opt" onclick="setLang(&#39;ja&#39;,this)">🇯🇵 日本語</div>
+        <div class="lang-opt" onclick="setLang(&#39;pt&#39;,this)">🇧🇷 Português</div>
+      </div>
+    </div>
+    <div class="credit">by <a href="https://manu.vision/" target="_blank">Manu.Vision</a></div>
+  </div>
 </div>
 <div class="donate-bar">
   <span class="donate-heart">♥</span>
@@ -200,15 +221,15 @@ html,body{min-height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-
       <div class="mc" id="mc7" onclick="openL(7)"><div class="mi">🏁</div><div style="flex:1;min-width:0"><div class="mt">Full beat — start to export</div><div class="ms">The complete Madlib/Dilla workflow end-to-end</div></div><div class="mb bn">Final</div></div>
     </div>
     <div class="lv" id="lview">
-      <button class="back" onclick="closeL()">&#8249; Missions</button>
+      <button class="back" onclick="closeL()">‹ Missions</button>
       <div class="lmeta" id="lmeta">Step 1 of 5</div>
       <div class="lh1" id="lh1"></div>
       <div class="lkick" id="lkick"></div>
       <div class="dots" id="ldots"></div>
       <div id="lstep"></div>
       <div class="brow">
-        <button class="bprev" id="bprev" onclick="prevS()">&#8249;</button>
-        <button class="bnxt" id="bnxt" onclick="nextS()">Next step &#8594;</button>
+        <button class="bprev" id="bprev" onclick="prevS()">‹</button>
+        <button class="bnxt" id="bnxt" onclick="nextS()">Next step →</button>
       </div>
     </div>
   </div>
@@ -248,7 +269,7 @@ html,body{min-height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-
       <div class="qstep"><div class="qnum">1</div><div class="qtext">In Sample Mode: <strong>K1</strong> = start point, <strong>K2</strong> = end point.</div></div>
       <div class="qstep"><div class="qnum">2</div><div class="qtext">Hold <strong>SHIFT + PAD 13</strong> (TRIM SAMPLE) to permanently cut outside the markers.</div></div>
       <div class="qstep"><div class="qnum">3</div><div class="qtext">Press <strong>CHOP</strong> to slice across pads. Press <strong>LOOP</strong> to loop the sample.</div></div>
-      <div class="qtip"><strong>Tip:</strong> See &#8679; on screen? Hold <strong>SHIFT</strong> to zoom the waveform with the knobs for precise trimming.</div>
+      <div class="qtip"><strong>Tip:</strong> See ⇧ on screen? Hold <strong>SHIFT</strong> to zoom the waveform with the knobs for precise trimming.</div>
     </div>
     <div class="qcard">
       <div class="qcard-hdr"><div class="qcard-icon">⏺</div><div class="qcard-title">Record a new sequence</div></div>
@@ -256,12 +277,12 @@ html,body{min-height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-
       <div class="qstep"><div class="qnum">2</div><div class="qtext">Press <strong>SEQ RECORD</strong> to arm recording.</div></div>
       <div class="qstep"><div class="qnum">3</div><div class="qtext">Press <strong>PLAY</strong>. Tap pads to lay down your beat. Loops and overdubs automatically.</div></div>
       <div class="qstep"><div class="qnum">4</div><div class="qtext">Press <strong>STOP</strong> when done. Press <strong>PLAY</strong> again to listen back.</div></div>
-      <div class="qtip"><strong>Tip:</strong> Made a mistake? Hold <strong>SHIFT + &#8722;</strong> to undo the last recording pass instantly.</div>
+      <div class="qtip"><strong>Tip:</strong> Made a mistake? Hold <strong>SHIFT + −</strong> to undo the last recording pass instantly.</div>
     </div>
     <div class="qcard">
       <div class="qcard-hdr"><div class="qcard-icon">✨</div><div class="qcard-title">Powerful FX</div></div>
       <div class="qstep"><div class="qnum">1</div><div class="qtext">Press <strong>PAD FX</strong> and hit pads to trigger effects. Harder press = more effect.</div></div>
-      <div class="qstep"><div class="qnum">2</div><div class="qtext">Press <strong>KNOB FX</strong> to control one effect with K1&#8211;K3, keeping pads free.</div></div>
+      <div class="qstep"><div class="qnum">2</div><div class="qtext">Press <strong>KNOB FX</strong> to control one effect with K1–K3, keeping pads free.</div></div>
       <div class="qstep"><div class="qnum">3</div><div class="qtext">Press <strong>SHIFT + PAD FX</strong> to enter <strong>Flex Beat</strong> — time-warp stutter effects.</div></div>
       <div class="qtip"><strong>Tip:</strong> Press <strong>SHIFT + KNOB FX</strong> to choose which effect and which pads it applies to.</div>
     </div>
@@ -271,9 +292,9 @@ html,body{min-height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-
       <div class="combo-row"><div class="kbd">SHIFT</div><div class="plus">+</div><div class="kbd">PAD 13</div><div class="combo-desc"><strong>Trim sample</strong> — cut outside start/end</div></div>
       <div class="combo-row"><div class="kbd">SHIFT</div><div class="plus">+</div><div class="kbd">PAD 5</div><div class="combo-desc"><strong>Compressor</strong> — punch &amp; tape glue</div></div>
       <div class="combo-row"><div class="kbd">SHIFT</div><div class="plus">+</div><div class="kbd">PAD 12</div><div class="combo-desc"><strong>Song Mode</strong> — arrange &amp; export</div></div>
-      <div class="combo-row"><div class="kbd">SHIFT</div><div class="plus">+</div><div class="kbd or">&#8722;</div><div class="combo-desc"><strong>Undo</strong> — clears last recording pass</div></div>
+      <div class="combo-row"><div class="kbd">SHIFT</div><div class="plus">+</div><div class="kbd or">−</div><div class="combo-desc"><strong>Undo</strong> — clears last recording pass</div></div>
       <div class="combo-row"><div class="kbd">SHIFT</div><div class="plus">+</div><div class="kbd">PAD FX</div><div class="combo-desc"><strong>Flex Beat</strong> — time-warp stutter</div></div>
-      <div class="combo-row"><div class="kbd or">STOP</div><div class="plus">&#215;2</div><div style="width:6px"></div><div class="combo-desc"><strong>Kill all sound</strong> — emergency reset</div></div>
+      <div class="combo-row"><div class="kbd or">STOP</div><div class="plus">×2</div><div style="width:6px"></div><div class="combo-desc"><strong>Kill all sound</strong> — emergency reset</div></div>
       <div class="combo-row"><div class="kbd">NOTE REP</div><div class="plus">+</div><div class="kbd">PAD</div><div class="combo-desc"><strong>Note Repeat</strong> — hi-hat rolls &amp; fills</div></div>
       <div class="combo-row"><div class="kbd">SHIFT</div><div class="plus">+</div><div class="kbd">SAMP REC</div><div class="combo-desc"><strong>Sample Recall</strong> — last 25s of audio</div></div>
     </div>
@@ -285,18 +306,18 @@ html,body{min-height:100%;background:#0A0A0A;color:var(--tx);font-family:-apple-
 
 <!-- Bottom nav: 2 tabs + central playlist button -->
 <nav class="bnav">
-  <button class="tb active" onclick="swTab('learn',this)">
-    <div class="ti"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+  <button class="tb active" onclick="swTab(&#39;learn&#39;,this)">
+    <div class="ti"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg></div>
     <div class="tl">Lessons</div>
   </button>
   <div class="tb-center">
     <a class="yt-fab" href="https://www.youtube.com/playlist?list=PLA-YSZkavOYGp_lDIXc4IRExExHMzoucK" target="_blank" rel="noopener" aria-label="Watch playlist on YouTube">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><polygon points="9 7 19 12 9 17"/></svg>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><polygon points="9 7 19 12 9 17"></polygon></svg>
     </a>
     <div class="tl" style="color:var(--or);margin-top:2px">Videos</div>
   </div>
-  <button class="tb" onclick="swTab('ref',this)">
-    <div class="ti"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="13" y2="15"/></svg></div>
+  <button class="tb" onclick="swTab(&#39;ref&#39;,this)">
+    <div class="ti"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="9" y1="7" x2="15" y2="7"></line><line x1="9" y1="11" x2="15" y2="11"></line><line x1="9" y1="15" x2="13" y2="15"></line></svg></div>
     <div class="tl">Cards</div>
   </button>
 </nav>
@@ -407,9 +428,9 @@ function closeL(){
 }
 function rStep(){
   const l=LS[curL];const s=l.s[curS];const tot=l.s.length;
-  document.getElementById('lmeta').textContent='Step '+(curS+1)+' of '+tot;
+  document.getElementById('lmeta').textContent=LANGS[curLang].step_of.replace('{a}',curS+1).replace('{b}',tot);
   document.getElementById('bprev').style.opacity=curS===0?'0.25':'1';
-  document.getElementById('bnxt').textContent=curS===tot-1?'Complete \u2713':'Next step \u2192';
+  document.getElementById('bnxt').textContent=curS===tot-1?LANGS[curLang].complete:LANGS[curLang].next_step;
   document.getElementById('ldots').innerHTML=l.s.map((_,i)=>'<div class="dot'+(i===curS?' cur':i<curS?' dn':'')+'"></div>').join('');
   document.getElementById('lstep').innerHTML='<div class="sc-card"><div class="snl">Step '+(curS+1)+'</div><div class="sa">'+s.a+'</div><div class="sd">'+s.d+'</div>'+(s.tip?'<div class="tip">'+s.tip+'</div>':'')+'</div>';
   window.scrollTo(0,0);
@@ -428,12 +449,173 @@ function updP(){
   [1,2,3,4,5,6,7].forEach(id=>{
     const c=document.getElementById('mc'+id);const b=c.querySelector('.mb');
     c.classList.remove('cur');
-    if(done.has(id)){c.classList.add('done');b.textContent='\u2713 Done';b.className='mb bd2';}
+    if(done.has(id)){c.classList.add('done');b.textContent=LANGS[curLang].done_txt;b.className='mb bd2';}
   });
   const nx=[1,2,3,4,5,6,7].find(id=>!done.has(id));
-  if(nx){const c=document.getElementById('mc'+nx);c.classList.add('cur');c.classList.remove('done');const b=c.querySelector('.mb');if(!done.has(nx)){b.textContent=nx===1?'Start':nx===7?'Final':'Next';b.className='mb bs';}}
+  if(nx){const c=document.getElementById('mc'+nx);c.classList.add('cur');c.classList.remove('done');const b=c.querySelector('.mb');if(!done.has(nx)){b.textContent=nx===1?LANGS[curLang].start:nx===7?LANGS[curLang].final:LANGS[curLang].next;b.className='mb bs';}}
+}
+
+/* ── Language system ── */
+const LANGS={
+  en:{
+    code:'en',flag:'🇬🇧',label:'EN',
+    nav_lessons:'Lessons',nav_cards:'Cards',nav_videos:'Videos',
+    donate:'Support this guide — donate via PayPal',
+    your_missions:'Your missions',done_lbl:'Done',missions_lbl:'Missions',progress_lbl:'Progress',
+    start:'Start',next:'Next',final:'Final',done_txt:'✓ Done',
+    step_of:'Step {a} of {b}',complete:'Complete ✓',next_step:'Next step →',
+    setup_usb_n:'Audio source via USB-C',setup_usb_d:'Rear USB port — phone, tablet, or computer. Play any app, MPC Sample receives audio live',
+    setup_hp_n:'Headphones (3.5mm)',setup_hp_d:'PHONES jack on rear panel — built-in speaker turns off automatically when connected',
+    setup_mic_n:'Built-in mic',setup_mic_d:'Next to Encoder — lo-fi sampling, live sounds, Madlib-style room recordings',
+    mc1t:'First sounds',mc1s:'Power on · play demo · explore pads',
+    mc2t:'Record your first sample',mc2s:'USB source → grab · trim → chop',
+    mc3t:'Chop like Madlib',mc3s:'Slice · tune · filter — make it yours',
+    mc4t:'Build a boom bap beat',mc4s:'Drums + chops → sequence → glue',
+    mc5t:'Note Repeat & live feel',mc5s:'Hi-hat rolls · swing · Dilla timing',
+    mc6t:'Master the effects',mc6s:'Pad FX · Knob FX · Flex Beat · Compressor',
+    mc7t:'Full beat — start to export',mc7s:'The complete Madlib/Dilla workflow end-to-end',
+  },
+  fr:{
+    code:'fr',flag:'🇫🇷',label:'FR',
+    nav_lessons:'Leçons',nav_cards:'Fiches',nav_videos:'Vidéos',
+    donate:'Soutenir ce guide — faire un don via PayPal',
+    your_missions:'Vos missions',done_lbl:'Faites',missions_lbl:'Missions',progress_lbl:'Progrès',
+    start:'Début',next:'Suite',final:'Final',done_txt:'✓ Fait',
+    step_of:'Étape {a} sur {b}',complete:'Terminé ✓',next_step:'Étape suivante →',
+    setup_usb_n:'Source audio via USB-C',setup_usb_d:'Port USB arrière — téléphone, tablette ou ordinateur. Lancez n\'importe quelle app, le MPC Sample reçoit le son en direct',
+    setup_hp_n:'Casque (3,5mm)',setup_hp_d:'Prise PHONES sur le panneau arrière — le haut-parleur intégré se coupe automatiquement',
+    setup_mic_n:'Micro intégré',setup_mic_d:'À côté de l\'encodeur — sampling lo-fi, sons live, enregistrements ambiance à la Madlib',
+    mc1t:'Premiers sons',mc1s:'Allumer · démo · explorer les pads',
+    mc2t:'Enregistrer un premier sample',mc2s:'Source USB → capturer · couper → chopper',
+    mc3t:'Chopper comme Madlib',mc3s:'Slicer · accorder · filtrer — faire sien',
+    mc4t:'Construire un boom bap',mc4s:'Drums + chops → séquence → coller',
+    mc5t:'Note Repeat & feeling',mc5s:'Roulements de hi-hat · swing · timing à la Dilla',
+    mc6t:'Maîtriser les effets',mc6s:'Pad FX · Knob FX · Flex Beat · Compresseur',
+    mc7t:'Beat complet — de A à Z',mc7s:'Le workflow Madlib/Dilla de bout en bout',
+  },
+  es:{
+    code:'es',flag:'🇪🇸',label:'ES',
+    nav_lessons:'Lecciones',nav_cards:'Fichas',nav_videos:'Vídeos',
+    donate:'Apoya esta guía — dona vía PayPal',
+    your_missions:'Tus misiones',done_lbl:'Hechas',missions_lbl:'Misiones',progress_lbl:'Progreso',
+    start:'Inicio',next:'Siguiente',final:'Final',done_txt:'✓ Hecho',
+    step_of:'Paso {a} de {b}',complete:'Completado ✓',next_step:'Siguiente paso →',
+    setup_usb_n:'Fuente de audio por USB-C',setup_usb_d:'Puerto USB trasero — teléfono, tablet u ordenador. Reproduce cualquier app, el MPC Sample recibe el audio en directo',
+    setup_hp_n:'Auriculares (3,5mm)',setup_hp_d:'Jack PHONES en el panel trasero — el altavoz integrado se apaga automáticamente',
+    setup_mic_n:'Micrófono integrado',setup_mic_d:'Junto al Encoder — sampling lo-fi, sonidos en vivo, grabaciones de ambiente al estilo Madlib',
+    mc1t:'Primeros sonidos',mc1s:'Encender · demo · explorar pads',
+    mc2t:'Grabar tu primer sample',mc2s:'Fuente USB → capturar · recortar → chop',
+    mc3t:'Chop como Madlib',mc3s:'Slicear · afinar · filtrar — hacerlo tuyo',
+    mc4t:'Construir un boom bap',mc4s:'Drums + chops → secuencia → pegar',
+    mc5t:'Note Repeat y feeling',mc5s:'Rolls de hi-hat · swing · timing à la Dilla',
+    mc6t:'Dominar los efectos',mc6s:'Pad FX · Knob FX · Flex Beat · Compresor',
+    mc7t:'Beat completo — de inicio a exportar',mc7s:'El workflow Madlib/Dilla de principio a fin',
+  },
+  de:{
+    code:'de',flag:'🇩🇪',label:'DE',
+    nav_lessons:'Lektionen',nav_cards:'Karten',nav_videos:'Videos',
+    donate:'Diese Anleitung unterstützen — via PayPal spenden',
+    your_missions:'Deine Missionen',done_lbl:'Fertig',missions_lbl:'Missionen',progress_lbl:'Fortschritt',
+    start:'Start',next:'Weiter',final:'Final',done_txt:'✓ Fertig',
+    step_of:'Schritt {a} von {b}',complete:'Abgeschlossen ✓',next_step:'Nächster Schritt →',
+    setup_usb_n:'Audioquelle über USB-C',setup_usb_d:'Hinterer USB-Anschluss — Handy, Tablet oder Computer. Jede App abspielen, MPC Sample empfängt Audio live',
+    setup_hp_n:'Kopfhörer (3,5mm)',setup_hp_d:'PHONES-Buchse auf der Rückseite — eingebauter Lautsprecher schaltet sich automatisch ab',
+    setup_mic_n:'Eingebautes Mikrofon',setup_mic_d:'Neben dem Encoder — Lo-Fi-Sampling, Live-Sounds, Raumaufnahmen im Madlib-Stil',
+    mc1t:'Erste Klänge',mc1s:'Einschalten · Demo · Pads erkunden',
+    mc2t:'Ersten Sample aufnehmen',mc2s:'USB-Quelle → aufnehmen · trimmen → choppen',
+    mc3t:'Choppen wie Madlib',mc3s:'Slicen · stimmen · filtern — zu deinem machen',
+    mc4t:'Einen Boom Bap bauen',mc4s:'Drums + Chops → Sequenz → zusammenfügen',
+    mc5t:'Note Repeat & Feeling',mc5s:'Hi-Hat-Rolls · Swing · Dilla-Timing',
+    mc6t:'Effekte meistern',mc6s:'Pad FX · Knob FX · Flex Beat · Kompressor',
+    mc7t:'Vollständiger Beat — von Anfang bis Export',mc7s:'Der komplette Madlib/Dilla-Workflow von A bis Z',
+  },
+  ja:{
+    code:'ja',flag:'🇯🇵',label:'JA',
+    nav_lessons:'レッスン',nav_cards:'カード',nav_videos:'動画',
+    donate:'このガイドをサポート — PayPalで寄付',
+    your_missions:'ミッション',done_lbl:'完了',missions_lbl:'ミッション',progress_lbl:'進捗',
+    start:'開始',next:'次へ',final:'最終',done_txt:'✓ 完了',
+    step_of:'ステップ {a} / {b}',complete:'完了 ✓',next_step:'次のステップ →',
+    setup_usb_n:'USB-Cオーディオソース',setup_usb_d:'背面USBポート — スマホ、タブレット、PCを接続。どのアプリも再生でき、MPC Sampleがリアルタイムで受信',
+    setup_hp_n:'ヘッドフォン（3.5mm）',setup_hp_d:'背面PHONESジャック — 接続すると内蔵スピーカーが自動的にオフ',
+    setup_mic_n:'内蔵マイク',setup_mic_d:'エンコーダー横 — ローファイサンプリング、ライブ録音、Madlib風アンビエント録音',
+    mc1t:'最初のサウンド',mc1s:'電源オン · デモ再生 · パッドを探索',
+    mc2t:'最初のサンプルを録音',mc2s:'USB接続 → キャプチャ · トリム → チョップ',
+    mc3t:'Madlib流チョップ',mc3s:'スライス · チューン · フィルター — 自分のものに',
+    mc4t:'ブームバップビートを作る',mc4s:'ドラム + チョップ → シーケンス → まとめる',
+    mc5t:'ノートリピートとグルーヴ',mc5s:'ハイハットロール · スウィング · Dillaタイミング',
+    mc6t:'エフェクトをマスター',mc6s:'Pad FX · Knob FX · Flex Beat · コンプレッサー',
+    mc7t:'フルビート — 最初から書き出しまで',mc7s:'Madlib/Dillaの完全なワークフロー',
+  },
+  pt:{
+    code:'pt',flag:'🇧🇷',label:'PT',
+    nav_lessons:'Lições',nav_cards:'Fichas',nav_videos:'Vídeos',
+    donate:'Apoie este guia — doe via PayPal',
+    your_missions:'Suas missões',done_lbl:'Feitas',missions_lbl:'Missões',progress_lbl:'Progresso',
+    start:'Início',next:'Próximo',final:'Final',done_txt:'✓ Feito',
+    step_of:'Passo {a} de {b}',complete:'Concluído ✓',next_step:'Próximo passo →',
+    setup_usb_n:'Fonte de áudio via USB-C',setup_usb_d:'Porta USB traseira — celular, tablet ou computador. Toque qualquer app, o MPC Sample recebe o áudio ao vivo',
+    setup_hp_n:'Fones de ouvido (3,5mm)',setup_hp_d:'Entrada PHONES no painel traseiro — alto-falante integrado desliga automaticamente',
+    setup_mic_n:'Microfone integrado',setup_mic_d:'Ao lado do Encoder — sampling lo-fi, sons ao vivo, gravações ambientes estilo Madlib',
+    mc1t:'Primeiros sons',mc1s:'Ligar · demo · explorar pads',
+    mc2t:'Gravar seu primeiro sample',mc2s:'Fonte USB → capturar · cortar → chopar',
+    mc3t:'Chopar como Madlib',mc3s:'Fatiar · afinar · filtrar — tornar seu',
+    mc4t:'Construir um boom bap',mc4s:'Drums + chops → sequência → colar',
+    mc5t:'Note Repeat e feeling',mc5s:'Rolls de hi-hat · swing · timing à la Dilla',
+    mc6t:'Dominar os efeitos',mc6s:'Pad FX · Knob FX · Flex Beat · Compressor',
+    mc7t:'Beat completo — do início à exportação',mc7s:'O workflow Madlib/Dilla do começo ao fim',
+  },
+};
+
+let curLang='en';
+
+function toggleLang(){
+  document.getElementById('lang-menu').classList.toggle('open');
+}
+document.addEventListener('click',function(e){
+  if(!document.getElementById('lang-wrap').contains(e.target)){
+    document.getElementById('lang-menu').classList.remove('open');
+  }
+});
+
+function setLang(code,el){
+  curLang=code;
+  const L=LANGS[code];
+  document.getElementById('lang-menu').classList.remove('open');
+  document.getElementById('lang-btn').textContent=L.flag+' '+L.label;
+  document.querySelectorAll('.lang-opt').forEach(o=>o.classList.remove('active'));
+  el.classList.add('active');
+  // Nav
+  const tls=document.querySelectorAll('.tl');
+  tls[0].textContent=L.nav_lessons;
+  tls[2].textContent=L.nav_cards;
+  // Donate
+  document.querySelector('.donate-bar a').textContent=L.donate;
+  // Stats
+  const slbs=document.querySelectorAll('.slb');
+  slbs[0].textContent=L.done_lbl; slbs[1].textContent=L.missions_lbl; slbs[2].textContent=L.progress_lbl;
+  // Section label
+  const slbls=document.querySelectorAll('.slbl');
+  if(slbls[0]) slbls[0].textContent=L.your_missions;
+  // Mission cards
+  [[1,L.mc1t,L.mc1s],[2,L.mc2t,L.mc2s],[3,L.mc3t,L.mc3s],[4,L.mc4t,L.mc4s],
+   [5,L.mc5t,L.mc5s],[6,L.mc6t,L.mc6s],[7,L.mc7t,L.mc7s]].forEach(([id,t,s])=>{
+    const c=document.getElementById('mc'+id); if(!c) return;
+    c.querySelector('.mt').textContent=t; c.querySelector('.ms').textContent=s;
+  });
+  // Setup card
+  const devns=document.querySelectorAll('.devn'), devss=document.querySelectorAll('.devs');
+  if(devns[0]){devns[0].textContent=L.setup_usb_n; devss[0].textContent=L.setup_usb_d;}
+  if(devns[1]){devns[1].textContent=L.setup_hp_n;  devss[1].textContent=L.setup_hp_d;}
+  if(devns[2]){devns[2].textContent=L.setup_mic_n; devss[2].textContent=L.setup_mic_d;}
+  // Update mission titles in LS so lesson view header reflects lang
+  [[1,L.mc1t],[2,L.mc2t],[3,L.mc3t],[4,L.mc4t],[5,L.mc5t],[6,L.mc6t],[7,L.mc7t]]
+    .forEach(([id,t])=>{ LS[id].t=t; });
+  if(curL!==null) document.getElementById('lh1').innerHTML=LS[curL].t;
+  updP();
 }
 
 </script>
-</body>
-</html>
+
+
+</body></html>
