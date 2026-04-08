@@ -437,32 +437,32 @@
         .highlights-footer a:hover { background: rgba(139, 92, 246, 0.1); border-color: var(--primary-violet); }
         .highlights-footer svg { width: 20px; height: 20px; }
 
-        /* Skills Section */
-        .skills { background: var(--dark-bg); position: relative; }
-        .skills::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent); }
-        .skills-content { max-width: 900px; margin: 0 auto; }
-        .skills-group { margin-bottom: 40px; }
-        .skills-group:last-of-type { margin-bottom: 48px; }
-        .skills-group-title {
+        /* Experience Section */
+        .experience { background: var(--dark-bg); position: relative; }
+        .experience::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent); }
+        .experience-content { max-width: 900px; margin: 0 auto; }
+        .experience-group { margin-bottom: 40px; }
+        .experience-group:last-of-type { margin-bottom: 48px; }
+        .experience-group-title {
             font-family: var(--font-display); font-size: 1.1rem; font-weight: 600;
             color: var(--primary-light-purple); margin-bottom: 16px; letter-spacing: -0.01em;
             text-align: center;
         }
-        .skills-badges {
+        .experience-badges {
             display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
         }
-        .skill-badge {
+        .exp-badge {
             display: inline-flex; align-items: center; padding: 8px 16px;
             background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3);
             border-radius: 100px; font-size: 0.85rem; font-weight: 500;
             color: var(--text-primary); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: default;
         }
-        .skills.focus-mode .skill-badge {
+        .experience.focus-mode .exp-badge {
             opacity: 0.25; transform: scale(0.95);
             border-color: rgba(139, 92, 246, 0.15);
         }
-        .skills.focus-mode .skill-badge.current-focus {
+        .experience.focus-mode .exp-badge.current-focus {
             opacity: 1; transform: scale(1);
             background: linear-gradient(135deg, rgba(255, 196, 0, 0.9) 0%, rgba(255, 77, 0, 0.9) 100%);
             border-color: rgba(255, 170, 0, 0.65);
@@ -1015,7 +1015,7 @@
             <ul class="nav-links">
                 <li><a href="#about">About</a></li>
                 <li><a href="#highlights">Highlights</a></li>
-                <li><a href="#skills">Skills</a></li>
+                <li><a href="#experience">Experience</a></li>
                 <li><a href="#brands">Partners</a></li>
                 <li><a href="#speaking">Speaking</a></li>
                 <li><a href="#press">Press</a></li>
@@ -1032,7 +1032,7 @@
     <div class="mobile-menu" id="mobileMenu">
         <a href="#about" onclick="closeMobileMenu()">About</a>
         <a href="#highlights" onclick="closeMobileMenu()">Highlights</a>
-        <a href="#skills" onclick="closeMobileMenu()">Skills</a>
+        <a href="#experience" onclick="closeMobileMenu()">Experience</a>
         <a href="#brands" onclick="closeMobileMenu()">Partners</a>
         <a href="#speaking" onclick="closeMobileMenu()">Speaking</a>
         <a href="#press" onclick="closeMobileMenu()">Press</a>
@@ -1096,7 +1096,7 @@
                 <div class="about-content">
                     <h2 class="reveal-right">A little bit about me</h2>
                     <div class="about-stats reveal-right delay-1">
-                        <div class="stat"><div class="stat-number" data-target="15" data-suffix="+">0+</div><div class="stat-label">Years Experience</div></div>
+                        <div class="stat"><div class="stat-number" data-target="15" data-suffix="+">0+</div><div class="stat-label">Years of Experience</div></div>
                         <div class="stat"><div class="stat-number" data-target="100" data-suffix="+">0+</div><div class="stat-label">Talks Delivered</div></div>
                         <div class="stat"><div class="stat-number" data-target="30" data-suffix="+">0+</div><div class="stat-label">Countries</div></div>
                     </div>
@@ -1196,23 +1196,23 @@
         </div>
     </section>
 
-    <!-- Skills Section  -->
+    <!-- Experience Section  -->
 
-    <section class="skills" id="skills">
+    <section class="experience" id="experience">
         <div class="container">
             <div class="section-header">
                 <div class="section-eyebrow reveal">Corporate Experience</div>
                 <h2 class="section-title reveal delay-1">Full-Time Positions</h2>
             </div>
-            <div class="skills-content">
-                <div class="skills-group">
-                    <h3 class="skills-group-title reveal">Companies I've recently worked for</h3>
-                    <div class="skills-badges reveal delay-1">
-                        <span class="skill-badge">Paysafe</span>
-                        <span class="skill-badge">IBM</span>
-                        <span class="skill-badge">Immersion</span>
-                        <span class="skill-badge">Unity</span>
-                        <span class="skill-badge current-focus">Adobe</span>
+            <div class="experience-content">
+                <div class="experience-group">
+                    <h3 class="experience-group-title reveal">Companies I've recently worked for</h3>
+                    <div class="experience-badges reveal delay-1">
+                        <span class="exp-badge">Paysafe</span>
+                        <span class="exp-badge">IBM</span>
+                        <span class="exp-badge">Immersion</span>
+                        <span class="exp-badge">Unity</span>
+                        <span class="exp-badge current-focus">Adobe</span>
                     </div>
                 </div>
                 
@@ -1566,7 +1566,7 @@
             scrollProgress.style.width = scrollPercent + '%';
 
             // Highlight active nav section
-            const sections = ['home', 'about', 'highlights', 'skills', 'brands', 'speaking', 'press', 'contact'];
+            const sections = ['home', 'about', 'highlights', 'experience', 'brands', 'speaking', 'press', 'contact'];
             const navLinks = document.querySelectorAll('.nav-links a');
             let currentSection = 'home';
 
@@ -1663,16 +1663,16 @@
             revealElements.forEach(el => observer.observe(el));
         }
 
-        // Skills Focus Toggle with Magnetic Effect and Sparks
+        // Experience Focus Toggle with Magnetic Effect and Sparks
         const focusToggle = document.getElementById('focusToggle');
-        const skillsSection = document.querySelector('.skills');
+        const experienceSection = document.querySelector('.experience');
         const sparkContainer = document.getElementById('sparkContainer');
 
         if (focusToggle) {
             // Toggle focus mode
             focusToggle.addEventListener('click', (e) => {
                 const isActive = focusToggle.classList.toggle('active');
-                skillsSection.classList.toggle('focus-mode', isActive);
+                experienceSection.classList.toggle('focus-mode', isActive);
                 createSparks(sparkContainer, isActive ? 'purple' : 'orange');
             });
 
