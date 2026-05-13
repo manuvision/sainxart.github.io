@@ -484,7 +484,10 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
     <div class="section" data-tab="states" style="padding-bottom:4px">
       <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <span>7-State Mapping &nbsp;·&nbsp; ↺ rotation &nbsp;·&nbsp; ⚡ flicker</span>
-        <button id="pal-open-btn" title="Apply a color palette to all 7 states">🎨 Palette</button>
+        <div style="display:flex;gap:4px">
+          <button id="pal-open-btn" title="Apply a color palette to all 7 states">🎨 Palette</button>
+          <button id="pal-random-btn" title="Random palette" style="background:none;border:1px solid #2a2a2a;border-radius:3px;color:#555;font-size:11px;cursor:pointer;padding:1px 5px;transition:all .12s">🎲</button>
+        </div>
       </div>
       <div id="statesContainer"></div>
     </div>
@@ -895,6 +898,7 @@ STATE_DEFS.forEach((def, i) => {
           <span class="flk-icon">⚡</span>
           <span class="flk-text">Flicker</span>
         </label>
+        <button class="rot-btn" id="rndbtn-${i}" title="Random preset glyph">🎲</button>
       </div>
     </div>
     <input type="color" id="statecolor-${i}" value="${def.defaultColor}">
@@ -927,6 +931,13 @@ STATE_DEFS.forEach((def, i) => {
     btn.textContent = `↺ ${app.stateRotations[i]}°`;
     btn.classList.toggle('nonzero', app.stateRotations[i] !== 0);
     requestDraw();
+  });
+
+  document.getElementById(`rndbtn-${i}`).addEventListener('click', () => {
+    const sh = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+    const img = SHAPE_IMGS[sh.id];
+    const go = () => assignSVGToState(i, img, sh.name);
+    if (img.complete && img.naturalWidth > 0) go(); else img.onload = go;
   });
 
   document.getElementById(`flicker-${i}`).addEventListener('change', e => {
@@ -1291,6 +1302,11 @@ function openPalettePicker() {
 function closePalettePicker() { palModal.classList.remove('open'); }
 
 document.getElementById('pal-open-btn').addEventListener('click', openPalettePicker);
+document.getElementById('pal-random-btn').addEventListener('click', () => {
+  const pal = PALETTES[Math.floor(Math.random() * PALETTES.length)];
+  const colors = palReversed ? [...pal.colors].reverse() : pal.colors;
+  applyPalette(colors);
+});
 document.getElementById('pal-close').addEventListener('click', closePalettePicker);
 palModal.addEventListener('click', e => { if (e.target === palModal) closePalettePicker(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closePalettePicker(); closeLibrary(); } });
