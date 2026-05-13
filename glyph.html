@@ -145,11 +145,25 @@ input[type=color] {
   flex: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   background: #080808; overflow: hidden; position: relative;
+  perspective: 900px; perspective-origin: center center;
 }
 #preview-placeholder { text-align: center; color: #2a2a2a; user-select: none; }
 #preview-placeholder .ph-icon { font-size: 52px; margin-bottom: 14px; }
 #preview-placeholder p { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+
+#canvas-wrap {
+  display: flex; align-items: center; justify-content: center;
+  transform-style: preserve-3d; cursor: grab; user-select: none;
+  max-width: 100%; max-height: 100%;
+}
+#canvas-wrap:active { cursor: grabbing; }
 canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pixelated; }
+
+#drag-hint {
+  position: absolute; bottom: 56px; left: 50%; transform: translateX(-50%);
+  font-size: 9px; color: #333; letter-spacing: 1.5px; text-transform: uppercase;
+  pointer-events: none; white-space: nowrap; display: none;
+}
 
 /* export buttons */
 #export-bar {
@@ -470,6 +484,14 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
     </div>
 
     <div class="section" data-tab="tune">
+      <div class="section-title">3D Layer Depth Spread</div>
+      <div class="slider-row">
+        <input type="range" id="depthSpread" min="0" max="200" value="0" step="1">
+        <span class="slider-val" id="depthSpreadVal">0</span>
+      </div>
+    </div>
+
+    <div class="section" data-tab="tune">
       <div class="section-title">Flicker Speed (glyphs / sec)</div>
       <div class="slider-row">
         <input type="range" id="flickerSpeed" min="1" max="60" value="8" step="1">
@@ -514,7 +536,10 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
     <div class="ph-icon">◈</div>
     <p>Upload media to begin</p>
   </div>
-  <canvas id="outputCanvas" style="display:none"></canvas>
+  <div id="canvas-wrap">
+    <canvas id="outputCanvas" style="display:none"></canvas>
+  </div>
+  <div id="drag-hint">drag · rotate &nbsp;|&nbsp; scroll · zoom &nbsp;|&nbsp; dbl-click · reset</div>
   <div id="video-controls">
     <button class="vbtn" id="playPauseBtn">⏸ Pause</button>
   </div>
@@ -656,6 +681,8 @@ const app = {
   gridAnimLastMs: 0,
   // uploaded glyph pack
   uploadedShapes: [],
+  // 3D view
+  rotX: 0, rotY: 0, zoom: 1, panX: 0, panY: 0, depthSpread: 0,
   // render control
   statesDirty: true,
   needsDraw:   false,
@@ -822,8 +849,9 @@ function drawFrame() {
       if (scale <= 0.001) continue;
 
       const angleRad = app.stateRotations[displayIdx] * Math.PI / 180;
-      const cx = x*grid + grid/2;
-      const cy = y*grid + grid/2;
+      const depthZ   = (displayIdx - 3) * app.depthSpread;
+      const cx = x*grid + grid/2 + depthZ * Math.sin(app.rotY * Math.PI / 180);
+      const cy = y*grid + grid/2 - depthZ * Math.sin(app.rotX * Math.PI / 180);
       const hasTile = !app.fillSolid &&
         (app.svgImages[displayIdx] || (app.flickerEnabled[displayIdx] && app.uploadedShapes.length));
 
@@ -1420,6 +1448,109 @@ if (window.innerWidth <= 700) switchMobileTab('input');
 window.addEventListener('resize', () => {
   if (window.innerWidth <= 700 &&
       !document.querySelector('.m-tab.active')) switchMobileTab('input');
+});
+
+/* ══════════════════════════════════════════════════════════════════
+   3D ROTATION + ZOOM
+══════════════════════════════════════════════════════════════════ */
+const canvasWrap = document.getElementById('canvas-wrap');
+const dragHint   = document.getElementById('drag-hint');
+
+function applyTransform() {
+  canvasWrap.style.transform =
+    `translate(${app.panX}px, ${app.panY}px) rotateX(${app.rotX}deg) rotateY(${app.rotY}deg) scale(${app.zoom})`;
+  const active = app.rotX !== 0 || app.rotY !== 0 || app.zoom !== 1 || app.panX !== 0 || app.panY !== 0;
+  dragHint.style.display = active ? 'block' : 'none';
+  if (app.depthSpread > 0) requestDraw();
+}
+
+/* Mouse drag */
+const preview = document.getElementById('preview');
+let drag = { active: false, lastX: 0, lastY: 0 };
+
+preview.addEventListener('mousedown', e => {
+  drag.active = true; drag.lastX = e.clientX; drag.lastY = e.clientY;
+});
+window.addEventListener('mousemove', e => {
+  if (!drag.active) return;
+  app.rotY += (e.clientX - drag.lastX) * 0.35;
+  app.rotX -= (e.clientY - drag.lastY) * 0.35;
+  app.rotX  = Math.max(-80, Math.min(80, app.rotX));
+  drag.lastX = e.clientX; drag.lastY = e.clientY;
+  applyTransform();
+});
+window.addEventListener('mouseup', () => { drag.active = false; });
+
+/* Scroll-wheel zoom */
+preview.addEventListener('wheel', e => {
+  e.preventDefault();
+  app.zoom *= e.deltaY < 0 ? 1.06 : 1 / 1.06;
+  app.zoom  = Math.max(0.2, Math.min(6, app.zoom));
+  applyTransform();
+}, { passive: false });
+
+/* Double-click reset */
+preview.addEventListener('dblclick', () => {
+  app.rotX = 0; app.rotY = 0; app.zoom = 1; app.panX = 0; app.panY = 0;
+  applyTransform();
+});
+
+/* Touch: 1-finger rotate, 2-finger pan + pinch zoom */
+let touch = { active: false, lastX: 0, lastY: 0, lastDist: 0, lastMidX: 0, lastMidY: 0 };
+
+preview.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) {
+    touch.active = true;
+    touch.lastX = e.touches[0].clientX;
+    touch.lastY = e.touches[0].clientY;
+  } else if (e.touches.length === 2) {
+    touch.active = false;
+    touch.lastDist = Math.hypot(
+      e.touches[1].clientX - e.touches[0].clientX,
+      e.touches[1].clientY - e.touches[0].clientY
+    );
+    touch.lastMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+    touch.lastMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+  }
+}, { passive: true });
+
+preview.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (e.touches.length === 1 && touch.active) {
+    app.rotY += (e.touches[0].clientX - touch.lastX) * 0.45;
+    app.rotX -= (e.touches[0].clientY - touch.lastY) * 0.45;
+    app.rotX  = Math.max(-80, Math.min(80, app.rotX));
+    touch.lastX = e.touches[0].clientX;
+    touch.lastY = e.touches[0].clientY;
+    applyTransform();
+  } else if (e.touches.length === 2) {
+    const dist = Math.hypot(
+      e.touches[1].clientX - e.touches[0].clientX,
+      e.touches[1].clientY - e.touches[0].clientY
+    );
+    const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+    const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+    if (touch.lastDist > 0) {
+      app.zoom *= dist / touch.lastDist;
+      app.zoom  = Math.max(0.2, Math.min(6, app.zoom));
+      app.panX += midX - touch.lastMidX;
+      app.panY += midY - touch.lastMidY;
+      applyTransform();
+    }
+    touch.lastDist = dist;
+    touch.lastMidX = midX;
+    touch.lastMidY = midY;
+  }
+}, { passive: false });
+
+preview.addEventListener('touchend', () => { touch.active = false; touch.lastDist = 0; });
+
+/* Depth spread slider */
+document.getElementById('depthSpread').addEventListener('input', e => {
+  app.depthSpread = parseFloat(e.target.value);
+  document.getElementById('depthSpreadVal').textContent =
+    parseFloat(e.target.value).toFixed(1);
+  requestDraw();
 });
 </script>
 </body>
