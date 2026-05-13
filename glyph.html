@@ -445,8 +445,8 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
       </div>
       <div class="slider-row" id="gridAnimSpeedRow" style="margin-top:6px;display:none">
         <span class="slider-label" style="min-width:38px">Rate</span>
-        <input type="range" id="gridAnimSpeed" min="0.5" max="16" value="3" step="0.5">
-        <span class="slider-val" id="gridAnimSpeedVal">3/s</span>
+        <input type="range" id="gridAnimSpeed" min="0.5" max="16" value="1" step="0.5">
+        <span class="slider-val" id="gridAnimSpeedVal">1/s</span>
       </div>
     </div>
 
@@ -676,9 +676,10 @@ const app = {
   flickerSpeed:   8,
   variedRhythm:   false,
   gridAnim:       false,
-  gridAnimSpeed:  3,
+  gridAnimSpeed:  1,
   gridAnimDir:    1,
   gridAnimLastMs: 0,
+  gridAnimHold:   0,
   // uploaded glyph pack
   uploadedShapes: [],
   // 3D view
@@ -796,9 +797,11 @@ function updateGridAnim(now) {
   if (now - app.gridAnimLastMs < interval) return;
   app.gridAnimLastMs = now;
 
+  if (app.gridAnimHold > 0) { app.gridAnimHold--; return; }
+
   let next = app.grid + GRID_ANIM_STEP * app.gridAnimDir;
-  if (next >= GRID_ANIM_MAX) { next = GRID_ANIM_MAX; app.gridAnimDir = -1; }
-  else if (next <= GRID_ANIM_MIN) { next = GRID_ANIM_MIN; app.gridAnimDir = 1; }
+  if (next >= GRID_ANIM_MAX) { next = GRID_ANIM_MAX; app.gridAnimDir = -1; app.gridAnimHold = 3; }
+  else if (next <= GRID_ANIM_MIN) { next = GRID_ANIM_MIN; app.gridAnimDir = 1; app.gridAnimHold = 3; }
 
   app.grid = next;
   document.getElementById('gridSlider').value = next;
