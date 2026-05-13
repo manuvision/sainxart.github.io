@@ -403,13 +403,16 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
         <div class="upload-title" id="uploadTitle">Upload Image or Video</div>
         <div class="upload-sub">Click or drag &amp; drop</div>
       </div>
+      <button class="btn" id="cameraBtn" style="width:100%;margin-top:6px;padding:8px">📷 Camera</button>
     </div>
 
     <div class="section" data-tab="input">
       <div class="section-title">Aspect Ratio</div>
       <div class="btn-group">
-        <button class="btn active" data-ratio="original">Original</button>
-        <button class="btn" data-ratio="1:1">1 : 1</button>
+        <button class="btn active" data-ratio="original">Orig</button>
+        <button class="btn" data-ratio="1:1">1:1</button>
+        <button class="btn" data-ratio="16:9">16:9</button>
+        <button class="btn" data-ratio="9:16">9:16</button>
       </div>
     </div>
 
@@ -668,13 +671,31 @@ const bctx      = bufCanvas.getContext('2d');
 const tinted    = Array.from({length:7}, () => document.createElement('canvas'));
 const tctx      = tinted.map(c => c.getContext('2d'));
 
+function cropRect(srcW, srcH, tw, th) {
+  const sr = srcW / srcH, tr = tw / th;
+  if (sr > tr) {
+    const sW = srcH * tr;
+    return { sx: (srcW - sW) / 2, sy: 0, sW, sH: srcH };
+  } else {
+    const sH = srcW / tr;
+    return { sx: 0, sy: (srcH - sH) / 2, sW: srcW, sH };
+  }
+}
+
 function setupCanvas() {
   const el = app.mediaEl; if (!el) return;
   const srcW = el.videoWidth || el.naturalWidth || 800;
   const srcH = el.videoHeight || el.naturalHeight || 600;
-  if (app.aspectRatio === '1:1') {
+  const ar = app.aspectRatio;
+  if (ar === '1:1') {
     const sz = Math.min(srcW, srcH);
     canvas.width = sz; canvas.height = sz;
+  } else if (ar === '16:9') {
+    const r = cropRect(srcW, srcH, 16, 9);
+    canvas.width = Math.round(r.sW); canvas.height = Math.round(r.sH);
+  } else if (ar === '9:16') {
+    const r = cropRect(srcW, srcH, 9, 16);
+    canvas.width = Math.round(r.sW); canvas.height = Math.round(r.sH);
   } else {
     canvas.width = srcW; canvas.height = srcH;
   }
@@ -764,9 +785,14 @@ function drawFrame() {
   const srcH = el.videoHeight || el.naturalHeight || 600;
 
   let sx = 0, sy = 0, sW = srcW, sH = srcH;
-  if (app.aspectRatio === '1:1') {
+  const ar = app.aspectRatio;
+  if (ar === '1:1') {
     const sz = Math.min(srcW, srcH);
     sx = (srcW-sz)/2; sy = (srcH-sz)/2; sW = sH = sz;
+  } else if (ar === '16:9' || ar === '9:16') {
+    const [tw, th] = ar === '16:9' ? [16, 9] : [9, 16];
+    const r = cropRect(srcW, srcH, tw, th);
+    sx = r.sx; sy = r.sy; sW = r.sW; sH = r.sH;
   }
 
   const bw = Math.ceil(sw/grid), bh = Math.ceil(sh/grid);
@@ -914,6 +940,7 @@ STATE_DEFS.forEach((def, i) => {
 ══════════════════════════════════════════════════════════════════ */
 function loadMedia(file) {
   if (!file) return;
+  stopCamera();
   const url = URL.createObjectURL(file);
   document.getElementById('uploadTitle').textContent = file.name;
   document.getElementById('preview-placeholder').style.display = 'none';
@@ -1274,6 +1301,54 @@ document.getElementById('pal-reverse').addEventListener('click', function() {
     const colors = palReversed ? [...pal.colors].reverse() : pal.colors;
     applyPalette(colors);
   }
+});
+
+/* ══════════════════════════════════════════════════════════════════
+   CAMERA
+══════════════════════════════════════════════════════════════════ */
+let cameraStream = null;
+
+async function startCamera() {
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    });
+    const video = document.createElement('video');
+    video.srcObject = cameraStream;
+    video.playsInline = true; video.muted = true; video.autoplay = true;
+    video.onloadedmetadata = () => {
+      if (app.mediaEl && app.mediaEl.pause) app.mediaEl.pause();
+      app.mediaEl = video; app.mediaType = 'video';
+      setupCanvas(); app.statesDirty = true;
+      video.play(); app.playing = true;
+      document.getElementById('preview-placeholder').style.display = 'none';
+      canvas.style.display = 'block';
+      document.getElementById('export-bar').style.display = 'flex';
+      document.getElementById('video-controls').style.display = 'flex';
+      document.getElementById('m-video-section').style.display = 'block';
+      document.getElementById('uploadTitle').textContent = '📷 Camera live';
+      document.getElementById('playPauseBtn').textContent = '⏸ Pause';
+      document.getElementById('m-playPauseBtn').textContent = '⏸ Pause';
+      const btn = document.getElementById('cameraBtn');
+      btn.textContent = '⏹ Stop Camera'; btn.classList.add('active');
+      ensureLoop();
+    };
+  } catch {
+    alert('Camera access denied or unavailable.');
+  }
+}
+
+function stopCamera() {
+  if (!cameraStream) return;
+  cameraStream.getTracks().forEach(t => t.stop());
+  cameraStream = null;
+  const btn = document.getElementById('cameraBtn');
+  btn.textContent = '📷 Camera'; btn.classList.remove('active');
+}
+
+document.getElementById('cameraBtn').addEventListener('click', () => {
+  if (cameraStream) stopCamera(); else startCamera();
 });
 
 /* ══════════════════════════════════════════════════════════════════
