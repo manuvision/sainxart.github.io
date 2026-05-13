@@ -403,7 +403,10 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
         <div class="upload-title" id="uploadTitle">Upload Image or Video</div>
         <div class="upload-sub">Click or drag &amp; drop</div>
       </div>
-      <button class="btn" id="cameraBtn" style="width:100%;margin-top:6px;padding:8px">📷 Camera</button>
+      <div style="display:flex;gap:4px;margin-top:6px">
+        <button class="btn" id="cameraBtn" style="flex:1;padding:8px">📷 Camera</button>
+        <button class="btn" id="cameraFlipBtn" style="display:none;padding:8px;flex:0 0 auto" title="Flip camera">🔄</button>
+      </div>
     </div>
 
     <div class="section" data-tab="input">
@@ -1307,11 +1310,15 @@ document.getElementById('pal-reverse').addEventListener('click', function() {
    CAMERA
 ══════════════════════════════════════════════════════════════════ */
 let cameraStream = null;
+let cameraFacing = 'environment';
 
-async function startCamera() {
+async function startCamera(facing) {
+  facing = facing || cameraFacing;
+  cameraFacing = facing;
   try {
+    if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
     cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 720 } },
       audio: false
     });
     const video = document.createElement('video');
@@ -1332,6 +1339,7 @@ async function startCamera() {
       document.getElementById('m-playPauseBtn').textContent = '⏸ Pause';
       const btn = document.getElementById('cameraBtn');
       btn.textContent = '⏹ Stop Camera'; btn.classList.add('active');
+      document.getElementById('cameraFlipBtn').style.display = 'block';
       ensureLoop();
     };
   } catch {
@@ -1345,10 +1353,14 @@ function stopCamera() {
   cameraStream = null;
   const btn = document.getElementById('cameraBtn');
   btn.textContent = '📷 Camera'; btn.classList.remove('active');
+  document.getElementById('cameraFlipBtn').style.display = 'none';
 }
 
 document.getElementById('cameraBtn').addEventListener('click', () => {
   if (cameraStream) stopCamera(); else startCamera();
+});
+document.getElementById('cameraFlipBtn').addEventListener('click', () => {
+  startCamera(cameraFacing === 'environment' ? 'user' : 'environment');
 });
 
 /* ══════════════════════════════════════════════════════════════════
