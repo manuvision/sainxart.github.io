@@ -422,8 +422,8 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
     <div class="section" data-tab="tune">
       <div class="section-title">Resolution (Grid Size)</div>
       <div class="slider-row">
-        <input type="range" id="gridSlider" min="4" max="80" value="20" step="1">
-        <span class="slider-val" id="gridVal">20</span>
+        <input type="range" id="gridSlider" min="4" max="80" value="8" step="1">
+        <span class="slider-val" id="gridVal">8</span>
       </div>
       <div class="toggle-row" style="margin-top:6px">
         <span class="toggle-label">Animate Grid Size</span>
@@ -459,8 +459,8 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
       <div class="section-title">Midtone Shape Scale</div>
       <div class="slider-row">
         <span class="slider-label">Min</span>
-        <input type="range" id="scaleMin" min="0" max="1" value="0.05" step="0.01">
-        <span class="slider-val" id="scaleMinVal">0.05</span>
+        <input type="range" id="scaleMin" min="0" max="1" value="1" step="0.01">
+        <span class="slider-val" id="scaleMinVal">1.00</span>
       </div>
       <div class="slider-row">
         <span class="slider-label">Max</span>
@@ -638,8 +638,8 @@ const STATE_DEFS = [
 
 const app = {
   mediaEl:null, mediaType:null,
-  grid:20, bgColor:'#000000', aspectRatio:'original',
-  fillSolid:false, invert:false, scaleMin:0.05, scaleMax:1.0,
+  grid:8, bgColor:'#000000', aspectRatio:'original',
+  fillSolid:false, invert:false, scaleMin:1.0, scaleMax:1.0,
   // per-state
   colors:         STATE_DEFS.map(s => s.defaultColor),
   svgImages:      Array(7).fill(null),
