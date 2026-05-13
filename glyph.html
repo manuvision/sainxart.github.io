@@ -445,8 +445,8 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
       </div>
       <div class="slider-row" id="gridAnimSpeedRow" style="margin-top:6px;display:none">
         <span class="slider-label" style="min-width:38px">Speed</span>
-        <input type="range" id="gridAnimSpeed" min="0.05" max="1" value="0.2" step="0.05">
-        <span class="slider-val" id="gridAnimSpeedVal">0.2×</span>
+        <input type="range" id="gridAnimSpeed" min="0.01" max="0.5" value="0.05" step="0.01">
+        <span class="slider-val" id="gridAnimSpeedVal">0.05×</span>
       </div>
     </div>
 
@@ -684,7 +684,7 @@ const app = {
   flickerSpeed:   8,
   variedRhythm:   false,
   gridAnim:       false,
-  gridAnimSpeed:  0.2,
+  gridAnimSpeed:  0.05,
   gridAnimPhase:  0,
   gridAnimLastMs: 0,
   // uploaded glyph pack
@@ -706,10 +706,14 @@ const app = {
 /* ══════════════════════════════════════════════════════════════════
    CANVAS SETUP
 ══════════════════════════════════════════════════════════════════ */
-const canvas    = document.getElementById('outputCanvas');
-const ctx       = canvas.getContext('2d');
-const bufCanvas = document.createElement('canvas');
-const bctx      = bufCanvas.getContext('2d');
+const canvas       = document.getElementById('outputCanvas');
+const ctx          = canvas.getContext('2d');
+const bufCanvas    = document.createElement('canvas');
+const bctx         = bufCanvas.getContext('2d');
+const recordCanvas = document.createElement('canvas');
+const rctx         = recordCanvas.getContext('2d');
+const perspCanvas  = document.createElement('canvas');
+const pctx         = perspCanvas.getContext('2d');
 const tinted    = Array.from({length:7}, () => document.createElement('canvas'));
 const tctx      = tinted.map(c => c.getContext('2d'));
 
@@ -741,6 +745,7 @@ function setupCanvas() {
   } else {
     canvas.width = srcW; canvas.height = srcH;
   }
+  recordCanvas.width = canvas.width; recordCanvas.height = canvas.height;
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -901,6 +906,7 @@ function ensureLoop() {
     const anyFlicker = app.flickerEnabled.some(Boolean) && app.uploadedShapes.length > 0;
     if (app.mediaType === 'video' || anyFlicker || app.needsDraw || app.isRecording || app.gridAnim || app.depthAnim) {
       drawFrame();
+      compositeFrame();
       app.needsDraw = false;
     }
     requestAnimationFrame(loop);
@@ -909,6 +915,64 @@ function ensureLoop() {
 }
 
 function requestDraw() { app.needsDraw = true; ensureLoop(); }
+
+function compositeFrame() {
+  if (!app.isRecording) return;
+  const rw = recordCanvas.width, rh = recordCanvas.height;
+  const amp = 12;
+  const eRotXdeg = app.rotX + (app.depthAnim ? amp * Math.sin(app.depthAnimPhase) : 0);
+  const eRotYdeg = app.rotY + (app.depthAnim ? amp * Math.cos(app.depthAnimPhase) : 0);
+  const eRotX = eRotXdeg * Math.PI / 180;
+  const eRotY = eRotYdeg * Math.PI / 180;
+  const d = 900; // matches CSS perspective: 900px
+  const N = 80;  // strips per axis
+
+  rctx.fillStyle = app.bgColor;
+  rctx.fillRect(0, 0, rw, rh);
+
+  if (Math.abs(eRotX) < 0.001 && Math.abs(eRotY) < 0.001) {
+    rctx.drawImage(canvas, 0, 0);
+    return;
+  }
+
+  // Pass 1 — rotateY: map vertical strips with perspective onto perspCanvas
+  perspCanvas.width = rw; perspCanvas.height = rh;
+  pctx.fillStyle = app.bgColor;
+  pctx.fillRect(0, 0, rw, rh);
+
+  const projX    = new Float32Array(N + 1);
+  const hScaleY  = new Float32Array(N + 1);
+  for (let i = 0; i <= N; i++) {
+    const xRel   = (i / N) * rw - rw / 2;
+    const denom  = d + xRel * Math.sin(eRotY);
+    projX[i]     = xRel * Math.cos(eRotY) * d / denom + rw / 2;
+    hScaleY[i]   = d / denom;
+  }
+  for (let i = 0; i < N; i++) {
+    const sx = (i / N) * rw,   sw = rw / N;
+    const dx = projX[i],       dw = projX[i + 1] - projX[i];
+    const hs = (hScaleY[i] + hScaleY[i + 1]) / 2;
+    const dh = rh * hs,        dy = (rh - dh) / 2;
+    pctx.drawImage(canvas, sx, 0, sw, rh, dx, dy, dw, dh);
+  }
+
+  // Pass 2 — rotateX: map horizontal strips with perspective onto recordCanvas
+  const projY    = new Float32Array(N + 1);
+  const wScaleX  = new Float32Array(N + 1);
+  for (let i = 0; i <= N; i++) {
+    const yRel   = (i / N) * rh - rh / 2;
+    const denom  = d + yRel * Math.sin(eRotX);
+    projY[i]     = yRel * Math.cos(eRotX) * d / denom + rh / 2;
+    wScaleX[i]   = d / denom;
+  }
+  for (let i = 0; i < N; i++) {
+    const sy = (i / N) * rh,   sh = rh / N;
+    const dy = projY[i],       dh = projY[i + 1] - projY[i];
+    const ws = (wScaleX[i] + wScaleX[i + 1]) / 2;
+    const dw = rw * ws,        dx = (rw - dw) / 2;
+    rctx.drawImage(perspCanvas, 0, sy, rw, sh, dx, dy, dw, dh);
+  }
+}
 
 /* ══════════════════════════════════════════════════════════════════
    ASSIGN SVG TO STATE
@@ -1123,8 +1187,9 @@ function startRecording() {
   const types = ['video/mp4;codecs=avc1','video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
   const mimeType = types.find(t => { try { return MediaRecorder.isTypeSupported(t); } catch { return false; } }) || 'video/webm';
 
+  recordCanvas.width = canvas.width; recordCanvas.height = canvas.height;
   app.recChunks = [];
-  app.mediaRecorder = new MediaRecorder(canvas.captureStream(30), { mimeType, videoBitsPerSecond: 8_000_000 });
+  app.mediaRecorder = new MediaRecorder(recordCanvas.captureStream(30), { mimeType, videoBitsPerSecond: 8_000_000 });
 
   app.mediaRecorder.ondataavailable = e => { if (e.data.size > 0) app.recChunks.push(e.data); };
   app.mediaRecorder.onstop = () => {
