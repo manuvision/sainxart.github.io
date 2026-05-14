@@ -60,6 +60,44 @@
 
     #upload-screen.hidden .footer { opacity: 0; }
 
+    /* ── VIDEO CONTROLS ────────────────────────────────────── */
+    #video-controls {
+      display: none; align-items: center; gap: 10px;
+      width: min(480px, calc(100vw - 48px));
+      pointer-events: all;
+    }
+
+    #video-controls.visible { display: flex; }
+
+    .play-btn {
+      width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.15s, transform 0.1s;
+      color: #fff;
+    }
+
+    .play-btn:hover { background: rgba(255,255,255,0.2); }
+    .play-btn:active { transform: scale(0.92); }
+
+    .progress-wrap { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+
+    input[type=range].progress {
+      width: 100%; height: 3px;
+      background: rgba(255,255,255,0.2); border-radius: 2px;
+      accent-color: #fff;
+    }
+
+    input[type=range].progress::-webkit-slider-thumb {
+      width: 12px; height: 12px;
+    }
+
+    .time-row {
+      display: flex; justify-content: space-between;
+      font-size: 10px; color: rgba(255,255,255,0.35); letter-spacing: 0.3px;
+      font-variant-numeric: tabular-nums;
+    }
+
     /* Drop zone is a <label> — clicking anywhere opens file picker natively */
     #drop-zone {
       width: min(480px, calc(100vw - 48px));
@@ -274,11 +312,12 @@
       <span class="pill">JPEG</span>
       <span class="pill">PNG</span>
       <span class="pill">WebP</span>
+      <span class="pill">MP4</span>
       <span class="pill">2:1 ratio</span>
     </div>
   </label>
 
-  <input type="file" id="file-input" accept="image/*" />
+  <input type="file" id="file-input" accept="image/*,video/mp4,video/webm,video/quicktime" />
 
   <div class="footer">Made by Manuel Sainsily</div>
 </div>
@@ -305,6 +344,20 @@
       </div>
     </div>
     <div class="hud-bottom">
+      <div id="video-controls">
+        <div class="play-btn" id="play-btn">
+          <svg id="play-icon" width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M3 2l7 4-7 4z"/></svg>
+          <svg id="pause-icon" width="12" height="12" viewBox="0 0 12 12" fill="currentColor" style="display:none"><rect x="2" y="1.5" width="3" height="9" rx="1"/><rect x="7" y="1.5" width="3" height="9" rx="1"/></svg>
+        </div>
+        <div class="progress-wrap">
+          <input type="range" class="progress" id="progress-bar" min="0" max="1000" value="0" step="1" />
+          <div class="time-row">
+            <span id="time-current">0:00</span>
+            <span id="time-total">0:00</span>
+          </div>
+        </div>
+      </div>
+
       <div class="drag-hint">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.8">
           <path d="M6.5 1v4M4.5 3l2-2 2 2M6.5 12v-4M4.5 10l2 2 2-2M1 6.5h4M3 4.5l-2 2 2 2M12 6.5H8M10 4.5l2 2-2 2"/>
@@ -434,18 +487,70 @@
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
     new Uint8Array([10,10,10,255]));
-  // Always CLAMP_TO_EDGE — REPEAT is only valid for POT textures in WebGL1
-  // and most panoramas are non-POT (e.g. 6000×3000), which causes black output.
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+  function setTexParams() {
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  }
 
   // ── Camera state ────────────────────────────────────────────
   let yaw   = 0, pitch = 0;
   let fovDeg = 75;
   let hasImage = false;
   let velYaw = 0, velPitch = 0, inertiaId;
+
+  // ── Video state ──────────────────────────────────────────────
+  let videoEl   = null;
+  let isVideo   = false;
+  let scrubbing = false;
+
+  const videoControls = document.getElementById('video-controls');
+  const playBtn       = document.getElementById('play-btn');
+  const playIcon      = document.getElementById('play-icon');
+  const pauseIcon     = document.getElementById('pause-icon');
+  const progressBar   = document.getElementById('progress-bar');
+  const timeCurrent   = document.getElementById('time-current');
+  const timeTotal     = document.getElementById('time-total');
+
+  function fmtTime(s) {
+    if (!isFinite(s)) return '0:00';
+    const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  }
+
+  function updatePlayPause() {
+    const paused = !videoEl || videoEl.paused;
+    playIcon.style.display  = paused  ? '' : 'none';
+    pauseIcon.style.display = paused  ? 'none' : '';
+  }
+
+  function updateProgress() {
+    if (!videoEl || scrubbing) return;
+    const pct = videoEl.duration ? videoEl.currentTime / videoEl.duration : 0;
+    progressBar.value = Math.round(pct * 1000);
+    timeCurrent.textContent = fmtTime(videoEl.currentTime);
+    timeTotal.textContent   = fmtTime(videoEl.duration);
+  }
+
+  playBtn.addEventListener('click', () => {
+    if (!videoEl) return;
+    videoEl.paused ? videoEl.play() : videoEl.pause();
+  });
+
+  progressBar.addEventListener('mousedown',  () => { scrubbing = true; });
+  progressBar.addEventListener('touchstart', () => { scrubbing = true; }, { passive: true });
+  progressBar.addEventListener('input', () => {
+    if (!videoEl) return;
+    videoEl.currentTime = (progressBar.value / 1000) * videoEl.duration;
+    timeCurrent.textContent = fmtTime(videoEl.currentTime);
+  });
+  progressBar.addEventListener('change', () => { scrubbing = false; });
 
   function fovRad() { return fovDeg * Math.PI / 180; }
 
@@ -459,6 +564,13 @@
   }
 
   function draw() {
+    // Upload latest video frame every tick
+    if (isVideo && videoEl && videoEl.readyState >= 2) {
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, videoEl);
+      setTexParams();
+      updateProgress();
+    }
     pitch = Math.max(-Math.PI * 0.499, Math.min(Math.PI * 0.499, pitch));
     gl.uniform2f(uRes, canvas.width, canvas.height);
     gl.uniform1f(uFovU, fovRad());
@@ -628,10 +740,69 @@
     img.src = src;
   }
 
+  function cleanupVideo() {
+    if (videoEl) {
+      videoEl.pause();
+      videoEl.src = '';
+      videoEl = null;
+    }
+    isVideo = false;
+    videoControls.classList.remove('visible');
+    progressBar.value = 0;
+  }
+
+  // ── Load video into WebGL texture ───────────────────────────
+  function loadVideoURL(src, filename) {
+    cleanupVideo();
+    loading.classList.add('active');
+    const vid = document.createElement('video');
+    vid.loop = true;
+    vid.muted = false;
+    vid.playsInline = true;
+    vid.crossOrigin = 'anonymous';
+
+    vid.addEventListener('canplay', () => {
+      // Upload first frame so texture isn't blank before play starts
+      if (vid.readyState >= 2) {
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, vid);
+        setTexParams();
+      }
+      videoEl = vid;
+      isVideo = true;
+      hasImage = true;
+      yaw = 0; pitch = 0; velYaw = 0; velPitch = 0;
+      setFov(75);
+      hudFilename.textContent = filename || 'panorama.mp4';
+      videoControls.classList.add('visible');
+      timeTotal.textContent = fmtTime(vid.duration);
+      loading.classList.remove('active');
+      uploadScreen.classList.add('hidden');
+      viewerEl.classList.add('visible');
+      showHud();
+      vid.play().then(updatePlayPause).catch(updatePlayPause);
+    }, { once: true });
+
+    vid.addEventListener('play',  updatePlayPause);
+    vid.addEventListener('pause', updatePlayPause);
+    vid.addEventListener('error', () => {
+      loading.classList.remove('active');
+      showToast('Could not load video — try an MP4 file.');
+    });
+
+    vid.src = src;
+    vid.load();
+  }
+
   function handleFile(file) {
     if (!file) return;
-    if (!file.type.startsWith('image/')) { showToast('Please select a valid image file.'); return; }
-    loadImageURL(URL.createObjectURL(file), file.name);
+    if (file.type.startsWith('video/')) {
+      loadVideoURL(URL.createObjectURL(file), file.name);
+    } else if (file.type.startsWith('image/')) {
+      loadImageURL(URL.createObjectURL(file), file.name);
+    } else {
+      showToast('Please drop an image or video file.');
+    }
   }
 
   // ── File input ───────────────────────────────────────────────
@@ -645,19 +816,23 @@
   dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
   dropZone.addEventListener('dragleave', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); });
   dropZone.addEventListener('drop', e => {
-    e.preventDefault(); dropZone.classList.remove('drag-over');
+    e.preventDefault(); e.stopPropagation(); // stop bubbling to document handler
+    dropZone.classList.remove('drag-over');
     handleFile(e.dataTransfer.files[0]);
   });
 
-  // Drop anywhere when viewer is active
+  // Drop anywhere when viewer is already showing (not on upload screen)
   document.addEventListener('dragover', e => e.preventDefault());
   document.addEventListener('drop', e => {
     e.preventDefault();
+    if (!uploadScreen.classList.contains('hidden')) return; // let dropZone handle it
     if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   });
 
   // ── Buttons ──────────────────────────────────────────────────
   backBtn.addEventListener('click', () => {
+    cleanupVideo();
+    hasImage = false;
     viewerEl.classList.remove('visible');
     hud.classList.remove('faded');
     setTimeout(() => uploadScreen.classList.remove('hidden'), 100);
@@ -676,6 +851,7 @@
     if (e.key === 'ArrowRight') { yaw   += s; showHud(); }
     if (e.key === 'ArrowUp')    { pitch -= s; showHud(); }
     if (e.key === 'ArrowDown')  { pitch += s; showHud(); }
+    if (e.key === ' ') { e.preventDefault(); playBtn.click(); showHud(); }
     if (e.key === 'Escape')     backBtn.click();
     if (e.key === 'f' || e.key === 'F') fullBtn.click();
   });
