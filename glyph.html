@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dithering Tool</title>
+<title>Glyph</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -399,7 +399,7 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
 
 <!-- ════════════════ SIDEBAR ════════════════ -->
 <div id="sidebar">
-  <div id="sidebar-header">Dithering Tool</div>
+  <div id="sidebar-header">Glyph</div>
 
   <div id="m-tabs">
     <div class="m-tab active" data-tab="input"><span class="m-tab-icon">📁</span>Input</div>
@@ -434,13 +434,13 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
     </div>
 
     <div class="section" data-tab="tune">
-      <div class="section-title">Resolution (Grid Size)</div>
+      <div class="section-title">Grid</div>
       <div class="slider-row">
         <input type="range" id="gridSlider" min="4" max="80" value="8" step="1">
         <span class="slider-val" id="gridVal">8</span>
       </div>
       <div class="toggle-row" style="margin-top:6px">
-        <span class="toggle-label">Animate Grid Size</span>
+        <span class="toggle-label">Animate Grid</span>
         <label class="toggle"><input type="checkbox" id="gridAnim"><span class="toggle-track"></span></label>
       </div>
       <div class="slider-row" id="gridAnimSpeedRow" style="margin-top:6px;display:none">
@@ -451,26 +451,24 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
     </div>
 
     <div class="section" data-tab="tune">
-      <div class="section-title">Background Color</div>
-      <div class="slider-row">
+      <div class="section-title">Render</div>
+      <div class="slider-row" style="margin-bottom:8px">
+        <span class="slider-label" style="min-width:52px;color:#555">BG Color</span>
         <input type="color" id="bgColor" value="#000000">
-        <span style="font-size:11px;color:#555;margin-left:4px" id="bgColorHex">#000000</span>
+        <span style="font-size:11px;color:#444;margin-left:4px" id="bgColorHex">#000000</span>
       </div>
-    </div>
-
-    <div class="section" data-tab="tune">
       <div class="toggle-row">
-        <span class="toggle-label">Fill SVG Shapes (Solid)</span>
+        <span class="toggle-label">Fill Shapes</span>
         <label class="toggle"><input type="checkbox" id="fillSolid"><span class="toggle-track"></span></label>
       </div>
       <div class="toggle-row">
-        <span class="toggle-label">Quick Invert Mapping</span>
+        <span class="toggle-label">Invert Mapping</span>
         <label class="toggle"><input type="checkbox" id="invertMap"><span class="toggle-track"></span></label>
       </div>
     </div>
 
     <div class="section" data-tab="tune">
-      <div class="section-title">Midtone Shape Scale</div>
+      <div class="section-title">Scale</div>
       <div class="slider-row">
         <span class="slider-label">Min</span>
         <input type="range" id="scaleMin" min="0" max="1" value="1" step="0.01">
@@ -484,7 +482,7 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
     </div>
 
     <div class="section" data-tab="tune">
-      <div class="section-title">3D Layer Depth Spread</div>
+      <div class="section-title">Depth</div>
       <div class="slider-row">
         <input type="range" id="depthSpread" min="0" max="200" value="0" step="1">
         <span class="slider-val" id="depthSpreadVal">0</span>
@@ -494,29 +492,29 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
         <label class="toggle"><input type="checkbox" id="depthInvert"><span class="toggle-track"></span></label>
       </div>
       <div class="toggle-row">
-        <span class="toggle-label">Circular Rotation Preview</span>
+        <span class="toggle-label">Auto Rotate</span>
         <label class="toggle"><input type="checkbox" id="depthAnim"><span class="toggle-track"></span></label>
       </div>
     </div>
 
     <div class="section" data-tab="tune">
-      <div class="section-title">Flicker Speed (glyphs / sec)</div>
+      <div class="section-title">Flicker Speed</div>
       <div class="slider-row">
         <input type="range" id="flickerSpeed" min="1" max="60" value="8" step="1">
-        <span class="slider-val" id="flickerSpeedVal">8</span>
+        <span class="slider-val" id="flickerSpeedVal">8/s</span>
       </div>
       <div class="toggle-row" style="margin-top:6px">
-        <span class="toggle-label">Varied Rhythms per State</span>
+        <span class="toggle-label">Varied Rhythms</span>
         <label class="toggle"><input type="checkbox" id="variedRhythm"><span class="toggle-track"></span></label>
       </div>
     </div>
 
     <div class="section" data-tab="states" style="padding-bottom:4px">
       <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <span>7-State Mapping &nbsp;·&nbsp; ↺ rotation &nbsp;·&nbsp; ⚡ flicker</span>
+        <span>States</span>
         <div style="display:flex;gap:4px">
           <button id="pal-open-btn" title="Apply a color palette to all 7 states">🎨 Palette</button>
-          <button id="pal-random-btn" title="Random palette" style="background:none;border:1px solid #2a2a2a;border-radius:3px;color:#555;font-size:11px;cursor:pointer;padding:1px 5px;transition:all .12s">🎲</button>
+          <button id="pal-random-btn" title="Randomize palette and all glyphs" style="background:none;border:1px solid #2a2a2a;border-radius:3px;color:#555;font-size:11px;cursor:pointer;padding:1px 5px;transition:all .12s">🎲</button>
         </div>
       </div>
       <div id="statesContainer"></div>
@@ -1012,8 +1010,8 @@ STATE_DEFS.forEach((def, i) => {
       </div>
     </div>
     <input type="color" id="statecolor-${i}" value="${def.defaultColor}">
-    <button class="micro-btn lib-open-btn" data-state="${i}">⊞</button>
-    <label class="micro-btn" id="svgbtn-${i}">SVG<input type="file" accept=".svg,image/svg+xml"></label>
+    <button class="micro-btn lib-open-btn" data-state="${i}" title="Open shape library">⊞</button>
+    <label class="micro-btn" id="svgbtn-${i}" title="Upload a custom SVG file">SVG<input type="file" accept=".svg,image/svg+xml"></label>
   `;
   statesContainer.appendChild(row);
 
@@ -1137,7 +1135,7 @@ document.getElementById('scaleMax').addEventListener('input', e => {
 });
 document.getElementById('flickerSpeed').addEventListener('input', e => {
   app.flickerSpeed = parseInt(e.target.value);
-  document.getElementById('flickerSpeedVal').textContent = e.target.value;
+  document.getElementById('flickerSpeedVal').textContent = e.target.value + '/s';
 });
 document.getElementById('variedRhythm').addEventListener('change', e => {
   app.variedRhythm = e.target.checked;
@@ -1210,6 +1208,9 @@ function startRecording() {
   ensureLoop();
   recordBtn.innerHTML = '<span class="rec-dot"></span>Stop Recording';
   recordBtn.classList.add('recording');
+  const mr = document.getElementById('m-record-btn');
+  mr.innerHTML = '<span class="rec-dot"></span>Stop Recording';
+  mr.classList.add('recording');
 }
 
 function stopRecording() { if (app.mediaRecorder && app.isRecording) app.mediaRecorder.stop(); }
@@ -1508,17 +1509,8 @@ document.getElementById('m-download-btn').addEventListener('click', () => {
 });
 
 document.getElementById('m-record-btn').addEventListener('click', () => {
-  if (app.isRecording) {
-    stopRecording();
-  } else {
-    startRecording();
-    document.getElementById('m-record-btn').innerHTML = '<span class="rec-dot"></span>Stop Recording';
-    document.getElementById('m-record-btn').classList.add('recording');
-  }
+  if (app.isRecording) stopRecording(); else startRecording();
 });
-
-/* patch onstop to also reset mobile button */
-const _origStartRecording = startRecording;
 
 /* ══════════════════════════════════════════════════════════════════
    MOBILE TABS
@@ -1649,8 +1641,7 @@ preview.addEventListener('touchend', () => { touch.active = false; touch.lastDis
 /* Depth spread slider */
 document.getElementById('depthSpread').addEventListener('input', e => {
   app.depthSpread = parseFloat(e.target.value);
-  document.getElementById('depthSpreadVal').textContent =
-    parseFloat(e.target.value).toFixed(1);
+  document.getElementById('depthSpreadVal').textContent = parseInt(e.target.value);
   requestDraw();
 });
 document.getElementById('depthInvert').addEventListener('change', e => {
