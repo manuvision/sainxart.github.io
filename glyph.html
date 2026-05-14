@@ -564,6 +564,10 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
         <span class="toggle-label">Auto Rotate</span>
         <label class="toggle"><input type="checkbox" id="depthAnim"><span class="toggle-track"></span></label>
       </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Auto Randomize</span>
+        <label class="toggle"><input type="checkbox" id="autoRandom"><span class="toggle-track"></span></label>
+      </div>
     </div>
 
     <div class="section" data-tab="tune">
@@ -759,6 +763,7 @@ const app = {
   // 3D view
   rotX: 0, rotY: 0, zoom: 1, panX: 0, panY: 0, depthSpread: 0, depthInvert: false,
   depthAnim: false, depthAnimPhase: 0, depthAnimLastMs: 0,
+  autoRandom: false, autoRandomLastMs: 0,
   // render control
   statesDirty: true,
   needsDraw:   false,
@@ -869,7 +874,7 @@ function updateFlicker(now) {
 /* ══════════════════════════════════════════════════════════════════
    GRID ANIMATION
 ══════════════════════════════════════════════════════════════════ */
-const GRID_ANIM_MIN = 4, GRID_ANIM_MAX = 80;
+const GRID_ANIM_MIN = 8, GRID_ANIM_MAX = 80;
 
 function updateGridAnim(now) {
   if (!app.gridAnim) return;
@@ -970,8 +975,9 @@ function ensureLoop() {
     updateFlicker(now);
     updateGridAnim(now);
     updateDepthAnim(now);
+    updateAutoRandom(now);
     const anyFlicker = app.flickerEnabled.some(Boolean) && app.uploadedShapes.length > 0;
-    if (app.mediaType === 'video' || anyFlicker || app.needsDraw || app.isRecording || app.gridAnim || app.depthAnim) {
+    if (app.mediaType === 'video' || anyFlicker || app.needsDraw || app.isRecording || app.gridAnim || app.depthAnim || app.autoRandom) {
       drawFrame();
       compositeFrame();
       app.needsDraw = false;
@@ -1483,7 +1489,7 @@ function openPalettePicker() {
 function closePalettePicker() { palModal.classList.remove('open'); }
 
 document.getElementById('pal-open-btn').addEventListener('click', openPalettePicker);
-document.getElementById('pal-random-btn').addEventListener('click', () => {
+function randomizeAll() {
   const pal = PALETTES[Math.floor(Math.random() * PALETTES.length)];
   const colors = palReversed ? [...pal.colors].reverse() : pal.colors;
   applyPalette(colors);
@@ -1493,7 +1499,9 @@ document.getElementById('pal-random-btn').addEventListener('click', () => {
     const go = () => assignSVGToState(i, img, sh.name);
     if (img.complete && img.naturalWidth > 0) go(); else img.onload = go;
   }
-});
+}
+
+document.getElementById('pal-random-btn').addEventListener('click', randomizeAll);
 document.getElementById('pal-close').addEventListener('click', closePalettePicker);
 palModal.addEventListener('click', e => { if (e.target === palModal) closePalettePicker(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closePalettePicker(); closeLibrary(); } });
@@ -1617,6 +1625,15 @@ function applyTransform() {
   if (app.depthSpread > 0) requestDraw();
 }
 
+function updateAutoRandom(now) {
+  if (!app.autoRandom) return;
+  if (app.autoRandomLastMs === 0) { app.autoRandomLastMs = now; return; }
+  if (now - app.autoRandomLastMs >= 1000) {
+    app.autoRandomLastMs = now;
+    randomizeAll();
+  }
+}
+
 function updateDepthAnim(now) {
   if (!app.depthAnim) return;
   if (app.depthAnimLastMs === 0) { app.depthAnimLastMs = now; return; }
@@ -1721,6 +1738,10 @@ document.getElementById('depthAnim').addEventListener('change', e => {
   app.depthAnim = e.target.checked;
   if (e.target.checked) { app.depthAnimLastMs = 0; ensureLoop(); }
   else applyTransform();
+});
+document.getElementById('autoRandom').addEventListener('change', e => {
+  app.autoRandom = e.target.checked;
+  if (e.target.checked) { app.autoRandomLastMs = 0; ensureLoop(); }
 });
 </script>
 </body>
