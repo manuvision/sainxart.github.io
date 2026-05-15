@@ -505,7 +505,7 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
     <div class="section" data-tab="tune">
       <div class="section-title">Grid</div>
       <div class="slider-row">
-        <input type="range" id="gridSlider" min="4" max="80" value="8" step="1">
+        <input type="range" id="gridSlider" min="4" max="400" value="8" step="1">
         <span class="slider-val" id="gridVal">8</span>
       </div>
       <div class="toggle-row">
@@ -801,15 +801,13 @@ function setupCanvas() {
   const srcH = el.videoHeight || el.naturalHeight || 600;
   const ar = app.aspectRatio;
   if (ar === '1:1') {
-    const sz = Math.min(srcW, srcH);
-    canvas.width = sz; canvas.height = sz;
+    canvas.width = 1080; canvas.height = 1080;
   } else if (ar === '16:9') {
-    const r = cropRect(srcW, srcH, 16, 9);
-    canvas.width = Math.round(r.sW); canvas.height = Math.round(r.sH);
+    canvas.width = 1920; canvas.height = 1080;
   } else if (ar === '9:16') {
-    const r = cropRect(srcW, srcH, 9, 16);
-    canvas.width = Math.round(r.sW); canvas.height = Math.round(r.sH);
+    canvas.width = 1080; canvas.height = 1920;
   } else {
+    // original: use source size but cap at 1080p equivalent
     canvas.width = srcW; canvas.height = srcH;
   }
   recordCanvas.width = canvas.width; recordCanvas.height = canvas.height;
@@ -869,7 +867,7 @@ function updateFlicker(now) {
 /* ══════════════════════════════════════════════════════════════════
    GRID ANIMATION
 ══════════════════════════════════════════════════════════════════ */
-const GRID_ANIM_MIN = 4, GRID_ANIM_MAX = 80;
+const GRID_ANIM_MIN = 8, GRID_ANIM_MAX = 160;
 
 function updateGridAnim(now) {
   if (!app.gridAnim) return;
@@ -966,7 +964,13 @@ function drawFrame() {
 function ensureLoop() {
   if (app.loopRunning) return;
   app.loopRunning = true;
+let lastFrameMs = 0;
   function loop(now) {
+    const targetFps = app.isRecording ? 24 : 60;
+    const interval  = 1000 / targetFps;
+    if (now - lastFrameMs < interval) { requestAnimationFrame(loop); return; }
+    lastFrameMs = now;
+
     updateFlicker(now);
     updateGridAnim(now);
     updateDepthAnim(now);
@@ -1256,7 +1260,8 @@ function startRecording() {
 
   recordCanvas.width = canvas.width; recordCanvas.height = canvas.height;
   app.recChunks = [];
-  app.mediaRecorder = new MediaRecorder(recordCanvas.captureStream(30), { mimeType, videoBitsPerSecond: 8_000_000 });
+ const streamCanvas = (app.rotX === 0 && app.rotY === 0 && !app.depthAnim) ? canvas : recordCanvas;
+ app.mediaRecorder = new MediaRecorder(streamCanvas.captureStream(24), { mimeType, videoBitsPerSecond: 10_000_000 });
 
   app.mediaRecorder.ondataavailable = e => { if (e.data.size > 0) app.recChunks.push(e.data); };
   app.mediaRecorder.onstop = () => {
@@ -1521,7 +1526,7 @@ async function startCamera(facing) {
   try {
     if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
     cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      video: { facingMode: { ideal: facing }, width: { ideal: 1920 }, height: { ideal: 1080 } },
       audio: false
     });
     const video = document.createElement('video');
