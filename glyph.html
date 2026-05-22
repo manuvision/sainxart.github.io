@@ -196,6 +196,18 @@ input[type=color]::-webkit-color-swatch { border: none; border-radius: 6px; }
   transition: all .15s; flex-shrink: 0; font-family: inherit; font-weight: 500;
 }
 #pal-random-btn:hover { background: rgba(255,255,255,0.13); color: #fff; }
+#pal-reset-btn {
+  background: rgba(255,255,255,0.08); border: none; border-radius: 6px; color: #8e8e93;
+  font-size: 13px; cursor: pointer; padding: 4px 8px; line-height: 1;
+  transition: all .15s; flex-shrink: 0; font-family: inherit; font-weight: 500;
+}
+#pal-reset-btn:hover { background: rgba(255,255,255,0.13); color: #fff; }
+#glyph-preset-btn {
+  background: rgba(255,255,255,0.08); border: none; border-radius: 6px; color: #8e8e93;
+  font-size: 11px; cursor: pointer; padding: 4px 8px; line-height: 1;
+  transition: all .15s; flex-shrink: 0; font-family: inherit; font-weight: 600; letter-spacing: 0.2px;
+}
+#glyph-preset-btn:hover { background: rgba(255,255,255,0.13); color: #fff; }
 
 /* states section header */
 .states-section-header {
@@ -585,9 +597,11 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
     <div class="section" data-tab="states">
       <div class="states-section-header">
         <span class="section-title">States</span>
-        <div style="display:flex;gap:6px">
-          <button id="pal-open-btn" title="Apply a color palette to all 7 states">🎨 Palette</button>
+        <div style="display:flex;gap:5px;align-items:center">
+          <button id="glyph-preset-btn" title="Apply preset glyphs (light→dark: circle, tri, diamond, heart, leaf, rounded)">Glyph</button>
+          <button id="pal-open-btn" title="Apply a color palette to all 7 states">🎨</button>
           <button id="pal-random-btn" title="Randomize palette and all glyphs">🎲</button>
+          <button id="pal-reset-btn" title="Reset to image palette and square glyphs">↺</button>
         </div>
       </div>
       <div id="statesContainer"></div>
@@ -1159,12 +1173,13 @@ function loadMedia(file) {
       document.getElementById('m-playPauseBtn').textContent = '⏸ Pause';
       ensureLoop();
     };
+    video.onloadeddata = () => { applyImagePalette(); };
   } else {
     app.mediaType = 'image';
     document.getElementById('video-controls').style.display = 'none';
     document.getElementById('m-video-section').style.display = 'none';
     const img = new Image();
-    img.onload = () => { app.mediaEl = img; setupCanvas(); app.statesDirty = true; requestDraw(); };
+    img.onload = () => { app.mediaEl = img; setupCanvas(); app.statesDirty = true; requestDraw(); applyImagePalette(); };
     img.src = url;
   }
 }
@@ -1423,18 +1438,18 @@ function handleFolderUpload(files) {
    COLOR PALETTE PICKER
 ══════════════════════════════════════════════════════════════════ */
 const PALETTES = [
-  { name:'Monochrome', colors:['#ffffff','#d4d4d4','#aaaaaa','#777777','#4d4d4d','#2a2a2a','#111111'] },
-  { name:'Dusk',       colors:['#f5d080','#e09050','#b85060','#6a3090','#2a3888','#101840','#060810'] },
-  { name:'Ember',      colors:['#fff0b0','#ffcc55','#ff8833','#cc3311','#881100','#380800','#120200'] },
-  { name:'Forest',     colors:['#d8f8c0','#88d870','#40a840','#187830','#084818','#022008','#010802'] },
-  { name:'Ocean',      colors:['#d8f0ff','#70c0f0','#2870d0','#0848a8','#042468','#01102e','#000408'] },
-  { name:'Aurora',     colors:['#f0e0ff','#b870e8','#6828c0','#3008a0','#160460','#06011e','#020008'] },
-  { name:'Sepia',      colors:['#fff8e0','#eac890','#c09060','#805828','#503010','#281408','#0c0602'] },
-  { name:'Neon City',  colors:['#ffffff','#a0ff80','#18ddc8','#0080ff','#aa00ff','#440060','#0a000f'] },
-  { name:'Rust',       colors:['#fff0d0','#f0b860','#d06030','#a02818','#601008','#280400','#0c0100'] },
-  { name:'Mint Ice',   colors:['#f0fff8','#a0efd8','#44d0a8','#0ea878','#087048','#023820','#00100a'] },
-  { name:'Candy',      colors:['#ffffff','#ffb8e0','#ff70a8','#cc2888','#880860','#380028','#100010'] },
-  { name:'Gold Ink',   colors:['#fffae0','#f8e080','#d4b030','#a07808','#604400','#2a1c00','#0c0800'] },
+  { name:'Monochrome', colors:['#e0e0e0','#c0c0c0','#a0a0a0','#808080','#606060','#404040','#242424'] },
+  { name:'Dusk',       colors:['#f0c080','#d87840','#b84858','#6a2888','#243080','#141850','#0c0c28'] },
+  { name:'Ember',      colors:['#f8d060','#f0a030','#e06018','#c03008','#881800','#4c0a00','#200400'] },
+  { name:'Forest',     colors:['#c0f0a0','#80c860','#409040','#206830','#0c5020','#063010','#021808'] },
+  { name:'Ocean',      colors:['#b0d8f8','#60a8e0','#2868c0','#084898','#043070','#011840','#000820'] },
+  { name:'Aurora',     colors:['#e8c8ff','#a060e8','#6020c0','#3008a8','#180470','#080128','#020014'] },
+  { name:'Sepia',      colors:['#f0e0b0','#d0a860','#b07040','#804028','#502010','#28100c','#140804'] },
+  { name:'Neon City',  colors:['#d8ffc0','#60f060','#00c8b8','#0060f0','#8000e0','#40006c','#140020'] },
+  { name:'Rust',       colors:['#f0d890','#e09040','#c84820','#902018','#581008','#2c0804','#120200'] },
+  { name:'Mint Ice',   colors:['#c8f8e4','#78e4be','#30b890','#0a8868','#065848','#023020','#011010'] },
+  { name:'Candy',      colors:['#ffc8e8','#ff98cc','#ff50a0','#d01878','#800848','#3c0028','#180010'] },
+  { name:'Gold Ink',   colors:['#f8e898','#e8c050','#c89010','#906000','#583800','#2c1c00','#140a00'] },
 ];
 
 let palReversed = false;
@@ -1442,8 +1457,79 @@ let palSelected = null;
 const palModal = document.getElementById('pal-modal');
 const palBody  = document.getElementById('pal-body');
 
+/* Extract 7 colours from the current media, sorted bright → dark */
+function extractImagePalette() {
+  const el = app.mediaEl;
+  if (!el) return null;
+  const sz = 64;
+  const sc = document.createElement('canvas');
+  sc.width = sz; sc.height = sz;
+  const sctx = sc.getContext('2d', { willReadFrequently: true });
+  const srcW = el.videoWidth || el.naturalWidth || 800;
+  const srcH = el.videoHeight || el.naturalHeight || 600;
+  try { sctx.drawImage(el, 0, 0, srcW, srcH, 0, 0, sz, sz); } catch { return null; }
+  const d = sctx.getImageData(0, 0, sz, sz).data;
+  const pixels = [];
+  for (let i = 0; i < d.length; i += 4)
+    pixels.push([d[i], d[i+1], d[i+2], 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]]);
+  pixels.sort((a, b) => b[3] - a[3]);
+  const n = pixels.length;
+  return [0.04, 0.17, 0.31, 0.50, 0.69, 0.83, 0.96].map(p => {
+    const [r, g, b] = pixels[Math.round(p * (n - 1))];
+    return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+  });
+}
+
+function applyImagePalette() {
+  const colors = extractImagePalette();
+  if (!colors) return;
+  applyPalette(palReversed ? [...colors].reverse() : colors);
+  palSelected = -1;
+}
+
+/* Reset: image palette + all glyphs → square */
+function applyDefaultGlyphs() {
+  const sq = SHAPE_IMGS['square'];
+  for (let i = 0; i < 7; i++) {
+    const go = () => assignSVGToState(i, sq, 'Square');
+    if (sq.complete && sq.naturalWidth > 0) go(); else sq.onload = go;
+  }
+}
+
+/* Glyph preset: circle → tri-dn → tri-up → diamond → heart → leaf → rounded */
+const PRESET_GLYPH_IDS = ['circle','tri-dn','tri-up','diamond','heart','leaf','rounded'];
+function applyPresetGlyphs() {
+  PRESET_GLYPH_IDS.forEach((id, i) => {
+    const sh = SHAPES.find(s => s.id === id);
+    const img = SHAPE_IMGS[id];
+    const go = () => assignSVGToState(i, img, sh.name);
+    if (img.complete && img.naturalWidth > 0) go(); else img.onload = go;
+  });
+}
+
 function buildPaletteCards() {
   palBody.innerHTML = '';
+
+  // ── Image palette (dynamic, always first) ──
+  const imgColors = extractImagePalette();
+  const imgDisplay = imgColors ? (palReversed ? [...imgColors].reverse() : imgColors)
+                               : Array(7).fill('#444444');
+  const imgCard = document.createElement('div');
+  imgCard.className = 'pal-card' + (palSelected === -1 ? ' selected' : '');
+  if (!imgColors) imgCard.style.opacity = '0.35';
+  const imgName = document.createElement('span'); imgName.className = 'pal-name'; imgName.textContent = 'Image';
+  const imgSw = document.createElement('div'); imgSw.className = 'pal-swatches';
+  imgDisplay.forEach(c => { const s = document.createElement('div'); s.className = 'pal-swatch'; s.style.background = c; imgSw.appendChild(s); });
+  imgCard.appendChild(imgName); imgCard.appendChild(imgSw);
+  imgCard.addEventListener('click', () => {
+    if (!imgColors) return;
+    palSelected = -1;
+    applyPalette(palReversed ? [...imgColors].reverse() : imgColors);
+    buildPaletteCards();
+  });
+  palBody.appendChild(imgCard);
+
+  // ── Preset palettes ──
   PALETTES.forEach((pal, idx) => {
     const colors = palReversed ? [...pal.colors].reverse() : pal.colors;
     const card = document.createElement('div');
@@ -1481,7 +1567,6 @@ function applyPalette(colors) {
 }
 
 function openPalettePicker() {
-  palSelected = null;
   buildPaletteCards();
   palModal.classList.add('open');
 }
@@ -1502,6 +1587,8 @@ function randomizeAll() {
 }
 
 document.getElementById('pal-random-btn').addEventListener('click', randomizeAll);
+document.getElementById('pal-reset-btn').addEventListener('click', () => { applyImagePalette(); applyDefaultGlyphs(); });
+document.getElementById('glyph-preset-btn').addEventListener('click', applyPresetGlyphs);
 document.getElementById('pal-close').addEventListener('click', closePalettePicker);
 palModal.addEventListener('click', e => { if (e.target === palModal) closePalettePicker(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closePalettePicker(); closeLibrary(); } });
@@ -1510,7 +1597,9 @@ document.getElementById('pal-reverse').addEventListener('click', function() {
   palReversed = !palReversed;
   this.classList.toggle('active', palReversed);
   buildPaletteCards();
-  if (palSelected !== null) {
+  if (palSelected === -1) {
+    applyImagePalette();
+  } else if (palSelected !== null) {
     const pal = PALETTES[palSelected];
     const colors = palReversed ? [...pal.colors].reverse() : pal.colors;
     applyPalette(colors);
