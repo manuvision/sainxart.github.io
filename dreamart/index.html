@@ -1162,7 +1162,6 @@
       <button class="sort-option" data-sort="oldest" role="menuitem">Oldest first</button>
       <button class="sort-option" data-sort="score-high" role="menuitem">Highest score</button>
       <button class="sort-option" data-sort="score-low" role="menuitem">Lowest score</button>
-      <button class="sort-option" data-sort="color" role="menuitem">Color family</button>
     </div>
   </div>
 
@@ -1391,10 +1390,8 @@
       newest: 'Newest',
       oldest: 'Oldest',
       'score-high': 'Score high',
-      'score-low': 'Score low',
-      color: 'Color'
+      'score-low': 'Score low'
     };
-    const colorOrder = ['Ember', 'Ochre', 'Moss', 'Slate', 'Aurora'];
 
     function dateValue(item) {
       return item && item.date ? new Date(item.date + 'T12:00:00').getTime() : 0;
@@ -1408,13 +1405,6 @@
         if (activeSort === 'oldest') return dateValue(a) - dateValue(b);
         if (activeSort === 'score-high') return (bScore - aScore) || (dateValue(b) - dateValue(a));
         if (activeSort === 'score-low') return (aScore - bScore) || (dateValue(b) - dateValue(a));
-        if (activeSort === 'color') {
-          const aMeta = scoreMeta(a.sleepScore);
-          const bMeta = scoreMeta(b.sleepScore);
-          const aIndex = aMeta ? colorOrder.indexOf(aMeta.palette) : 99;
-          const bIndex = bMeta ? colorOrder.indexOf(bMeta.palette) : 99;
-          return (aIndex - bIndex) || (dateValue(b) - dateValue(a));
-        }
         return dateValue(b) - dateValue(a);
       });
       return sorted;
