@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dream Art — One Dream A Night</title>
+  <title>Dream Art — One Dreamscape A Night</title>
   <meta name="description" content="Every night since May 23, 2025. Sleep data turned into generative sculptures — one artwork per night, ongoing." />
   <link rel="canonical" href="https://manu.vision/dreamart/" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -11,7 +11,7 @@
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Dream Art" />
-  <meta property="og:title" content="Dream Art — One Dream A Night" />
+  <meta property="og:title" content="Dream Art — One Dreamscape A Night" />
   <meta property="og:description" content="Every night since May 23, 2025. Sleep data turned into generative sculptures — one artwork per night, ongoing." />
   <meta property="og:url" content="https://manu.vision/dreamart/" />
   <meta property="og:image" content="https://manu.vision/dreamart/og-card.png" />
@@ -21,7 +21,7 @@
 
   <!-- Twitter / X -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Dream Art — One Dream A Night" />
+  <meta name="twitter:title" content="Dream Art — One Dreamscape A Night" />
   <meta name="twitter:description" content="Every night since May 23, 2025. Sleep data turned into generative sculptures." />
   <meta name="twitter:image" content="https://manu.vision/dreamart/og-card.png" />
   <script>
@@ -120,7 +120,8 @@
 
     /* Calendar text+icon pill button (lives in gallery-controls) */
     #cal-btn,
-    #sort-btn {
+    #sort-btn,
+    #wrap-btn {
       display: inline-flex;
       align-items: center;
       gap: 0.45rem;
@@ -140,10 +141,26 @@
     #cal-btn:hover,
     #cal-btn.active,
     #sort-btn:hover,
-    #sort-btn.active {
+    #sort-btn.active,
+    #wrap-btn:hover,
+    #wrap-btn.active {
       border-color: rgba(240,171,252,0.64);
       background: rgba(240,171,252,0.18);
       color: #f8d4ff;
+    }
+
+    #wrap-btn {
+      margin-left: auto;
+      border-color: rgba(255,110,219,0.78);
+      background: rgba(255,110,219,0.16);
+      color: #ff9ee8;
+      box-shadow: 0 0 0 1px rgba(255,110,219,0.1), 0 10px 28px rgba(255,110,219,0.09);
+    }
+    #wrap-btn:hover,
+    #wrap-btn.active {
+      border-color: rgba(255,155,236,0.92);
+      background: rgba(255,110,219,0.24);
+      color: #ffd1f5;
     }
 
     /* ── Calendar panel — drops from #gallery-controls ──────── */
@@ -324,6 +341,9 @@
       #filter-pill {
         width: 100%;
         justify-content: space-between;
+      }
+      #wrap-btn {
+        margin-left: 0;
       }
     }
 
@@ -548,8 +568,8 @@
       justify-content: center;
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      overflow-y: auto;
-      padding: 4.25rem 1rem 3rem;
+      overflow: hidden;
+      padding: 3.35rem 1rem 3.6rem;
       box-sizing: border-box;
     }
     #lightbox.open { display: flex; }
@@ -557,17 +577,17 @@
     #lb-img-wrap {
       position: relative;
       max-width: min(92vw, 520px);
-      max-height: 92vh;
+      max-height: calc(100vh - 7rem);
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.9rem;
+      gap: 0.68rem;
       z-index: 1000;
       margin: auto 0;
     }
     #lb-img {
       max-width: 100%;
-      max-height: min(68vh, 760px);
+      max-height: min(54vh, 620px);
       object-fit: contain;
       border-radius: 10px;
       box-shadow: 0 32px 100px rgba(0,0,0,0.8);
@@ -577,8 +597,8 @@
     }
     #lb-img.loaded { opacity: 1; }
     @media (max-height: 760px) {
-      #lb-img { max-height: 54vh; }
-      #lb-img-wrap { gap: 0.65rem; }
+      #lb-img { max-height: 46vh; }
+      #lb-img-wrap { gap: 0.52rem; }
     }
     #lb-date {
       font-family: var(--font-display);
@@ -832,9 +852,27 @@
       padding-bottom: 1px;
       transition: color 0.2s, border-color 0.2s;
     }
+    button.tip-link {
+      border-top: 0;
+      border-right: 0;
+      border-left: 0;
+      background: transparent;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      padding-left: 0;
+      padding-right: 0;
+    }
     .tip-link:hover {
       color: var(--link-hover);
       border-bottom-color: var(--link-hover);
+    }
+    #about-wrap-link {
+      color: #ff9ee8;
+      border-bottom-color: rgba(255,110,219,0.58);
+    }
+    #about-wrap-link:hover {
+      color: #ffd1f5;
+      border-bottom-color: rgba(255,155,236,0.88);
     }
     .credit-list {
       margin-top: 1.25rem;
@@ -878,7 +916,7 @@
       gap: 0.75rem;
       flex-wrap: wrap;
       margin-top: 0.1rem;
-      margin-bottom: 1.6rem;
+      margin-bottom: 2.15rem;
     }
     .lb-action {
       display: inline-flex;
@@ -941,13 +979,294 @@
       color: var(--link-hover);
     }
     .trailer-watch svg { flex-shrink: 0; }
+
+    /* ── Highlights modal ────────────────────────────────────── */
+    #wrap-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1120;
+      background: rgba(4,4,10,0.96);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      overflow: hidden;
+      padding: 2.75rem 1.25rem 1.4rem;
+      animation: fade-in 0.25s ease;
+    }
+    #wrap-overlay.open { display: block; }
+    #wrap-panel {
+      max-width: 480px;
+      margin: 0 auto;
+      height: calc(100vh - 4.15rem);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    #wrap-slide {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: grid;
+      place-items: center;
+    }
+    #wrap-close {
+      position: fixed;
+      top: 1.25rem;
+      right: 1.25rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      z-index: 1121;
+    }
+    #wrap-close:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+    .wrap-card {
+      width: min(100%, calc((100vh - 8.9rem) * 0.8));
+      aspect-ratio: 4 / 5;
+      max-height: calc(100vh - 8.9rem);
+      min-height: 0;
+      border-radius: 18px;
+      border: 1px solid rgba(167,139,250,0.42);
+      background: linear-gradient(180deg, rgba(14,14,28,0.98), rgba(7,7,15,0.98));
+      box-shadow: 0 28px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(240,171,252,0.08);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .wrap-hero {
+      position: relative;
+      height: auto;
+      min-height: 0;
+      background: #07070f;
+      overflow: hidden;
+      flex: 1 1 auto;
+    }
+    .wrap-hero img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .wrap-hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(7,7,15,0.06), rgba(7,7,15,0.78));
+      pointer-events: none;
+    }
+    .wrap-content {
+      padding: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      flex: 0 0 auto;
+      min-height: 0;
+      overflow-y: auto;
+    }
+    .wrap-card.no-image .wrap-content {
+      flex: 1 1 auto;
+      justify-content: center;
+      padding: 1.35rem;
+    }
+    .wrap-card.no-image .wrap-stat-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .wrap-card.no-image .wrap-stat-grid.full-width {
+      grid-template-columns: 1fr;
+    }
+    .wrap-eyebrow {
+      color: var(--pink);
+      font-size: 0.64rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+    .wrap-card h2 {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 300;
+      font-size: 2rem;
+      line-height: 1.05;
+      color: var(--text);
+    }
+    .wrap-copy {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    .wrap-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+    .wrap-stat {
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.035);
+      border-radius: 10px;
+      padding: 0.66rem;
+    }
+    .wrap-stat strong {
+      display: block;
+      color: var(--text);
+      font-size: 1.12rem;
+      line-height: 1;
+    }
+    .wrap-stat span {
+      display: block;
+      margin-top: 0.35rem;
+      color: var(--dim);
+      font-size: 0.58rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .wrap-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .wrap-bar-row {
+      display: grid;
+      grid-template-columns: 74px 1fr 44px;
+      align-items: center;
+      gap: 0.7rem;
+      color: var(--muted);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .wrap-bar-track {
+      height: 8px;
+      border-radius: 99px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .wrap-bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      min-width: 2px;
+    }
+    .wrap-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+      flex-wrap: wrap;
+      flex: 0 0 auto;
+    }
+    .wrap-nav button {
+      border: 1px solid var(--pink-line);
+      background: var(--pink-soft);
+      color: var(--pink);
+      border-radius: 8px;
+      padding: 0.55rem 0.8rem;
+      font-family: var(--font-ui);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    #wrap-next.wrap-love {
+      border-color: rgba(246,184,90,0.64);
+      background: rgba(246,184,90,0.12);
+      color: var(--link);
+      min-width: 96px;
+      justify-content: center;
+      text-align: center;
+    }
+    #wrap-next.wrap-love:hover {
+      border-color: rgba(255,208,138,0.86);
+      background: rgba(246,184,90,0.2);
+      color: var(--link-hover);
+    }
+    .wrap-nav button:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+    #wrap-count {
+      color: var(--dim);
+      font-size: 0.64rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    #love-popover {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1140;
+      place-items: center;
+      padding: 1.25rem;
+      background: rgba(4,4,10,0.62);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    #love-popover.open { display: grid; }
+    .love-card {
+      width: min(100%, 390px);
+      border: 1px solid rgba(246,184,90,0.5);
+      border-radius: 18px;
+      background: rgba(14,14,28,0.96);
+      box-shadow: 0 22px 70px rgba(0,0,0,0.58), 0 0 0 1px rgba(246,184,90,0.08);
+      padding: 1.35rem;
+      color: var(--text);
+    }
+    .love-card h2 {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 300;
+      font-size: 2rem;
+      line-height: 1;
+      text-align: center;
+    }
+    .love-card p {
+      margin-top: 0.7rem;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.55;
+    }
+    .love-actions {
+      display: grid;
+      gap: 0.6rem;
+      margin-top: 1.1rem;
+    }
+    .love-actions a,
+    .love-actions button {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 8px;
+      border: 1px solid rgba(167,139,250,0.36);
+      background: rgba(167,139,250,0.1);
+      color: var(--pink);
+      min-height: 42px;
+      font-family: var(--font-ui);
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .love-actions a:first-child {
+      border-color: rgba(246,184,90,0.62);
+      background: rgba(246,184,90,0.14);
+      color: var(--link);
+    }
+    @media (max-width: 520px) {
+      .wrap-card h2 { font-size: 1.65rem; }
+      .wrap-stat-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
 
   <header>
     <h1>Dream Art</h1>
-    <p>One dream per night, visualized from data.</p>
+    <p>One dreamscape per night, visualized from data.</p>
     <nav>
       <a href="https://manu.vision">← manu.vision</a>
       <div class="nav-info-row">
@@ -970,7 +1289,7 @@
     <div id="about-panel">
 
       <section class="about-section">
-        <p class="about-eyebrow">One Dream A Night</p>
+        <p class="about-eyebrow">One Dreamscape A Night</p>
         <h2 id="about-title">On May 23rd 2025, I started recording and turning my sleep data into dreamscapes.</h2>
         <p>
           Each image is a small translation of one night: a private biometric signal turned into
@@ -1052,6 +1371,9 @@
         <p>
           Some weeks are missing. That's part of the year too.
         </p>
+        <button class="tip-link" id="about-wrap-link" type="button">
+          Open the highlights →
+        </button>
 
         <div class="tip-block">
           <p>
@@ -1110,6 +1432,13 @@
         <path d="M8.5 4H13M8.5 7.5H12M8.5 11H11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
       </svg>
     </button>
+    <button id="wrap-btn" aria-label="Open highlights">
+      Highlights
+      <svg width="13" height="13" viewBox="0 0 15 15" fill="none">
+        <path d="M2.5 11.5V3.5C2.5 2.7 3.1 2.1 3.9 2.1H11.1C11.9 2.1 12.5 2.7 12.5 3.5V11.5C12.5 12.3 11.9 12.9 11.1 12.9H3.9C3.1 12.9 2.5 12.3 2.5 11.5Z" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M5 5H10M5 7.5H10M5 10H7.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+    </button>
     <div id="filter-pill">
       <span id="filter-label"></span>
       <button id="filter-clear" aria-label="Clear filter">×</button>
@@ -1146,6 +1475,29 @@
     </div>
   </div>
 
+  <div id="wrap-overlay" role="dialog" aria-modal="true" aria-label="Highlights" hidden>
+    <button id="wrap-close" aria-label="Close">✕</button>
+    <div id="wrap-panel">
+      <div id="wrap-slide"></div>
+      <div class="wrap-nav">
+        <button id="wrap-prev">Previous</button>
+        <span id="wrap-count">0 / 0</span>
+        <button id="wrap-next">Next</button>
+      </div>
+    </div>
+    <div id="love-popover" role="dialog" aria-modal="true" aria-labelledby="love-title" hidden>
+      <div class="love-card">
+        <h2 id="love-title">❤️ <span id="love-count">0</span></h2>
+        <p>Enjoying this project? Consider tipping the artist.</p>
+        <div class="love-actions">
+          <a href="https://www.paypal.com/paypalme/manuelsainsily" target="_blank" rel="noopener">Tip the artist</a>
+          <button id="love-learn" type="button">Learn more</button>
+          <button id="love-share-wrap" type="button">Share highlights</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <main>
     <div id="grid"></div>
     <div id="empty">No artworks found</div>
@@ -1166,7 +1518,7 @@
       <div class="lb-reading" id="lb-reading"></div>
       <div class="lb-actions">
         <button class="lb-action" id="lb-copy" type="button">Copy link</button>
-        <button class="lb-action" id="lb-share" type="button">Share</button>
+        <button class="lb-action" id="lb-love" type="button" aria-label="Love this dream">❤️ 0</button>
         <button class="lb-action" id="lb-card" type="button">Save card</button>
       </div>
     </div>
@@ -1184,6 +1536,7 @@
 
   <script>
     const API = 'https://dreamart.manu.vision/api/gallery/public';
+    const LOVE_API = 'https://dreamart.manu.vision/api/love';
 
     // Sleep-score → range color, mirrors getScoreColor() in lib/prompt.ts so
     // the public gallery's "May 21 · 92" tints exactly match the private app.
@@ -1225,6 +1578,29 @@
     function shareUrlFor(item) {
       const base = `${location.origin}${location.pathname}${location.search}`;
       return item && item.date ? `${base}#${item.date}` : base;
+    }
+
+    function loveTargetFor(item) {
+      return item && item.date ? `date:${item.date}` : null;
+    }
+
+    async function fetchLoveCount(target) {
+      const res = await fetch(`${LOVE_API}?target=${encodeURIComponent(target)}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('Could not fetch love count.');
+      const data = await res.json();
+      return Number(data.count) || 0;
+    }
+
+    async function incrementLove(target) {
+      const res = await fetch(LOVE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target }),
+        cache: 'no-store'
+      });
+      if (!res.ok) throw new Error('Could not save love.');
+      const data = await res.json();
+      return Number(data.count) || 0;
     }
 
     async function copyText(text) {
@@ -1310,8 +1686,8 @@
       });
     }
 
-    function drawImageContain(ctx, image, x, y, width, height) {
-      const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
+    function drawImageCover(ctx, image, x, y, width, height) {
+      const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
       const drawWidth = image.naturalWidth * scale;
       const drawHeight = image.naturalHeight * scale;
       const dx = x + (width - drawWidth) / 2;
@@ -1333,30 +1709,60 @@
       const image = await loadCardImage(item.imageData);
       const canvas = document.createElement('canvas');
       canvas.width = 1080;
-      canvas.height = 1440;
+      canvas.height = 1350;
       const ctx = canvas.getContext('2d');
       const score = item.sleepScore != null ? item.sleepScore : '';
       const scoreColorValue = scoreColor(item.sleepScore) || '#c4b5fd';
-      const displayFont = '"Cormorant Garamond", Georgia, serif';
-      const uiFont = '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+      const uiFont = '"Space Mono", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawRoundedRect(ctx, 40, 40, 1000, 1360, 46, 'rgba(14,14,28,0.96)', 'rgba(167,139,250,0.62)', 3);
 
-      const artworkX = 110;
-      const artworkY = 110;
-      const artworkSize = 860;
-      drawRoundedRect(ctx, artworkX, artworkY, artworkSize, artworkSize, 30, '#07070f', 'rgba(167,139,250,0.34)', 2);
+      const cardX = 40;
+      const cardY = 40;
+      const cardW = 1000;
+      const cardH = 1270;
+      const radius = 46;
       ctx.save();
-      roundRectPath(ctx, artworkX, artworkY, artworkSize, artworkSize, 30);
+      roundRectPath(ctx, cardX, cardY, cardW, cardH, radius);
       ctx.clip();
-      drawImageContain(ctx, image, artworkX, artworkY, artworkSize, artworkSize);
+      drawImageCover(ctx, image, cardX, cardY, cardW, cardH);
+      const gradient = ctx.createLinearGradient(0, 720, 0, cardY + cardH);
+      gradient.addColorStop(0, 'rgba(7,7,15,0)');
+      gradient.addColorStop(0.5, 'rgba(7,7,15,0.38)');
+      gradient.addColorStop(1, 'rgba(7,7,15,0.82)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(cardX, 720, cardW, cardH - 680);
       ctx.restore();
+      drawRoundedRect(ctx, cardX, cardY, cardW, cardH, radius, 'rgba(0,0,0,0)', 'rgba(167,139,250,0.72)', 3);
 
-      ctx.fillStyle = '#c4b5fd';
+      const pad = 56;
+      const contentX = cardX + pad;
+      const maxWidth = cardW - pad * 2;
+      const bottom = cardY + cardH - pad;
+      const reading = dreamReading(item);
+      const fitted = fittedCanvasLines(ctx, reading, maxWidth - 44, 230, uiFont, 25, 18, 1.42);
+      const readingHeight = fitted.lines.length * fitted.lineHeight + 34;
+      const readingY = bottom - readingHeight;
+
+      drawRoundedRect(ctx, contentX, readingY, maxWidth, readingHeight, 16, 'rgba(14,14,28,0.68)', 'rgba(167,139,250,0.34)', 1.5);
+      ctx.fillStyle = '#f1efff';
+      ctx.font = `400 ${fitted.size}px ${uiFont}`;
+      ctx.letterSpacing = '0px';
+      let textY = readingY + 39;
+      for (const line of fitted.lines) {
+        ctx.fillText(line, contentX + 22, textY);
+        textY += fitted.lineHeight;
+      }
+
+      const pillY = readingY - 64;
+
       ctx.font = `700 20px ${uiFont}`;
       ctx.letterSpacing = '3px';
-      ctx.fillText('MANU.VISION/DREAMART', artworkX, 1038);
+      const siteText = 'MANU.VISION/DREAMART';
+      const siteWidth = Math.ceil(ctx.measureText(siteText).width + 38);
+      drawRoundedRect(ctx, contentX, pillY - 62, siteWidth, 44, 8, 'rgba(14,14,28,0.68)', 'rgba(167,139,250,0.34)', 1.5);
+      ctx.fillStyle = '#c4b5fd';
+      ctx.fillText(siteText, contentX + 19, pillY - 34);
       ctx.letterSpacing = '0px';
 
       const label = item.label || item.date || 'Dreamscape';
@@ -1365,26 +1771,153 @@
       ctx.letterSpacing = '2px';
       const dateLabel = dateText.toUpperCase();
       const dateWidth = Math.ceil(ctx.measureText(dateLabel).width + 38);
-      drawRoundedRect(ctx, artworkX, 1070, dateWidth, 46, 8, 'rgba(139,92,246,0.12)', 'rgba(139,92,246,0.28)', 1);
+      drawRoundedRect(ctx, contentX, pillY, dateWidth, 46, 8, 'rgba(14,14,28,0.68)', 'rgba(139,92,246,0.34)', 1.5);
       ctx.fillStyle = '#f1efff';
-      ctx.fillText(dateLabel, artworkX + 19, 1100);
+      ctx.fillText(dateLabel, contentX + 19, pillY + 30);
 
       const scoreText = `SCORE ${score}`;
       const scoreWidth = Math.ceil(ctx.measureText(scoreText).width + 38);
-      drawRoundedRect(ctx, artworkX + dateWidth + 14, 1070, scoreWidth, 46, 8, 'rgba(139,92,246,0.12)', 'rgba(139,92,246,0.28)', 1);
+      drawRoundedRect(ctx, contentX + dateWidth + 14, pillY, scoreWidth, 46, 8, 'rgba(14,14,28,0.68)', 'rgba(139,92,246,0.34)', 1.5);
       ctx.fillStyle = scoreColorValue;
-      ctx.fillText(scoreText, artworkX + dateWidth + 33, 1100);
+      ctx.fillText(scoreText, contentX + dateWidth + 33, pillY + 30);
       ctx.letterSpacing = '0px';
 
-      const reading = dreamReading(item);
-      const fitted = fittedCanvasLines(ctx, reading, artworkSize, 210, uiFont, 26, 18, 1.45);
-      ctx.fillStyle = '#b4afd4';
-      ctx.font = `400 ${fitted.size}px ${uiFont}`;
-      let textY = 1172;
-      for (const line of fitted.lines) {
-        ctx.fillText(line, artworkX, textY);
-        textY += fitted.lineHeight;
+      return canvasToBlob(canvas);
+    }
+
+    async function createWrapExportImage(slide, index, total) {
+      await document.fonts?.ready;
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080;
+      canvas.height = 1350;
+      const ctx = canvas.getContext('2d');
+      const uiFont = '"Space Mono", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+      const displayFont = '"Cormorant Garamond", Georgia, serif';
+
+      ctx.fillStyle = '#07070f';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const cardX = 32;
+      const cardY = 34;
+      const cardW = canvas.width - cardX * 2;
+      const cardH = canvas.height - cardY * 2;
+      const inset = 46;
+      const contentX = cardX + inset;
+      const contentW = cardW - inset * 2;
+
+      drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 34, 'rgba(12,12,25,0.98)', 'rgba(167,139,250,0.72)', 3);
+
+      function drawStats(stats, y) {
+        if (!stats || !stats.length) return y;
+        const fullWidthRows = stats.length <= 2 && stats.some(([, value]) => String(value).length > 12);
+        const gap = 16;
+        const rowH = 84;
+        const colW = fullWidthRows ? contentW : (contentW - gap) / 2;
+        stats.slice(0, 4).forEach(([label, value], i) => {
+          const col = fullWidthRows ? 0 : i % 2;
+          const row = fullWidthRows ? i : Math.floor(i / 2);
+          const x = contentX + col * (colW + gap);
+          const itemY = y + row * (rowH + gap);
+          drawRoundedRect(ctx, x, itemY, colW, rowH, 12, 'rgba(255,255,255,0.05)', 'rgba(255,255,255,0.15)', 1.5);
+          let valueSize = 28;
+          do {
+            ctx.font = `700 ${valueSize}px ${uiFont}`;
+            if (ctx.measureText(String(value)).width <= colW - 40) break;
+            valueSize -= 1;
+          } while (valueSize >= 16);
+          ctx.fillStyle = '#f1efff';
+          ctx.fillText(String(value), x + 20, itemY + 36);
+          ctx.font = `700 13px ${uiFont}`;
+          ctx.letterSpacing = '2.4px';
+          ctx.fillStyle = '#a9a1cb';
+          ctx.fillText(String(label).toUpperCase().slice(0, 24), x + 20, itemY + 65);
+          ctx.letterSpacing = '0px';
+        });
+        return y + (fullWidthRows ? stats.length : Math.ceil(stats.length / 2)) * rowH + (fullWidthRows ? stats.length - 1 : Math.ceil(stats.length / 2) - 1) * gap;
       }
+
+      function drawBars(bars, y) {
+        if (!bars || !bars.length) return y;
+        let barY = y;
+        bars.forEach(bar => {
+          ctx.font = `700 20px ${uiFont}`;
+          ctx.letterSpacing = '2.2px';
+          ctx.fillStyle = '#c9c2e8';
+          ctx.fillText(bar.label.toUpperCase(), contentX, barY + 18);
+          const trackX = contentX + 172;
+          const trackW = contentW - 250;
+          drawRoundedRect(ctx, trackX, barY + 4, trackW, 14, 99, 'rgba(255,255,255,0.11)', null);
+          drawRoundedRect(ctx, trackX, barY + 4, Math.max(5, trackW * (bar.pct / 100)), 14, 99, bar.color, null);
+          ctx.fillStyle = '#c9c2e8';
+          ctx.fillText(`${bar.pct}%`, contentX + contentW - 66, barY + 18);
+          ctx.letterSpacing = '0px';
+          barY += 52;
+        });
+        return barY;
+      }
+
+      function drawTextBlock(y, maxCopyHeight) {
+        ctx.font = `700 18px ${uiFont}`;
+        ctx.letterSpacing = '3.8px';
+        ctx.fillStyle = '#f0abfc';
+        ctx.fillText(String(slide.eyebrow || '').toUpperCase(), contentX, y);
+        ctx.letterSpacing = '0px';
+
+        ctx.font = `italic 300 64px ${displayFont}`;
+        ctx.fillStyle = '#f1efff';
+        const titleLines = wrapCanvasText(ctx, slide.title || 'Dream Art Highlights', contentW);
+        let cursor = y + 78;
+        titleLines.slice(0, 2).forEach(line => {
+          ctx.fillText(line, contentX, cursor);
+          cursor += 68;
+        });
+
+        const copy = fittedCanvasLines(ctx, slide.copy || '', contentW, maxCopyHeight, uiFont, 28, 20, 1.42);
+        ctx.font = `400 ${copy.size}px ${uiFont}`;
+        ctx.fillStyle = '#d8d2f2';
+        cursor += 20;
+        copy.lines.slice(0, Math.floor(maxCopyHeight / copy.lineHeight)).forEach(line => {
+          ctx.fillText(line, contentX, cursor);
+          cursor += copy.lineHeight;
+        });
+        return cursor;
+      }
+
+      if (slide.image) {
+        const contentH = slide.stats && slide.stats.length > 2 ? 520 : 400;
+        const heroH = cardH - contentH;
+        try {
+          const image = await loadCardImage(slide.image);
+          ctx.save();
+          roundRectPath(ctx, cardX, cardY, cardW, cardH, 34);
+          ctx.clip();
+          drawImageCover(ctx, image, cardX, cardY, cardW, heroH);
+          ctx.restore();
+        } catch {}
+        ctx.save();
+        roundRectPath(ctx, cardX, cardY, cardW, cardH, 34);
+        ctx.clip();
+        ctx.fillStyle = 'rgba(12,12,25,0.98)';
+        ctx.fillRect(cardX, cardY + heroH, cardW, contentH);
+        ctx.restore();
+        const stats = slide.stats || [];
+        const fullWidthRows = stats.length <= 2 && stats.some(([, value]) => String(value).length > 12);
+        const statRows = fullWidthRows ? stats.length : Math.ceil(stats.length / 2);
+        const statBlockH = stats.length ? statRows * 84 + Math.max(0, statRows - 1) * 16 : 0;
+        const statY = cardY + cardH - inset - statBlockH;
+        const textStart = cardY + heroH + 48;
+        const copySpace = Math.max(58, statY - textStart - 170);
+        drawTextBlock(textStart, copySpace);
+        drawStats(stats, statY);
+      } else {
+        let cursor = drawTextBlock(cardY + 210, 230);
+        cursor += 34;
+        cursor = drawStats(slide.stats, cursor);
+        cursor += slide.stats ? 32 : 0;
+        drawBars(slide.bars, cursor);
+      }
+
+      drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 34, 'rgba(0,0,0,0)', 'rgba(167,139,250,0.72)', 3);
 
       return canvasToBlob(canvas);
     }
@@ -1413,13 +1946,24 @@
     const lbBackdrop  = document.getElementById('lb-backdrop');
     const lbReading   = document.getElementById('lb-reading');
     const lbCopy      = document.getElementById('lb-copy');
-    const lbShare     = document.getElementById('lb-share');
+    const lbLove      = document.getElementById('lb-love');
     const lbCard      = document.getElementById('lb-card');
     const calBtn      = document.getElementById('cal-btn');
     const calPanel    = document.getElementById('cal-panel');
     const calClearBtn = document.getElementById('cal-clear-btn');
     const sortBtn     = document.getElementById('sort-btn');
     const sortPanel   = document.getElementById('sort-panel');
+    const wrapBtn     = document.getElementById('wrap-btn');
+    const wrapOverlay = document.getElementById('wrap-overlay');
+    const wrapClose   = document.getElementById('wrap-close');
+    const wrapSlide   = document.getElementById('wrap-slide');
+    const wrapPrev    = document.getElementById('wrap-prev');
+    const wrapNext    = document.getElementById('wrap-next');
+    const wrapCount   = document.getElementById('wrap-count');
+    const lovePopover = document.getElementById('love-popover');
+    const loveCountEl = document.getElementById('love-count');
+    const loveLearn   = document.getElementById('love-learn');
+    const loveShareWrap = document.getElementById('love-share-wrap');
     const filterPill  = document.getElementById('filter-pill');
     const filterLabel = document.getElementById('filter-label');
     const filterClear = document.getElementById('filter-clear');
@@ -1437,6 +1981,9 @@
     let activeFilter = null;         // { start, end, text }
     let activeHeatmapDate = null;    // date string of the currently selected heatmap cell
     let activeSort = 'newest';
+    let wrapSlides = [];
+    let wrapIndex = 0;
+    let wrapLoveCount = 0;
 
     const sortLabels = {
       newest: 'Newest',
@@ -1475,6 +2022,182 @@
       document.querySelectorAll('.hm-cell.hm-selected')
               .forEach(c => c.classList.remove('hm-selected'));
       activeHeatmapDate = null;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[char]));
+    }
+
+    function dayNumber(iso) {
+      return Math.floor(new Date(`${iso}T12:00:00`).getTime() / 86400000);
+    }
+
+    function isoFromDayNumber(day) {
+      return new Date(day * 86400000).toISOString().split('T')[0];
+    }
+
+    function scoreBucket(score) {
+      const value = Number(score);
+      if (!Number.isFinite(value)) return { label: 'Unknown', color: '#9CA3AF' };
+      if (value >= 86) return { label: 'Aurora', color: '#8B5CF6' };
+      if (value >= 71) return { label: 'Slate', color: '#3A78B8' };
+      if (value >= 56) return { label: 'Moss', color: '#4D7C5A' };
+      if (value >= 41) return { label: 'Ochre', color: '#D4A853' };
+      return { label: 'Ember', color: '#C8613A' };
+    }
+
+    function averageScore(items) {
+      const scores = items.map(item => Number(item.sleepScore)).filter(Number.isFinite);
+      if (!scores.length) return null;
+      return Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+    }
+
+    function sortedByDateAsc(items) {
+      return [...items].filter(item => item.date).sort((a, b) => dateValue(a) - dateValue(b));
+    }
+
+    function longestGeneratedRun(items) {
+      const dates = sortedByDateAsc(items).map(item => item.date);
+      if (!dates.length) return null;
+      let best = { length: 1, start: dates[0], end: dates[0] };
+      let currentRun = { length: 1, start: dates[0], end: dates[0] };
+      for (let i = 1; i < dates.length; i++) {
+        if (dayNumber(dates[i]) === dayNumber(dates[i - 1]) + 1) {
+          currentRun.length += 1;
+          currentRun.end = dates[i];
+        } else {
+          if (currentRun.length > best.length) best = { ...currentRun };
+          currentRun = { length: 1, start: dates[i], end: dates[i] };
+        }
+      }
+      if (currentRun.length > best.length) best = { ...currentRun };
+      return best;
+    }
+
+    function longestGalleryPause(items) {
+      const dates = sortedByDateAsc(items).map(item => item.date);
+      if (dates.length < 2) return null;
+      let best = null;
+      for (let i = 1; i < dates.length; i++) {
+        const gap = dayNumber(dates[i]) - dayNumber(dates[i - 1]) - 1;
+        if (gap > 0 && (!best || gap > best.length)) {
+          best = {
+            length: gap,
+            start: isoFromDayNumber(dayNumber(dates[i - 1]) + 1),
+            end: isoFromDayNumber(dayNumber(dates[i]) - 1)
+          };
+        }
+      }
+      return best;
+    }
+
+    function buildWrapSlides(items) {
+      const dated = sortedByDateAsc(items);
+      if (!dated.length) return [];
+      const scored = dated.filter(item => Number.isFinite(Number(item.sleepScore)));
+      const first = dated[0];
+      const latest = dated[dated.length - 1];
+      const midpoint = dated[Math.floor((dated.length - 1) / 2)];
+      const highest = scored.length ? [...scored].sort((a, b) => Number(b.sleepScore) - Number(a.sleepScore) || dateValue(a) - dateValue(b))[0] : null;
+      const lowest = scored.length ? [...scored].sort((a, b) => Number(a.sleepScore) - Number(b.sleepScore) || dateValue(a) - dateValue(b))[0] : null;
+      const avg = averageScore(dated);
+      const run = longestGeneratedRun(dated);
+      const pause = longestGalleryPause(dated);
+      const bucketOrder = ['Aurora', 'Slate', 'Moss', 'Ochre', 'Ember'];
+      const buckets = bucketOrder.map(label => {
+        const sample = scored.find(item => scoreBucket(item.sleepScore).label === label);
+        const count = scored.filter(item => scoreBucket(item.sleepScore).label === label).length;
+        const color = sample ? scoreBucket(sample.sleepScore).color : {
+          Aurora: '#8B5CF6',
+          Slate: '#3A78B8',
+          Moss: '#4D7C5A',
+          Ochre: '#D4A853',
+          Ember: '#C8613A'
+        }[label];
+        return { label, count, color, pct: scored.length ? Math.round((count / scored.length) * 100) : 0 };
+      });
+
+      return [
+        {
+          eyebrow: 'Project highlights',
+          title: 'One Dreamscape A Night',
+          copy: 'Sleep data becomes a daily visual diary: score chooses the shape and palette, while readiness, sleep stages, HRV, and recovery steer scale, clustering, rotation, and suspension. Each score range leaves a different tint in the archive.',
+          bars: buckets,
+          stats: [
+            ['Dreamscapes', dated.length],
+            ['Average score', avg ?? '—'],
+            ['Highest score', highest ? highest.sleepScore : '—'],
+            ['Lowest score', lowest ? lowest.sleepScore : '—']
+          ]
+        },
+        {
+          image: first.imageData,
+          eyebrow: 'First dreamscape',
+          title: first.label || fmtLabel(first.date),
+          copy: `${fmtLabel(first.date)} opened the archive: the first recorded night turned into a visual object instead of staying only as a number.`,
+          stats: [
+            ['Sleep score', first.sleepScore ?? '—'],
+            ['Palette', scoreBucket(first.sleepScore).label]
+          ]
+        },
+        {
+          image: latest.imageData,
+          eyebrow: 'Latest dreamscape',
+          title: latest.label || fmtLabel(latest.date),
+          copy: 'The project is still alive and accumulating, one night at a time, with each new image extending the same private visual diary.',
+          stats: [
+            ['Sleep score', latest.sleepScore ?? '—'],
+            ['Palette', scoreBucket(latest.sleepScore).label]
+          ]
+        },
+        highest && {
+          image: highest.imageData,
+          eyebrow: 'Highest score',
+          title: highest.label || fmtLabel(highest.date),
+          copy: 'The most restored night in the gallery rises with the clearest signal: the dreamscape opens into its brightest, most buoyant register.',
+          stats: [
+            ['Sleep score', highest.sleepScore],
+            ['Palette', scoreBucket(highest.sleepScore).label]
+          ]
+        },
+        lowest && {
+          image: lowest.imageData,
+          eyebrow: 'Lowest score',
+          title: lowest.label || fmtLabel(lowest.date),
+          copy: 'The lowest-scoring night keeps the archive honest, translating difficulty into a sharper visual weather instead of hiding it.',
+          stats: [
+            ['Sleep score', lowest.sleepScore],
+            ['Palette', scoreBucket(lowest.sleepScore).label]
+          ]
+        },
+        {
+          image: midpoint.imageData,
+          eyebrow: 'Rhythm',
+          title: 'Streaks And Pauses',
+          copy: 'The calendar shows the pulse of the practice: stretches of daily translation, and the quiet gaps where the archive briefly disappears.',
+          stats: [
+            ['Longest streak', run ? `${run.length} nights` : '—'],
+            ['Streak dates', run ? `${fmtLabel(run.start)} - ${fmtLabel(run.end)}` : '—'],
+            ['Longest pause', pause ? `${pause.length} nights` : '—'],
+            ['Pause dates', pause ? `${fmtLabel(pause.start)} - ${fmtLabel(pause.end)}` : '—']
+          ]
+        },
+        {
+          eyebrow: 'Thank you',
+          title: 'Keep Following The Dreams',
+          copy: 'The project keeps growing beyond its first year. Share the highlights, and visit the gallery regularly to discover new daily dreamscapes.',
+          stats: [
+            ['Website', 'manu.vision/dreamart'],
+            ['Instagram', '@manu.vision']
+          ]
+        }
+      ].filter(Boolean);
     }
 
     // ── Heatmap ───────────────────────────────────────────────
@@ -1664,6 +2387,11 @@
         // Cache-bust query + no-store prevents browser/CDN from holding stale JSON.
         const res  = await fetch(`${API}?t=${Date.now()}`, { cache: 'no-store' });
         allItems   = (await res.json()).filter(d => d.imageData);
+        try {
+          wrapLoveCount = await fetchLoveCount('wrap');
+        } catch {
+          wrapLoveCount = 0;
+        }
         applyFilter(null);
         renderHeatmap(allItems);
         // Honor a #YYYY-MM-DD deep link if one is present — opens the lightbox
@@ -1781,6 +2509,7 @@
       e.stopPropagation();
       calPanel.classList.toggle('open');
       sortPanel.classList.remove('open');
+      updateSortUI();
     });
     sortBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -1797,10 +2526,10 @@
       });
     });
     document.addEventListener('click', (e) => {
-      if (!calPanel.contains(e.target) && e.target !== calBtn) {
+      if (!calPanel.contains(e.target) && !calBtn.contains(e.target)) {
         calPanel.classList.remove('open');
       }
-      if (!sortPanel.contains(e.target) && e.target !== sortBtn) {
+      if (!sortPanel.contains(e.target) && !sortBtn.contains(e.target)) {
         sortPanel.classList.remove('open');
         updateSortUI();
       }
@@ -1809,6 +2538,178 @@
     function fmtLabel(d) {
       return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
+
+    function renderWrapSlide() {
+      const slide = wrapSlides[wrapIndex];
+      if (!slide) {
+        wrapSlide.innerHTML = '<article class="wrap-card no-image"><div class="wrap-content"><p class="wrap-copy">No dreamscapes are available for the highlights yet.</p></div></article>';
+        wrapCount.textContent = '0 / 0';
+        wrapPrev.disabled = true;
+        wrapNext.disabled = true;
+        wrapNext.classList.remove('wrap-love');
+        return;
+      }
+
+      const fullWidthStats = slide.stats && slide.stats.length <= 2 && slide.stats.some(([, value]) => String(value).length > 12);
+      const stats = slide.stats ? `
+        <div class="wrap-stat-grid ${fullWidthStats ? 'full-width' : ''}">
+          ${slide.stats.map(([label, value]) => `
+            <div class="wrap-stat">
+              <strong>${escapeHtml(value)}</strong>
+              <span>${escapeHtml(label)}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : '';
+
+      const bars = slide.bars ? `
+        <div class="wrap-bars">
+          ${slide.bars.map(bar => `
+            <div class="wrap-bar-row">
+              <span>${escapeHtml(bar.label)}</span>
+              <div class="wrap-bar-track">
+                <div class="wrap-bar-fill" style="width:${Math.max(bar.pct, bar.count ? 4 : 0)}%;background:${bar.color};"></div>
+              </div>
+              <span>${bar.pct}%</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : '';
+
+      wrapSlide.innerHTML = `
+        <article class="wrap-card ${slide.image ? '' : 'no-image'}">
+          ${slide.image ? `<div class="wrap-hero"><img src="${escapeHtml(slide.image)}" alt=""></div>` : ''}
+          <div class="wrap-content">
+            <div class="wrap-eyebrow">${escapeHtml(slide.eyebrow)}</div>
+            <h2>${escapeHtml(slide.title)}</h2>
+            <p class="wrap-copy">${escapeHtml(slide.copy)}</p>
+            ${stats}
+            ${bars}
+          </div>
+        </article>
+      `;
+      wrapCount.textContent = `${wrapIndex + 1} / ${wrapSlides.length}`;
+      wrapPrev.disabled = wrapIndex === 0;
+      wrapNext.disabled = false;
+      if (wrapIndex === wrapSlides.length - 1) {
+        wrapNext.classList.add('wrap-love');
+        wrapNext.textContent = `❤️ ${wrapLoveCount}`;
+        wrapNext.setAttribute('aria-label', `Love the highlights. ${wrapLoveCount} loves`);
+      } else {
+        wrapNext.classList.remove('wrap-love');
+        wrapNext.textContent = 'Next';
+        wrapNext.setAttribute('aria-label', 'Next');
+      }
+    }
+
+    function openWrap() {
+      wrapSlides = buildWrapSlides(allItems);
+      wrapIndex = 0;
+      calPanel.classList.remove('open');
+      sortPanel.classList.remove('open');
+      updateSortUI();
+      renderWrapSlide();
+      wrapOverlay.hidden = false;
+      wrapOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      wrapBtn.classList.add('active');
+    }
+
+    function closeWrap() {
+      wrapOverlay.classList.remove('open');
+      wrapOverlay.hidden = true;
+      closeLovePopover();
+      document.body.style.overflow = '';
+      wrapBtn.classList.remove('active');
+    }
+
+    function prevWrapSlide() {
+      if (wrapIndex > 0) {
+        wrapIndex -= 1;
+        renderWrapSlide();
+      }
+    }
+
+    function nextWrapSlide() {
+      if (wrapIndex < wrapSlides.length - 1) {
+        wrapIndex += 1;
+        renderWrapSlide();
+        return;
+      }
+      loveWrap();
+    }
+
+    function openLovePopover() {
+      loveCountEl.textContent = wrapLoveCount;
+      lovePopover.hidden = false;
+      lovePopover.classList.add('open');
+    }
+
+    function closeLovePopover() {
+      lovePopover.classList.remove('open');
+      lovePopover.hidden = true;
+    }
+
+    async function loveWrap() {
+      wrapNext.disabled = true;
+      const previous = wrapLoveCount;
+      wrapLoveCount += 1;
+      renderWrapSlide();
+      openLovePopover();
+      try {
+        wrapLoveCount = await incrementLove('wrap');
+        loveCountEl.textContent = wrapLoveCount;
+      } catch (error) {
+        console.error('Could not save wrap love', error);
+        wrapLoveCount = previous;
+        loveCountEl.textContent = wrapLoveCount;
+      } finally {
+        renderWrapSlide();
+      }
+    }
+
+    async function exportWrapSlides(button = loveShareWrap) {
+      if (!wrapSlides.length) wrapSlides = buildWrapSlides(allItems);
+      if (!wrapSlides.length) return;
+      button.disabled = true;
+      const originalText = button.textContent;
+      try {
+        for (let i = 0; i < wrapSlides.length; i++) {
+          button.textContent = `Export ${i + 1}/${wrapSlides.length}`;
+          const blob = await createWrapExportImage(wrapSlides[i], i, wrapSlides.length);
+          downloadBlob(blob, `dream-art-highlights-${String(i + 1).padStart(2, '0')}.png`);
+          await new Promise(resolve => setTimeout(resolve, 120));
+        }
+        button.textContent = 'Saved';
+      } catch (error) {
+        console.error('Could not export wrap', error);
+        button.textContent = 'Try again';
+      } finally {
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.disabled = false;
+        }, 1400);
+      }
+    }
+
+    wrapBtn.addEventListener('click', () => {
+      if (wrapOverlay.classList.contains('open')) closeWrap();
+      else openWrap();
+    });
+    wrapClose.addEventListener('click', closeWrap);
+    wrapPrev.addEventListener('click', prevWrapSlide);
+    wrapNext.addEventListener('click', nextWrapSlide);
+    loveShareWrap.addEventListener('click', () => exportWrapSlides(loveShareWrap));
+    loveLearn.addEventListener('click', () => {
+      closeWrap();
+      openAbout();
+    });
+    lovePopover.addEventListener('click', e => {
+      if (e.target === lovePopover) closeLovePopover();
+    });
+    wrapOverlay.addEventListener('click', e => {
+      if (e.target === wrapOverlay) closeWrap();
+    });
 
     // Single date
     document.getElementById('single-apply').addEventListener('click', () => {
@@ -1893,6 +2794,9 @@
       lbPrev.disabled    = current === 0;
       lbNext.disabled    = current === displayed.length - 1;
       lbCounter.textContent = `${current + 1} / ${displayed.length}`;
+      lbLove.textContent = `❤️ ${item.loveCount ?? 0}`;
+      lbLove.disabled = false;
+      lbLove.setAttribute('aria-label', `Love this dream. ${item.loveCount ?? 0} loves`);
     }
     function prevImg() { if (current > 0) { current--; showLightbox(); } }
     function nextImg() { if (current < displayed.length - 1) { current++; showLightbox(); } }
@@ -1907,21 +2811,25 @@
       lbCopy.textContent = 'Copied';
       setTimeout(() => { lbCopy.textContent = 'Copy link'; }, 1200);
     });
-    lbShare.addEventListener('click', async () => {
+    lbLove.addEventListener('click', async () => {
       const item = displayed[current];
-      const url = shareUrlFor(item);
-      const title = item && item.label ? `Dream Art · ${item.label}` : 'Dream Art';
-      if (navigator.share) {
-        try {
-          await navigator.share({ title, text: 'A dreamscape generated from one night of sleep data.', url });
-          return;
-        } catch (error) {
-          if (error && error.name === 'AbortError') return;
-        }
+      const target = loveTargetFor(item);
+      if (!item || !target) return;
+      const previous = item.loveCount ?? 0;
+      item.loveCount = previous + 1;
+      lbLove.textContent = `❤️ ${item.loveCount}`;
+      lbLove.disabled = true;
+      try {
+        item.loveCount = await incrementLove(target);
+        lbLove.textContent = `❤️ ${item.loveCount}`;
+        lbLove.setAttribute('aria-label', `Love this dream. ${item.loveCount} loves`);
+      } catch (error) {
+        console.error('Could not save dream love', error);
+        item.loveCount = previous;
+        lbLove.textContent = `❤️ ${item.loveCount}`;
+      } finally {
+        lbLove.disabled = false;
       }
-      await copyText(url);
-      lbShare.textContent = 'Link copied';
-      setTimeout(() => { lbShare.textContent = 'Share'; }, 1200);
     });
     lbCard.addEventListener('click', async () => {
       const item = displayed[current];
@@ -1946,6 +2854,16 @@
         if (e.key === 'ArrowRight')  nextImg();
         return;
       }
+      if (wrapOverlay.classList.contains('open')) {
+        if (lovePopover.classList.contains('open')) {
+          if (e.key === 'Escape') closeLovePopover();
+          return;
+        }
+        if (e.key === 'Escape')      closeWrap();
+        if (e.key === 'ArrowLeft')   prevWrapSlide();
+        if (e.key === 'ArrowRight')  nextWrapSlide();
+        return;
+      }
       const about = document.getElementById('about-overlay');
       if (about && about.classList.contains('open') && e.key === 'Escape') {
         closeAbout();
@@ -1965,6 +2883,7 @@
     // ── About modal ──────────────────────────────────────────
     const aboutOverlay = document.getElementById('about-overlay');
     const aboutClose   = document.getElementById('about-close');
+    const aboutWrapLink = document.getElementById('about-wrap-link');
     const infoBtn      = document.getElementById('info-btn');
     const trailerVideo = document.getElementById('trailer-video');
     const TRAILER_SRC  = 'trailer.mp4';
@@ -1998,6 +2917,10 @@
       aboutOverlay.classList.contains('open') ? closeAbout() : openAbout();
     });
     aboutClose.addEventListener('click', closeAbout);
+    aboutWrapLink.addEventListener('click', () => {
+      closeAbout();
+      openWrap();
+    });
     // Click outside the panel closes (the backdrop is the overlay itself)
     aboutOverlay.addEventListener('click', (e) => {
       if (e.target === aboutOverlay) closeAbout();
