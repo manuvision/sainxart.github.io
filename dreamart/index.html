@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dream Art — One Dream A Night</title>
-  <meta name="description" content="Every night since May 24, 2025. Sleep data turned into generative sculptures — one artwork per night, ongoing." />
+  <meta name="description" content="Every night since May 23, 2025. Sleep data turned into generative sculptures — one artwork per night, ongoing." />
   <link rel="canonical" href="https://manu.vision/dreamart/" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 
@@ -12,17 +12,17 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Dream Art" />
   <meta property="og:title" content="Dream Art — One Dream A Night" />
-  <meta property="og:description" content="Every night since May 24, 2025. Sleep data turned into generative sculptures — one artwork per night, ongoing." />
+  <meta property="og:description" content="Every night since May 23, 2025. Sleep data turned into generative sculptures — one artwork per night, ongoing." />
   <meta property="og:url" content="https://manu.vision/dreamart/" />
   <meta property="og:image" content="https://manu.vision/dreamart/og-card.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="A growing gallery of generative dream artworks — one sculpture per night of sleep, ongoing since May 24, 2025." />
+  <meta property="og:image:alt" content="A growing gallery of generative dream artworks — one sculpture per night of sleep, ongoing since May 23, 2025." />
 
   <!-- Twitter / X -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Dream Art — One Dream A Night" />
-  <meta name="twitter:description" content="Every night since May 24, 2025. Sleep data turned into generative sculptures." />
+  <meta name="twitter:description" content="Every night since May 23, 2025. Sleep data turned into generative sculptures." />
   <meta name="twitter:image" content="https://manu.vision/dreamart/og-card.png" />
   <script>
     // Redirect /dreamart and /dreamart/ to /dreamart/index.html
@@ -32,20 +32,25 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --bg:        #07070f;
       --bg-card:   #0e0e1c;
-      --border:    rgba(255,255,255,0.07);
-      --text:      #e2e2f0;
-      --muted:     #7878a0;
-      --dim:       #404060;
-      --purple:    #a78bfa;
+      --border:    rgba(255,255,255,0.12);
+      --text:      #f1efff;
+      --muted:     #b4afd4;
+      --dim:       #918cb4;
+      --purple:    #c4b5fd;
+      --pink:      #f0abfc;
+      --pink-soft: rgba(240,171,252,0.12);
+      --pink-line: rgba(240,171,252,0.42);
+      --link:      #f6b85a;
+      --link-hover:#ffd08a;
       --font-display: 'Cormorant Garamond', Georgia, serif;
-      --font-ui:   -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-ui:   'Space Mono', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     }
 
     html, body {
@@ -96,11 +101,11 @@
       font-size: 0.68rem;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      color: var(--dim);
+      color: var(--link);
       text-decoration: none;
       transition: color 0.2s;
     }
-    header nav a:hover { color: var(--purple); }
+    header nav a:hover { color: var(--link-hover); }
 
     /* ── Gallery controls bar (between heatmap and grid) ─────── */
     #gallery-controls {
@@ -121,9 +126,9 @@
       gap: 0.45rem;
       padding: 0.4rem 0.7rem 0.4rem 0.6rem;
       border-radius: 8px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted);
+      border: 1px solid var(--pink-line);
+      background: var(--pink-soft);
+      color: var(--pink);
       cursor: pointer;
       font-size: 0.65rem;
       font-family: var(--font-ui);
@@ -136,9 +141,9 @@
     #cal-btn.active,
     #sort-btn:hover,
     #sort-btn.active {
-      border-color: rgba(167,139,250,0.4);
-      background: rgba(167,139,250,0.08);
-      color: var(--purple);
+      border-color: rgba(240,171,252,0.64);
+      background: rgba(240,171,252,0.18);
+      color: #f8d4ff;
     }
 
     /* ── Calendar panel — drops from #gallery-controls ──────── */
@@ -192,8 +197,8 @@
     }
     .sort-option:hover,
     .sort-option.active {
-      background: rgba(167,139,250,0.1);
-      color: var(--purple);
+      background: rgba(240,171,252,0.12);
+      color: var(--pink);
     }
     .sort-option.active::after {
       content: 'Selected';
@@ -223,8 +228,8 @@
     }
     .cal-tab:first-child { border-right: 1px solid var(--border); }
     .cal-tab.active {
-      background: rgba(167,139,250,0.1);
-      color: var(--purple);
+      background: rgba(240,171,252,0.12);
+      color: var(--pink);
     }
 
     .cal-section { display: none; }
@@ -254,9 +259,9 @@
       width: 100%;
       padding: 0.55rem;
       border-radius: 8px;
-      border: 1px solid rgba(167,139,250,0.3);
-      background: rgba(167,139,250,0.1);
-      color: var(--purple);
+      border: 1px solid var(--pink-line);
+      background: var(--pink-soft);
+      color: var(--pink);
       font-size: 0.68rem;
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -264,7 +269,7 @@
       transition: background 0.15s;
       margin-bottom: 0.5rem;
     }
-    .cal-apply:hover { background: rgba(167,139,250,0.18); }
+    .cal-apply:hover { background: rgba(240,171,252,0.18); }
 
     .cal-clear {
       width: 100%;
@@ -286,9 +291,9 @@
       display: none;
       padding: 0.35rem 0.9rem;
       border-radius: 99px;
-      border: 1px solid rgba(167,139,250,0.3);
-      background: rgba(167,139,250,0.08);
-      color: var(--purple);
+      border: 1px solid var(--pink-line);
+      background: var(--pink-soft);
+      color: var(--pink);
       font-size: 0.65rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
@@ -628,7 +633,7 @@
 
     #lb-counter {
       position: fixed;
-      bottom: 1.5rem;
+      bottom: 0.65rem;
       left: 50%;
       transform: translateX(-50%);
       font-size: 0.65rem;
@@ -653,8 +658,8 @@
       text-transform: uppercase;
       border-top: 1px solid var(--border);
     }
-    footer a { color: var(--dim); text-decoration: none; transition: color 0.2s; }
-    footer a:hover { color: var(--purple); }
+    footer a { color: var(--link); text-decoration: none; transition: color 0.2s; }
+    footer a:hover { color: var(--link-hover); }
 
     /* ── Year stat under tagline ─────────────────────────────── */
     .year-stat {
@@ -678,9 +683,9 @@
       gap: 0.45rem;
       padding: 0.4rem 0.7rem 0.4rem 0.6rem;
       border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--bg-card);
-      color: var(--muted);
+      border: 1px solid var(--pink-line);
+      background: var(--pink-soft);
+      color: var(--pink);
       cursor: pointer;
       font-size: 0.65rem;
       font-family: var(--font-ui);
@@ -690,9 +695,9 @@
       white-space: nowrap;
     }
     #info-btn:hover, #info-btn.active {
-      color: var(--purple);
-      border-color: rgba(167,139,250,0.4);
-      background: rgba(167,139,250,0.1);
+      color: #f8d4ff;
+      border-color: rgba(240,171,252,0.64);
+      background: rgba(240,171,252,0.18);
     }
 
     /* ── About modal ─────────────────────────────────────────── */
@@ -740,7 +745,7 @@
       font-size: 0.65rem;
       letter-spacing: 0.32em;
       text-transform: uppercase;
-      color: var(--purple);
+      color: var(--pink);
       margin-bottom: 0.6rem;
     }
     .about-section {
@@ -819,17 +824,17 @@
     .tip-link {
       display: inline-block;
       margin-top: 0.85rem;
-      color: var(--purple);
+      color: var(--link);
       text-decoration: none;
       font-size: 0.85rem;
       letter-spacing: 0.04em;
-      border-bottom: 1px solid rgba(167,139,250,0.4);
+      border-bottom: 1px solid rgba(246,184,90,0.55);
       padding-bottom: 1px;
       transition: color 0.2s, border-color 0.2s;
     }
     .tip-link:hover {
-      color: #c4a8fa;
-      border-bottom-color: #c4a8fa;
+      color: var(--link-hover);
+      border-bottom-color: var(--link-hover);
     }
     .credit-list {
       margin-top: 1.25rem;
@@ -840,14 +845,14 @@
       color: var(--dim);
     }
     .credit-list a {
-      color: var(--muted);
+      color: var(--link);
       text-decoration: none;
       border-bottom: 1px solid transparent;
       transition: color 0.2s, border-color 0.2s;
     }
     .credit-list a:hover {
-      color: var(--purple);
-      border-bottom-color: rgba(167,139,250,0.3);
+      color: var(--link-hover);
+      border-bottom-color: rgba(255,208,138,0.55);
     }
 
     /* Lightbox metadata (primitive · bracket) */
@@ -873,6 +878,7 @@
       gap: 0.75rem;
       flex-wrap: wrap;
       margin-top: 0.1rem;
+      margin-bottom: 1.6rem;
     }
     .lb-action {
       display: inline-flex;
@@ -880,9 +886,9 @@
       gap: 0.45rem;
       padding: 0.48rem 0.72rem;
       border-radius: 8px;
-      border: 1px solid rgba(167,139,250,0.25);
-      background: rgba(167,139,250,0.07);
-      color: var(--purple);
+      border: 1px solid var(--pink-line);
+      background: var(--pink-soft);
+      color: var(--pink);
       cursor: pointer;
       font-family: var(--font-ui);
       font-size: 0.64rem;
@@ -891,9 +897,9 @@
       transition: background 0.18s, border-color 0.18s, color 0.18s;
     }
     .lb-action:hover {
-      background: rgba(167,139,250,0.13);
-      border-color: rgba(167,139,250,0.45);
-      color: #c4a8fa;
+      background: rgba(240,171,252,0.18);
+      border-color: rgba(240,171,252,0.64);
+      color: #f8d4ff;
     }
 
     /* ── Trailer card inside the About modal ─────────────────── */
@@ -921,7 +927,7 @@
       justify-content: center;
       gap: 0.5rem;
       padding: 0.9rem 1rem;
-      color: var(--purple);
+      color: var(--link);
       text-decoration: none;
       font-size: 0.78rem;
       letter-spacing: 0.16em;
@@ -932,7 +938,7 @@
     }
     .trailer-watch:hover {
       background: rgba(167,139,250,0.12);
-      color: #c4a8fa;
+      color: var(--link-hover);
     }
     .trailer-watch svg { flex-shrink: 0; }
   </style>
@@ -941,10 +947,7 @@
 
   <header>
     <h1>Dream Art</h1>
-    <p>Generative sculptures from biometric sleep data</p>
-    <div class="year-stat" id="year-stat" hidden>
-      <span class="count" id="dream-count">—</span> dreams · <span id="span-text">one dream per night, visualized</span>
-    </div>
+    <p>One dream per night, visualized from data.</p>
     <nav>
       <a href="https://manu.vision">← manu.vision</a>
       <div class="nav-info-row">
@@ -967,8 +970,8 @@
     <div id="about-panel">
 
       <section class="about-section">
-        <p class="about-eyebrow">One Year Of Dreams</p>
-        <h2 id="about-title">For one year, I turned my sleep data into daily dreamscapes.</h2>
+        <p class="about-eyebrow">One Dream A Night</p>
+        <h2 id="about-title">On May 23rd 2025, I started recording and turning my sleep data into dreamscapes.</h2>
         <p>
           Each image is a small translation of one night: a private biometric signal turned into
           shape, color, material, and atmosphere. The gallery keeps the sleep score visible, while
@@ -1001,19 +1004,6 @@
           Watch on Instagram
         </a>
       </div>
-
-      <section class="about-section">
-        <p class="about-eyebrow">One Dream A Night</p>
-        <h2>What you're looking at</h2>
-        <p>
-          It's May 24th, 2025. My smart ring starts recording how I sleep each night. Every morning, that data
-          turns into one of the sculptures you see here, generated by a parametric prompt I wrote
-          that maps biometrics to form, color, and material.
-        </p>
-        <p>
-          <strong>One night, one artwork. </strong>
-        </p>
-      </section>
 
       <section class="about-section">
         <h2>How to read it</h2>
@@ -1062,15 +1052,6 @@
         <p>
           Some weeks are missing. That's part of the year too.
         </p>
-      </section>
-
-      <section class="about-section">
-        <h2>Ethics manifesto</h2>
-        <p>
-          This project uses my own personal data, shared with consent and with privacy in mind.
-          Dream Art is a reflective art practice, not a diagnostic tool: it makes no medical claims,
-          and it treats biometric data as material for meaning rather than proof about health.
-        </p>
 
         <div class="tip-block">
           <p>
@@ -1084,7 +1065,7 @@
         <div class="credit-list">
           <div>An ongoing art project by <a href="https://manu.vision" target="_blank" rel="noopener">Manuel Sainsily</a>, Designer & Creative Technologist.</div>
           <div>Inspired by the work of an artist friend (<a href="https://www.instagram.com/josue_ibanez/" target="_blank" rel="noopener">Josue Ibañez</a>) exploring sleep as creative medium.</div>
-          <div>A new dream is added every morning since May 24th, 2025. Follow along on <a href="https://www.instagram.com/manu.vision/" target="_blank" rel="noopener">Instagram</a>.</div>
+          <div>A new dream is added every morning since May 23rd, 2025. Follow along on <a href="https://www.instagram.com/manu.vision/" target="_blank" rel="noopener">Instagram</a>.</div>
         </div>
       </section>
 
@@ -1093,7 +1074,7 @@
 
   <!-- ── Heatmap ──────────────────────────────────────────── -->
   <section id="heatmap-section">
-    <div id="heatmap-title">Every dream, since May 24, 2025</div>
+    <div id="heatmap-title">Every dream, since May 23, 2025</div>
     <div id="heatmap-wrap">
       <div id="heatmap-month-labels"></div>
       <div id="heatmap-grid"></div>
@@ -1226,18 +1207,19 @@
     }
 
     function dreamReading(item) {
+      if (item.reading) return item.reading;
       const meta = scoreMeta(item.sleepScore);
       if (!meta) {
         return 'This dreamscape keeps its score quiet, leaving the night to read as pure form and atmosphere.';
       }
       const passages = {
-        Aurora: 'An aurora field of spheres suggests a night with lift and ease: open, buoyant, and gently luminous.',
-        Slate: 'Cool slate toruses hold the night in smooth loops, suggesting a steady rhythm with enough spaciousness to feel restored.',
-        Moss: 'Moss-toned cylinders gather like grounded markers, carrying a balanced night that feels calm, organic, and present.',
-        Ochre: 'Ochre cubes create a more compact architecture, a night translated into warmth, weight, and careful recovery.',
-        Ember: 'Ember pyramids sharpen the composition, turning a harder night into something alert, angular, and still alive.'
+        Aurora: 'This night becomes aurora spheres: open, buoyant forms that suggest ease, lift, and a luminous sense of restoration.',
+        Slate: 'This night becomes slate toruses: smooth loops that hold the composition in a steady rhythm with a calm sense of return.',
+        Moss: 'This night becomes moss cylinders: grounded vertical forms that gather like quiet markers across a balanced, organic field.',
+        Ochre: 'This night becomes ochre cubes: a warmer, more compact architecture where recovery feels deliberate and held close.',
+        Ember: 'This night becomes ember pyramids: sharper forms that turn a harder night into something alert, angular, and still alive.'
       };
-      return `${passages[meta.palette]} The public signal is the sleep score, ${item.sleepScore}; the more intimate data stays folded into scale, clustering, height, and motion.`;
+      return `${passages[meta.palette]} The more intimate signals stay abstracted: length shapes the scale, deeper rest adds weight, dream-rich sleep loosens the motion, and recovery changes how high the forms seem to float.`;
     }
 
     function shareUrlFor(item) {
@@ -1261,83 +1243,150 @@
       input.remove();
     }
 
-    function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
-      const words = text.split(/\s+/);
+    function roundRectPath(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + width, y, x + width, y + height, r);
+      ctx.arcTo(x + width, y + height, x, y + height, r);
+      ctx.arcTo(x, y + height, x, y, r);
+      ctx.arcTo(x, y, x + width, y, r);
+      ctx.closePath();
+    }
+
+    function drawRoundedRect(ctx, x, y, width, height, radius, fill, stroke, strokeWidth = 1) {
+      roundRectPath(ctx, x, y, width, height, radius);
+      if (fill) {
+        ctx.fillStyle = fill;
+        ctx.fill();
+      }
+      if (stroke) {
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = strokeWidth;
+        ctx.stroke();
+      }
+    }
+
+    function wrapCanvasText(ctx, text, maxWidth) {
+      const words = String(text ?? '').trim().split(/\s+/).filter(Boolean);
       const lines = [];
       let line = '';
       for (const word of words) {
         const next = line ? `${line} ${word}` : word;
-        if (ctx.measureText(next).width <= maxWidth) {
+        if (ctx.measureText(next).width <= maxWidth || !line) {
           line = next;
         } else {
-          if (line) lines.push(line);
+          lines.push(line);
           line = word;
-          if (lines.length === maxLines) break;
         }
       }
-      if (line && lines.length < maxLines) lines.push(line);
-      lines.forEach((l, index) => ctx.fillText(l, x, y + index * lineHeight));
+      if (line) lines.push(line);
+      return lines;
     }
 
-    function drawCover(ctx, img, x, y, width, height) {
-      const scale = Math.max(width / img.naturalWidth, height / img.naturalHeight);
-      const sw = width / scale;
-      const sh = height / scale;
-      const sx = (img.naturalWidth - sw) / 2;
-      const sy = (img.naturalHeight - sh) / 2;
-      ctx.drawImage(img, sx, sy, sw, sh, x, y, width, height);
+    function fittedCanvasLines(ctx, text, maxWidth, maxHeight, fontFamily, startSize, minSize, lineRatio) {
+      for (let size = startSize; size >= minSize; size -= 1) {
+        ctx.font = `400 ${size}px ${fontFamily}`;
+        const lineHeight = Math.round(size * lineRatio);
+        const lines = wrapCanvasText(ctx, text, maxWidth);
+        if (lines.length * lineHeight <= maxHeight) return { lines, size, lineHeight };
+      }
+      ctx.font = `400 ${minSize}px ${fontFamily}`;
+      return {
+        lines: wrapCanvasText(ctx, text, maxWidth),
+        size: minSize,
+        lineHeight: Math.round(minSize * lineRatio),
+      };
     }
 
     function loadCardImage(src) {
       return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = src;
+        const image = new Image();
+        image.crossOrigin = 'anonymous';
+        image.decoding = 'async';
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = src;
+      });
+    }
+
+    function drawImageContain(ctx, image, x, y, width, height) {
+      const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
+      const drawWidth = image.naturalWidth * scale;
+      const drawHeight = image.naturalHeight * scale;
+      const dx = x + (width - drawWidth) / 2;
+      const dy = y + (height - drawHeight) / 2;
+      ctx.drawImage(image, dx, dy, drawWidth, drawHeight);
+    }
+
+    function canvasToBlob(canvas) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Could not create image file.'));
+        }, 'image/png', 0.95);
       });
     }
 
     async function createPublicShareCard(item) {
+      await document.fonts?.ready;
+      const image = await loadCardImage(item.imageData);
       const canvas = document.createElement('canvas');
       canvas.width = 1080;
       canvas.height = 1440;
       const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Canvas unavailable');
+      const score = item.sleepScore != null ? item.sleepScore : '';
+      const scoreColorValue = scoreColor(item.sleepScore) || '#c4b5fd';
+      const displayFont = '"Cormorant Garamond", Georgia, serif';
+      const uiFont = '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
 
-      ctx.fillStyle = '#07070f';
-      ctx.fillRect(0, 0, 1080, 1440);
-      const img = await loadCardImage(item.imageData);
-      drawCover(ctx, img, 70, 70, 940, 960);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawRoundedRect(ctx, 40, 40, 1000, 1360, 46, 'rgba(14,14,28,0.96)', 'rgba(167,139,250,0.62)', 3);
 
-      const gradient = ctx.createLinearGradient(0, 880, 0, 1440);
-      gradient.addColorStop(0, 'rgba(7, 7, 15, 0)');
-      gradient.addColorStop(0.28, 'rgba(7, 7, 15, 0.94)');
-      gradient.addColorStop(1, '#07070f');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 820, 1080, 620);
+      const artworkX = 110;
+      const artworkY = 110;
+      const artworkSize = 860;
+      drawRoundedRect(ctx, artworkX, artworkY, artworkSize, artworkSize, 30, '#07070f', 'rgba(167,139,250,0.34)', 2);
+      ctx.save();
+      roundRectPath(ctx, artworkX, artworkY, artworkSize, artworkSize, 30);
+      ctx.clip();
+      drawImageContain(ctx, image, artworkX, artworkY, artworkSize, artworkSize);
+      ctx.restore();
 
-      ctx.fillStyle = '#a78bfa';
-      ctx.font = '700 26px "Courier New", monospace';
-      ctx.fillText('DREAM ART', 70, 1120);
-      ctx.fillStyle = '#e2e2f0';
-      ctx.font = '400 48px "Courier New", monospace';
-      ctx.fillText(item.label || item.date || 'Dreamscape', 70, 1188);
-      if (item.sleepScore != null) {
-        ctx.fillStyle = scoreColor(item.sleepScore) || '#a78bfa';
-        ctx.font = '700 34px "Courier New", monospace';
-        ctx.fillText(`Sleep score ${item.sleepScore}`, 70, 1240);
+      ctx.fillStyle = '#c4b5fd';
+      ctx.font = `700 20px ${uiFont}`;
+      ctx.letterSpacing = '3px';
+      ctx.fillText('MANU.VISION/DREAMART', artworkX, 1038);
+      ctx.letterSpacing = '0px';
+
+      const label = item.label || item.date || 'Dreamscape';
+      const dateText = label.length > 30 ? (item.date || label) : label;
+      ctx.font = `700 17px ${uiFont}`;
+      ctx.letterSpacing = '2px';
+      const dateLabel = dateText.toUpperCase();
+      const dateWidth = Math.ceil(ctx.measureText(dateLabel).width + 38);
+      drawRoundedRect(ctx, artworkX, 1070, dateWidth, 46, 8, 'rgba(139,92,246,0.12)', 'rgba(139,92,246,0.28)', 1);
+      ctx.fillStyle = '#f1efff';
+      ctx.fillText(dateLabel, artworkX + 19, 1100);
+
+      const scoreText = `SCORE ${score}`;
+      const scoreWidth = Math.ceil(ctx.measureText(scoreText).width + 38);
+      drawRoundedRect(ctx, artworkX + dateWidth + 14, 1070, scoreWidth, 46, 8, 'rgba(139,92,246,0.12)', 'rgba(139,92,246,0.28)', 1);
+      ctx.fillStyle = scoreColorValue;
+      ctx.fillText(scoreText, artworkX + dateWidth + 33, 1100);
+      ctx.letterSpacing = '0px';
+
+      const reading = dreamReading(item);
+      const fitted = fittedCanvasLines(ctx, reading, artworkSize, 210, uiFont, 26, 18, 1.45);
+      ctx.fillStyle = '#b4afd4';
+      ctx.font = `400 ${fitted.size}px ${uiFont}`;
+      let textY = 1172;
+      for (const line of fitted.lines) {
+        ctx.fillText(line, artworkX, textY);
+        textY += fitted.lineHeight;
       }
-      ctx.fillStyle = '#b7b7d6';
-      ctx.font = '400 30px "Courier New", monospace';
-      wrapCanvasText(ctx, dreamReading(item), 70, 1300, 940, 40, 3);
-      ctx.fillStyle = '#7878a0';
-      ctx.font = '700 22px "Courier New", monospace';
-      ctx.fillText('manu.vision/dreamart', 70, 1390);
 
-      return new Promise((resolve, reject) => {
-        canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('Export failed')), 'image/png', 0.95);
-      });
+      return canvasToBlob(canvas);
     }
 
     function downloadBlob(blob, filename) {
@@ -1345,8 +1394,11 @@
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     const grid        = document.getElementById('grid');
@@ -1426,7 +1478,7 @@
     }
 
     // ── Heatmap ───────────────────────────────────────────────
-    const HEATMAP_START = '2025-05-24';
+    const HEATMAP_START = '2025-05-23';
 
     function renderHeatmap(items) {
       // Build lookup maps
@@ -1442,8 +1494,8 @@
       const titleEl = document.getElementById('heatmap-title');
       if (titleEl) {
         titleEl.textContent = items.length > 0
-          ? `${items.length} dreams · since May 24, 2025`
-          : 'Every dream, since May 24, 2025';
+          ? `${items.length} dreams · since May 23, 2025`
+          : 'Every dream, since May 23, 2025';
       }
 
       const startDate = new Date(HEATMAP_START + 'T12:00:00');
@@ -1612,13 +1664,6 @@
         // Cache-bust query + no-store prevents browser/CDN from holding stale JSON.
         const res  = await fetch(`${API}?t=${Date.now()}`, { cache: 'no-store' });
         allItems   = (await res.json()).filter(d => d.imageData);
-        // Update the "N dreams · one dream per night, visualized" stat in the header
-        const stat = document.getElementById('year-stat');
-        const count = document.getElementById('dream-count');
-        if (stat && count && allItems.length > 0) {
-          count.textContent = allItems.length;
-          stat.hidden = false;
-        }
         applyFilter(null);
         renderHeatmap(allItems);
         // Honor a #YYYY-MM-DD deep link if one is present — opens the lightbox
@@ -1885,18 +1930,10 @@
       try {
         const blob = await createPublicShareCard(item);
         const filename = `dream-art-${item.date || 'card'}.png`;
-        const file = new File([blob], filename, { type: 'image/png' });
-        if (navigator.share && navigator.canShare?.({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: item.label ? `Dream Art · ${item.label}` : 'Dream Art',
-            text: 'A dreamscape generated from one night of sleep data.',
-          });
-        } else {
-          downloadBlob(blob, filename);
-        }
+        downloadBlob(blob, filename);
         lbCard.textContent = 'Saved';
-      } catch {
+      } catch (error) {
+        console.error('Could not create share card', error);
         lbCard.textContent = 'Try again';
       }
       setTimeout(() => { lbCard.textContent = 'Save card'; }, 1400);
