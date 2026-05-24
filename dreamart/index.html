@@ -636,7 +636,10 @@
       padding: 3.35rem 1rem 3.6rem;
       box-sizing: border-box;
     }
-    #lightbox.open { display: flex; }
+    #lightbox.open {
+      display: flex;
+      animation: lightbox-fade-in 0.48s ease both;
+    }
 
     #reading-overlay {
       display: none;
@@ -661,7 +664,7 @@
       display: flex;
       flex-direction: column;
       gap: 0.8rem;
-      transition: transform 0.88s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.88s ease, filter 0.88s ease;
+      transition: transform 1.54s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.54s ease, filter 1.54s ease;
     }
     #reading-overlay.revealing #reading-panel {
       transform: scale(1.045);
@@ -709,7 +712,7 @@
       background:
         radial-gradient(circle at 50% 45%, rgba(240,171,252,0.2), transparent 34%),
         linear-gradient(180deg, rgba(15,12,30,0.98), rgba(5,5,12,0.98));
-      animation: mystery-pulse 1.12s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation: mystery-pulse 2s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
     .reading-mystery-reveal::before,
     .reading-mystery-reveal::after {
@@ -720,7 +723,7 @@
         radial-gradient(circle, rgba(240,171,252,0.22) 1px, transparent 1px),
         radial-gradient(circle, rgba(246,184,90,0.18) 1px, transparent 1px);
       background-size: 14px 14px, 23px 23px;
-      animation: mystery-drift 1.12s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation: mystery-drift 2s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
     .reading-mystery-reveal::after {
       transform: rotate(24deg) scale(1.1);
@@ -735,7 +738,7 @@
       font-style: italic;
       color: var(--pink);
       text-shadow: 0 0 34px rgba(240,171,252,0.52), 0 0 70px rgba(246,184,90,0.18);
-      animation: mystery-mark-pop 1.12s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation: mystery-mark-pop 2s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
     .reading-mystery-label {
       position: absolute;
@@ -1041,6 +1044,10 @@
     }
     #about-overlay.open { display: block; }
     @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes lightbox-fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
 
     #about-panel {
       max-width: 560px;
@@ -2033,7 +2040,7 @@
           <div class="reading-mystery-label">Revealing the dreamscape</div>
         </div>
       `;
-      window.setTimeout(openReadingEntry, 1120);
+      window.setTimeout(openReadingEntry, 2000);
     }
 
     function nextReadingStep() {
