@@ -1863,12 +1863,6 @@
           copy: dreamReading(item),
           facts: null,
         },
-        {
-          eyebrow: 'Reveal',
-          title: item.label || mysteryDateLabel(item),
-          copy: dreamReading(item),
-          image: item.imageData,
-        },
       ];
     }
 
@@ -1941,7 +1935,13 @@
       }
       closeReadingMode();
       const idx = displayed.findIndex(item => item.date === readingItem?.date);
-      if (idx >= 0) openLightbox(idx);
+      if (idx >= 0) {
+        openLightbox(idx);
+        return;
+      }
+      displayed = sortItems(allItems);
+      const fallback = displayed.findIndex(item => item.date === readingItem?.date);
+      if (fallback >= 0) openLightbox(fallback);
     }
 
     function prevReadingStep() {
@@ -2868,7 +2868,12 @@
         grid.appendChild(mysteryWrap);
       }
 
-      displayed.forEach((item, i) => {
+      const visibleItems = dailyMystery
+        ? displayed.filter(item => item.date !== dailyMystery.date)
+        : displayed;
+
+      visibleItems.forEach((item) => {
+        const i = displayed.findIndex(entry => entry.date === item.date);
         const wrap = document.createElement('div');
         wrap.className = 'item';
 
