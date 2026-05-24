@@ -650,12 +650,23 @@
       animation: fade-in 0.25s ease;
     }
     #reading-overlay.open { display: grid; place-items: center; }
+    #reading-overlay.revealing {
+      background:
+        radial-gradient(circle at 50% 48%, rgba(240,171,252,0.2), transparent 28%),
+        rgba(4,4,10,0.96);
+    }
     #reading-panel {
       width: min(100%, 520px);
       max-height: calc(100vh - 3.8rem);
       display: flex;
       flex-direction: column;
       gap: 0.8rem;
+      transition: transform 0.58s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.58s ease, filter 0.58s ease;
+    }
+    #reading-overlay.revealing #reading-panel {
+      transform: scale(1.045);
+      opacity: 0;
+      filter: blur(18px);
     }
     #reading-card {
       position: relative;
@@ -688,6 +699,71 @@
     #reading-close:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
     .reading-step {
       animation: reading-rise 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .reading-mystery-reveal {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(240,171,252,0.2), transparent 34%),
+        linear-gradient(180deg, rgba(15,12,30,0.98), rgba(5,5,12,0.98));
+      animation: mystery-pulse 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .reading-mystery-reveal::before,
+    .reading-mystery-reveal::after {
+      content: '';
+      position: absolute;
+      inset: -20%;
+      background-image:
+        radial-gradient(circle, rgba(240,171,252,0.22) 1px, transparent 1px),
+        radial-gradient(circle, rgba(246,184,90,0.18) 1px, transparent 1px);
+      background-size: 14px 14px, 23px 23px;
+      animation: mystery-drift 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .reading-mystery-reveal::after {
+      transform: rotate(24deg) scale(1.1);
+      opacity: 0.7;
+      animation-direction: reverse;
+    }
+    .reading-mystery-mark {
+      position: relative;
+      z-index: 2;
+      font-family: var(--font-display);
+      font-size: clamp(5rem, 22vw, 9rem);
+      font-style: italic;
+      color: var(--pink);
+      text-shadow: 0 0 34px rgba(240,171,252,0.52), 0 0 70px rgba(246,184,90,0.18);
+      animation: mystery-mark-pop 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .reading-mystery-label {
+      position: absolute;
+      left: 1.2rem;
+      right: 1.2rem;
+      bottom: 1.2rem;
+      z-index: 2;
+      color: var(--link);
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      text-align: center;
+      text-transform: uppercase;
+      animation: reading-rise 0.38s ease both;
+    }
+    @keyframes mystery-pulse {
+      0% { opacity: 0; transform: scale(0.96); filter: blur(10px); }
+      42% { opacity: 1; transform: scale(1); filter: blur(0); }
+      100% { opacity: 0; transform: scale(1.08); filter: blur(16px); }
+    }
+    @keyframes mystery-drift {
+      from { transform: translateY(18px) scale(0.96); opacity: 0; }
+      45% { opacity: 1; }
+      to { transform: translateY(-24px) scale(1.08); opacity: 0; }
+    }
+    @keyframes mystery-mark-pop {
+      0% { opacity: 0; transform: scale(0.7) rotate(-8deg); }
+      42% { opacity: 1; transform: scale(1) rotate(0deg); }
+      100% { opacity: 0; transform: scale(1.2) rotate(6deg); }
     }
     @keyframes reading-rise {
       from { opacity: 0; transform: translateY(14px) scale(0.985); }
@@ -1904,6 +1980,7 @@
 
       readingCount.textContent = `${readingIndex + 1} / ${readingSteps.length}`;
       readingPrev.disabled = readingIndex === 0;
+      readingNext.disabled = false;
       readingNext.textContent = readingIndex === readingSteps.length - 1 ? 'Open entry' : 'Reveal';
     }
 
@@ -1915,6 +1992,7 @@
       updateSortUI();
       readingSteps = buildReadingSteps(readingItem);
       readingIndex = 0;
+      readingRevealing = false;
       renderReadingStep();
       readingOverlay.hidden = false;
       readingOverlay.classList.add('open');
@@ -1923,16 +2001,15 @@
 
     function closeReadingMode() {
       readingOverlay.classList.remove('open');
+      readingOverlay.classList.remove('revealing');
       readingOverlay.hidden = true;
+      readingRevealing = false;
+      readingNext.disabled = false;
+      readingPrev.disabled = false;
       document.body.style.overflow = '';
     }
 
-    function nextReadingStep() {
-      if (readingIndex < readingSteps.length - 1) {
-        readingIndex += 1;
-        renderReadingStep();
-        return;
-      }
+    function openReadingEntry() {
       closeReadingMode();
       const idx = displayed.findIndex(item => item.date === readingItem?.date);
       if (idx >= 0) {
@@ -1944,7 +2021,33 @@
       if (fallback >= 0) openLightbox(fallback);
     }
 
+    function revealReadingEntry() {
+      if (readingRevealing) return;
+      readingRevealing = true;
+      readingNext.disabled = true;
+      readingPrev.disabled = true;
+      readingOverlay.classList.add('revealing');
+      readingCard.innerHTML = `
+        <div class="reading-mystery-reveal">
+          <div class="reading-mystery-mark">?</div>
+          <div class="reading-mystery-label">Revealing the dreamscape</div>
+        </div>
+      `;
+      window.setTimeout(openReadingEntry, 720);
+    }
+
+    function nextReadingStep() {
+      if (readingRevealing) return;
+      if (readingIndex < readingSteps.length - 1) {
+        readingIndex += 1;
+        renderReadingStep();
+        return;
+      }
+      revealReadingEntry();
+    }
+
     function prevReadingStep() {
+      if (readingRevealing) return;
       if (readingIndex > 0) {
         readingIndex -= 1;
         renderReadingStep();
@@ -2369,6 +2472,7 @@
     let readingSteps = [];
     let readingIndex = 0;
     let readingItem = null;
+    let readingRevealing = false;
 
     const sortLabels = {
       newest: 'Newest',
