@@ -1028,9 +1028,9 @@
       gap: 0.45rem;
       padding: 0.4rem 0.7rem 0.4rem 0.6rem;
       border-radius: 8px;
-      border: 1px solid var(--pink-line);
-      background: var(--pink-soft);
-      color: var(--pink);
+      border: 1px solid rgba(246,184,90,0.58);
+      background: rgba(246,184,90,0.1);
+      color: var(--link);
       cursor: pointer;
       font-size: 0.65rem;
       font-family: var(--font-ui);
@@ -1040,9 +1040,9 @@
       white-space: nowrap;
     }
     #info-btn:hover, #info-btn.active {
-      color: #f8d4ff;
-      border-color: rgba(240,171,252,0.64);
-      background: rgba(240,171,252,0.18);
+      color: var(--link-hover);
+      border-color: rgba(246,184,90,0.82);
+      background: rgba(246,184,90,0.18);
     }
 
     /* ── About modal ─────────────────────────────────────────── */
@@ -1413,31 +1413,30 @@
     }
     .wrap-mini-heatmap {
       display: grid;
-      grid-template-columns: repeat(var(--heatmap-side), minmax(0, 1fr));
-      grid-auto-rows: 1fr;
+      grid-template-columns: repeat(var(--heatmap-weeks), minmax(0, 1fr));
+      grid-template-rows: repeat(7, minmax(0, 1fr));
+      grid-auto-flow: column;
       gap: 2px;
       margin-top: 0.4rem;
-      padding: 0.8rem;
+      padding: 0.72rem;
       border: 1px solid rgba(255,255,255,0.09);
       border-radius: 14px;
       background: rgba(255,255,255,0.035);
-      flex: 1 1 auto;
-      aspect-ratio: 1;
-      width: min(100%, calc((var(--heatmap-side) * 18px) + ((var(--heatmap-side) - 1) * 2px) + 1.6rem));
-      max-height: 100%;
+      width: 100%;
+      aspect-ratio: var(--heatmap-weeks) / 7;
+      max-height: 9.5rem;
       min-height: 0;
       align-self: center;
-      align-content: center;
-      justify-content: center;
     }
     .wrap-mini-cell {
-      aspect-ratio: 1 / 1;
       width: 100%;
-      height: auto;
-      align-self: center;
+      height: 100%;
       border-radius: 2px;
       background: rgba(255,255,255,0.07);
       box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18);
+    }
+    .wrap-card.system-slide .wrap-content {
+      justify-content: center;
     }
     .wrap-decoder {
       display: grid;
@@ -1841,12 +1840,11 @@
 
   <header>
     <h1>Dream Art</h1>
-    <p>One dreamscape per night, visualized from data.</p>
+    <p>Turning daily sleep data into art.</p>
     <nav>
-      <a href="https://manu.vision">← manu.vision</a>
       <div class="nav-info-row">
-        <button id="info-btn" aria-label="About this project">
-          About this project
+        <button id="info-btn" aria-label="Why">
+          Why
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
             <circle cx="7.5" cy="7.5" r="6.25" stroke="currentColor" stroke-width="1.2"/>
             <path d="M7.5 6.5V11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
@@ -2012,14 +2010,6 @@
       <svg width="13" height="13" viewBox="0 0 15 15" fill="none">
         <path d="M2.5 11.5V3.5C2.5 2.7 3.1 2.1 3.9 2.1H11.1C11.9 2.1 12.5 2.7 12.5 3.5V11.5C12.5 12.3 11.9 12.9 11.1 12.9H3.9C3.1 12.9 2.5 12.3 2.5 11.5Z" stroke="currentColor" stroke-width="1.2"/>
         <path d="M5 5H10M5 7.5H10M5 10H7.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-      </svg>
-    </button>
-    <button id="how-btn" aria-label="Open how it works">
-      Playground
-      <svg width="13" height="13" viewBox="0 0 15 15" fill="none">
-        <path d="M2.2 10.8C3.4 8.1 5.1 6.4 7.5 6.4C9.9 6.4 11.6 8.1 12.8 10.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-        <path d="M4 4.2H11M5.5 2.2H9.5M6.2 12.5H8.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-        <circle cx="7.5" cy="6.4" r="1.35" stroke="currentColor" stroke-width="1.2"/>
       </svg>
     </button>
     <div id="filter-pill">
@@ -2892,7 +2882,8 @@
           cursor += 68;
         });
 
-        const copy = fittedCanvasLines(ctx, slide.copy || '', contentW, maxCopyHeight, uiFont, 28, 20, 1.42);
+        const copyText = Array.isArray(slide.copy) ? slide.copy.join(' ') : slide.copy || '';
+        const copy = fittedCanvasLines(ctx, copyText, contentW, maxCopyHeight, uiFont, 28, 20, 1.42);
         ctx.font = `400 ${copy.size}px ${uiFont}`;
         ctx.fillStyle = '#d8d2f2';
         cursor += 20;
@@ -3162,10 +3153,14 @@
       const todayDate = new Date(today + 'T12:00:00');
       const latestArchiveDate = new Date(latestDate + 'T12:00:00');
       const endDate = latestArchiveDate > todayDate ? latestArchiveDate : todayDate;
+      const startDow = startDate.getDay();
       const totalDays = Math.round((endDate - startDate) / 864e5) + 1;
-      // The grid grows as the archive grows: 20x20 today, then 21x21, 22x22, etc.
-      const side = Math.ceil(Math.sqrt(totalDays));
-      let html = `<div class="wrap-mini-heatmap" style="--heatmap-side:${side}">`;
+      const totalCells = startDow + totalDays;
+      const weeks = Math.ceil(totalCells / 7);
+      let html = `<div class="wrap-mini-heatmap" style="--heatmap-weeks:${weeks}">`;
+      for (let i = 0; i < startDow; i += 1) {
+        html += '<span class="wrap-mini-cell" style="opacity:0"></span>';
+      }
       for (let dayOffset = 0; dayOffset < totalDays; dayOffset += 1) {
         const d = new Date(startDate);
         d.setDate(startDate.getDate() + dayOffset);
@@ -3174,7 +3169,7 @@
         const color = score != null ? scoreColor(score) : artworkSet.has(dateStr) ? 'rgba(180,175,212,0.36)' : 'rgba(255,255,255,0.055)';
         html += `<span class="wrap-mini-cell" title="${dateStr}${score != null ? ` · ${score}` : ''}" style="background:${color}"></span>`;
       }
-      for (let i = totalDays; i < side * side; i += 1) {
+      for (let i = totalCells; i < weeks * 7; i += 1) {
         html += '<span class="wrap-mini-cell" style="opacity:0"></span>';
       }
       html += '</div>';
@@ -3247,21 +3242,19 @@
 
       return [
         {
-          eyebrow: 'One dreamscape a night',
-          title: 'Data Turned Into Art',
-          copy: 'Since May 23rd, 2025, I started tracking my sleep: turning daily biometrics into visual artifacts, with the sleep score shaping the colors, form, and overall aesthetic, and the more intimate measurements abstracted inside the artwork.',
-          video: 'trailer.mp4'
-        },
-        {
-          eyebrow: 'Calendar',
-          title: `${dated.length} Dreams Since May 23, 2025`,
-          copy: 'The heatmap shows the pulse: accumulated nights, visible pauses, and the score color of each dreamscape in the archive.',
-          heatmap: buildMiniHeatmap(dated)
-        },
-        {
           eyebrow: 'Why',
           title: 'Memory, Color, Geometry',
           copy: 'I publicly launched this gallery in memory of my mother, Nathalie Déglas (1964-2026), an art teacher who loved visual experimentation and teaching, and in support of those still living with diabetes, including my mother-in-law.',
+          video: 'trailer.mp4'
+        },
+        {
+          eyebrow: 'One dreamscape a night',
+          title: 'Data Turned Into Art',
+          copy: [
+            'Since May 23rd, 2025, I started tracking my sleep: turning daily biometrics into visual artifacts, with the sleep score shaping the colors, form, and overall aesthetic, and the more intimate measurements abstracted inside the artwork.',
+            `The heatmap shows the pulse: accumulated nights, visible pauses, and the score color of each dreamscape in the archive. ${dated.length} and counting.`
+          ],
+          heatmap: buildMiniHeatmap(dated),
           bars: buckets
         },
         {
@@ -3754,6 +3747,9 @@
           `).join('')}
         </div>
       ` : '';
+      const copy = Array.isArray(slide.copy)
+        ? slide.copy.map(line => `<p class="wrap-copy">${escapeHtml(line)}</p>`).join('')
+        : `<p class="wrap-copy">${escapeHtml(slide.copy)}</p>`;
       const heatmap = slide.heatmap || '';
       const decoder = slide.decoder || '';
       const points = slide.points || '';
@@ -3764,12 +3760,12 @@
           : '';
 
       wrapSlide.innerHTML = `
-        <article class="wrap-card ${media ? '' : 'no-image'}">
+        <article class="wrap-card ${media ? '' : 'no-image'} ${slide.heatmap ? 'system-slide' : ''}">
           ${media}
           <div class="wrap-content">
             <div class="wrap-eyebrow">${escapeHtml(slide.eyebrow)}</div>
             <h2>${escapeHtml(slide.title)}</h2>
-            <p class="wrap-copy">${escapeHtml(slide.copy)}</p>
+            ${copy}
             ${heatmap}
             ${decoder}
             ${points}
@@ -3842,21 +3838,25 @@
     wrapOverlay.addEventListener('click', e => {
       if (e.target === wrapOverlay) closeWrap();
     });
-    howBtn.addEventListener('click', () => {
-      howOverlay.classList.contains('open') ? closeHowModal() : openHowModal();
-    });
-    howClose.addEventListener('click', closeHowModal);
-    howReset.addEventListener('click', resetHowSignals);
-    howOpenEntry.addEventListener('click', openHowEntry);
-    document.querySelectorAll('[data-how-key]').forEach(input => {
-      input.addEventListener('input', () => {
-        howTarget[input.dataset.howKey] = Number(input.value);
-        updateHowMatch();
+    if (howBtn && howOverlay) {
+      howBtn.addEventListener('click', () => {
+        howOverlay.classList.contains('open') ? closeHowModal() : openHowModal();
       });
-    });
-    howOverlay.addEventListener('click', e => {
-      if (e.target === howOverlay) closeHowModal();
-    });
+    }
+    if (howClose) howClose.addEventListener('click', closeHowModal);
+    if (howReset) howReset.addEventListener('click', resetHowSignals);
+    if (howOpenEntry) howOpenEntry.addEventListener('click', openHowEntry);
+    if (howOverlay) {
+      document.querySelectorAll('[data-how-key]').forEach(input => {
+        input.addEventListener('input', () => {
+          howTarget[input.dataset.howKey] = Number(input.value);
+          updateHowMatch();
+        });
+      });
+      howOverlay.addEventListener('click', e => {
+        if (e.target === howOverlay) closeHowModal();
+      });
+    }
 
     // Single date
     document.getElementById('single-apply').addEventListener('click', () => {
