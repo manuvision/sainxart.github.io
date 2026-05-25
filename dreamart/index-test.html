@@ -1,0 +1,4043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dream Art — One Dreamscape A Night</title>
+  <meta name="description" content="Every night since May 23, 2025. Sleep data turned into generative sculptures — one artwork per night, ongoing." />
+  <link rel="canonical" href="https://manu.vision/dreamart/" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Dream Art" />
+  <meta property="og:title" content="Dream Art — One Dreamscape A Night" />
+  <meta property="og:description" content="Every night since May 23, 2025. Sleep data turned into generative sculptures — one artwork per night, ongoing." />
+  <meta property="og:url" content="https://manu.vision/dreamart/" />
+  <meta property="og:image" content="https://manu.vision/dreamart/og-card.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="A growing gallery of generative dream artworks — one sculpture per night of sleep, ongoing since May 23, 2025." />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Dream Art — One Dreamscape A Night" />
+  <meta name="twitter:description" content="Every night since May 23, 2025. Sleep data turned into generative sculptures." />
+  <meta name="twitter:image" content="https://manu.vision/dreamart/og-card.png" />
+  <script>
+    // Redirect /dreamart and /dreamart/ to /dreamart/index.html, while allowing test pages.
+    if (!location.pathname.endsWith('.html')) {
+      location.replace(location.pathname.replace(/\/?$/, '/index.html') + location.search + location.hash);
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #07070f;
+      --bg-card:   #0e0e1c;
+      --border:    rgba(255,255,255,0.12);
+      --text:      #f1efff;
+      --muted:     #b4afd4;
+      --dim:       #918cb4;
+      --purple:    #c4b5fd;
+      --pink:      #f0abfc;
+      --pink-soft: rgba(240,171,252,0.12);
+      --pink-line: rgba(240,171,252,0.42);
+      --link:      #f6b85a;
+      --link-hover:#ffd08a;
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-ui:   'Space Mono', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-ui);
+      min-height: 100%;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header ──────────────────────────────────────────────── */
+    header {
+      padding: 3.5rem 2rem 2.5rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    header h1 {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 10vw, 5.5rem);
+      font-weight: 300;
+      font-style: italic;
+      letter-spacing: 0.02em;
+      line-height: 1;
+      color: var(--text);
+    }
+    header p {
+      margin-top: 0.6rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    header nav {
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    /* Info button row — sits centered under the manu.vision link */
+    .nav-info-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    header nav a {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--link);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    header nav a:hover { color: var(--link-hover); }
+
+    /* ── Gallery controls bar (between heatmap and grid) ─────── */
+    #gallery-controls {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      position: relative;    /* anchor for #cal-panel */
+    }
+
+    /* Calendar text+icon pill button (lives in gallery-controls) */
+    #cal-btn,
+    #sort-btn,
+    #wrap-btn,
+    #how-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.4rem 0.7rem 0.4rem 0.6rem;
+      border-radius: 8px;
+      border: 1px solid var(--pink-line);
+      background: var(--pink-soft);
+      color: var(--pink);
+      cursor: pointer;
+      font-size: 0.65rem;
+      font-family: var(--font-ui);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      transition: border-color 0.2s, background 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    #cal-btn:hover,
+    #cal-btn.active,
+    #sort-btn:hover,
+    #sort-btn.active,
+    #wrap-btn:hover,
+    #wrap-btn.active,
+    #how-btn:hover,
+    #how-btn.active {
+      border-color: rgba(240,171,252,0.64);
+      background: rgba(240,171,252,0.18);
+      color: #f8d4ff;
+    }
+
+    #wrap-btn {
+      margin-left: auto;
+      border-color: rgba(255,110,219,0.78);
+      background: rgba(255,110,219,0.16);
+      color: #ff9ee8;
+      box-shadow: 0 0 0 1px rgba(255,110,219,0.1), 0 10px 28px rgba(255,110,219,0.09);
+    }
+    #wrap-btn:hover,
+    #wrap-btn.active {
+      border-color: rgba(255,155,236,0.92);
+      background: rgba(255,110,219,0.24);
+      color: #ffd1f5;
+    }
+    #how-btn {
+      border-color: rgba(246,184,90,0.58);
+      background: rgba(246,184,90,0.1);
+      color: var(--link);
+    }
+    #how-btn:hover,
+    #how-btn.active {
+      border-color: rgba(246,184,90,0.82);
+      background: rgba(246,184,90,0.18);
+      color: var(--link-hover);
+    }
+
+    /* ── Calendar panel — drops from #gallery-controls ──────── */
+    #cal-panel {
+      display: none;
+      position: absolute;
+      top: calc(100% + 0.4rem);
+      left: 1.5rem;
+      z-index: 200;
+      background: #0e0e1c;
+      border: 1px solid rgba(167,139,250,0.3);
+      border-radius: 14px;
+      padding: 1.25rem;
+      width: 260px;
+      max-width: calc(100vw - 3rem);
+      box-sizing: border-box;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.8);
+    }
+    #cal-panel.open { display: block; }
+
+    #sort-panel {
+      display: none;
+      position: absolute;
+      top: calc(100% + 0.4rem);
+      left: 13.25rem;
+      z-index: 200;
+      background: #0e0e1c;
+      border: 1px solid rgba(167,139,250,0.3);
+      border-radius: 14px;
+      padding: 0.5rem;
+      width: 210px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.8);
+    }
+    #sort-panel.open { display: block; }
+    .sort-option {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.65rem 0.7rem;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: var(--font-ui);
+      font-size: 0.67rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-align: left;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sort-option:hover,
+    .sort-option.active {
+      background: rgba(240,171,252,0.12);
+      color: var(--pink);
+    }
+    .sort-option.active::after {
+      content: 'Selected';
+      color: var(--dim);
+      font-size: 0.55rem;
+      letter-spacing: 0.08em;
+    }
+
+    .cal-tabs {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .cal-tab {
+      flex: 1;
+      padding: 0.45rem 0;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      background: transparent;
+      border: none;
+      color: var(--dim);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .cal-tab:first-child { border-right: 1px solid var(--border); }
+    .cal-tab.active {
+      background: rgba(240,171,252,0.12);
+      color: var(--pink);
+    }
+
+    .cal-section { display: none; }
+    .cal-section.active { display: block; }
+
+    .cal-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dim);
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+    .cal-input {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      color: var(--text);
+      font-size: 0.75rem;
+      font-family: var(--font-ui);
+      color-scheme: dark;
+      margin-bottom: 0.75rem;
+    }
+    .cal-apply {
+      width: 100%;
+      padding: 0.55rem;
+      border-radius: 8px;
+      border: 1px solid var(--pink-line);
+      background: var(--pink-soft);
+      color: var(--pink);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-bottom: 0.5rem;
+    }
+    .cal-apply:hover { background: rgba(240,171,252,0.18); }
+
+    .cal-clear {
+      width: 100%;
+      padding: 0.45rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      display: none;
+    }
+    .cal-clear.visible { display: block; }
+
+    /* Active filter pill — inline in nav row */
+    #filter-pill {
+      display: none;
+      padding: 0.35rem 0.9rem;
+      border-radius: 99px;
+      border: 1px solid var(--pink-line);
+      background: var(--pink-soft);
+      color: var(--pink);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    #filter-pill.visible { display: inline-flex; }
+    #filter-pill button {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      line-height: 1;
+      padding: 0;
+    }
+    @media (max-width: 640px) {
+      #gallery-controls {
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+      #cal-panel {
+        left: 1.5rem;
+        right: 1.5rem;
+        width: auto;
+      }
+      #sort-panel {
+        left: 1.5rem;
+        right: 1.5rem;
+        top: calc(100% + 0.45rem);
+        width: auto;
+      }
+      #filter-pill {
+        width: 100%;
+        justify-content: space-between;
+      }
+      #wrap-btn {
+        margin-left: 0;
+      }
+    }
+
+    /* ── Heatmap ──────────────────────────────────────────────── */
+    #heatmap-section {
+      padding: 2rem 1.5rem 1.75rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #heatmap-title {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--dim);
+      margin-bottom: 1rem;
+    }
+
+    #heatmap-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 0.25rem;
+    }
+
+    #heatmap-month-labels {
+      position: relative;
+      height: 16px;
+      margin-bottom: 4px;
+    }
+    #heatmap-month-labels span {
+      position: absolute;
+      font-size: 0.58rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--dim);
+      white-space: nowrap;
+    }
+
+    /* Grid dimensions (rows/columns/gap) are set in JS based on available width */
+    #heatmap-grid {
+      display: grid;
+      grid-auto-flow: column;
+    }
+
+    .hm-cell {
+      border-radius: 2px;
+      background: #131326;
+      transition: opacity 0.12s;
+      position: relative;
+    }
+    .hm-cell.hm-gap {
+      background: transparent;
+      pointer-events: none;
+    }
+    .hm-cell.hm-data {
+      cursor: pointer;
+    }
+    .hm-cell.hm-data:hover {
+      opacity: 0.75;
+      outline: 1.5px solid rgba(255,255,255,0.35);
+      outline-offset: 0px;
+    }
+    /* Selected state: dim + centered × */
+    .hm-cell.hm-selected {
+      opacity: 0.4;
+    }
+    .hm-cell.hm-selected::after {
+      content: '×';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 9px;
+      line-height: 1;
+      color: rgba(255,255,255,0.95);
+      font-weight: 700;
+      pointer-events: none;
+    }
+
+    /* Tooltip */
+    #hm-tooltip {
+      position: fixed;
+      z-index: 9999;
+      background: #16162b;
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 6px;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.63rem;
+      color: var(--text);
+      letter-spacing: 0.04em;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.12s;
+      white-space: nowrap;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.7);
+    }
+    #hm-tooltip.visible { opacity: 1; }
+
+    /* Legend */
+    #heatmap-legend {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.85rem;
+      flex-wrap: wrap;
+    }
+    .hm-legend-label {
+      font-size: 0.58rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dim);
+      margin-right: 0.1rem;
+    }
+    .hm-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.58rem;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .hm-legend-swatch {
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ── Grid ────────────────────────────────────────────────── */
+    main {
+      padding: 2.5rem 1.5rem 4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem 0.75rem;
+    }
+    @media (min-width: 640px)  { #grid { grid-template-columns: repeat(3, 1fr); gap: 1.25rem 1rem; } }
+    @media (min-width: 1024px) { #grid { grid-template-columns: repeat(4, 1fr); gap: 1.5rem 1.25rem; } }
+    @media (min-width: 1400px) { #grid { grid-template-columns: repeat(5, 1fr); } }
+
+    .item { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .cell {
+      aspect-ratio: 2 / 3;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      background: var(--bg-card);
+      position: relative;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .cell:hover {
+      transform: scale(1.025);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+    .cell:active { transform: scale(0.98); }
+    .mystery-card {
+      border: 1px solid rgba(240,171,252,0.48);
+      background:
+        radial-gradient(circle at 50% 42%, rgba(240,171,252,0.18), transparent 34%),
+        linear-gradient(180deg, rgba(20,17,36,0.94), rgba(8,8,18,0.98));
+      overflow: hidden;
+    }
+    .mystery-card::before {
+      display: none;
+    }
+    .mystery-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px),
+        linear-gradient(135deg, transparent, rgba(246,184,90,0.08), transparent);
+      background-size: 8px 8px, 100% 100%;
+      pointer-events: none;
+    }
+    .mystery-mark {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-display);
+      font-size: clamp(3.5rem, 12vw, 7rem);
+      font-style: italic;
+      font-weight: 300;
+      color: var(--pink);
+      text-shadow: 0 0 28px rgba(240,171,252,0.36);
+      z-index: 1;
+    }
+    .mystery-pill {
+      position: absolute;
+      left: 0.8rem;
+      right: 0.8rem;
+      bottom: 0.8rem;
+      z-index: 2;
+      padding: 0.55rem 0.65rem;
+      border-radius: 8px;
+      border: 1px solid rgba(246,184,90,0.42);
+      background: rgba(7,7,15,0.74);
+      color: var(--link);
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      line-height: 1.35;
+      text-align: center;
+      text-transform: uppercase;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .cell img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .cell img.loaded { opacity: 1; }
+
+    /* skeleton shimmer */
+    .cell::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, var(--bg-card) 25%, rgba(255,255,255,0.03) 50%, var(--bg-card) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.6s infinite;
+      border-radius: inherit;
+      transition: opacity 0.3s;
+    }
+    .cell.loaded::before { opacity: 0; pointer-events: none; }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .item-date {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-style: italic;
+      font-weight: 300;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Empty ───────────────────────────────────────────────── */
+    #empty {
+      display: none;
+      text-align: center;
+      padding: 5rem 1rem;
+      color: var(--dim);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ── Lightbox ────────────────────────────────────────────── */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(4, 4, 10, 0.97);
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      overflow: hidden;
+      padding: 3.35rem 1rem 3.6rem;
+      box-sizing: border-box;
+    }
+    #lightbox.open {
+      display: flex;
+      animation: lightbox-fade-in 0.48s ease both;
+    }
+
+    #reading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1160;
+      background: rgba(4,4,10,0.96);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      padding: 2.5rem 1.1rem 1.3rem;
+      animation: fade-in 0.25s ease;
+    }
+    #reading-overlay.open { display: grid; place-items: center; }
+    #reading-overlay.revealing {
+      background:
+        radial-gradient(circle at 50% 48%, rgba(240,171,252,0.2), transparent 28%),
+        rgba(4,4,10,0.96);
+    }
+    #reading-panel {
+      width: min(100%, 520px);
+      max-height: calc(100vh - 3.8rem);
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      transition: transform 1.54s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.54s ease, filter 1.54s ease;
+    }
+    #reading-overlay.revealing #reading-panel {
+      transform: scale(1.045);
+      opacity: 0;
+      filter: blur(18px);
+    }
+    #reading-card {
+      position: relative;
+      min-height: min(620px, calc(100vh - 8.4rem));
+      border-radius: 22px;
+      border: 1px solid rgba(167,139,250,0.46);
+      background:
+        radial-gradient(circle at 50% 12%, rgba(240,171,252,0.11), transparent 34%),
+        linear-gradient(180deg, rgba(14,14,28,0.98), rgba(7,7,15,0.98));
+      box-shadow: 0 28px 90px rgba(0,0,0,0.68), 0 0 0 1px rgba(240,171,252,0.08);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(1.2rem, 5vw, 2rem);
+    }
+    #reading-close {
+      position: fixed;
+      top: 1.1rem;
+      right: 1.1rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      z-index: 1161;
+    }
+    #reading-close:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+    .reading-step {
+      animation: reading-rise 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .reading-mystery-reveal {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(240,171,252,0.2), transparent 34%),
+        linear-gradient(180deg, rgba(15,12,30,0.98), rgba(5,5,12,0.98));
+      animation: mystery-pulse 2s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .reading-mystery-reveal::before,
+    .reading-mystery-reveal::after {
+      content: '';
+      position: absolute;
+      inset: -20%;
+      background-image:
+        radial-gradient(circle, rgba(240,171,252,0.22) 1px, transparent 1px),
+        radial-gradient(circle, rgba(246,184,90,0.18) 1px, transparent 1px);
+      background-size: 14px 14px, 23px 23px;
+      animation: mystery-drift 2s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .reading-mystery-reveal::after {
+      transform: rotate(24deg) scale(1.1);
+      opacity: 0.7;
+      animation-direction: reverse;
+    }
+    .reading-mystery-mark {
+      position: relative;
+      z-index: 2;
+      font-family: var(--font-display);
+      font-size: clamp(5rem, 22vw, 9rem);
+      font-style: italic;
+      color: var(--pink);
+      text-shadow: 0 0 34px rgba(240,171,252,0.52), 0 0 70px rgba(246,184,90,0.18);
+      animation: mystery-mark-pop 2s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .reading-mystery-label {
+      position: absolute;
+      left: 1.2rem;
+      right: 1.2rem;
+      bottom: 1.2rem;
+      z-index: 2;
+      color: var(--link);
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      text-align: center;
+      text-transform: uppercase;
+      animation: reading-rise 0.38s ease both;
+    }
+    @keyframes mystery-pulse {
+      0% { opacity: 0; transform: scale(0.96); filter: blur(10px); }
+      42% { opacity: 1; transform: scale(1); filter: blur(0); }
+      100% { opacity: 0; transform: scale(1.08); filter: blur(16px); }
+    }
+    @keyframes mystery-drift {
+      from { transform: translateY(18px) scale(0.96); opacity: 0; }
+      45% { opacity: 1; }
+      to { transform: translateY(-24px) scale(1.08); opacity: 0; }
+    }
+    @keyframes mystery-mark-pop {
+      0% { opacity: 0; transform: scale(0.7) rotate(-8deg); }
+      42% { opacity: 1; transform: scale(1) rotate(0deg); }
+      100% { opacity: 0; transform: scale(1.2) rotate(6deg); }
+    }
+    @keyframes reading-rise {
+      from { opacity: 0; transform: translateY(14px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .reading-eyebrow {
+      color: var(--pink);
+      font-size: 0.62rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+    .reading-title {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 300;
+      font-size: clamp(2.25rem, 10vw, 4rem);
+      line-height: 0.98;
+      color: var(--text);
+      margin-bottom: 1rem;
+    }
+    .reading-copy {
+      color: var(--muted);
+      font-size: 0.94rem;
+      line-height: 1.65;
+      max-width: 34rem;
+    }
+    .reading-facts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.55rem;
+      margin-top: 1.25rem;
+    }
+    .reading-fact {
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.035);
+      border-radius: 10px;
+      padding: 0.74rem;
+    }
+    .reading-fact strong {
+      display: block;
+      color: var(--text);
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+    .reading-fact span {
+      display: block;
+      margin-top: 0.35rem;
+      color: var(--dim);
+      font-size: 0.58rem;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+    .reading-image-wrap {
+      position: absolute;
+      inset: 0;
+      background: #07070f;
+    }
+    .reading-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      animation: image-reveal 0.85s cubic-bezier(0.18, 0.8, 0.18, 1) both;
+    }
+    .reading-image-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(7,7,15,0.08), transparent 35%, rgba(7,7,15,0.64));
+      pointer-events: none;
+    }
+    @keyframes image-reveal {
+      from { opacity: 0; filter: blur(18px); transform: scale(1.06); }
+      to { opacity: 1; filter: blur(0); transform: scale(1); }
+    }
+    .reading-image-caption {
+      position: relative;
+      z-index: 2;
+      margin-top: auto;
+      align-self: flex-start;
+      max-width: 92%;
+      padding: 0.75rem 0.85rem;
+      border-radius: 10px;
+      border: 1px solid rgba(167,139,250,0.34);
+      background: rgba(7,7,15,0.72);
+      color: var(--text);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .reading-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .reading-nav button {
+      border: 1px solid var(--pink-line);
+      background: var(--pink-soft);
+      color: var(--pink);
+      border-radius: 8px;
+      padding: 0.55rem 0.8rem;
+      font-family: var(--font-ui);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .reading-nav button:disabled { opacity: 0.35; cursor: default; }
+    #reading-count {
+      color: var(--dim);
+      font-size: 0.64rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    #lb-img-wrap {
+      position: relative;
+      max-width: min(92vw, 520px);
+      max-height: calc(100vh - 7rem);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.68rem;
+      z-index: 1000;
+      margin: auto 0;
+    }
+    #lb-img {
+      max-width: 100%;
+      max-height: min(54vh, 620px);
+      object-fit: contain;
+      border-radius: 10px;
+      box-shadow: 0 32px 100px rgba(0,0,0,0.8);
+      display: block;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    #lb-img.loaded { opacity: 1; }
+    @media (max-height: 760px) {
+      #lb-img { max-height: 46vh; }
+      #lb-img-wrap { gap: 0.52rem; }
+    }
+    #lb-date {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-style: italic;
+      font-weight: 300;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    #lb-close {
+      position: fixed;
+      top: 1.25rem;
+      right: 1.25rem;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s;
+      z-index: 1001;
+    }
+    #lb-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+    .lb-nav {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s, opacity 0.2s;
+      z-index: 1001;
+    }
+    .lb-nav:hover { background: rgba(255,255,255,0.09); color: var(--text); }
+    .lb-nav:disabled { opacity: 0.15; cursor: default; }
+    #lb-prev { left: 1rem; }
+    #lb-next { right: 1rem; }
+
+    #lb-counter {
+      position: fixed;
+      bottom: 0.65rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    #lb-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+    }
+
+    /* ── Footer ──────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.68rem;
+      color: var(--dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--link); text-decoration: none; transition: color 0.2s; }
+    footer a:hover { color: var(--link-hover); }
+
+    /* ── Year stat under tagline ─────────────────────────────── */
+    .year-stat {
+      margin-top: 0.4rem;
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 300;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+      font-size: 0.95rem;
+    }
+    .year-stat .count {
+      color: var(--purple);
+      font-weight: 400;
+    }
+
+    /* ── Info button (twin of #cal-btn) ──────────────────────── */
+    #info-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.4rem 0.7rem 0.4rem 0.6rem;
+      border-radius: 8px;
+      border: 1px solid var(--pink-line);
+      background: var(--pink-soft);
+      color: var(--pink);
+      cursor: pointer;
+      font-size: 0.65rem;
+      font-family: var(--font-ui);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+      white-space: nowrap;
+    }
+    #info-btn:hover, #info-btn.active {
+      color: #f8d4ff;
+      border-color: rgba(240,171,252,0.64);
+      background: rgba(240,171,252,0.18);
+    }
+
+    /* ── About modal ─────────────────────────────────────────── */
+    #about-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1100;
+      background: rgba(4,4,10,0.94);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      overflow-y: auto;
+      padding: 4rem 1.25rem 5rem;
+      animation: fade-in 0.25s ease;
+    }
+    #about-overlay.open { display: block; }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes lightbox-fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    #about-panel {
+      max-width: 560px;
+      margin: 0 auto;
+      position: relative;
+    }
+    #about-close {
+      position: fixed;
+      top: 1.25rem;
+      right: 1.25rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: color 0.2s, border-color 0.2s;
+      z-index: 1101;
+    }
+    #about-close:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+
+    .about-eyebrow {
+      font-size: 0.65rem;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--pink);
+      margin-bottom: 0.6rem;
+    }
+    .about-section {
+      margin-bottom: 2.75rem;
+    }
+    .about-section h2 {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 300;
+      font-size: 1.7rem;
+      line-height: 1.2;
+      color: var(--text);
+      margin-bottom: 0.85rem;
+    }
+    .about-section p {
+      font-size: 0.92rem;
+      line-height: 1.65;
+      color: var(--muted);
+      letter-spacing: 0.005em;
+    }
+    .about-section p + p { margin-top: 0.85rem; }
+    .about-section p strong {
+      color: var(--text);
+      font-weight: 400;
+    }
+
+    /* Decoder grid — five score ranges */
+    .decoder {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      gap: 0.55rem 0.95rem;
+      align-items: center;
+      margin-top: 1rem;
+      padding: 1rem 1.1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .decoder .swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+    }
+    .decoder .range-name {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 400;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    .decoder .range-score {
+      color: var(--dim);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-variant-numeric: tabular-nums;
+    }
+    .decoder .range-prim {
+      color: var(--muted);
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    /* Tip + credit links */
+    .tip-block {
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+    .tip-block p {
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+    .tip-link {
+      display: inline-block;
+      margin-top: 0.85rem;
+      color: var(--link);
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid rgba(246,184,90,0.55);
+      padding-bottom: 1px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    button.tip-link {
+      border-top: 0;
+      border-right: 0;
+      border-left: 0;
+      background: transparent;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      padding-left: 0;
+      padding-right: 0;
+    }
+    .tip-link:hover {
+      color: var(--link-hover);
+      border-bottom-color: var(--link-hover);
+    }
+    #about-wrap-link {
+      color: #ff9ee8;
+      border-bottom-color: rgba(255,110,219,0.58);
+    }
+    #about-wrap-link:hover {
+      color: #ffd1f5;
+      border-bottom-color: rgba(255,155,236,0.88);
+    }
+    .credit-list {
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      line-height: 1.85;
+      color: var(--dim);
+    }
+    .credit-list a {
+      color: var(--link);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .credit-list a:hover {
+      color: var(--link-hover);
+      border-bottom-color: rgba(255,208,138,0.55);
+    }
+
+    /* Lightbox metadata (primitive · bracket) */
+    .lb-meta {
+      margin-top: 0.15rem;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+    .lb-reading {
+      max-width: 34rem;
+      margin-top: -0.25rem;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.65;
+      text-align: center;
+    }
+    .lb-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 0.1rem;
+      margin-bottom: 2.15rem;
+    }
+    .lb-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.48rem 0.72rem;
+      border-radius: 8px;
+      border: 1px solid var(--pink-line);
+      background: var(--pink-soft);
+      color: var(--pink);
+      cursor: pointer;
+      font-family: var(--font-ui);
+      font-size: 0.64rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: background 0.18s, border-color 0.18s, color 0.18s;
+    }
+    .lb-action:hover {
+      background: rgba(240,171,252,0.18);
+      border-color: rgba(240,171,252,0.64);
+      color: #f8d4ff;
+    }
+
+    /* ── Trailer card inside the About modal ─────────────────── */
+    .trailer-card {
+      margin: 0 auto 2.75rem;
+      max-width: 320px;            /* matches a comfortable 9:16 portrait */
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(167,139,250,0.25);
+      background: var(--bg-card);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5),
+                  0 0 0 1px rgba(167,139,250,0.08);
+      position: relative;
+    }
+    .trailer-card video {
+      display: block;
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      object-fit: cover;
+      background: #07070f;
+    }
+    .trailer-watch {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.9rem 1rem;
+      color: var(--link);
+      text-decoration: none;
+      font-size: 0.78rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      border-top: 1px solid rgba(167,139,250,0.18);
+      background: rgba(167,139,250,0.04);
+      transition: background 0.2s, color 0.2s;
+    }
+    .trailer-watch:hover {
+      background: rgba(167,139,250,0.12);
+      color: var(--link-hover);
+    }
+    .trailer-watch svg { flex-shrink: 0; }
+
+    /* ── Highlights modal ────────────────────────────────────── */
+    #wrap-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1120;
+      background: rgba(4,4,10,0.96);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      overflow: hidden;
+      padding: 2.75rem 1.25rem 1.4rem;
+      animation: fade-in 0.25s ease;
+    }
+    #wrap-overlay.open { display: block; }
+    #wrap-panel {
+      max-width: 480px;
+      margin: 0 auto;
+      height: calc(100vh - 4.15rem);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    #wrap-slide {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: grid;
+      place-items: center;
+    }
+    #wrap-close {
+      position: fixed;
+      top: 1.25rem;
+      right: 1.25rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      z-index: 1121;
+    }
+    #wrap-close:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+    .wrap-card {
+      width: min(100%, calc((100vh - 8.9rem) * 0.8));
+      aspect-ratio: 4 / 5;
+      max-height: calc(100vh - 8.9rem);
+      min-height: 0;
+      border-radius: 18px;
+      border: 1px solid rgba(167,139,250,0.42);
+      background: linear-gradient(180deg, rgba(14,14,28,0.98), rgba(7,7,15,0.98));
+      box-shadow: 0 28px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(240,171,252,0.08);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .wrap-hero {
+      position: relative;
+      height: auto;
+      min-height: 0;
+      background: #07070f;
+      overflow: hidden;
+      flex: 1 1 auto;
+    }
+    .wrap-hero img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .wrap-hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(7,7,15,0.06), rgba(7,7,15,0.78));
+      pointer-events: none;
+    }
+    .wrap-content {
+      padding: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      flex: 0 0 auto;
+      min-height: 0;
+      overflow-y: auto;
+    }
+    .wrap-card.no-image .wrap-content {
+      flex: 1 1 auto;
+      justify-content: center;
+      padding: 1.35rem;
+    }
+    .wrap-card.no-image .wrap-stat-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .wrap-card.no-image .wrap-stat-grid.full-width {
+      grid-template-columns: 1fr;
+    }
+    .wrap-eyebrow {
+      color: var(--pink);
+      font-size: 0.64rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+    .wrap-card h2 {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 300;
+      font-size: 2rem;
+      line-height: 1.05;
+      color: var(--text);
+    }
+    .wrap-copy {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    .wrap-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+    .wrap-stat {
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.035);
+      border-radius: 10px;
+      padding: 0.66rem;
+    }
+    .wrap-stat strong {
+      display: block;
+      color: var(--text);
+      font-size: 1.12rem;
+      line-height: 1;
+    }
+    .wrap-stat span {
+      display: block;
+      margin-top: 0.35rem;
+      color: var(--dim);
+      font-size: 0.58rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .wrap-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .wrap-bar-row {
+      display: grid;
+      grid-template-columns: 74px 1fr 44px;
+      align-items: center;
+      gap: 0.7rem;
+      color: var(--muted);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .wrap-bar-track {
+      height: 8px;
+      border-radius: 99px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .wrap-bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      min-width: 2px;
+    }
+    .wrap-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+      flex-wrap: wrap;
+      flex: 0 0 auto;
+    }
+    .wrap-nav button {
+      border: 1px solid var(--pink-line);
+      background: var(--pink-soft);
+      color: var(--pink);
+      border-radius: 8px;
+      padding: 0.55rem 0.8rem;
+      font-family: var(--font-ui);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    #wrap-next.wrap-love {
+      border-color: rgba(246,184,90,0.64);
+      background: rgba(246,184,90,0.12);
+      color: var(--link);
+      min-width: 96px;
+      justify-content: center;
+      text-align: center;
+    }
+    #wrap-next.wrap-love:hover {
+      border-color: rgba(255,208,138,0.86);
+      background: rgba(246,184,90,0.2);
+      color: var(--link-hover);
+    }
+    .wrap-nav button:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+    #wrap-count {
+      color: var(--dim);
+      font-size: 0.64rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    #love-popover {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1140;
+      place-items: center;
+      padding: 1.25rem;
+      background: rgba(4,4,10,0.62);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    #love-popover.open { display: grid; }
+    .love-card {
+      width: min(100%, 390px);
+      border: 1px solid rgba(246,184,90,0.5);
+      border-radius: 18px;
+      background: rgba(14,14,28,0.96);
+      box-shadow: 0 22px 70px rgba(0,0,0,0.58), 0 0 0 1px rgba(246,184,90,0.08);
+      padding: 1.35rem;
+      color: var(--text);
+    }
+    .love-card h2 {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 300;
+      font-size: 2rem;
+      line-height: 1;
+      text-align: center;
+    }
+    .love-card p {
+      margin-top: 0.7rem;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.55;
+    }
+    .love-actions {
+      display: grid;
+      gap: 0.6rem;
+      margin-top: 1.1rem;
+    }
+    .love-actions a,
+    .love-actions button {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 8px;
+      border: 1px solid rgba(167,139,250,0.36);
+      background: rgba(167,139,250,0.1);
+      color: var(--pink);
+      min-height: 42px;
+      font-family: var(--font-ui);
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .love-actions a:first-child {
+      border-color: rgba(246,184,90,0.62);
+      background: rgba(246,184,90,0.14);
+      color: var(--link);
+    }
+    @media (max-width: 520px) {
+      .wrap-card h2 { font-size: 1.65rem; }
+      .wrap-stat-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── How it works interactive modal ─────────────────────── */
+    #how-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1140;
+      background: rgba(4,4,10,0.94);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      padding: 2.5rem 1.25rem;
+      overflow: auto;
+      animation: fade-in 0.25s ease;
+    }
+    #how-overlay.open { display: grid; place-items: center; }
+    #how-panel {
+      width: min(100%, 980px);
+      border: 1px solid rgba(167,139,250,0.36);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(14,14,28,0.98), rgba(8,8,18,0.98));
+      box-shadow: 0 34px 120px rgba(0,0,0,0.75);
+      padding: clamp(1rem, 3vw, 1.45rem);
+    }
+    #how-close {
+      position: fixed;
+      top: 1.25rem;
+      right: 1.25rem;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      cursor: pointer;
+      font: 0.9rem var(--font-ui);
+    }
+    #how-close:hover { color: var(--text); border-color: rgba(255,255,255,0.24); }
+    .how-head {
+      display: grid;
+      gap: 0.55rem;
+      margin-bottom: 1.15rem;
+    }
+    .how-eyebrow {
+      color: var(--link);
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .how-head h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2.25rem, 7vw, 4.2rem);
+      font-style: italic;
+      font-weight: 300;
+      line-height: 0.95;
+    }
+    .how-head p {
+      max-width: 48rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.65;
+    }
+    .how-stage {
+      display: grid;
+      grid-template-columns: minmax(260px, 0.78fr) minmax(0, 1.22fr);
+      gap: clamp(1rem, 3vw, 1.45rem);
+      align-items: stretch;
+    }
+    .how-controls {
+      display: grid;
+      align-content: start;
+      gap: 0.78rem;
+      padding: 0.85rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.035);
+    }
+    .how-control {
+      display: grid;
+      gap: 0.42rem;
+      padding: 0.72rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      background: rgba(5,5,14,0.5);
+    }
+    .how-control label,
+    .how-meta-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      color: var(--purple);
+      font-size: 0.62rem;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+    .how-control label span:last-child {
+      color: var(--link);
+    }
+    .how-control input {
+      width: 100%;
+      accent-color: var(--pink);
+    }
+    .how-control small {
+      color: var(--dim);
+      font-size: 0.68rem;
+      line-height: 1.45;
+    }
+    .how-reset {
+      width: 100%;
+      padding: 0.68rem;
+      border: 1px solid rgba(240,171,252,0.38);
+      border-radius: 10px;
+      background: rgba(240,171,252,0.1);
+      color: var(--pink);
+      cursor: pointer;
+      font: 0.65rem var(--font-ui);
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+    .how-preview {
+      min-height: 540px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(167,139,250,0.32);
+      border-radius: 18px;
+      background: #05050d;
+      isolation: isolate;
+    }
+    .how-preview img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transform: scale(1.025);
+      transition: opacity 0.38s ease, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .how-preview img.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .how-preview::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(180deg, transparent 36%, rgba(4,4,10,0.18) 54%, rgba(4,4,10,0.9) 100%);
+      pointer-events: none;
+    }
+    .how-info {
+      position: absolute;
+      left: clamp(0.9rem, 3vw, 1.25rem);
+      right: clamp(0.9rem, 3vw, 1.25rem);
+      bottom: clamp(0.9rem, 3vw, 1.25rem);
+      z-index: 2;
+      display: grid;
+      gap: 0.7rem;
+    }
+    .how-pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .how-pill {
+      width: fit-content;
+      max-width: 100%;
+      padding: 0.45rem 0.58rem;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 7px;
+      background: rgba(10,10,22,0.76);
+      color: var(--text);
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .how-title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 6vw, 3.8rem);
+      font-style: italic;
+      font-weight: 300;
+      line-height: 0.95;
+    }
+    .how-reading {
+      max-width: 42rem;
+      color: #d8d3f6;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      text-shadow: 0 1px 20px rgba(0,0,0,0.55);
+    }
+    .how-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      align-items: center;
+    }
+    .how-open-entry {
+      border: 1px solid rgba(246,184,90,0.56);
+      border-radius: 9px;
+      background: rgba(246,184,90,0.13);
+      color: var(--link);
+      cursor: pointer;
+      padding: 0.58rem 0.7rem;
+      font: 0.62rem var(--font-ui);
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+    .how-open-entry:hover {
+      border-color: rgba(246,184,90,0.86);
+      color: var(--link-hover);
+    }
+    .how-match-note {
+      color: var(--dim);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    @media (max-width: 820px) {
+      #how-overlay { padding: 3.6rem 1rem 1.2rem; align-items: start; }
+      .how-stage { grid-template-columns: 1fr; }
+      .how-preview { min-height: min(78vh, 620px); }
+    }
+    @media (max-width: 560px) {
+      #how-panel { border-radius: 16px; }
+      .how-controls { grid-template-columns: 1fr; }
+      .how-preview { min-height: 560px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Dream Art</h1>
+    <p>One dreamscape per night, visualized from data.</p>
+    <nav>
+      <a href="https://manu.vision">← manu.vision</a>
+      <div class="nav-info-row">
+        <button id="info-btn" aria-label="About this project">
+          About this project
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+            <circle cx="7.5" cy="7.5" r="6.25" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M7.5 6.5V11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <circle cx="7.5" cy="4.3" r="0.75" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+
+  </header>
+
+  <!-- ── About modal ────────────────────────────────────────── -->
+  <div id="about-overlay" role="dialog" aria-modal="true" aria-labelledby="about-title" hidden>
+    <button id="about-close" aria-label="Close">✕</button>
+    <div id="about-panel">
+
+      <section class="about-section">
+        <p class="about-eyebrow">One Dreamscape A Night</p>
+        <h2 id="about-title">On May 23rd 2025, I started recording and turning my sleep data into dreamscapes.</h2>
+        <p>
+          Each image is a small translation of one night: a private biometric signal turned into
+          shape, color, material, and atmosphere. The gallery keeps the sleep score visible, while
+          the more intimate measurements stay abstracted inside the artwork.
+        </p>
+      </section>
+
+      <!-- Trailer (lazy-loaded — `src` is attached the first time the modal
+           opens, so the 13 MB file never touches initial page load). -->
+      <div class="trailer-card" id="trailer-card">
+        <video
+          id="trailer-video"
+          muted
+          loop
+          playsinline
+          controls
+          preload="none"
+          poster=""
+          aria-label="Dream Art teaser video"
+        ></video>
+        <a class="trailer-watch"
+           href="https://www.instagram.com/manu.vision/reel/DYptbRsRbM_/"
+           target="_blank" rel="noopener"
+           aria-label="Watch the trailer on Instagram">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <rect x="1" y="1" width="11" height="11" rx="3" stroke="currentColor" stroke-width="1.2"/>
+            <circle cx="6.5" cy="6.5" r="2.4" stroke="currentColor" stroke-width="1.2"/>
+            <circle cx="9.5" cy="3.5" r="0.65" fill="currentColor"/>
+          </svg>
+          Watch on Instagram
+        </a>
+      </div>
+
+      <section class="about-section">
+        <h2>How to read it</h2>
+        <p>The sleep score that morning chooses the shape, and the color family:</p>
+        <div class="decoder" aria-label="Score decoder">
+          <span class="swatch" style="background:#C8613A"></span>
+          <span class="range-name">Ember</span>
+          <span class="range-score">0–40</span>
+          <span class="range-prim">Pyramid</span>
+
+          <span class="swatch" style="background:#D4A853"></span>
+          <span class="range-name">Ochre</span>
+          <span class="range-score">41–55</span>
+          <span class="range-prim">Cube</span>
+
+          <span class="swatch" style="background:#4D7C5A"></span>
+          <span class="range-name">Moss</span>
+          <span class="range-score">56–70</span>
+          <span class="range-prim">Cylinder</span>
+
+          <span class="swatch" style="background:#3A78B8"></span>
+          <span class="range-name">Slate</span>
+          <span class="range-score">71–85</span>
+          <span class="range-prim">Torus</span>
+
+          <span class="swatch" style="background:#8B5CF6"></span>
+          <span class="range-name">Aurora</span>
+          <span class="range-score">86–100</span>
+          <span class="range-prim">Sphere</span>
+        </div>
+        <p style="margin-top: 1rem; font-size: 0.82rem;">
+          Sleep readiness, total sleep, deep sleep, REM (Rapid Eye Movement), and HRV (Heart Rate Variability) then shape the composition: amount (1 to 5), scale, clustering,
+          rotation, and how the primitives float. The material (ceramic with marble strikes, glossy metal with oxidation, wood with
+          moss and flowers, translucent and textured polymer, or glass with a particle swarm) is chosen by date, so the same
+          biometrics on a different night would still feel like a different piece.
+        </p>
+      </section>
+
+      <section class="about-section">
+        <h2>Why</h2>
+        <p>
+          This digital gallery was made exactly a year after the start of the project, in memory of my mother, Nathalie Déglas (1964-2026), an art teacher who loved color, geometry, and experiment,
+          and in support of those still living with diabetes, including my mother-in-law. A portion
+          of any tips goes to diabetes research.
+        </p>
+        <p>
+          Some weeks are missing. That's part of the year too.
+        </p>
+        <button class="tip-link" id="about-wrap-link" type="button">
+          Open the highlights →
+        </button>
+
+        <div class="tip-block">
+          <p>
+            If this resonates and you'd like to support the work, a small tip helps me keep building.
+          </p>
+          <a class="tip-link" href="https://www.paypal.com/paypalme/manuelsainsily" target="_blank" rel="noopener">
+            Tip the artist →
+          </a>
+        </div>
+
+        <div class="credit-list">
+          <div>An ongoing art project by <a href="https://manu.vision" target="_blank" rel="noopener">Manuel Sainsily</a>, Designer & Creative Technologist.</div>
+          <div>Inspired by the work of an artist friend (<a href="https://www.instagram.com/josue_ibanez/" target="_blank" rel="noopener">Josue Ibañez</a>) exploring sleep as creative medium.</div>
+          <div>A new dream is added every morning since May 23rd, 2025. Follow along on <a href="https://www.instagram.com/manu.vision/" target="_blank" rel="noopener">Instagram</a>.</div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- ── Heatmap ──────────────────────────────────────────── -->
+  <section id="heatmap-section">
+    <div id="heatmap-title">Every dream, since May 23, 2025</div>
+    <div id="heatmap-wrap">
+      <div id="heatmap-month-labels"></div>
+      <div id="heatmap-grid"></div>
+    </div>
+    <div id="heatmap-legend">
+      <span class="hm-legend-label">Sleep score</span>
+      <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#C8613A"></div>Poor</div>
+      <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#D4A853"></div>Fair</div>
+      <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#4D7C5A"></div>Moderate</div>
+      <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#3A78B8"></div>Good</div>
+      <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#8B5CF6"></div>Optimal</div>
+    </div>
+  </section>
+  <div id="hm-tooltip" aria-hidden="true"></div>
+
+  <!-- ── Gallery controls (filter bar above grid) ────────── -->
+  <div id="gallery-controls">
+    <button id="cal-btn" aria-label="Filter by date">
+      Choose a date
+      <svg width="13" height="13" viewBox="0 0 15 15" fill="none">
+        <rect x="1" y="2.5" width="13" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M5 1V4M10 1V4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M1 6H14" stroke="currentColor" stroke-width="1.2"/>
+        <rect x="3.5" y="8" width="2" height="2" rx="0.5" fill="currentColor" opacity="0.7"/>
+        <rect x="6.5" y="8" width="2" height="2" rx="0.5" fill="currentColor" opacity="0.5"/>
+        <rect x="9.5" y="8" width="2" height="2" rx="0.5" fill="currentColor" opacity="0.3"/>
+      </svg>
+    </button>
+    <button id="sort-btn" aria-label="Sort gallery" aria-expanded="false">
+      Sort: newest
+      <svg width="13" height="13" viewBox="0 0 15 15" fill="none">
+        <path d="M4 2.5V12.5M4 12.5L1.8 10.3M4 12.5L6.2 10.3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8.5 4H13M8.5 7.5H12M8.5 11H11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <button id="wrap-btn" aria-label="Open highlights">
+      Highlights
+      <svg width="13" height="13" viewBox="0 0 15 15" fill="none">
+        <path d="M2.5 11.5V3.5C2.5 2.7 3.1 2.1 3.9 2.1H11.1C11.9 2.1 12.5 2.7 12.5 3.5V11.5C12.5 12.3 11.9 12.9 11.1 12.9H3.9C3.1 12.9 2.5 12.3 2.5 11.5Z" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M5 5H10M5 7.5H10M5 10H7.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <button id="how-btn" aria-label="Open how it works">
+      How it works
+      <svg width="13" height="13" viewBox="0 0 15 15" fill="none">
+        <path d="M2.2 10.8C3.4 8.1 5.1 6.4 7.5 6.4C9.9 6.4 11.6 8.1 12.8 10.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M4 4.2H11M5.5 2.2H9.5M6.2 12.5H8.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        <circle cx="7.5" cy="6.4" r="1.35" stroke="currentColor" stroke-width="1.2"/>
+      </svg>
+    </button>
+    <div id="filter-pill">
+      <span id="filter-label"></span>
+      <button id="filter-clear" aria-label="Clear filter">×</button>
+    </div>
+
+    <!-- Calendar panel — drops from this controls bar -->
+    <div id="cal-panel" role="dialog" aria-label="Filter by date">
+      <div class="cal-tabs">
+        <button class="cal-tab active" data-tab="single">Single Date</button>
+        <button class="cal-tab" data-tab="range">Date Range</button>
+      </div>
+
+      <div class="cal-section active" id="tab-single">
+        <label class="cal-label">Select date</label>
+        <input type="date" class="cal-input" id="single-date" />
+        <button class="cal-apply" id="single-apply">Filter →</button>
+      </div>
+
+      <div class="cal-section" id="tab-range">
+        <label class="cal-label">From</label>
+        <input type="date" class="cal-input" id="range-from" />
+        <label class="cal-label">To</label>
+        <input type="date" class="cal-input" id="range-to" />
+        <button class="cal-apply" id="range-apply">Filter →</button>
+      </div>
+
+      <button class="cal-clear" id="cal-clear-btn">Clear filter ×</button>
+    </div>
+    <div id="sort-panel" role="menu" aria-label="Sort gallery">
+      <button class="sort-option active" data-sort="newest" role="menuitem">Newest first</button>
+      <button class="sort-option" data-sort="oldest" role="menuitem">Oldest first</button>
+      <button class="sort-option" data-sort="score-high" role="menuitem">Highest score</button>
+      <button class="sort-option" data-sort="score-low" role="menuitem">Lowest score</button>
+    </div>
+  </div>
+
+  <div id="how-overlay" role="dialog" aria-modal="true" aria-labelledby="how-title" hidden>
+    <button id="how-close" aria-label="Close">✕</button>
+    <div id="how-panel">
+      <div class="how-head">
+        <p class="how-eyebrow">Interactive system map</p>
+        <h2 id="how-title">How the dreamscapes change</h2>
+        <p>
+          Move the sleep signals to browse real images from the archive. Nothing is generated here:
+          each slider finds the closest preloaded dreamscape and reveals how score, rest, rhythm,
+          and recovery shape the visual language.
+        </p>
+      </div>
+
+      <div class="how-stage">
+        <div class="how-controls" id="how-controls">
+          <div class="how-control">
+            <label for="how-score">Sleep score <span id="how-score-value">72</span></label>
+            <input id="how-score" data-how-key="score" type="range" min="0" max="100" value="72" />
+            <small>Chooses the shape family and dominant color range.</small>
+          </div>
+          <div class="how-control">
+            <label for="how-duration">Sleep length <span id="how-duration-value">64</span></label>
+            <input id="how-duration" data-how-key="duration" type="range" min="0" max="100" value="64" />
+            <small>Pulls the composition toward smaller or larger forms.</small>
+          </div>
+          <div class="how-control">
+            <label for="how-rem">REM rhythm <span id="how-rem-value">58</span></label>
+            <input id="how-rem" data-how-key="rem" type="range" min="0" max="100" value="58" />
+            <small>Influences rotation, looseness, and motion.</small>
+          </div>
+          <div class="how-control">
+            <label for="how-recovery">Recovery <span id="how-recovery-value">70</span></label>
+            <input id="how-recovery" data-how-key="recovery" type="range" min="0" max="100" value="70" />
+            <small>Changes how calmly the objects float in the frame.</small>
+          </div>
+          <div class="how-control">
+            <label for="how-hrv">HRV steadiness <span id="how-hrv-value">52</span></label>
+            <input id="how-hrv" data-how-key="hrv" type="range" min="0" max="100" value="52" />
+            <small>Guides clustering, spacing, and visual tension.</small>
+          </div>
+          <button class="how-reset" id="how-reset" type="button">Reset signals</button>
+        </div>
+
+        <div class="how-preview" id="how-preview" aria-live="polite">
+          <img id="how-img-a" alt="" />
+          <img id="how-img-b" alt="" />
+          <div class="how-info">
+            <div class="how-pill-row">
+              <span class="how-pill" id="how-date">Archive match</span>
+              <span class="how-pill" id="how-score-pill">Score --</span>
+              <span class="how-pill" id="how-shape">Shape</span>
+            </div>
+            <h3 class="how-title" id="how-match-title">Move the sliders</h3>
+            <p class="how-reading" id="how-reading">The archive will surface the closest matching dreamscape.</p>
+            <div class="how-actions">
+              <button class="how-open-entry" id="how-open-entry" type="button">Open entry</button>
+              <span class="how-match-note" id="how-match-note">Preloading archive matches</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="wrap-overlay" role="dialog" aria-modal="true" aria-label="Highlights" hidden>
+    <button id="wrap-close" aria-label="Close">✕</button>
+    <div id="wrap-panel">
+      <div id="wrap-slide"></div>
+      <div class="wrap-nav">
+        <button id="wrap-prev">Previous</button>
+        <span id="wrap-count">0 / 0</span>
+        <button id="wrap-next">Next</button>
+      </div>
+    </div>
+    <div id="love-popover" role="dialog" aria-modal="true" aria-labelledby="love-title" hidden>
+      <div class="love-card">
+        <h2 id="love-title">❤️ <span id="love-count">0</span></h2>
+        <p>Enjoying this project? Consider tipping the artist.</p>
+        <div class="love-actions">
+          <a href="https://www.paypal.com/paypalme/manuelsainsily" target="_blank" rel="noopener">Tip the artist</a>
+          <button id="love-learn" type="button">Learn more</button>
+          <button id="love-share-wrap" type="button">Share highlights</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <div id="grid"></div>
+    <div id="empty">No artworks found</div>
+  </main>
+
+  <div id="reading-overlay" role="dialog" aria-modal="true" aria-label="Today’s dreamscape reading" hidden>
+    <button id="reading-close" aria-label="Close">✕</button>
+    <div id="reading-panel">
+      <div id="reading-card"></div>
+      <div class="reading-nav">
+        <button id="reading-prev" type="button">Previous</button>
+        <span id="reading-count">0 / 0</span>
+        <button id="reading-next" type="button">Reveal</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
+    <div id="lb-backdrop"></div>
+    <button id="lb-close" aria-label="Close">✕</button>
+    <button class="lb-nav" id="lb-prev" aria-label="Previous">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div id="lb-img-wrap">
+      <img id="lb-img" src="" alt="Dream art" />
+      <div id="lb-date"></div>
+      <div class="lb-meta" id="lb-meta"></div>
+      <div class="lb-reading" id="lb-reading"></div>
+      <div class="lb-actions">
+        <button class="lb-action" id="lb-copy" type="button">Copy link</button>
+        <button class="lb-action" id="lb-love" type="button" aria-label="Love this dream">❤️ 0</button>
+        <button class="lb-action" id="lb-card" type="button">Save card</button>
+      </div>
+    </div>
+    <button class="lb-nav" id="lb-next" aria-label="Next">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M5 2L10 7L5 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div id="lb-counter"></div>
+  </div>
+
+  <footer>
+    <a href="https://manu.vision">manu.vision</a>
+  </footer>
+
+  <script>
+    const API = 'https://dreamart.manu.vision/api/gallery/public';
+    const LOVE_API = 'https://dreamart.manu.vision/api/love';
+
+    // Sleep-score → range color, mirrors getScoreColor() in lib/prompt.ts so
+    // the public gallery's "May 21 · 92" tints exactly match the private app.
+    function scoreColor(score) {
+      if (score == null) return null;
+      if (score >= 86) return '#8B5CF6'; // Aurora — violet
+      if (score >= 71) return '#3A78B8'; // Slate — blue
+      if (score >= 56) return '#4D7C5A'; // Moss — green
+      if (score >= 41) return '#D4A853'; // Ochre — amber
+      return '#C8613A';                  // Ember — rust
+    }
+
+    // Bracket label + primitive shape from sleep score — mirrors lib/prompt.ts
+    function scoreMeta(score) {
+      if (score == null) return null;
+      if (score >= 86) return { label: 'Optimal',  primitive: 'Sphere',   palette: 'Aurora' };
+      if (score >= 71) return { label: 'Good',     primitive: 'Torus',    palette: 'Slate'  };
+      if (score >= 56) return { label: 'Moderate', primitive: 'Cylinder', palette: 'Moss'   };
+      if (score >= 41) return { label: 'Fair',     primitive: 'Cube',     palette: 'Ochre'  };
+      return            { label: 'Poor',     primitive: 'Pyramid',  palette: 'Ember'  };
+    }
+
+    function dreamReading(item) {
+      if (item.reading) return item.reading;
+      const meta = scoreMeta(item.sleepScore);
+      if (!meta) {
+        return 'This dreamscape keeps its score quiet, leaving the night to read as pure form and atmosphere.';
+      }
+      const passages = {
+        Aurora: 'This night becomes aurora spheres: open, buoyant forms that suggest ease, lift, and a luminous sense of restoration.',
+        Slate: 'This night becomes slate toruses: smooth loops that hold the composition in a steady rhythm with a calm sense of return.',
+        Moss: 'This night becomes moss cylinders: grounded vertical forms that gather like quiet markers across a balanced, organic field.',
+        Ochre: 'This night becomes ochre cubes: a warmer, more compact architecture where recovery feels deliberate and held close.',
+        Ember: 'This night becomes ember pyramids: sharper forms that turn a harder night into something alert, angular, and still alive.'
+      };
+      return `${passages[meta.palette]} The more intimate signals stay abstracted: length shapes the scale, deeper rest adds weight, dream-rich sleep loosens the motion, and recovery changes how high the forms seem to float.`;
+    }
+
+    function clamp01(value) {
+      return Math.max(0, Math.min(1, value));
+    }
+
+    function seededFraction(seed) {
+      let hash = 2166136261;
+      const text = String(seed ?? '');
+      for (let i = 0; i < text.length; i += 1) {
+        hash ^= text.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return ((hash >>> 0) % 1000) / 1000;
+    }
+
+    function numericMetric(item, keys, fallback) {
+      for (const key of keys) {
+        const value = Number(item?.[key]);
+        if (Number.isFinite(value)) return value;
+      }
+      return fallback;
+    }
+
+    function normalizeMetric(value, min, max) {
+      if (!Number.isFinite(value)) return 0.5;
+      return clamp01((value - min) / (max - min));
+    }
+
+    function howFingerprint(item) {
+      const score = Number.isFinite(Number(item?.sleepScore)) ? Number(item.sleepScore) : 72;
+      const seed = item?.date || item?.label || score;
+      const durationFallback = 50 + (score - 50) * 0.22 + (seededFraction(`${seed}:duration`) - 0.5) * 42;
+      const remFallback = 50 + (seededFraction(`${seed}:rem`) - 0.5) * 76;
+      const recoveryFallback = 50 + (score - 50) * 0.42 + (seededFraction(`${seed}:recovery`) - 0.5) * 32;
+      const hrvFallback = 50 + (seededFraction(`${seed}:hrv`) - 0.5) * 82;
+      const duration = numericMetric(item, ['durationScore', 'sleepDurationScore', 'totalSleepScore', 'totalSleep'], durationFallback);
+      const rem = numericMetric(item, ['remScore', 'remSleepScore', 'remSleep'], remFallback);
+      const recovery = numericMetric(item, ['readinessScore', 'recoveryScore', 'readiness', 'recovery'], recoveryFallback);
+      const hrv = numericMetric(item, ['hrvScore', 'hrvBalanceScore', 'hrv', 'averageHrv'], hrvFallback);
+
+      return {
+        score: clamp01(score / 100),
+        duration: normalizeMetric(duration, 0, 100),
+        rem: normalizeMetric(rem, 0, 100),
+        recovery: normalizeMetric(recovery, 0, 100),
+        hrv: normalizeMetric(hrv, 0, 100)
+      };
+    }
+
+    function buildHowPool(items) {
+      return sortItems(items)
+        .filter(item => item.imageData && Number.isFinite(Number(item.sleepScore)))
+        .map(item => ({ item, fingerprint: howFingerprint(item) }));
+    }
+
+    function howTargetFingerprint() {
+      return {
+        score: howTarget.score / 100,
+        duration: howTarget.duration / 100,
+        rem: howTarget.rem / 100,
+        recovery: howTarget.recovery / 100,
+        hrv: howTarget.hrv / 100
+      };
+    }
+
+    function howDistance(a, b) {
+      return (
+        Math.abs(a.score - b.score) * 2.8 +
+        Math.abs(a.duration - b.duration) * 0.86 +
+        Math.abs(a.rem - b.rem) * 0.72 +
+        Math.abs(a.recovery - b.recovery) * 0.94 +
+        Math.abs(a.hrv - b.hrv) * 0.72
+      );
+    }
+
+    function howClosestMatch(target) {
+      const candidates = howPool.length ? howPool : buildHowPool(allItems);
+      if (!candidates.length) return null;
+      const loaded = candidates.filter(entry => howLoadedImages.has(entry.item.imageData));
+      const source = loaded.length ? loaded : candidates;
+      return source
+        .map(entry => ({ ...entry, distance: howDistance(target, entry.fingerprint) }))
+        .sort((a, b) => a.distance - b.distance || dateValue(b.item) - dateValue(a.item))[0]?.item || null;
+    }
+
+    function preloadHowImages() {
+      if (howPreloadStarted || !allItems.length) return;
+      howPreloadStarted = true;
+      howPool = buildHowPool(allItems);
+      howPreloadedCount = 0;
+      howPool.forEach(({ item }) => {
+        const img = new Image();
+        img.decoding = 'async';
+        img.onload = () => {
+          howLoadedImages.add(item.imageData);
+          howPreloadedCount += 1;
+          if (howOverlay.classList.contains('open')) updateHowMatch(true);
+        };
+        img.onerror = () => {
+          howPreloadedCount += 1;
+        };
+        img.src = item.imageData;
+      });
+    }
+
+    function scheduleHowPreload() {
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(preloadHowImages, { timeout: 2500 });
+      } else {
+        window.setTimeout(preloadHowImages, 1200);
+      }
+    }
+
+    function setHowImage(item) {
+      if (!item || item === howCurrentItem) return;
+      const nextImg = howShowingA ? howImgB : howImgA;
+      const prevImg = howShowingA ? howImgA : howImgB;
+      nextImg.alt = item.label || 'Dreamscape archive match';
+      nextImg.src = item.imageData;
+      nextImg.classList.add('active');
+      prevImg.classList.remove('active');
+      howShowingA = !howShowingA;
+      howCurrentItem = item;
+    }
+
+    function describeHowMatch(item) {
+      const meta = scoreMeta(item?.sleepScore);
+      if (!meta) return 'The archive match keeps the signal abstract, letting form and atmosphere carry the reading.';
+      const score = Number(item.sleepScore);
+      const tone = score >= 86 ? 'luminous' : score >= 71 ? 'clear' : score >= 56 ? 'grounded' : score >= 41 ? 'compact' : 'alert';
+      return `The nearest archive match turns this signal into ${meta.palette.toLowerCase()} ${meta.primitive.toLowerCase()} forms: ${tone} in color, with scale, rhythm, spacing, and suspension shaped by the other sliders.`;
+    }
+
+    function updateHowControlLabels() {
+      Object.keys(howTarget).forEach(key => {
+        const el = document.getElementById(`how-${key}-value`);
+        if (el) el.textContent = howTarget[key];
+      });
+    }
+
+    function updateHowMatch(quiet = false) {
+      updateHowControlLabels();
+      const item = howClosestMatch(howTargetFingerprint());
+      if (!item) {
+        howMatchTitle.textContent = 'No archive match yet';
+        howReading.textContent = 'The gallery data is still loading.';
+        return;
+      }
+      const meta = scoreMeta(item.sleepScore);
+      const label = item.label || mysteryDateLabel(item);
+      howDate.textContent = label;
+      howScorePill.textContent = `Score ${item.sleepScore ?? '--'}`;
+      howScorePill.style.color = scoreColor(item.sleepScore) || '';
+      howShape.textContent = meta ? `${meta.palette} · ${meta.primitive}` : 'Dreamscape';
+      howMatchTitle.textContent = label;
+      howReading.textContent = item.reading || describeHowMatch(item);
+      const loaded = howLoadedImages.size;
+      const total = howPool.length || allItems.length;
+      howMatchNote.textContent = total ? `${loaded}/${total} archive matches preloaded` : 'Preparing archive matches';
+      if (!quiet || item !== howCurrentItem) setHowImage(item);
+    }
+
+    function openHowModal() {
+      preloadHowImages();
+      calPanel.classList.remove('open');
+      sortPanel.classList.remove('open');
+      howOverlay.hidden = false;
+      howOverlay.classList.add('open');
+      howBtn.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      updateHowMatch();
+    }
+
+    function closeHowModal() {
+      howOverlay.classList.remove('open');
+      howOverlay.hidden = true;
+      howBtn.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    function resetHowSignals() {
+      Object.assign(howTarget, {
+        score: 72,
+        duration: 64,
+        rem: 58,
+        recovery: 70,
+        hrv: 52
+      });
+      document.querySelectorAll('[data-how-key]').forEach(input => {
+        input.value = howTarget[input.dataset.howKey];
+      });
+      updateHowMatch();
+    }
+
+    function openHowEntry() {
+      if (!howCurrentItem) return;
+      const idx = displayed.findIndex(item => item.date === howCurrentItem.date);
+      closeHowModal();
+      if (idx >= 0) {
+        openLightbox(idx);
+        return;
+      }
+      displayed = sortItems(allItems);
+      const fallback = displayed.findIndex(item => item.date === howCurrentItem.date);
+      if (fallback >= 0) openLightbox(fallback);
+    }
+
+    function todayDreamscape() {
+      return sortItems(allItems)[0] || null;
+    }
+
+    function mysteryDateLabel(item) {
+      if (!item?.date) return 'Today';
+      return new Date(`${item.date}T12:00:00`).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+
+    function buildReadingSteps(item) {
+      const meta = scoreMeta(item.sleepScore);
+      const score = item.sleepScore != null ? item.sleepScore : 'quiet';
+      const palette = meta?.palette ?? 'Unknown';
+      const primitive = meta?.primitive ?? 'Form';
+      const range = meta?.label ?? 'Unscored';
+      return [
+        {
+          eyebrow: 'Today’s dreamscape',
+          title: 'Before The Image',
+          copy: `${mysteryDateLabel(item)} is hidden for a moment. Start with the signal: a sleep score of ${score}, translated into a ${palette.toLowerCase()} visual register.`,
+          facts: [
+            ['Date', mysteryDateLabel(item)],
+            ['Signal', `${range}${item.sleepScore != null ? ` · ${item.sleepScore}` : ''}`],
+          ],
+        },
+        {
+          eyebrow: 'How to read it',
+          title: `${palette} · ${primitive}`,
+          copy: meta
+            ? `The score chooses the visual family: ${palette.toLowerCase()} color and ${primitive.toLowerCase()} geometry. The intimate measurements stay abstracted inside scale, clustering, height, rotation, and atmosphere.`
+            : 'This night keeps its score quiet, leaving the dreamscape to be read through form, spacing, and atmosphere.',
+          facts: [
+            ['Palette', palette],
+            ['Primitive', primitive],
+          ],
+        },
+        {
+          eyebrow: 'Visual reading',
+          title: 'The Night In Words',
+          copy: dreamReading(item),
+          facts: null,
+        },
+      ];
+    }
+
+    function renderReadingStep() {
+      const step = readingSteps[readingIndex];
+      if (!step) return;
+
+      const facts = step.facts ? `
+        <div class="reading-facts">
+          ${step.facts.map(([label, value]) => `
+            <div class="reading-fact">
+              <strong>${escapeHtml(value)}</strong>
+              <span>${escapeHtml(label)}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : '';
+
+      if (step.image) {
+        readingCard.innerHTML = `
+          <div class="reading-image-wrap">
+            <img src="${escapeHtml(step.image)}" alt="${escapeHtml(step.title)}">
+          </div>
+          <div class="reading-image-caption reading-step">
+            <div class="reading-eyebrow">${escapeHtml(step.eyebrow)}</div>
+            <div class="reading-copy">${escapeHtml(step.copy)}</div>
+          </div>
+        `;
+      } else {
+        readingCard.innerHTML = `
+          <div class="reading-step">
+            <div class="reading-eyebrow">${escapeHtml(step.eyebrow)}</div>
+            <h2 class="reading-title">${escapeHtml(step.title)}</h2>
+            <p class="reading-copy">${escapeHtml(step.copy)}</p>
+            ${facts}
+          </div>
+        `;
+      }
+
+      readingCount.textContent = `${readingIndex + 1} / ${readingSteps.length}`;
+      readingPrev.disabled = readingIndex === 0;
+      readingNext.disabled = false;
+      readingNext.textContent = readingIndex === readingSteps.length - 1 ? 'Open entry' : 'Reveal';
+    }
+
+    function openReadingMode() {
+      readingItem = todayDreamscape();
+      if (!readingItem) return;
+      calPanel.classList.remove('open');
+      sortPanel.classList.remove('open');
+      updateSortUI();
+      readingSteps = buildReadingSteps(readingItem);
+      readingIndex = 0;
+      readingRevealing = false;
+      renderReadingStep();
+      readingOverlay.hidden = false;
+      readingOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeReadingMode() {
+      readingOverlay.classList.remove('open');
+      readingOverlay.classList.remove('revealing');
+      readingOverlay.hidden = true;
+      readingRevealing = false;
+      readingNext.disabled = false;
+      readingPrev.disabled = false;
+      document.body.style.overflow = '';
+    }
+
+    function openReadingEntry() {
+      closeReadingMode();
+      const idx = displayed.findIndex(item => item.date === readingItem?.date);
+      if (idx >= 0) {
+        openLightbox(idx);
+        return;
+      }
+      displayed = sortItems(allItems);
+      const fallback = displayed.findIndex(item => item.date === readingItem?.date);
+      if (fallback >= 0) openLightbox(fallback);
+    }
+
+    function revealReadingEntry() {
+      if (readingRevealing) return;
+      readingRevealing = true;
+      readingNext.disabled = true;
+      readingPrev.disabled = true;
+      readingOverlay.classList.add('revealing');
+      readingCard.innerHTML = `
+        <div class="reading-mystery-reveal">
+          <div class="reading-mystery-mark">?</div>
+          <div class="reading-mystery-label">Revealing the dreamscape</div>
+        </div>
+      `;
+      window.setTimeout(openReadingEntry, 2000);
+    }
+
+    function nextReadingStep() {
+      if (readingRevealing) return;
+      if (readingIndex < readingSteps.length - 1) {
+        readingIndex += 1;
+        renderReadingStep();
+        return;
+      }
+      revealReadingEntry();
+    }
+
+    function prevReadingStep() {
+      if (readingRevealing) return;
+      if (readingIndex > 0) {
+        readingIndex -= 1;
+        renderReadingStep();
+      }
+    }
+
+    function shareUrlFor(item) {
+      const base = `${location.origin}${location.pathname}${location.search}`;
+      return item && item.date ? `${base}#${item.date}` : base;
+    }
+
+    function loveTargetFor(item) {
+      return item && item.date ? `date:${item.date}` : null;
+    }
+
+    async function fetchLoveCount(target) {
+      const res = await fetch(`${LOVE_API}?target=${encodeURIComponent(target)}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('Could not fetch love count.');
+      const data = await res.json();
+      return Number(data.count) || 0;
+    }
+
+    async function incrementLove(target) {
+      const res = await fetch(LOVE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target }),
+        cache: 'no-store'
+      });
+      if (!res.ok) throw new Error('Could not save love.');
+      const data = await res.json();
+      return Number(data.count) || 0;
+    }
+
+    async function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+      const input = document.createElement('textarea');
+      input.value = text;
+      input.setAttribute('readonly', '');
+      input.style.position = 'fixed';
+      input.style.opacity = '0';
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      input.remove();
+    }
+
+    function roundRectPath(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + width, y, x + width, y + height, r);
+      ctx.arcTo(x + width, y + height, x, y + height, r);
+      ctx.arcTo(x, y + height, x, y, r);
+      ctx.arcTo(x, y, x + width, y, r);
+      ctx.closePath();
+    }
+
+    function drawRoundedRect(ctx, x, y, width, height, radius, fill, stroke, strokeWidth = 1) {
+      roundRectPath(ctx, x, y, width, height, radius);
+      if (fill) {
+        ctx.fillStyle = fill;
+        ctx.fill();
+      }
+      if (stroke) {
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = strokeWidth;
+        ctx.stroke();
+      }
+    }
+
+    function wrapCanvasText(ctx, text, maxWidth) {
+      const words = String(text ?? '').trim().split(/\s+/).filter(Boolean);
+      const lines = [];
+      let line = '';
+      for (const word of words) {
+        const next = line ? `${line} ${word}` : word;
+        if (ctx.measureText(next).width <= maxWidth || !line) {
+          line = next;
+        } else {
+          lines.push(line);
+          line = word;
+        }
+      }
+      if (line) lines.push(line);
+      return lines;
+    }
+
+    function fittedCanvasLines(ctx, text, maxWidth, maxHeight, fontFamily, startSize, minSize, lineRatio) {
+      for (let size = startSize; size >= minSize; size -= 1) {
+        ctx.font = `400 ${size}px ${fontFamily}`;
+        const lineHeight = Math.round(size * lineRatio);
+        const lines = wrapCanvasText(ctx, text, maxWidth);
+        if (lines.length * lineHeight <= maxHeight) return { lines, size, lineHeight };
+      }
+      ctx.font = `400 ${minSize}px ${fontFamily}`;
+      return {
+        lines: wrapCanvasText(ctx, text, maxWidth),
+        size: minSize,
+        lineHeight: Math.round(minSize * lineRatio),
+      };
+    }
+
+    function loadCardImage(src) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.crossOrigin = 'anonymous';
+        image.decoding = 'async';
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = src;
+      });
+    }
+
+    function drawImageCover(ctx, image, x, y, width, height) {
+      const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+      const drawWidth = image.naturalWidth * scale;
+      const drawHeight = image.naturalHeight * scale;
+      const dx = x + (width - drawWidth) / 2;
+      const dy = y + (height - drawHeight) / 2;
+      ctx.drawImage(image, dx, dy, drawWidth, drawHeight);
+    }
+
+    function canvasToBlob(canvas) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Could not create image file.'));
+        }, 'image/png', 0.95);
+      });
+    }
+
+    async function createPublicShareCard(item) {
+      await document.fonts?.ready;
+      const image = await loadCardImage(item.imageData);
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080;
+      canvas.height = 1350;
+      const ctx = canvas.getContext('2d');
+      const score = item.sleepScore != null ? item.sleepScore : '';
+      const scoreColorValue = scoreColor(item.sleepScore) || '#c4b5fd';
+      const uiFont = '"Space Mono", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const cardX = 40;
+      const cardY = 40;
+      const cardW = 1000;
+      const cardH = 1270;
+      const radius = 46;
+      ctx.save();
+      roundRectPath(ctx, cardX, cardY, cardW, cardH, radius);
+      ctx.clip();
+      drawImageCover(ctx, image, cardX, cardY, cardW, cardH);
+      const gradient = ctx.createLinearGradient(0, 720, 0, cardY + cardH);
+      gradient.addColorStop(0, 'rgba(7,7,15,0)');
+      gradient.addColorStop(0.5, 'rgba(7,7,15,0.38)');
+      gradient.addColorStop(1, 'rgba(7,7,15,0.82)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(cardX, 720, cardW, cardH - 680);
+      ctx.restore();
+      drawRoundedRect(ctx, cardX, cardY, cardW, cardH, radius, 'rgba(0,0,0,0)', 'rgba(167,139,250,0.72)', 3);
+
+      const pad = 56;
+      const contentX = cardX + pad;
+      const maxWidth = cardW - pad * 2;
+      const bottom = cardY + cardH - pad;
+      const reading = dreamReading(item);
+      const fitted = fittedCanvasLines(ctx, reading, maxWidth - 44, 230, uiFont, 25, 18, 1.42);
+      const readingHeight = fitted.lines.length * fitted.lineHeight + 34;
+      const readingY = bottom - readingHeight;
+
+      drawRoundedRect(ctx, contentX, readingY, maxWidth, readingHeight, 16, 'rgba(14,14,28,0.68)', 'rgba(167,139,250,0.34)', 1.5);
+      ctx.fillStyle = '#f1efff';
+      ctx.font = `400 ${fitted.size}px ${uiFont}`;
+      ctx.letterSpacing = '0px';
+      let textY = readingY + 39;
+      for (const line of fitted.lines) {
+        ctx.fillText(line, contentX + 22, textY);
+        textY += fitted.lineHeight;
+      }
+
+      const pillY = readingY - 64;
+
+      ctx.font = `700 20px ${uiFont}`;
+      ctx.letterSpacing = '3px';
+      const siteText = 'MANU.VISION/DREAMART';
+      const siteWidth = Math.ceil(ctx.measureText(siteText).width + 38);
+      drawRoundedRect(ctx, contentX, pillY - 62, siteWidth, 44, 8, 'rgba(14,14,28,0.68)', 'rgba(167,139,250,0.34)', 1.5);
+      ctx.fillStyle = '#c4b5fd';
+      ctx.fillText(siteText, contentX + 19, pillY - 34);
+      ctx.letterSpacing = '0px';
+
+      const label = item.label || item.date || 'Dreamscape';
+      const dateText = label.length > 30 ? (item.date || label) : label;
+      ctx.font = `700 17px ${uiFont}`;
+      ctx.letterSpacing = '2px';
+      const dateLabel = dateText.toUpperCase();
+      const dateWidth = Math.ceil(ctx.measureText(dateLabel).width + 38);
+      drawRoundedRect(ctx, contentX, pillY, dateWidth, 46, 8, 'rgba(14,14,28,0.68)', 'rgba(139,92,246,0.34)', 1.5);
+      ctx.fillStyle = '#f1efff';
+      ctx.fillText(dateLabel, contentX + 19, pillY + 30);
+
+      const scoreText = `SCORE ${score}`;
+      const scoreWidth = Math.ceil(ctx.measureText(scoreText).width + 38);
+      drawRoundedRect(ctx, contentX + dateWidth + 14, pillY, scoreWidth, 46, 8, 'rgba(14,14,28,0.68)', 'rgba(139,92,246,0.34)', 1.5);
+      ctx.fillStyle = scoreColorValue;
+      ctx.fillText(scoreText, contentX + dateWidth + 33, pillY + 30);
+      ctx.letterSpacing = '0px';
+
+      return canvasToBlob(canvas);
+    }
+
+    async function createWrapExportImage(slide, index, total) {
+      await document.fonts?.ready;
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080;
+      canvas.height = 1350;
+      const ctx = canvas.getContext('2d');
+      const uiFont = '"Space Mono", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+      const displayFont = '"Cormorant Garamond", Georgia, serif';
+
+      ctx.fillStyle = '#07070f';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const cardX = 32;
+      const cardY = 34;
+      const cardW = canvas.width - cardX * 2;
+      const cardH = canvas.height - cardY * 2;
+      const inset = 46;
+      const contentX = cardX + inset;
+      const contentW = cardW - inset * 2;
+
+      drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 34, 'rgba(12,12,25,0.98)', 'rgba(167,139,250,0.72)', 3);
+
+      function drawStats(stats, y) {
+        if (!stats || !stats.length) return y;
+        const fullWidthRows = stats.length <= 2 && stats.some(([, value]) => String(value).length > 12);
+        const gap = 16;
+        const rowH = 84;
+        const colW = fullWidthRows ? contentW : (contentW - gap) / 2;
+        stats.slice(0, 4).forEach(([label, value], i) => {
+          const col = fullWidthRows ? 0 : i % 2;
+          const row = fullWidthRows ? i : Math.floor(i / 2);
+          const x = contentX + col * (colW + gap);
+          const itemY = y + row * (rowH + gap);
+          drawRoundedRect(ctx, x, itemY, colW, rowH, 12, 'rgba(255,255,255,0.05)', 'rgba(255,255,255,0.15)', 1.5);
+          let valueSize = 28;
+          do {
+            ctx.font = `700 ${valueSize}px ${uiFont}`;
+            if (ctx.measureText(String(value)).width <= colW - 40) break;
+            valueSize -= 1;
+          } while (valueSize >= 16);
+          ctx.fillStyle = '#f1efff';
+          ctx.fillText(String(value), x + 20, itemY + 36);
+          ctx.font = `700 13px ${uiFont}`;
+          ctx.letterSpacing = '2.4px';
+          ctx.fillStyle = '#a9a1cb';
+          ctx.fillText(String(label).toUpperCase().slice(0, 24), x + 20, itemY + 65);
+          ctx.letterSpacing = '0px';
+        });
+        return y + (fullWidthRows ? stats.length : Math.ceil(stats.length / 2)) * rowH + (fullWidthRows ? stats.length - 1 : Math.ceil(stats.length / 2) - 1) * gap;
+      }
+
+      function drawBars(bars, y) {
+        if (!bars || !bars.length) return y;
+        let barY = y;
+        bars.forEach(bar => {
+          ctx.font = `700 20px ${uiFont}`;
+          ctx.letterSpacing = '2.2px';
+          ctx.fillStyle = '#c9c2e8';
+          ctx.fillText(bar.label.toUpperCase(), contentX, barY + 18);
+          const trackX = contentX + 172;
+          const trackW = contentW - 250;
+          drawRoundedRect(ctx, trackX, barY + 4, trackW, 14, 99, 'rgba(255,255,255,0.11)', null);
+          drawRoundedRect(ctx, trackX, barY + 4, Math.max(5, trackW * (bar.pct / 100)), 14, 99, bar.color, null);
+          ctx.fillStyle = '#c9c2e8';
+          ctx.fillText(`${bar.pct}%`, contentX + contentW - 66, barY + 18);
+          ctx.letterSpacing = '0px';
+          barY += 52;
+        });
+        return barY;
+      }
+
+      function drawTextBlock(y, maxCopyHeight) {
+        ctx.font = `700 18px ${uiFont}`;
+        ctx.letterSpacing = '3.8px';
+        ctx.fillStyle = '#f0abfc';
+        ctx.fillText(String(slide.eyebrow || '').toUpperCase(), contentX, y);
+        ctx.letterSpacing = '0px';
+
+        ctx.font = `italic 300 64px ${displayFont}`;
+        ctx.fillStyle = '#f1efff';
+        const titleLines = wrapCanvasText(ctx, slide.title || 'Dream Art Highlights', contentW);
+        let cursor = y + 78;
+        titleLines.slice(0, 2).forEach(line => {
+          ctx.fillText(line, contentX, cursor);
+          cursor += 68;
+        });
+
+        const copy = fittedCanvasLines(ctx, slide.copy || '', contentW, maxCopyHeight, uiFont, 28, 20, 1.42);
+        ctx.font = `400 ${copy.size}px ${uiFont}`;
+        ctx.fillStyle = '#d8d2f2';
+        cursor += 20;
+        copy.lines.slice(0, Math.floor(maxCopyHeight / copy.lineHeight)).forEach(line => {
+          ctx.fillText(line, contentX, cursor);
+          cursor += copy.lineHeight;
+        });
+        return cursor;
+      }
+
+      if (slide.image) {
+        const contentH = slide.stats && slide.stats.length > 2 ? 520 : 400;
+        const heroH = cardH - contentH;
+        try {
+          const image = await loadCardImage(slide.image);
+          ctx.save();
+          roundRectPath(ctx, cardX, cardY, cardW, cardH, 34);
+          ctx.clip();
+          drawImageCover(ctx, image, cardX, cardY, cardW, heroH);
+          ctx.restore();
+        } catch {}
+        ctx.save();
+        roundRectPath(ctx, cardX, cardY, cardW, cardH, 34);
+        ctx.clip();
+        ctx.fillStyle = 'rgba(12,12,25,0.98)';
+        ctx.fillRect(cardX, cardY + heroH, cardW, contentH);
+        ctx.restore();
+        const stats = slide.stats || [];
+        const fullWidthRows = stats.length <= 2 && stats.some(([, value]) => String(value).length > 12);
+        const statRows = fullWidthRows ? stats.length : Math.ceil(stats.length / 2);
+        const statBlockH = stats.length ? statRows * 84 + Math.max(0, statRows - 1) * 16 : 0;
+        const statY = cardY + cardH - inset - statBlockH;
+        const textStart = cardY + heroH + 48;
+        const copySpace = Math.max(58, statY - textStart - 170);
+        drawTextBlock(textStart, copySpace);
+        drawStats(stats, statY);
+      } else {
+        let cursor = drawTextBlock(cardY + 210, 230);
+        cursor += 34;
+        cursor = drawStats(slide.stats, cursor);
+        cursor += slide.stats ? 32 : 0;
+        drawBars(slide.bars, cursor);
+      }
+
+      drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 34, 'rgba(0,0,0,0)', 'rgba(167,139,250,0.72)', 3);
+
+      return canvasToBlob(canvas);
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    const grid        = document.getElementById('grid');
+    const empty       = document.getElementById('empty');
+    const lightbox    = document.getElementById('lightbox');
+    const lbImg       = document.getElementById('lb-img');
+    const lbDate      = document.getElementById('lb-date');
+    const lbClose     = document.getElementById('lb-close');
+    const lbPrev      = document.getElementById('lb-prev');
+    const lbNext      = document.getElementById('lb-next');
+    const lbCounter   = document.getElementById('lb-counter');
+    const lbBackdrop  = document.getElementById('lb-backdrop');
+    const lbReading   = document.getElementById('lb-reading');
+    const lbCopy      = document.getElementById('lb-copy');
+    const lbLove      = document.getElementById('lb-love');
+    const lbCard      = document.getElementById('lb-card');
+    const calBtn      = document.getElementById('cal-btn');
+    const calPanel    = document.getElementById('cal-panel');
+    const calClearBtn = document.getElementById('cal-clear-btn');
+    const sortBtn     = document.getElementById('sort-btn');
+    const sortPanel   = document.getElementById('sort-panel');
+    const wrapBtn     = document.getElementById('wrap-btn');
+    const wrapOverlay = document.getElementById('wrap-overlay');
+    const wrapClose   = document.getElementById('wrap-close');
+    const wrapSlide   = document.getElementById('wrap-slide');
+    const wrapPrev    = document.getElementById('wrap-prev');
+    const wrapNext    = document.getElementById('wrap-next');
+    const wrapCount   = document.getElementById('wrap-count');
+    const lovePopover = document.getElementById('love-popover');
+    const loveCountEl = document.getElementById('love-count');
+    const loveLearn   = document.getElementById('love-learn');
+    const loveShareWrap = document.getElementById('love-share-wrap');
+    const readingOverlay = document.getElementById('reading-overlay');
+    const readingClose = document.getElementById('reading-close');
+    const readingCard = document.getElementById('reading-card');
+    const readingPrev = document.getElementById('reading-prev');
+    const readingNext = document.getElementById('reading-next');
+    const readingCount = document.getElementById('reading-count');
+    const howBtn      = document.getElementById('how-btn');
+    const howOverlay  = document.getElementById('how-overlay');
+    const howClose    = document.getElementById('how-close');
+    const howReset    = document.getElementById('how-reset');
+    const howImgA     = document.getElementById('how-img-a');
+    const howImgB     = document.getElementById('how-img-b');
+    const howDate     = document.getElementById('how-date');
+    const howScorePill = document.getElementById('how-score-pill');
+    const howShape    = document.getElementById('how-shape');
+    const howMatchTitle = document.getElementById('how-match-title');
+    const howReading  = document.getElementById('how-reading');
+    const howMatchNote = document.getElementById('how-match-note');
+    const howOpenEntry = document.getElementById('how-open-entry');
+    const filterPill  = document.getElementById('filter-pill');
+    const filterLabel = document.getElementById('filter-label');
+    const filterClear = document.getElementById('filter-clear');
+    const today       = new Date().toISOString().split('T')[0];
+
+    // Set date inputs max to today
+    ['single-date','range-from','range-to'].forEach(id => {
+      document.getElementById(id).max = today;
+      document.getElementById(id).value = today;
+    });
+
+    let allItems  = [];  // { imageData, date, label }
+    let displayed = [];  // filtered subset
+    let current   = 0;
+    let activeFilter = null;         // { start, end, text }
+    let activeHeatmapDate = null;    // date string of the currently selected heatmap cell
+    let activeSort = 'newest';
+    let wrapSlides = [];
+    let wrapIndex = 0;
+    let wrapLoveCount = 0;
+    let readingSteps = [];
+    let readingIndex = 0;
+    let readingItem = null;
+    let readingRevealing = false;
+    let howPool = [];
+    let howCurrentItem = null;
+    let howShowingA = true;
+    let howPreloadStarted = false;
+    let howPreloadedCount = 0;
+    const howLoadedImages = new Set();
+    const howTarget = {
+      score: 72,
+      duration: 64,
+      rem: 58,
+      recovery: 70,
+      hrv: 52
+    };
+
+    const sortLabels = {
+      newest: 'Newest',
+      oldest: 'Oldest',
+      'score-high': 'Score high',
+      'score-low': 'Score low'
+    };
+
+    function dateValue(item) {
+      return item && item.date ? new Date(item.date + 'T12:00:00').getTime() : 0;
+    }
+
+    function sortItems(items) {
+      const sorted = [...items];
+      sorted.sort((a, b) => {
+        const aScore = a.sleepScore ?? -1;
+        const bScore = b.sleepScore ?? -1;
+        if (activeSort === 'oldest') return dateValue(a) - dateValue(b);
+        if (activeSort === 'score-high') return (bScore - aScore) || (dateValue(b) - dateValue(a));
+        if (activeSort === 'score-low') return (aScore - bScore) || (dateValue(b) - dateValue(a));
+        return dateValue(b) - dateValue(a);
+      });
+      return sorted;
+    }
+
+    function updateSortUI() {
+      sortBtn.childNodes[0].nodeValue = `Sort: ${sortLabels[activeSort].toLowerCase()} `;
+      sortBtn.classList.toggle('active', activeSort !== 'newest');
+      sortBtn.setAttribute('aria-expanded', sortPanel.classList.contains('open') ? 'true' : 'false');
+      document.querySelectorAll('.sort-option').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.sort === activeSort);
+      });
+    }
+
+    function clearHeatmapSelection() {
+      document.querySelectorAll('.hm-cell.hm-selected')
+              .forEach(c => c.classList.remove('hm-selected'));
+      activeHeatmapDate = null;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[char]));
+    }
+
+    function dayNumber(iso) {
+      return Math.floor(new Date(`${iso}T12:00:00`).getTime() / 86400000);
+    }
+
+    function isoFromDayNumber(day) {
+      return new Date(day * 86400000).toISOString().split('T')[0];
+    }
+
+    function scoreBucket(score) {
+      const value = Number(score);
+      if (!Number.isFinite(value)) return { label: 'Unknown', color: '#9CA3AF' };
+      if (value >= 86) return { label: 'Aurora', color: '#8B5CF6' };
+      if (value >= 71) return { label: 'Slate', color: '#3A78B8' };
+      if (value >= 56) return { label: 'Moss', color: '#4D7C5A' };
+      if (value >= 41) return { label: 'Ochre', color: '#D4A853' };
+      return { label: 'Ember', color: '#C8613A' };
+    }
+
+    function averageScore(items) {
+      const scores = items.map(item => Number(item.sleepScore)).filter(Number.isFinite);
+      if (!scores.length) return null;
+      return Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+    }
+
+    function sortedByDateAsc(items) {
+      return [...items].filter(item => item.date).sort((a, b) => dateValue(a) - dateValue(b));
+    }
+
+    function longestGeneratedRun(items) {
+      const dates = sortedByDateAsc(items).map(item => item.date);
+      if (!dates.length) return null;
+      let best = { length: 1, start: dates[0], end: dates[0] };
+      let currentRun = { length: 1, start: dates[0], end: dates[0] };
+      for (let i = 1; i < dates.length; i++) {
+        if (dayNumber(dates[i]) === dayNumber(dates[i - 1]) + 1) {
+          currentRun.length += 1;
+          currentRun.end = dates[i];
+        } else {
+          if (currentRun.length > best.length) best = { ...currentRun };
+          currentRun = { length: 1, start: dates[i], end: dates[i] };
+        }
+      }
+      if (currentRun.length > best.length) best = { ...currentRun };
+      return best;
+    }
+
+    function longestGalleryPause(items) {
+      const dates = sortedByDateAsc(items).map(item => item.date);
+      if (dates.length < 2) return null;
+      let best = null;
+      for (let i = 1; i < dates.length; i++) {
+        const gap = dayNumber(dates[i]) - dayNumber(dates[i - 1]) - 1;
+        if (gap > 0 && (!best || gap > best.length)) {
+          best = {
+            length: gap,
+            start: isoFromDayNumber(dayNumber(dates[i - 1]) + 1),
+            end: isoFromDayNumber(dayNumber(dates[i]) - 1)
+          };
+        }
+      }
+      return best;
+    }
+
+    function buildWrapSlides(items) {
+      const dated = sortedByDateAsc(items);
+      if (!dated.length) return [];
+      const scored = dated.filter(item => Number.isFinite(Number(item.sleepScore)));
+      const first = dated[0];
+      const latest = dated[dated.length - 1];
+      const midpoint = dated[Math.floor((dated.length - 1) / 2)];
+      const highest = scored.length ? [...scored].sort((a, b) => Number(b.sleepScore) - Number(a.sleepScore) || dateValue(a) - dateValue(b))[0] : null;
+      const lowest = scored.length ? [...scored].sort((a, b) => Number(a.sleepScore) - Number(b.sleepScore) || dateValue(a) - dateValue(b))[0] : null;
+      const avg = averageScore(dated);
+      const run = longestGeneratedRun(dated);
+      const pause = longestGalleryPause(dated);
+      const bucketOrder = ['Aurora', 'Slate', 'Moss', 'Ochre', 'Ember'];
+      const buckets = bucketOrder.map(label => {
+        const sample = scored.find(item => scoreBucket(item.sleepScore).label === label);
+        const count = scored.filter(item => scoreBucket(item.sleepScore).label === label).length;
+        const color = sample ? scoreBucket(sample.sleepScore).color : {
+          Aurora: '#8B5CF6',
+          Slate: '#3A78B8',
+          Moss: '#4D7C5A',
+          Ochre: '#D4A853',
+          Ember: '#C8613A'
+        }[label];
+        return { label, count, color, pct: scored.length ? Math.round((count / scored.length) * 100) : 0 };
+      });
+
+      return [
+        {
+          eyebrow: 'Project highlights',
+          title: 'One Dreamscape A Night',
+          copy: 'Sleep data becomes a daily visual diary: score chooses the shape and palette, while readiness, sleep stages, HRV, and recovery steer scale, clustering, rotation, and suspension. Each score range leaves a different tint in the archive.',
+          bars: buckets,
+          stats: [
+            ['Dreamscapes', dated.length],
+            ['Average score', avg ?? '—'],
+            ['Highest score', highest ? highest.sleepScore : '—'],
+            ['Lowest score', lowest ? lowest.sleepScore : '—']
+          ]
+        },
+        {
+          image: first.imageData,
+          eyebrow: 'First dreamscape',
+          title: first.label || fmtLabel(first.date),
+          copy: `${fmtLabel(first.date)} opened the archive: the first recorded night turned into a visual object instead of staying only as a number.`,
+          stats: [
+            ['Sleep score', first.sleepScore ?? '—'],
+            ['Palette', scoreBucket(first.sleepScore).label]
+          ]
+        },
+        {
+          image: latest.imageData,
+          eyebrow: 'Latest dreamscape',
+          title: latest.label || fmtLabel(latest.date),
+          copy: 'The project is still alive and accumulating, one night at a time, with each new image extending the same private visual diary.',
+          stats: [
+            ['Sleep score', latest.sleepScore ?? '—'],
+            ['Palette', scoreBucket(latest.sleepScore).label]
+          ]
+        },
+        highest && {
+          image: highest.imageData,
+          eyebrow: 'Highest score',
+          title: highest.label || fmtLabel(highest.date),
+          copy: 'The most restored night in the gallery rises with the clearest signal: the dreamscape opens into its brightest, most buoyant register.',
+          stats: [
+            ['Sleep score', highest.sleepScore],
+            ['Palette', scoreBucket(highest.sleepScore).label]
+          ]
+        },
+        lowest && {
+          image: lowest.imageData,
+          eyebrow: 'Lowest score',
+          title: lowest.label || fmtLabel(lowest.date),
+          copy: 'The lowest-scoring night keeps the archive honest, translating difficulty into a sharper visual weather instead of hiding it.',
+          stats: [
+            ['Sleep score', lowest.sleepScore],
+            ['Palette', scoreBucket(lowest.sleepScore).label]
+          ]
+        },
+        {
+          image: midpoint.imageData,
+          eyebrow: 'Rhythm',
+          title: 'Streaks And Pauses',
+          copy: 'The calendar shows the pulse of the practice: stretches of daily translation, and the quiet gaps where the archive briefly disappears.',
+          stats: [
+            ['Longest streak', run ? `${run.length} nights` : '—'],
+            ['Streak dates', run ? `${fmtLabel(run.start)} - ${fmtLabel(run.end)}` : '—'],
+            ['Longest pause', pause ? `${pause.length} nights` : '—'],
+            ['Pause dates', pause ? `${fmtLabel(pause.start)} - ${fmtLabel(pause.end)}` : '—']
+          ]
+        },
+        {
+          eyebrow: 'Thank you',
+          title: 'Keep Following The Dreams',
+          copy: 'The project keeps growing beyond its first year. Share the highlights, and visit the gallery regularly to discover new daily dreamscapes.',
+          stats: [
+            ['Website', 'manu.vision/dreamart'],
+            ['Instagram', '@manu.vision']
+          ]
+        }
+      ].filter(Boolean);
+    }
+
+    // ── Heatmap ───────────────────────────────────────────────
+    const HEATMAP_START = '2025-05-23';
+
+    function renderHeatmap(items) {
+      // Build lookup maps
+      const scoreMap   = {};
+      const artworkSet = new Set();
+      items.forEach(item => {
+        if (!item.date) return;
+        artworkSet.add(item.date);
+        scoreMap[item.date] = item.sleepScore ?? null;
+      });
+
+      // Update the title with the live count
+      const titleEl = document.getElementById('heatmap-title');
+      if (titleEl) {
+        titleEl.textContent = items.length > 0
+          ? `${items.length} dreams · since May 23, 2025`
+          : 'Every dream, since May 23, 2025';
+      }
+
+      const startDate = new Date(HEATMAP_START + 'T12:00:00');
+      const todayDate = new Date(today + 'T12:00:00');
+
+      // Pad grid left to the nearest Sunday on or before startDate
+      const startDow  = startDate.getDay();
+      const gridStart = new Date(startDate);
+      gridStart.setDate(gridStart.getDate() - startDow);
+
+      // Pad grid right to the Saturday that ends the week containing today
+      const todayDow = todayDate.getDay();
+      const gridEnd  = new Date(todayDate);
+      gridEnd.setDate(gridEnd.getDate() + (6 - todayDow));
+
+      const totalDays  = Math.round((gridEnd - gridStart) / 864e5) + 1;
+      const totalWeeks = Math.ceil(totalDays / 7);
+
+      // ── Responsive cell size ────────────────────────────────
+      // Fill the available container width on desktop; enforce a 14 px floor
+      // on mobile so cells remain tap-friendly (adds horizontal scroll).
+      const GAP      = 2;
+      const wrapEl   = document.getElementById('heatmap-wrap');
+      const wrapW    = wrapEl.getBoundingClientRect().width;
+      const idealCell = Math.floor((wrapW - (totalWeeks - 1) * GAP) / totalWeeks);
+      const CELL     = Math.max(14, idealCell);
+      const STEP     = CELL + GAP;
+
+      const grid        = document.getElementById('heatmap-grid');
+      const monthLabels = document.getElementById('heatmap-month-labels');
+      grid.innerHTML        = '';
+      monthLabels.innerHTML = '';
+
+      // Apply computed dimensions to the grid element
+      grid.style.gridTemplateRows = `repeat(7, ${CELL}px)`;
+      grid.style.gridAutoColumns  = `${CELL}px`;
+      grid.style.gap              = `${GAP}px`;
+
+      const totalWidth = totalWeeks * STEP - GAP;
+      monthLabels.style.width = totalWidth + 'px';
+
+      let current         = new Date(gridStart);
+      const monthsSeen    = new Set();
+      let firstActiveSeen = false;
+
+      for (let i = 0; i < totalDays; i++) {
+        const dateStr   = current.toISOString().split('T')[0];
+        const weekIndex = Math.floor(i / 7);
+        const isBefore  = current < startDate;
+        const isAfter   = current > todayDate;
+
+        // ── Month label ──────────────────────────────────────
+        if (!isBefore && !isAfter) {
+          if (!firstActiveSeen) {
+            firstActiveSeen = true;
+            const key = current.getFullYear() + '-' + current.getMonth();
+            if (!monthsSeen.has(key)) {
+              monthsSeen.add(key);
+              const lbl = document.createElement('span');
+              lbl.textContent = current.toLocaleDateString('en-US', { month: 'short' });
+              lbl.style.left  = (weekIndex * STEP) + 'px';
+              monthLabels.appendChild(lbl);
+            }
+          }
+          if (current.getDate() === 1) {
+            const key = current.getFullYear() + '-' + current.getMonth();
+            if (!monthsSeen.has(key)) {
+              monthsSeen.add(key);
+              const lbl = document.createElement('span');
+              lbl.textContent = current.toLocaleDateString('en-US', { month: 'short' });
+              lbl.style.left  = (weekIndex * STEP) + 'px';
+              monthLabels.appendChild(lbl);
+            }
+          }
+        }
+
+        // ── Cell ─────────────────────────────────────────────
+        const cell = document.createElement('div');
+        if (isBefore || isAfter) {
+          cell.className = 'hm-cell hm-gap';
+        } else {
+          const score = scoreMap[dateStr];
+          if (artworkSet.has(dateStr)) {
+            cell.className = 'hm-cell hm-data';
+            cell.style.background = score != null ? scoreColor(score) : '#2a2a4a';
+          } else {
+            cell.className = 'hm-cell';
+          }
+          cell.dataset.date = dateStr;
+          if (score != null) cell.dataset.score = score;
+        }
+
+        grid.appendChild(cell);
+        current.setDate(current.getDate() + 1);
+      }
+
+      // Scroll so the most recent weeks (right edge) are in view on load.
+      // Use rAF to ensure the layout has settled before measuring.
+      requestAnimationFrame(() => {
+        wrapEl.scrollLeft = wrapEl.scrollWidth - wrapEl.clientWidth;
+      });
+
+      // ── Tooltip ──────────────────────────────────────────────
+      const tooltip = document.getElementById('hm-tooltip');
+      let ttHide;
+
+      grid.addEventListener('mouseover', (e) => {
+        const cell = e.target.closest('.hm-cell');
+        if (!cell || cell.classList.contains('hm-gap') || !cell.dataset.date) {
+          tooltip.classList.remove('visible');
+          return;
+        }
+        clearTimeout(ttHide);
+        const d     = cell.dataset.date;
+        const score = cell.dataset.score != null ? Number(cell.dataset.score) : null;
+        const label = new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        if (score != null) {
+          tooltip.innerHTML = `${label} <span style="color:${scoreColor(score)};font-weight:600">· ${score}</span>`;
+        } else if (artworkSet.has(d)) {
+          tooltip.innerHTML = `${label} <span style="color:var(--muted)">· dream</span>`;
+        } else {
+          tooltip.innerHTML = `${label} <span style="color:var(--dim)">· no dream yet</span>`;
+        }
+        tooltip.classList.add('visible');
+      });
+
+      grid.addEventListener('mousemove', (e) => {
+        const x = Math.min(e.clientX + 14, window.innerWidth - tooltip.offsetWidth - 8);
+        const y = e.clientY - tooltip.offsetHeight - 10;
+        tooltip.style.left = x + 'px';
+        tooltip.style.top  = y + 'px';
+      });
+
+      grid.addEventListener('mouseout', (e) => {
+        if (!e.relatedTarget || !grid.contains(e.relatedTarget)) {
+          ttHide = setTimeout(() => tooltip.classList.remove('visible'), 80);
+        }
+      });
+
+      // ── Click → filter main grid (toggle on same cell) ───────
+      grid.addEventListener('click', (e) => {
+        const cell = e.target.closest('.hm-cell.hm-data');
+        if (!cell || !cell.dataset.date) return;
+        tooltip.classList.remove('visible');
+
+        const d = cell.dataset.date;
+        if (d === activeHeatmapDate) {
+          // Same cell tapped again → deselect and clear filter
+          clearHeatmapSelection();
+          applyFilter(null);
+        } else {
+          // New cell → mark selected, apply filter
+          clearHeatmapSelection();
+          cell.classList.add('hm-selected');
+          activeHeatmapDate = d;
+          applyFilter({ start: d, end: d, text: fmtLabel(d) });
+          document.getElementById('grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
+
+    // ── Fetch ─────────────────────────────────────────────────
+    async function load() {
+      try {
+        // Always hit origin — the API itself sets a short edge TTL.
+        // Cache-bust query + no-store prevents browser/CDN from holding stale JSON.
+        const res  = await fetch(`${API}?t=${Date.now()}`, { cache: 'no-store' });
+        allItems   = (await res.json()).filter(d => d.imageData);
+        try {
+          wrapLoveCount = await fetchLoveCount('wrap');
+        } catch {
+          wrapLoveCount = 0;
+        }
+        applyFilter(null);
+        renderHeatmap(allItems);
+        scheduleHowPreload();
+        // Honor a #YYYY-MM-DD deep link if one is present — opens the lightbox
+        // straight onto that night's artwork.
+        const hashDate = decodeURIComponent(location.hash.replace(/^#/, ''));
+        if (/^\d{4}-\d{2}-\d{2}$/.test(hashDate)) {
+          const idx = displayed.findIndex(d => d.date === hashDate);
+          if (idx >= 0) openLightbox(idx);
+        }
+      } catch {
+        empty.style.display = 'block';
+        renderHeatmap([]);
+      }
+    }
+
+    // ── Render ────────────────────────────────────────────────
+    function applyFilter(filter) {
+      activeFilter = filter;
+      displayed = filter
+        ? allItems.filter(d => d.date >= filter.start && d.date <= filter.end)
+        : allItems;
+      displayed = sortItems(displayed);
+
+      // Update pill
+      if (filter) {
+        filterLabel.textContent = filter.text;
+        filterPill.classList.add('visible');
+        calClearBtn.classList.add('visible');
+        calBtn.classList.add('active');
+      } else {
+        filterPill.classList.remove('visible');
+        calClearBtn.classList.remove('visible');
+        calBtn.classList.remove('active');
+      }
+
+      // Sync heatmap selection to the active filter.
+      // Single-date filter → mark that cell (skip if already marked from a
+      // heatmap click for the same date to avoid redundant DOM work).
+      // Range or no filter → clear any existing selection.
+      if (filter && filter.start === filter.end) {
+        if (filter.start !== activeHeatmapDate) {
+          clearHeatmapSelection();
+          const hmCell = document.querySelector(`.hm-cell.hm-data[data-date="${filter.start}"]`);
+          if (hmCell) {
+            hmCell.classList.add('hm-selected');
+            activeHeatmapDate = filter.start;
+          }
+        }
+      } else {
+        clearHeatmapSelection();
+      }
+
+      render();
+    }
+
+    function render() {
+      grid.innerHTML = '';
+      if (displayed.length === 0) { empty.style.display = 'block'; return; }
+      empty.style.display = 'none';
+
+      const dailyMystery = !activeFilter && activeSort === 'newest' ? todayDreamscape() : null;
+      if (dailyMystery) {
+        const mysteryWrap = document.createElement('div');
+        mysteryWrap.className = 'item';
+
+        const mysteryCell = document.createElement('div');
+        mysteryCell.className = 'cell mystery-card loaded';
+        mysteryCell.setAttribute('role', 'button');
+        mysteryCell.setAttribute('tabindex', '0');
+        mysteryCell.setAttribute('aria-label', 'Open today’s dreamscape reading');
+        mysteryCell.innerHTML = `
+          <div class="mystery-mark">?</div>
+          <div class="mystery-pill">Today’s reading</div>
+        `;
+        mysteryCell.addEventListener('click', openReadingMode);
+        mysteryCell.addEventListener('keydown', event => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openReadingMode();
+          }
+        });
+
+        const mysteryLabel = document.createElement('div');
+        mysteryLabel.className = 'item-date';
+        mysteryLabel.textContent = 'Today’s dreamscape';
+
+        mysteryWrap.appendChild(mysteryCell);
+        mysteryWrap.appendChild(mysteryLabel);
+        grid.appendChild(mysteryWrap);
+      }
+
+      const visibleItems = dailyMystery
+        ? displayed.filter(item => item.date !== dailyMystery.date)
+        : displayed;
+
+      visibleItems.forEach((item) => {
+        const i = displayed.findIndex(entry => entry.date === item.date);
+        const wrap = document.createElement('div');
+        wrap.className = 'item';
+
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+
+        const img = document.createElement('img');
+        img.src = item.imageData;
+        img.alt = item.label || 'Dream art';
+        img.loading = 'lazy';
+        img.onload  = () => { img.classList.add('loaded'); cell.classList.add('loaded'); };
+        img.onerror = () => { cell.classList.add('loaded'); };
+        cell.appendChild(img);
+        cell.addEventListener('click', () => openLightbox(i));
+
+        const dateEl = document.createElement('div');
+        dateEl.className = 'item-date';
+        // Drop the year from the label (e.g. "May 21, 2026" → "May 21") so it
+        // fits cleanly next to the score, matching the private gallery format.
+        const shortLabel = (item.label || '').split(',')[0];
+        dateEl.textContent = shortLabel;
+        if (item.sleepScore != null) {
+          const sep = document.createElement('span');
+          sep.textContent = ' · ';
+          sep.style.opacity = '0.6';
+          const scoreSpan = document.createElement('span');
+          scoreSpan.textContent = item.sleepScore;
+          scoreSpan.style.color = scoreColor(item.sleepScore);
+          scoreSpan.style.fontStyle = 'normal';
+          scoreSpan.style.fontWeight = '500';
+          dateEl.appendChild(sep);
+          dateEl.appendChild(scoreSpan);
+        }
+
+        wrap.appendChild(cell);
+        wrap.appendChild(dateEl);
+        grid.appendChild(wrap);
+      });
+    }
+
+    // ── Calendar ──────────────────────────────────────────────
+    // Tab switching
+    document.querySelectorAll('.cal-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.cal-tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.cal-section').forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Toggle panel
+    calBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      calPanel.classList.toggle('open');
+      sortPanel.classList.remove('open');
+      updateSortUI();
+    });
+    sortBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sortPanel.classList.toggle('open');
+      calPanel.classList.remove('open');
+      updateSortUI();
+    });
+    document.querySelectorAll('.sort-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeSort = btn.dataset.sort;
+        sortPanel.classList.remove('open');
+        updateSortUI();
+        applyFilter(activeFilter);
+      });
+    });
+    document.addEventListener('click', (e) => {
+      if (!calPanel.contains(e.target) && !calBtn.contains(e.target)) {
+        calPanel.classList.remove('open');
+      }
+      if (!sortPanel.contains(e.target) && !sortBtn.contains(e.target)) {
+        sortPanel.classList.remove('open');
+        updateSortUI();
+      }
+    });
+
+    function fmtLabel(d) {
+      return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function renderWrapSlide() {
+      const slide = wrapSlides[wrapIndex];
+      if (!slide) {
+        wrapSlide.innerHTML = '<article class="wrap-card no-image"><div class="wrap-content"><p class="wrap-copy">No dreamscapes are available for the highlights yet.</p></div></article>';
+        wrapCount.textContent = '0 / 0';
+        wrapPrev.disabled = true;
+        wrapNext.disabled = true;
+        wrapNext.classList.remove('wrap-love');
+        return;
+      }
+
+      const fullWidthStats = slide.stats && slide.stats.length <= 2 && slide.stats.some(([, value]) => String(value).length > 12);
+      const stats = slide.stats ? `
+        <div class="wrap-stat-grid ${fullWidthStats ? 'full-width' : ''}">
+          ${slide.stats.map(([label, value]) => `
+            <div class="wrap-stat">
+              <strong>${escapeHtml(value)}</strong>
+              <span>${escapeHtml(label)}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : '';
+
+      const bars = slide.bars ? `
+        <div class="wrap-bars">
+          ${slide.bars.map(bar => `
+            <div class="wrap-bar-row">
+              <span>${escapeHtml(bar.label)}</span>
+              <div class="wrap-bar-track">
+                <div class="wrap-bar-fill" style="width:${Math.max(bar.pct, bar.count ? 4 : 0)}%;background:${bar.color};"></div>
+              </div>
+              <span>${bar.pct}%</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : '';
+
+      wrapSlide.innerHTML = `
+        <article class="wrap-card ${slide.image ? '' : 'no-image'}">
+          ${slide.image ? `<div class="wrap-hero"><img src="${escapeHtml(slide.image)}" alt=""></div>` : ''}
+          <div class="wrap-content">
+            <div class="wrap-eyebrow">${escapeHtml(slide.eyebrow)}</div>
+            <h2>${escapeHtml(slide.title)}</h2>
+            <p class="wrap-copy">${escapeHtml(slide.copy)}</p>
+            ${stats}
+            ${bars}
+          </div>
+        </article>
+      `;
+      wrapCount.textContent = `${wrapIndex + 1} / ${wrapSlides.length}`;
+      wrapPrev.disabled = wrapIndex === 0;
+      wrapNext.disabled = false;
+      if (wrapIndex === wrapSlides.length - 1) {
+        wrapNext.classList.add('wrap-love');
+        wrapNext.textContent = `❤️ ${wrapLoveCount}`;
+        wrapNext.setAttribute('aria-label', `Love the highlights. ${wrapLoveCount} loves`);
+      } else {
+        wrapNext.classList.remove('wrap-love');
+        wrapNext.textContent = 'Next';
+        wrapNext.setAttribute('aria-label', 'Next');
+      }
+    }
+
+    function openWrap() {
+      wrapSlides = buildWrapSlides(allItems);
+      wrapIndex = 0;
+      calPanel.classList.remove('open');
+      sortPanel.classList.remove('open');
+      updateSortUI();
+      renderWrapSlide();
+      wrapOverlay.hidden = false;
+      wrapOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      wrapBtn.classList.add('active');
+    }
+
+    function closeWrap() {
+      wrapOverlay.classList.remove('open');
+      wrapOverlay.hidden = true;
+      closeLovePopover();
+      document.body.style.overflow = '';
+      wrapBtn.classList.remove('active');
+    }
+
+    function prevWrapSlide() {
+      if (wrapIndex > 0) {
+        wrapIndex -= 1;
+        renderWrapSlide();
+      }
+    }
+
+    function nextWrapSlide() {
+      if (wrapIndex < wrapSlides.length - 1) {
+        wrapIndex += 1;
+        renderWrapSlide();
+        return;
+      }
+      loveWrap();
+    }
+
+    function openLovePopover() {
+      loveCountEl.textContent = wrapLoveCount;
+      lovePopover.hidden = false;
+      lovePopover.classList.add('open');
+    }
+
+    function closeLovePopover() {
+      lovePopover.classList.remove('open');
+      lovePopover.hidden = true;
+    }
+
+    async function loveWrap() {
+      wrapNext.disabled = true;
+      const previous = wrapLoveCount;
+      wrapLoveCount += 1;
+      renderWrapSlide();
+      openLovePopover();
+      try {
+        wrapLoveCount = await incrementLove('wrap');
+        loveCountEl.textContent = wrapLoveCount;
+      } catch (error) {
+        console.error('Could not save wrap love', error);
+        wrapLoveCount = previous;
+        loveCountEl.textContent = wrapLoveCount;
+      } finally {
+        renderWrapSlide();
+      }
+    }
+
+    async function exportWrapSlides(button = loveShareWrap) {
+      if (!wrapSlides.length) wrapSlides = buildWrapSlides(allItems);
+      if (!wrapSlides.length) return;
+      button.disabled = true;
+      const originalText = button.textContent;
+      try {
+        for (let i = 0; i < wrapSlides.length; i++) {
+          button.textContent = `Export ${i + 1}/${wrapSlides.length}`;
+          const blob = await createWrapExportImage(wrapSlides[i], i, wrapSlides.length);
+          downloadBlob(blob, `dream-art-highlights-${String(i + 1).padStart(2, '0')}.png`);
+          await new Promise(resolve => setTimeout(resolve, 120));
+        }
+        button.textContent = 'Saved';
+      } catch (error) {
+        console.error('Could not export wrap', error);
+        button.textContent = 'Try again';
+      } finally {
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.disabled = false;
+        }, 1400);
+      }
+    }
+
+    wrapBtn.addEventListener('click', () => {
+      if (wrapOverlay.classList.contains('open')) closeWrap();
+      else openWrap();
+    });
+    wrapClose.addEventListener('click', closeWrap);
+    wrapPrev.addEventListener('click', prevWrapSlide);
+    wrapNext.addEventListener('click', nextWrapSlide);
+    loveShareWrap.addEventListener('click', () => exportWrapSlides(loveShareWrap));
+    loveLearn.addEventListener('click', () => {
+      closeWrap();
+      openAbout();
+    });
+    lovePopover.addEventListener('click', e => {
+      if (e.target === lovePopover) closeLovePopover();
+    });
+    wrapOverlay.addEventListener('click', e => {
+      if (e.target === wrapOverlay) closeWrap();
+    });
+    howBtn.addEventListener('click', () => {
+      howOverlay.classList.contains('open') ? closeHowModal() : openHowModal();
+    });
+    howClose.addEventListener('click', closeHowModal);
+    howReset.addEventListener('click', resetHowSignals);
+    howOpenEntry.addEventListener('click', openHowEntry);
+    document.querySelectorAll('[data-how-key]').forEach(input => {
+      input.addEventListener('input', () => {
+        howTarget[input.dataset.howKey] = Number(input.value);
+        updateHowMatch();
+      });
+    });
+    howOverlay.addEventListener('click', e => {
+      if (e.target === howOverlay) closeHowModal();
+    });
+
+    // Single date
+    document.getElementById('single-apply').addEventListener('click', () => {
+      const d = document.getElementById('single-date').value;
+      if (!d) return;
+      applyFilter({ start: d, end: d, text: fmtLabel(d) });
+      calPanel.classList.remove('open');
+    });
+
+    // Range
+    document.getElementById('range-apply').addEventListener('click', () => {
+      const from = document.getElementById('range-from').value;
+      const to   = document.getElementById('range-to').value;
+      if (!from || !to || from > to) return;
+      const text = from === to ? fmtLabel(from) : `${fmtLabel(from)} — ${fmtLabel(to)}`;
+      applyFilter({ start: from, end: to, text });
+      calPanel.classList.remove('open');
+    });
+
+    // Clear
+    function clearFilter() {
+      document.getElementById('single-date').value = today;
+      document.getElementById('range-from').value  = today;
+      document.getElementById('range-to').value    = today;
+      applyFilter(null);
+      calPanel.classList.remove('open');
+      clearHeatmapSelection();
+    }
+    calClearBtn.addEventListener('click', clearFilter);
+    filterClear.addEventListener('click', clearFilter);
+
+    // ── Lightbox ──────────────────────────────────────────────
+    function openLightbox(index) {
+      current = index;
+      lightbox.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      showLightbox();
+    }
+    function closeLightbox() {
+      lightbox.classList.remove('open');
+      document.body.style.overflow = '';
+      lbImg.classList.remove('loaded');
+      // Clear the deep-link hash so reload doesn't keep re-opening the same image.
+      if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+    }
+    function showLightbox() {
+      lbImg.classList.remove('loaded');
+      lbImg.src = '';
+      const item = displayed[current];
+      setTimeout(() => {
+        lbImg.src = item.imageData;
+        lbImg.onload = () => lbImg.classList.add('loaded');
+      }, 20);
+      // Lightbox label mirrors the grid label: full date, plus a colored
+      // score chip when the entry has one.
+      lbDate.textContent = item.label || '';
+      if (item.sleepScore != null) {
+        const sep = document.createElement('span');
+        sep.textContent = ' · ';
+        sep.style.opacity = '0.6';
+        const scoreSpan = document.createElement('span');
+        scoreSpan.textContent = item.sleepScore;
+        scoreSpan.style.color = scoreColor(item.sleepScore);
+        scoreSpan.style.fontStyle = 'normal';
+        scoreSpan.style.fontWeight = '500';
+        lbDate.appendChild(sep);
+        lbDate.appendChild(scoreSpan);
+      }
+      // Secondary meta line — bracket label + primitive type ("Optimal · Sphere")
+      const lbMeta = document.getElementById('lb-meta');
+      if (lbMeta) {
+        const meta = scoreMeta(item.sleepScore);
+        lbMeta.textContent = meta ? `${meta.label} · ${meta.primitive}` : '';
+      }
+      if (lbReading) {
+        lbReading.textContent = dreamReading(item);
+      }
+      // Update the URL hash so the lightbox state is shareable as a deep link.
+      if (item.date) {
+        history.replaceState(null, '', `${location.pathname}${location.search}#${item.date}`);
+      }
+      lbPrev.disabled    = current === 0;
+      lbNext.disabled    = current === displayed.length - 1;
+      lbCounter.textContent = `${current + 1} / ${displayed.length}`;
+      lbLove.textContent = `❤️ ${item.loveCount ?? 0}`;
+      lbLove.disabled = false;
+      lbLove.setAttribute('aria-label', `Love this dream. ${item.loveCount ?? 0} loves`);
+    }
+    function prevImg() { if (current > 0) { current--; showLightbox(); } }
+    function nextImg() { if (current < displayed.length - 1) { current++; showLightbox(); } }
+
+    lbClose.addEventListener('click', closeLightbox);
+    lbBackdrop.addEventListener('click', closeLightbox);
+    lbPrev.addEventListener('click', prevImg);
+    lbNext.addEventListener('click', nextImg);
+    lbCopy.addEventListener('click', async () => {
+      const item = displayed[current];
+      await copyText(shareUrlFor(item));
+      lbCopy.textContent = 'Copied';
+      setTimeout(() => { lbCopy.textContent = 'Copy link'; }, 1200);
+    });
+    lbLove.addEventListener('click', async () => {
+      const item = displayed[current];
+      const target = loveTargetFor(item);
+      if (!item || !target) return;
+      const previous = item.loveCount ?? 0;
+      item.loveCount = previous + 1;
+      lbLove.textContent = `❤️ ${item.loveCount}`;
+      lbLove.disabled = true;
+      try {
+        item.loveCount = await incrementLove(target);
+        lbLove.textContent = `❤️ ${item.loveCount}`;
+        lbLove.setAttribute('aria-label', `Love this dream. ${item.loveCount} loves`);
+      } catch (error) {
+        console.error('Could not save dream love', error);
+        item.loveCount = previous;
+        lbLove.textContent = `❤️ ${item.loveCount}`;
+      } finally {
+        lbLove.disabled = false;
+      }
+    });
+    lbCard.addEventListener('click', async () => {
+      const item = displayed[current];
+      if (!item) return;
+      lbCard.textContent = 'Preparing';
+      try {
+        const blob = await createPublicShareCard(item);
+        const filename = `dream-art-${item.date || 'card'}.png`;
+        downloadBlob(blob, filename);
+        lbCard.textContent = 'Saved';
+      } catch (error) {
+        console.error('Could not create share card', error);
+        lbCard.textContent = 'Try again';
+      }
+      setTimeout(() => { lbCard.textContent = 'Save card'; }, 1400);
+    });
+
+    readingClose.addEventListener('click', closeReadingMode);
+    readingPrev.addEventListener('click', prevReadingStep);
+    readingNext.addEventListener('click', nextReadingStep);
+    readingOverlay.addEventListener('click', event => {
+      if (event.target === readingOverlay) closeReadingMode();
+    });
+
+    document.addEventListener('keydown', e => {
+      if (readingOverlay.classList.contains('open')) {
+        if (e.key === 'Escape') closeReadingMode();
+        if (e.key === 'ArrowLeft') prevReadingStep();
+        if (e.key === 'ArrowRight') nextReadingStep();
+        return;
+      }
+      if (lightbox.classList.contains('open')) {
+        if (e.key === 'Escape')      closeLightbox();
+        if (e.key === 'ArrowLeft')   prevImg();
+        if (e.key === 'ArrowRight')  nextImg();
+        return;
+      }
+      if (wrapOverlay.classList.contains('open')) {
+        if (lovePopover.classList.contains('open')) {
+          if (e.key === 'Escape') closeLovePopover();
+          return;
+        }
+        if (e.key === 'Escape')      closeWrap();
+        if (e.key === 'ArrowLeft')   prevWrapSlide();
+        if (e.key === 'ArrowRight')  nextWrapSlide();
+        return;
+      }
+      if (howOverlay.classList.contains('open')) {
+        if (e.key === 'Escape') closeHowModal();
+        return;
+      }
+      const about = document.getElementById('about-overlay');
+      if (about && about.classList.contains('open') && e.key === 'Escape') {
+        closeAbout();
+      }
+    });
+
+    // Swipe
+    let touchX = null;
+    lightbox.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+    lightbox.addEventListener('touchend', e => {
+      if (touchX === null) return;
+      const dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 50) { dx < 0 ? nextImg() : prevImg(); }
+      touchX = null;
+    }, { passive: true });
+
+    // ── About modal ──────────────────────────────────────────
+    const aboutOverlay = document.getElementById('about-overlay');
+    const aboutClose   = document.getElementById('about-close');
+    const aboutWrapLink = document.getElementById('about-wrap-link');
+    const infoBtn      = document.getElementById('info-btn');
+    const trailerVideo = document.getElementById('trailer-video');
+    const TRAILER_SRC  = 'trailer.mp4';
+    function openAbout() {
+      aboutOverlay.hidden = false;
+      aboutOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      infoBtn.classList.add('active');
+      // Attach the video source the first time the modal opens — keeps the
+      // 13 MB file off the initial page load entirely. Subsequent opens
+      // reuse the already-loaded video element.
+      if (trailerVideo && !trailerVideo.src) {
+        trailerVideo.src = TRAILER_SRC;
+      }
+      // Try to autoplay (muted, so iOS/Android allow it). If the browser
+      // blocks, the native controls are still there for a tap-to-play.
+      if (trailerVideo) {
+        trailerVideo.play().catch(() => { /* autoplay blocked, controls handle it */ });
+      }
+    }
+    function closeAbout() {
+      aboutOverlay.classList.remove('open');
+      aboutOverlay.hidden = true;
+      document.body.style.overflow = '';
+      infoBtn.classList.remove('active');
+      // Pause the trailer when the panel closes so the audio (if the user
+      // unmuted) doesn't keep running in the background.
+      if (trailerVideo && !trailerVideo.paused) trailerVideo.pause();
+    }
+    infoBtn.addEventListener('click', () => {
+      aboutOverlay.classList.contains('open') ? closeAbout() : openAbout();
+    });
+    aboutClose.addEventListener('click', closeAbout);
+    aboutWrapLink.addEventListener('click', () => {
+      closeAbout();
+      openWrap();
+    });
+    // Click outside the panel closes (the backdrop is the overlay itself)
+    aboutOverlay.addEventListener('click', (e) => {
+      if (e.target === aboutOverlay) closeAbout();
+    });
+
+    load();
+  </script>
+</body>
+</html>
