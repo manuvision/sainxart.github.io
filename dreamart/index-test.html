@@ -1413,18 +1413,20 @@
     }
     .wrap-mini-heatmap {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(0.42rem, 1fr));
-      gap: 0.18rem;
+      grid-template-columns: repeat(var(--heatmap-side), minmax(0, 1fr));
+      grid-template-rows: repeat(var(--heatmap-side), minmax(0, 1fr));
+      gap: 0.22rem;
       margin-top: 0.4rem;
       padding: 0.8rem;
       border: 1px solid rgba(255,255,255,0.09);
       border-radius: 14px;
       background: rgba(255,255,255,0.035);
       flex: 1 1 auto;
-      align-content: center;
+      aspect-ratio: 1;
+      width: 100%;
+      min-height: 0;
     }
     .wrap-mini-cell {
-      aspect-ratio: 1;
       border-radius: 3px;
       background: rgba(255,255,255,0.07);
       box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18);
@@ -3226,9 +3228,13 @@
       });
       const startDate = new Date(HEATMAP_START + 'T12:00:00');
       const latestDate = sortedByDateAsc(items).at(-1)?.date || today;
-      const endDate = new Date(latestDate + 'T12:00:00');
+      const todayDate = new Date(today + 'T12:00:00');
+      const latestArchiveDate = new Date(latestDate + 'T12:00:00');
+      const endDate = latestArchiveDate > todayDate ? latestArchiveDate : todayDate;
       const totalDays = Math.round((endDate - startDate) / 864e5) + 1;
-      let html = '<div class="wrap-mini-heatmap">';
+      // The grid grows as the archive grows: 20x20 today, then 21x21, 22x22, etc.
+      const side = Math.ceil(Math.sqrt(totalDays));
+      let html = `<div class="wrap-mini-heatmap" style="--heatmap-side:${side}">`;
       for (let dayOffset = 0; dayOffset < totalDays; dayOffset += 1) {
         const d = new Date(startDate);
         d.setDate(startDate.getDate() + dayOffset);
@@ -3236,6 +3242,9 @@
         const score = scoreMap[dateStr];
         const color = score != null ? scoreColor(score) : artworkSet.has(dateStr) ? 'rgba(180,175,212,0.36)' : 'rgba(255,255,255,0.055)';
         html += `<span class="wrap-mini-cell" title="${dateStr}${score != null ? ` · ${score}` : ''}" style="background:${color}"></span>`;
+      }
+      for (let i = totalDays; i < side * side; i += 1) {
+        html += '<span class="wrap-mini-cell" style="opacity:0"></span>';
       }
       html += '</div>';
       return html;
@@ -3305,25 +3314,14 @@
           eyebrow: 'Calendar',
           title: `${dated.length} Dreams Since May 23, 2025`,
           copy: 'The heatmap shows the pulse: accumulated nights, visible pauses, and the score color of each dreamscape in the archive.',
-          heatmap: buildMiniHeatmap(dated)
-        },
-        {
-          eyebrow: 'How to read it',
-          title: 'Score Defines Shape And Palette',
-          copy: 'Readiness, REM, HRV, recovery, and other sleep patterns then influence scale, clustering, rotation, suspension, material, and atmosphere.',
+          heatmap: buildMiniHeatmap(dated),
           bars: buckets
         },
         {
-          eyebrow: 'Project highlights',
+          eyebrow: 'How to read it',
           title: 'How to read it',
           copy: 'Sleep readiness, total sleep, deep sleep, REM (Rapid Eye Movement), and HRV (Heart Rate Variability) then shape the composition: amount (1 to 5), scale, clustering, rotation, and how the primitives float. The material (ceramic with marble strikes, glossy metal with oxidation, wood with moss and flowers, translucent and textured polymer, or glass with a particle swarm) is chosen by date, so the same biometrics on a different night would still feel like a different piece.',
-          decoder: buildScoreDecoder(),
-          stats: [
-            ['Dreamscapes', dated.length],
-            ['Average score', avg ?? '—'],
-            ['Highest score', highest ? highest.sleepScore : '—'],
-            ['Lowest score', lowest ? lowest.sleepScore : '—']
-          ]
+          decoder: buildScoreDecoder()
         },
         {
           image: first.imageData,
@@ -3375,6 +3373,17 @@
             ['Streak dates', run ? `${fmtLabel(run.start)} - ${fmtLabel(run.end)}` : '—'],
             ['Longest pause', pause ? `${pause.length} nights` : '—'],
             ['Pause dates', pause ? `${fmtLabel(pause.start)} - ${fmtLabel(pause.end)}` : '—']
+          ]
+        },
+        {
+          eyebrow: 'Archive recap',
+          title: 'The Year In Signals',
+          copy: 'A compact snapshot of the archive so far: how many nights became dreamscapes, where the average landed, and the strongest and hardest signals recorded along the way.',
+          stats: [
+            ['Dreamscapes', dated.length],
+            ['Average score', avg ?? '—'],
+            ['Highest score', highest ? highest.sleepScore : '—'],
+            ['Lowest score', lowest ? lowest.sleepScore : '—']
           ]
         },
         {
