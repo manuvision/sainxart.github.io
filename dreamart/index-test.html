@@ -1446,6 +1446,18 @@
       border-radius: 12px;
       background: rgba(255,255,255,0.035);
     }
+    .wrap-points {
+      display: grid;
+      gap: 0.45rem;
+      margin-top: 0.1rem;
+      color: var(--muted);
+      font-size: 0.74rem;
+      line-height: 1.42;
+    }
+    .wrap-point strong {
+      color: var(--text);
+      font-weight: 700;
+    }
     .wrap-decoder-row {
       display: grid;
       grid-template-columns: auto 1fr auto auto;
@@ -1455,6 +1467,11 @@
       font-size: 0.62rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
+    }
+    .wrap-decoder-head {
+      color: var(--dim);
+      font-size: 0.52rem;
+      letter-spacing: 0.14em;
     }
     .wrap-decoder-row i {
       width: 0.62rem;
@@ -3172,6 +3189,12 @@
       ];
       return `
         <div class="wrap-decoder">
+          <div class="wrap-decoder-row wrap-decoder-head">
+            <span></span>
+            <span>Palette</span>
+            <span>Score range</span>
+            <span>Shape</span>
+          </div>
           ${rows.map(([name, range, shape, color]) => `
             <div class="wrap-decoder-row">
               <i style="background:${color}"></i>
@@ -3180,6 +3203,16 @@
               <span>${shape}</span>
             </div>
           `).join('')}
+        </div>
+      `;
+    }
+
+    function buildReadingPoints() {
+      return `
+        <div class="wrap-points">
+          <div class="wrap-point"><strong>Score + readiness</strong> choose the palette range, primitive shape, object amount, and color position inside that range.</div>
+          <div class="wrap-point"><strong>Total sleep, deep sleep, REM, and HRV</strong> shape the composition: scale, clustering, rotation, and elevation.</div>
+          <div class="wrap-point"><strong>Date</strong> selects the material and generation seed, so similar biometrics can still become a different piece.</div>
         </div>
       `;
     }
@@ -3232,8 +3265,9 @@
         {
           eyebrow: 'How to read it',
           title: 'How to read it',
-          copy: 'Sleep readiness, total sleep, deep sleep, REM (Rapid Eye Movement), and HRV (Heart Rate Variability) then shape the composition: amount (1 to 5), scale, clustering, rotation, and how the primitives float. The material (ceramic with marble strikes, glossy metal with oxidation, wood with moss and flowers, translucent and textured polymer, or glass with a particle swarm) is chosen by date, so the same biometrics on a different night would still feel like a different piece.',
-          decoder: buildScoreDecoder()
+          copy: 'Each dreamscape is built from a few visual rules:',
+          decoder: buildScoreDecoder(),
+          points: buildReadingPoints()
         },
         {
           image: first.imageData,
@@ -3276,26 +3310,18 @@
           ]
         },
         {
-          image: midpoint.imageData,
-          eyebrow: 'Rhythm',
-          title: 'Streaks And Pauses',
-          copy: 'Stretches of daily translation, and the quiet gaps where the archive briefly disappears.',
-          stats: [
-            ['Longest streak', run ? `${run.length} nights` : '—'],
-            ['Streak dates', run ? `${fmtLabel(run.start)} - ${fmtLabel(run.end)}` : '—'],
-            ['Longest pause', pause ? `${pause.length} nights` : '—'],
-            ['Pause dates', pause ? `${fmtLabel(pause.start)} - ${fmtLabel(pause.end)}` : '—']
-          ]
-        },
-        {
           eyebrow: 'Archive recap',
           title: 'The Year In Signals',
-          copy: 'A compact snapshot of the archive so far: how many nights became dreamscapes, where the average landed, and the strongest and hardest signals recorded along the way.',
+          copy: 'A compact snapshot of the archive so far: how many nights became dreamscapes, where the average landed, and the stretches of daily translation or quiet gaps where the archive briefly disappears.',
           stats: [
             ['Dreamscapes', dated.length],
             ['Average score', avg ?? '—'],
             ['Highest score', highest ? highest.sleepScore : '—'],
-            ['Lowest score', lowest ? lowest.sleepScore : '—']
+            ['Lowest score', lowest ? lowest.sleepScore : '—'],
+            ['Longest streak', run ? `${run.length} nights` : '—'],
+            ['Streak dates', run ? `${fmtLabel(run.start)} - ${fmtLabel(run.end)}` : '—'],
+            ['Longest pause', pause ? `${pause.length} nights` : '—'],
+            ['Pause dates', pause ? `${fmtLabel(pause.start)} - ${fmtLabel(pause.end)}` : '—']
           ]
         },
         {
@@ -3728,6 +3754,7 @@
       ` : '';
       const heatmap = slide.heatmap || '';
       const decoder = slide.decoder || '';
+      const points = slide.points || '';
       const media = slide.video
         ? `<div class="wrap-hero"><video src="${escapeHtml(slide.video)}" muted loop playsinline autoplay></video></div>`
         : slide.image
@@ -3743,6 +3770,7 @@
             <p class="wrap-copy">${escapeHtml(slide.copy)}</p>
             ${heatmap}
             ${decoder}
+            ${points}
             ${stats}
             ${bars}
           </div>
