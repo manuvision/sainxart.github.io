@@ -1414,7 +1414,7 @@
     .wrap-mini-heatmap {
       display: grid;
       grid-template-columns: repeat(var(--heatmap-side), minmax(0, 1fr));
-      grid-template-rows: repeat(var(--heatmap-side), minmax(0, 1fr));
+      grid-auto-rows: 1fr;
       gap: 0.22rem;
       margin-top: 0.4rem;
       padding: 0.8rem;
@@ -1423,10 +1423,16 @@
       background: rgba(255,255,255,0.035);
       flex: 1 1 auto;
       aspect-ratio: 1;
-      width: 100%;
+      width: min(100%, 100cqw);
+      max-height: 100%;
       min-height: 0;
+      align-self: center;
     }
     .wrap-mini-cell {
+      aspect-ratio: 1 / 1;
+      width: 100%;
+      height: auto;
+      align-self: center;
       border-radius: 3px;
       background: rgba(255,255,255,0.07);
       box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18);
@@ -1568,19 +1574,6 @@
       text-transform: uppercase;
       cursor: pointer;
     }
-    #wrap-next.wrap-love {
-      border-color: rgba(246,184,90,0.64);
-      background: rgba(246,184,90,0.12);
-      color: var(--link);
-      min-width: 96px;
-      justify-content: center;
-      text-align: center;
-    }
-    #wrap-next.wrap-love:hover {
-      border-color: rgba(255,208,138,0.86);
-      background: rgba(246,184,90,0.2);
-      color: var(--link-hover);
-    }
     .wrap-nav button:disabled {
       opacity: 0.35;
       cursor: default;
@@ -1590,72 +1583,6 @@
       font-size: 0.64rem;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-    }
-    #love-popover {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 1140;
-      place-items: center;
-      padding: 1.25rem;
-      background: rgba(4,4,10,0.62);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-    #love-popover.open { display: grid; }
-    .love-card {
-      width: min(100%, 390px);
-      border: 1px solid rgba(246,184,90,0.5);
-      border-radius: 18px;
-      background: rgba(14,14,28,0.96);
-      box-shadow: 0 22px 70px rgba(0,0,0,0.58), 0 0 0 1px rgba(246,184,90,0.08);
-      padding: 1.35rem;
-      color: var(--text);
-    }
-    .love-card h2 {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.55rem;
-      font-family: var(--font-display);
-      font-style: italic;
-      font-weight: 300;
-      font-size: 2rem;
-      line-height: 1;
-      text-align: center;
-    }
-    .love-card p {
-      margin-top: 0.7rem;
-      color: var(--muted);
-      font-size: 0.86rem;
-      line-height: 1.55;
-    }
-    .love-actions {
-      display: grid;
-      gap: 0.6rem;
-      margin-top: 1.1rem;
-    }
-    .love-actions a,
-    .love-actions button {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border-radius: 8px;
-      border: 1px solid rgba(167,139,250,0.36);
-      background: rgba(167,139,250,0.1);
-      color: var(--pink);
-      min-height: 42px;
-      font-family: var(--font-ui);
-      font-size: 0.68rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      text-decoration: none;
-      cursor: pointer;
-    }
-    .love-actions a:first-child {
-      border-color: rgba(246,184,90,0.62);
-      background: rgba(246,184,90,0.14);
-      color: var(--link);
     }
     @media (max-width: 520px) {
       .wrap-card h2 { font-size: 1.65rem; }
@@ -2179,17 +2106,6 @@
         <button id="wrap-prev">Previous</button>
         <span id="wrap-count">0 / 0</span>
         <button id="wrap-next">Next</button>
-      </div>
-    </div>
-    <div id="love-popover" role="dialog" aria-modal="true" aria-labelledby="love-title" hidden>
-      <div class="love-card">
-        <h2 id="love-title">❤️ <span id="love-count">0</span></h2>
-        <p>Enjoying this project? Consider tipping the artist.</p>
-        <div class="love-actions">
-          <a href="https://www.paypal.com/paypalme/manuelsainsily" target="_blank" rel="noopener">Tip the artist</a>
-          <button id="love-learn" type="button">Learn more</button>
-          <button id="love-share-wrap" type="button">Share highlights</button>
-        </div>
       </div>
     </div>
   </div>
@@ -3045,10 +2961,6 @@
     const wrapPrev    = document.getElementById('wrap-prev');
     const wrapNext    = document.getElementById('wrap-next');
     const wrapCount   = document.getElementById('wrap-count');
-    const lovePopover = document.getElementById('love-popover');
-    const loveCountEl = document.getElementById('love-count');
-    const loveLearn   = document.getElementById('love-learn');
-    const loveShareWrap = document.getElementById('love-share-wrap');
     const readingOverlay = document.getElementById('reading-overlay');
     const readingClose = document.getElementById('reading-close');
     const readingCard = document.getElementById('reading-card');
@@ -3306,15 +3218,15 @@
           video: 'trailer.mp4'
         },
         {
-          eyebrow: 'Why',
-          title: 'Memory, Color, Geometry',
-          copy: 'I publicly launched this gallery in memory of my mother, Nathalie Déglas (1964-2026), an art teacher who loved visual experimentation and teaching, and in support of those still living with diabetes, including my mother-in-law.'
-        },
-        {
           eyebrow: 'Calendar',
           title: `${dated.length} Dreams Since May 23, 2025`,
           copy: 'The heatmap shows the pulse: accumulated nights, visible pauses, and the score color of each dreamscape in the archive.',
-          heatmap: buildMiniHeatmap(dated),
+          heatmap: buildMiniHeatmap(dated)
+        },
+        {
+          eyebrow: 'Why',
+          title: 'Memory, Color, Geometry',
+          copy: 'I publicly launched this gallery in memory of my mother, Nathalie Déglas (1964-2026), an art teacher who loved visual experimentation and teaching, and in support of those still living with diabetes, including my mother-in-law.',
           bars: buckets
         },
         {
@@ -3389,9 +3301,9 @@
         {
           eyebrow: 'Thank you',
           title: 'Keep Following The Dreams',
-          copy: 'The project keeps growing beyond its first year. Share the highlights, and visit the gallery regularly to discover new daily dreamscapes. Inspired by the work of an artist friend, Josue Ibañez, exploring sleep as creative medium.',
+          copy: 'The project keeps growing beyond its first year. Share the highlights, and visit the gallery regularly to discover new daily dreamscapes. Inspired by the work of an artist friend, Josue Ibañez, exploring sleep as creative medium. Enjoying this project? Consider tipping the artist.',
           stats: [
-            ['Website', 'manu.vision/dreamart', 'https://manu.vision/dreamart'],
+            ['Tip the artist', 'paypal.me/manuelsainsily', 'https://www.paypal.com/paypalme/manuelsainsily'],
             ['Instagram', '@manu.vision', 'https://www.instagram.com/manu.vision/']
           ]
         }
@@ -3781,7 +3693,6 @@
         wrapCount.textContent = '0 / 0';
         wrapPrev.disabled = true;
         wrapNext.disabled = true;
-        wrapNext.classList.remove('wrap-love');
         return;
       }
 
@@ -3841,11 +3752,9 @@
       wrapPrev.disabled = wrapIndex === 0;
       wrapNext.disabled = false;
       if (wrapIndex === wrapSlides.length - 1) {
-        wrapNext.classList.add('wrap-love');
-        wrapNext.textContent = `❤️ ${wrapLoveCount}`;
-        wrapNext.setAttribute('aria-label', `Love the highlights. ${wrapLoveCount} loves`);
+        wrapNext.textContent = 'Done';
+        wrapNext.setAttribute('aria-label', 'Close about this project');
       } else {
-        wrapNext.classList.remove('wrap-love');
         wrapNext.textContent = 'Next';
         wrapNext.setAttribute('aria-label', 'Next');
       }
@@ -3872,7 +3781,6 @@
     function closeWrap() {
       wrapOverlay.classList.remove('open');
       wrapOverlay.hidden = true;
-      closeLovePopover();
       document.body.style.overflow = '';
       wrapBtn.classList.remove('active');
       infoBtn.classList.remove('active');
@@ -3891,60 +3799,7 @@
         renderWrapSlide();
         return;
       }
-      loveWrap();
-    }
-
-    function openLovePopover() {
-      loveCountEl.textContent = wrapLoveCount;
-      lovePopover.hidden = false;
-      lovePopover.classList.add('open');
-    }
-
-    function closeLovePopover() {
-      lovePopover.classList.remove('open');
-      lovePopover.hidden = true;
-    }
-
-    async function loveWrap() {
-      wrapNext.disabled = true;
-      const previous = wrapLoveCount;
-      wrapLoveCount += 1;
-      renderWrapSlide();
-      openLovePopover();
-      try {
-        wrapLoveCount = await incrementLove('wrap');
-        loveCountEl.textContent = wrapLoveCount;
-      } catch (error) {
-        console.error('Could not save wrap love', error);
-        wrapLoveCount = previous;
-        loveCountEl.textContent = wrapLoveCount;
-      } finally {
-        renderWrapSlide();
-      }
-    }
-
-    async function exportWrapSlides(button = loveShareWrap) {
-      if (!wrapSlides.length) wrapSlides = buildWrapSlides(allItems);
-      if (!wrapSlides.length) return;
-      button.disabled = true;
-      const originalText = button.textContent;
-      try {
-        for (let i = 0; i < wrapSlides.length; i++) {
-          button.textContent = `Export ${i + 1}/${wrapSlides.length}`;
-          const blob = await createWrapExportImage(wrapSlides[i], i, wrapSlides.length);
-          downloadBlob(blob, `dream-art-highlights-${String(i + 1).padStart(2, '0')}.png`);
-          await new Promise(resolve => setTimeout(resolve, 120));
-        }
-        button.textContent = 'Saved';
-      } catch (error) {
-        console.error('Could not export wrap', error);
-        button.textContent = 'Try again';
-      } finally {
-        setTimeout(() => {
-          button.textContent = originalText;
-          button.disabled = false;
-        }, 1400);
-      }
+      closeWrap();
     }
 
     wrapBtn.addEventListener('click', () => {
@@ -3954,15 +3809,6 @@
     wrapClose.addEventListener('click', closeWrap);
     wrapPrev.addEventListener('click', prevWrapSlide);
     wrapNext.addEventListener('click', nextWrapSlide);
-    loveShareWrap.addEventListener('click', () => exportWrapSlides(loveShareWrap));
-    loveLearn.addEventListener('click', () => {
-      closeLovePopover();
-      wrapIndex = 0;
-      renderWrapSlide();
-    });
-    lovePopover.addEventListener('click', e => {
-      if (e.target === lovePopover) closeLovePopover();
-    });
     wrapOverlay.addEventListener('click', e => {
       if (e.target === wrapOverlay) closeWrap();
     });
@@ -4139,10 +3985,6 @@
         return;
       }
       if (wrapOverlay.classList.contains('open')) {
-        if (lovePopover.classList.contains('open')) {
-          if (e.key === 'Escape') closeLovePopover();
-          return;
-        }
         if (e.key === 'Escape')      closeWrap();
         if (e.key === 'ArrowLeft')   prevWrapSlide();
         if (e.key === 'ArrowRight')  nextWrapSlide();
