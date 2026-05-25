@@ -1378,6 +1378,12 @@
       object-fit: cover;
       display: block;
     }
+    .wrap-hero video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
     .wrap-hero::after {
       content: '';
       position: absolute;
@@ -1407,21 +1413,54 @@
     }
     .wrap-mini-heatmap {
       display: grid;
-      grid-template-columns: repeat(var(--heatmap-weeks), minmax(0, 1fr));
-      grid-template-rows: repeat(7, 1fr);
-      grid-auto-flow: column;
-      gap: 0.16rem;
-      margin-top: 1.1rem;
-      padding: 0.9rem;
+      grid-template-columns: repeat(auto-fill, minmax(0.42rem, 1fr));
+      gap: 0.18rem;
+      margin-top: 0.4rem;
+      padding: 0.8rem;
       border: 1px solid rgba(255,255,255,0.09);
       border-radius: 14px;
       background: rgba(255,255,255,0.035);
+      flex: 1 1 auto;
+      align-content: center;
     }
     .wrap-mini-cell {
       aspect-ratio: 1;
       border-radius: 3px;
       background: rgba(255,255,255,0.07);
       box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18);
+    }
+    .wrap-decoder {
+      display: grid;
+      gap: 0.4rem;
+      margin-top: 0.25rem;
+      padding: 0.7rem;
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.035);
+    }
+    .wrap-decoder-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      align-items: center;
+      gap: 0.55rem;
+      color: var(--muted);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .wrap-decoder-row i {
+      width: 0.62rem;
+      height: 0.62rem;
+      border-radius: 3px;
+      display: block;
+    }
+    .wrap-decoder-name {
+      color: var(--text);
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-style: italic;
+      letter-spacing: 0;
+      text-transform: none;
     }
     .wrap-eyebrow {
       color: var(--pink);
@@ -1466,6 +1505,19 @@
       font-size: 0.58rem;
       letter-spacing: 0.14em;
       text-transform: uppercase;
+    }
+    a.wrap-stat {
+      display: block;
+      text-decoration: none;
+    }
+    a.wrap-stat strong {
+      color: var(--link);
+      font-size: 0.95rem;
+      overflow-wrap: anywhere;
+    }
+    a.wrap-stat:hover {
+      border-color: rgba(246,184,90,0.52);
+      background: rgba(246,184,90,0.09);
     }
     .wrap-bars {
       display: flex;
@@ -3175,17 +3227,9 @@
       const startDate = new Date(HEATMAP_START + 'T12:00:00');
       const latestDate = sortedByDateAsc(items).at(-1)?.date || today;
       const endDate = new Date(latestDate + 'T12:00:00');
-      const startDay = startDate.getDay();
       const totalDays = Math.round((endDate - startDate) / 864e5) + 1;
-      const totalSlots = startDay + totalDays;
-      const totalWeeks = Math.max(1, Math.ceil(totalSlots / 7));
-      let html = `<div class="wrap-mini-heatmap" style="--heatmap-weeks:${totalWeeks}">`;
-      for (let i = 0; i < totalWeeks * 7; i += 1) {
-        const dayOffset = i - startDay;
-        if (dayOffset < 0 || dayOffset >= totalDays) {
-          html += '<span class="wrap-mini-cell" style="opacity:0"></span>';
-          continue;
-        }
+      let html = '<div class="wrap-mini-heatmap">';
+      for (let dayOffset = 0; dayOffset < totalDays; dayOffset += 1) {
         const d = new Date(startDate);
         d.setDate(startDate.getDate() + dayOffset);
         const dateStr = d.toISOString().split('T')[0];
@@ -3195,6 +3239,28 @@
       }
       html += '</div>';
       return html;
+    }
+
+    function buildScoreDecoder() {
+      const rows = [
+        ['Ember', '0-40', 'Pyramid', '#C8613A'],
+        ['Ochre', '41-55', 'Cube', '#D4A853'],
+        ['Moss', '56-70', 'Cylinder', '#4D7C5A'],
+        ['Slate', '71-85', 'Torus', '#3A78B8'],
+        ['Aurora', '86-100', 'Sphere', '#8B5CF6']
+      ];
+      return `
+        <div class="wrap-decoder">
+          ${rows.map(([name, range, shape, color]) => `
+            <div class="wrap-decoder-row">
+              <i style="background:${color}"></i>
+              <span class="wrap-decoder-name">${name}</span>
+              <span>${range}</span>
+              <span>${shape}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
     }
 
     function buildWrapSlides(items) {
@@ -3226,39 +3292,32 @@
       return [
         {
           eyebrow: 'One dreamscape a night',
-          title: 'A Private Signal Becomes A Visual Object',
-          copy: 'Since May 23rd, 2025, each recorded night has become a dreamscape: one visual object shaped by biometric signals, with the sleep score visible and the more intimate measurements abstracted inside the artwork.',
-          stats: [
-            ['Dreamscapes', dated.length],
-            ['Since', 'May 23, 2025']
-          ]
+          title: 'Data Turned Into Art',
+          copy: 'Since May 23rd, 2025, I started tracking my sleep: turning daily biometrics into visual artifacts, with the sleep score shaping the colors, form, and overall aesthetic, and the more intimate measurements abstracted inside the artwork.',
+          video: 'trailer.mp4'
         },
         {
           eyebrow: 'Why',
           title: 'Memory, Color, Geometry',
-          copy: 'I publicly launched this gallery in memory of my mother, Nathalie Déglas (1964-2026), an art teacher who loved color, geometry, and experimentation, and in support of those still living with diabetes, including my mother-in-law.',
-          stats: [
-            ['Practice', 'Daily'],
-            ['Support', 'Diabetes research']
-          ]
+          copy: 'I publicly launched this gallery in memory of my mother, Nathalie Déglas (1964-2026), an art teacher who loved visual experimentation and teaching, and in support of those still living with diabetes, including my mother-in-law.'
         },
         {
           eyebrow: 'Calendar',
           title: `${dated.length} Dreams Since May 23, 2025`,
-          copy: 'The heatmap shows the pulse of the practice: accumulated nights, visible pauses, and the score color of each dreamscape in the archive.',
+          copy: 'The heatmap shows the pulse: accumulated nights, visible pauses, and the score color of each dreamscape in the archive.',
           heatmap: buildMiniHeatmap(dated)
         },
         {
           eyebrow: 'How to read it',
-          title: 'Score Chooses Shape And Palette',
+          title: 'Score Defines Shape And Palette',
           copy: 'Readiness, REM, HRV, recovery, and other sleep patterns then influence scale, clustering, rotation, suspension, material, and atmosphere.',
           bars: buckets
         },
         {
           eyebrow: 'Project highlights',
-          title: 'One Dreamscape A Night',
-          copy: 'Sleep data becomes a daily visual diary: score chooses the shape and palette, while readiness, sleep stages, HRV, and recovery steer scale, clustering, rotation, and suspension. Each score range leaves a different tint in the archive.',
-          bars: buckets,
+          title: 'How to read it',
+          copy: 'Sleep readiness, total sleep, deep sleep, REM (Rapid Eye Movement), and HRV (Heart Rate Variability) then shape the composition: amount (1 to 5), scale, clustering, rotation, and how the primitives float. The material (ceramic with marble strikes, glossy metal with oxidation, wood with moss and flowers, translucent and textured polymer, or glass with a particle swarm) is chosen by date, so the same biometrics on a different night would still feel like a different piece.',
+          decoder: buildScoreDecoder(),
           stats: [
             ['Dreamscapes', dated.length],
             ['Average score', avg ?? '—'],
@@ -3310,7 +3369,7 @@
           image: midpoint.imageData,
           eyebrow: 'Rhythm',
           title: 'Streaks And Pauses',
-          copy: 'The calendar shows the pulse of the practice: stretches of daily translation, and the quiet gaps where the archive briefly disappears.',
+          copy: 'Stretches of daily translation, and the quiet gaps where the archive briefly disappears.',
           stats: [
             ['Longest streak', run ? `${run.length} nights` : '—'],
             ['Streak dates', run ? `${fmtLabel(run.start)} - ${fmtLabel(run.end)}` : '—'],
@@ -3321,10 +3380,10 @@
         {
           eyebrow: 'Thank you',
           title: 'Keep Following The Dreams',
-          copy: 'The project keeps growing beyond its first year. Share the highlights, and visit the gallery regularly to discover new daily dreamscapes.',
+          copy: 'The project keeps growing beyond its first year. Share the highlights, and visit the gallery regularly to discover new daily dreamscapes. Inspired by the work of an artist friend, Josue Ibañez, exploring sleep as creative medium.',
           stats: [
-            ['Website', 'manu.vision/dreamart'],
-            ['Instagram', '@manu.vision']
+            ['Website', 'manu.vision/dreamart', 'https://manu.vision/dreamart'],
+            ['Instagram', '@manu.vision', 'https://www.instagram.com/manu.vision/']
           ]
         }
       ].filter(Boolean);
@@ -3720,7 +3779,12 @@
       const fullWidthStats = slide.stats && slide.stats.length <= 2 && slide.stats.some(([, value]) => String(value).length > 12);
       const stats = slide.stats ? `
         <div class="wrap-stat-grid ${fullWidthStats ? 'full-width' : ''}">
-          ${slide.stats.map(([label, value]) => `
+          ${slide.stats.map(([label, value, href]) => href ? `
+            <a class="wrap-stat" href="${escapeHtml(href)}" target="_blank" rel="noopener">
+              <strong>${escapeHtml(value)}</strong>
+              <span>${escapeHtml(label)}</span>
+            </a>
+          ` : `
             <div class="wrap-stat">
               <strong>${escapeHtml(value)}</strong>
               <span>${escapeHtml(label)}</span>
@@ -3743,15 +3807,22 @@
         </div>
       ` : '';
       const heatmap = slide.heatmap || '';
+      const decoder = slide.decoder || '';
+      const media = slide.video
+        ? `<div class="wrap-hero"><video src="${escapeHtml(slide.video)}" muted loop playsinline autoplay></video></div>`
+        : slide.image
+          ? `<div class="wrap-hero"><img src="${escapeHtml(slide.image)}" alt=""></div>`
+          : '';
 
       wrapSlide.innerHTML = `
-        <article class="wrap-card ${slide.image ? '' : 'no-image'}">
-          ${slide.image ? `<div class="wrap-hero"><img src="${escapeHtml(slide.image)}" alt=""></div>` : ''}
+        <article class="wrap-card ${media ? '' : 'no-image'}">
+          ${media}
           <div class="wrap-content">
             <div class="wrap-eyebrow">${escapeHtml(slide.eyebrow)}</div>
             <h2>${escapeHtml(slide.title)}</h2>
             <p class="wrap-copy">${escapeHtml(slide.copy)}</p>
             ${heatmap}
+            ${decoder}
             ${stats}
             ${bars}
           </div>
