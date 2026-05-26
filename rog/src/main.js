@@ -293,10 +293,11 @@ function cameraOrigin() {
   };
 }
 
-function addGridCell(layer, char, cls) {
+function addGridCell(layer, char, cls, phase = 0) {
   const cell = document.createElement('span');
   cell.className = `cell ${cls}`;
   cell.textContent = char;
+  cell.style.setProperty('--phase', `${phase}ms`);
   layer.appendChild(cell);
 }
 
@@ -336,7 +337,7 @@ function renderMapLayer(className, z) {
       const point = { x: origin.x + x, y: origin.y + y };
       const tile = state.level.tiles[point.y][point.x];
       const [char, cls] = glyph(tile, point);
-      addGridCell(layer, char, cls);
+      addGridCell(layer, char, cls, (point.x * 61 + point.y * 97) % 1300);
     }
   }
   return layer;
@@ -344,29 +345,30 @@ function renderMapLayer(className, z) {
 
 function renderLeafLayer(depth) {
   const layer = document.createElement('div');
-  const gridSize = 12;
+  const gridSize = 10 + depth * 2;
   const origin = cameraOrigin();
-  const drift = state.turn * (0.18 + depth * 0.05);
-  const parallax = 1.1 + depth * 0.62;
+  const drift = state.turn * (0.34 + depth * 0.12);
+  const parallax = 2.2 + depth * 1.4;
   layer.className = `layer leaf-layer leaf-layer-${depth}`;
   layer.style.setProperty('--grid-size', gridSize);
-  layer.style.transform = `translate3d(${-(origin.x * parallax) + Math.sin(drift) * 5}px, ${-(origin.y * parallax) + Math.cos(drift * 0.8) * 5}px, ${140 + depth * 58}px) scale(${1 + depth * 0.08})`;
-  layer.style.opacity = String(0.08 + depth * 0.045);
+  layer.style.transform = `translate3d(${-(origin.x * parallax) + Math.sin(drift + depth) * 13}px, ${-(origin.y * parallax) + Math.cos(drift * 0.8 + depth) * 13}px, ${150 + depth * 72}px) scale(${1.08 + depth * 0.11})`;
+  layer.style.opacity = String(0.08 + depth * 0.04);
   layer.style.zIndex = String(16 + depth);
 
   for (let y = 0; y < gridSize; y += 1) {
     for (let x = 0; x < gridSize; x += 1) {
-      const noise = Math.abs(Math.sin((x + state.seed * 0.001) * 9.73 + (y + depth * 3.1) * 14.21));
-      const scatter = (x * 7 + y * 11 + depth * 5) % 17;
-      const visible = noise > 0.94 || (scatter === 0 && noise > 0.64);
-      addGridCell(layer, visible ? '8' : '', visible ? `leaf leaf-${depth}` : 'empty');
+      const px = x + depth * 5.37 + origin.x * 0.13;
+      const py = y + depth * 9.91 + origin.y * 0.13;
+      const noise = Math.abs(Math.sin((px + state.seed * 0.001) * (8.7 + depth) + py * (13.1 - depth * 0.7)));
+      const scatter = (x * (5 + depth) + y * (9 + depth * 2) + depth * 11) % (18 + depth * 3);
+      const visible = noise > 0.945 || (scatter === 0 && noise > 0.7);
+      addGridCell(layer, visible ? '8' : '', visible ? `leaf leaf-${depth}` : 'empty', (x * 47 + y * 83 + depth * 211) % 1100);
     }
   }
   return layer;
 }
 
 function render() {
-  const origin = cameraOrigin();
   stage.replaceChildren(
     renderAmbientLayer(2),
     renderAmbientLayer(1),
@@ -378,17 +380,7 @@ function render() {
   stage.style.setProperty('--tilt-x', '0deg');
   stage.style.setProperty('--tilt-y', '0deg');
 
-  const total = state.kills + state.monsters.length;
-  statsEl.innerHTML = [
-    ['TRN', state.turn],
-    ['SED', state.seed],
-    ['SDC', state.seedCode],
-    ['SEC', state.end === 'playing' ? 0 : state.end === 'won' ? 1 : -1],
-    ['CAM', `${origin.x},${origin.y}`],
-    ['XP', `${state.kills}/${total}`],
-    ['HMG', `${state.hp}/${MAX_HP}`],
-    ['BST', bestTurns || '--'],
-  ].map(([label, value]) => `<p>${label} ${value}</p>`).join('');
+  statsEl.textContent = `BEST ${bestTurns || '--'}`;
 
   levelEl.textContent = '1';
   hpEl.textContent = `${state.hp}/${MAX_HP}`;

@@ -129,6 +129,28 @@ button:hover {
   transform: translateZ(0);
 }
 
+@keyframes soft-sway {
+  0%,
+  100% {
+    transform: translateX(-1px);
+  }
+
+  50% {
+    transform: translateX(2px);
+  }
+}
+
+@keyframes idle-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
 .layer.back .cell {
   font-size: clamp(18px, 2.6vw, 42px);
   opacity: 0.7;
@@ -142,9 +164,20 @@ button:hover {
 
 .layer.leaf-layer {
   pointer-events: none;
-  filter: drop-shadow(3px 8px 1px rgba(0, 0, 0, 0.2));
   mask-image: radial-gradient(circle at center, transparent 0 16%, black 34%, black 62%, transparent 86%);
   -webkit-mask-image: radial-gradient(circle at center, transparent 0 16%, black 34%, black 62%, transparent 86%);
+}
+
+.leaf-layer-1 {
+  filter: blur(0.4px) drop-shadow(2px 5px 1px rgba(0, 0, 0, 0.18));
+}
+
+.leaf-layer-2 {
+  filter: blur(0.8px) drop-shadow(4px 9px 1px rgba(0, 0, 0, 0.2));
+}
+
+.leaf-layer-3 {
+  filter: blur(1.4px) drop-shadow(6px 13px 2px rgba(0, 0, 0, 0.22));
 }
 
 .layer.leaf-layer .cell {
@@ -153,6 +186,8 @@ button:hover {
 
 .leaf {
   color: rgba(92, 139, 113, 0.82);
+  animation: soft-sway 2.9s steps(2, end) infinite;
+  animation-delay: calc(var(--phase) * -1);
   text-shadow:
     3px 7px 0 rgba(0, 0, 0, 0.18),
     0 0 10px rgba(92, 139, 113, 0.12);
@@ -175,23 +210,34 @@ button:hover {
 }
 
 .floor { color: rgba(45, 58, 86, 0.7); }
-.tree { color: rgba(65, 106, 108, 0.88); }
+.tree {
+  color: rgba(65, 106, 108, 0.88);
+  animation: soft-sway 3.4s steps(2, end) infinite;
+  animation-delay: calc(var(--phase) * -1);
+}
 .rock { color: rgba(129, 123, 215, 0.78); }
-.hero { color: #dde2ff; }
-.monster { color: var(--coral); }
+.hero {
+  color: #dde2ff;
+  animation: idle-bob 1.35s steps(2, end) infinite;
+}
+.monster {
+  color: var(--coral);
+  animation: idle-bob 1.5s steps(2, end) infinite;
+  animation-delay: calc(var(--phase) * -1);
+}
 .chest { color: var(--ochre); }
 .bush { color: var(--olive); }
 
 .stats {
   position: absolute;
   left: 28px;
-  top: 28px;
+  top: 22px;
   z-index: 30;
-  color: var(--magenta);
-  font-size: clamp(22px, 2.4vw, 34px);
+  color: #9b82ff;
+  font-size: clamp(16px, 1.5vw, 24px);
   font-weight: 700;
-  line-height: 1.22;
-  text-shadow: 0 0 11px rgba(255, 56, 248, 0.3);
+  line-height: 1;
+  text-shadow: 0 0 9px rgba(155, 130, 255, 0.25);
 }
 
 .stats p {
