@@ -440,7 +440,7 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'ArrowLeft') move({ x: -1, y: 0 });
   if (event.key === 'ArrowRight') move({ x: 1, y: 0 });
   if (event.key === ' ') interact();
-  if (event.key.toLowerCase() === 'r') restart(state.seed + 1);
+  if (event.key.toLowerCase() === 'r') restart();
 });
 
 document.addEventListener('touchstart', (event) => {
@@ -498,7 +498,7 @@ document.querySelectorAll('[data-action="interact"]').forEach((button) => {
 });
 
 document.querySelectorAll('[data-action="restart"]').forEach((button) => {
-  button.addEventListener('click', () => restart(state.seed + 1));
+  button.addEventListener('click', () => restart());
 });
 
 render();
