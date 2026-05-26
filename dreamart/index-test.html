@@ -3462,8 +3462,9 @@
       // with the viewport instead of forcing horizontal overflow.
       const GAP      = 2;
       const wrapEl   = document.getElementById('heatmap-wrap');
-      const wrapW    = wrapEl.getBoundingClientRect().width;
-      const idealCell = Math.floor((wrapW - (totalWeeks - 1) * GAP) / totalWeeks);
+      const viewportW = document.documentElement.clientWidth || window.innerWidth || wrapEl.getBoundingClientRect().width;
+      const availableW = Math.max(280, viewportW - 48);
+      const idealCell = (availableW - (totalWeeks - 1) * GAP) / totalWeeks;
       const CELL     = Math.max(4, idealCell);
       const STEP     = CELL + GAP;
 
@@ -3478,6 +3479,7 @@
       grid.style.gap              = `${GAP}px`;
 
       const totalWidth = totalWeeks * STEP - GAP;
+      grid.style.width = totalWidth + 'px';
       monthLabels.style.width = totalWidth + 'px';
 
       let current         = new Date(gridStart);
