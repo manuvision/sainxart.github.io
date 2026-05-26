@@ -1462,7 +1462,7 @@
       gap: 2px;
       margin-top: 0.4rem;
       padding: 0.72rem;
-      border: 1px solid rgba(255,255,255,0.09);
+      border: 0;
       border-radius: 14px;
       background: rgba(255,255,255,0.035);
       width: 100%;
@@ -3458,14 +3458,15 @@
       const totalWeeks = Math.ceil(totalDays / 7);
 
       // ── Responsive cell size ────────────────────────────────
-      // Fill the available container width. On narrow screens the cells shrink
-      // with the viewport instead of forcing horizontal overflow.
+      // Fill the available width on desktop. On mobile, keep cells tappable and
+      // allow horizontal scrolling when the full calendar exceeds the viewport.
       const GAP      = 2;
       const wrapEl   = document.getElementById('heatmap-wrap');
       const viewportW = document.documentElement.clientWidth || window.innerWidth || wrapEl.getBoundingClientRect().width;
       const availableW = Math.max(280, viewportW - 48);
       const idealCell = (availableW - (totalWeeks - 1) * GAP) / totalWeeks;
-      const CELL     = Math.max(4, idealCell);
+      const minCell = viewportW <= 720 ? 12 : 4;
+      const CELL     = Math.max(minCell, idealCell);
       const STEP     = CELL + GAP;
 
       const grid        = document.getElementById('heatmap-grid');
@@ -4200,6 +4201,13 @@
     // Click outside the panel closes (the backdrop is the overlay itself)
     aboutOverlay.addEventListener('click', (e) => {
       if (e.target === aboutOverlay) closeAbout();
+    });
+
+    let heatmapResizeTimer = null;
+    window.addEventListener('resize', () => {
+      if (!allItems.length) return;
+      clearTimeout(heatmapResizeTimer);
+      heatmapResizeTimer = setTimeout(() => renderHeatmap(allItems), 120);
     });
 
     load();
