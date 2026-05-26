@@ -1424,7 +1424,7 @@
       background: rgba(255,255,255,0.035);
       width: 100%;
       aspect-ratio: var(--heatmap-weeks) / 7;
-      max-height: 9.5rem;
+      max-height: 14rem;
       min-height: 0;
       align-self: center;
     }
@@ -1506,6 +1506,9 @@
       color: var(--muted);
       font-size: 0.82rem;
       line-height: 1.5;
+    }
+    .wrap-copy.emphasis {
+      color: var(--text);
     }
     .wrap-stat-grid {
       display: grid;
@@ -3251,18 +3254,18 @@
           eyebrow: 'One dreamscape a night',
           title: 'Data Turned Into Art',
           copy: [
-            'Since May 23rd, 2025, I started tracking my sleep: turning daily biometrics into visual artifacts, with the sleep score shaping the colors, form, and overall aesthetic, and the more intimate measurements abstracted inside the artwork.',
-            `The heatmap shows the pulse: accumulated nights, visible pauses, and the score color of each dreamscape in the archive. ${dated.length} and counting.`
+            'Since May 23rd, 2025, I started tracking my sleep: turning biometrics into unique daily visual artifacts.',
+            `The heatmap shows the pulse: accumulated nights, visible pauses, and the score color of each of the ${dated.length} dreamscapes (and counting).`
           ],
-          heatmap: buildMiniHeatmap(dated),
-          bars: buckets
+          heatmap: buildMiniHeatmap(dated)
         },
         {
           eyebrow: 'How to read it',
           title: 'How to read it',
           copy: 'Each dreamscape is built from a few visual rules:',
           decoder: buildScoreDecoder(),
-          points: buildReadingPoints()
+          points: buildReadingPoints(),
+          bars: buckets
         },
         {
           image: first.imageData,
@@ -3314,15 +3317,19 @@
             ['Highest score', highest ? highest.sleepScore : '—'],
             ['Lowest score', lowest ? lowest.sleepScore : '—'],
             ['Longest streak', run ? `${run.length} nights` : '—'],
-            ['Streak dates', run ? `${fmtLabel(run.start)} - ${fmtLabel(run.end)}` : '—'],
             ['Longest pause', pause ? `${pause.length} nights` : '—'],
+            ['Streak dates', run ? `${fmtLabel(run.start)} - ${fmtLabel(run.end)}` : '—'],
             ['Pause dates', pause ? `${fmtLabel(pause.start)} - ${fmtLabel(pause.end)}` : '—']
           ]
         },
         {
           eyebrow: 'Thank you',
           title: 'Keep Following The Dreams',
-          copy: 'The project keeps growing beyond its first year. Share the highlights, and visit the gallery regularly to discover new daily dreamscapes. Inspired by the work of an artist friend, Josue Ibañez, exploring sleep as creative medium. Enjoying this project? Consider tipping the artist.',
+          copy: [
+            'The project keeps growing beyond its first year. Share the highlights, and visit the gallery regularly to discover new daily dreamscapes. Inspired by the work of an artist friend, Josue Ibañez, exploring sleep as creative medium.',
+            'Enjoying this project? Consider tipping the artist.'
+          ],
+          emphasisCopyIndex: 1,
           stats: [
             ['Tip the artist', 'paypal.me/manuelsainsily', 'https://www.paypal.com/paypalme/manuelsainsily'],
             ['Instagram', '@manu.vision', 'https://www.instagram.com/manu.vision/']
@@ -3748,7 +3755,7 @@
         </div>
       ` : '';
       const copy = Array.isArray(slide.copy)
-        ? slide.copy.map(line => `<p class="wrap-copy">${escapeHtml(line)}</p>`).join('')
+        ? slide.copy.map((line, index) => `<p class="wrap-copy ${index === slide.emphasisCopyIndex ? 'emphasis' : ''}">${escapeHtml(line)}</p>`).join('')
         : `<p class="wrap-copy">${escapeHtml(slide.copy)}</p>`;
       const heatmap = slide.heatmap || '';
       const decoder = slide.decoder || '';
