@@ -391,8 +391,8 @@ function renderLeafLayer(depth) {
 
   for (let y = 0; y < gridSize; y += 1) {
     for (let x = 0; x < gridSize; x += 1) {
-      const px = x + depth * 5.37 + origin.x * 0.13;
-      const py = y + depth * 9.91 + origin.y * 0.13;
+      const px = x + depth * 5.37;
+      const py = y + depth * 9.91;
       const noise = Math.abs(Math.sin((px + state.seed * 0.001) * (8.7 + depth) + py * (13.1 - depth * 0.7)));
       const scatter = (x * (5 + depth) + y * (9 + depth * 2) + depth * 11) % (18 + depth * 3);
       const visible = noise > 0.945 || (scatter === 0 && noise > 0.7);
