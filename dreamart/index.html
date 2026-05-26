@@ -580,6 +580,30 @@
         display: block;
       }
     }
+    @media (max-width: 430px) {
+      #heatmap-legend {
+        column-gap: 0.42rem;
+        row-gap: 0.6rem;
+      }
+      .hm-legend-label,
+      .hm-legend-item {
+        font-size: 0.47rem;
+        letter-spacing: 0.055em;
+      }
+      .hm-legend-top {
+        gap: 0.24rem;
+      }
+      .hm-legend-name {
+        gap: 0.22rem;
+      }
+      .hm-legend-swatch {
+        width: 7px;
+        height: 7px;
+      }
+      .hm-legend-track {
+        height: 5px;
+      }
+    }
 
     /* ── Grid ────────────────────────────────────────────────── */
     main {
@@ -1736,6 +1760,36 @@
       .wrap-decoder-row {
         grid-template-columns: auto minmax(3.9rem, 1fr) minmax(5.8rem, 6.4rem) minmax(0, 1fr) minmax(4.15rem, 4.15rem);
         gap: 0.38rem;
+      }
+    }
+    @media (max-width: 430px) {
+      .wrap-card.no-image .wrap-content {
+        padding: 1.05rem;
+      }
+      .wrap-decoder {
+        gap: 0.42rem;
+        padding: 0.55rem;
+      }
+      .wrap-decoder-row {
+        grid-template-columns: auto minmax(3.1rem, 1fr) minmax(4.75rem, 5.25rem) minmax(0, 1fr) minmax(3.35rem, 3.35rem);
+        gap: 0.24rem;
+        font-size: 0.49rem;
+        letter-spacing: 0.055em;
+      }
+      .wrap-decoder-head {
+        font-size: 0.43rem;
+        letter-spacing: 0.08em;
+      }
+      .wrap-decoder-row i {
+        width: 0.48rem;
+        height: 0.48rem;
+      }
+      .wrap-decoder-track {
+        height: 5px;
+      }
+      .wrap-points {
+        font-size: 0.68rem;
+        line-height: 1.35;
       }
     }
 
