@@ -378,7 +378,8 @@
     /* ── Heatmap ──────────────────────────────────────────────── */
     #heatmap-section {
       padding: 2rem 1.5rem 1.75rem;
-      max-width: 1200px;
+      width: 100%;
+      max-width: none;
       margin: 0 auto;
       border-bottom: 1px solid var(--border);
     }
@@ -479,11 +480,13 @@
       margin-top: 0.85rem;
     }
     .hm-legend-label {
+      display: flex;
+      align-items: center;
       font-size: 0.58rem;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--dim);
-      margin-right: 0.1rem;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      grid-column: 1 / -1;
     }
     .hm-legend-item {
       display: grid;
@@ -536,6 +539,9 @@
     @media (max-width: 720px) {
       #heatmap-legend {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .hm-legend-label {
+        grid-column: auto;
       }
     }
 
@@ -2049,6 +2055,7 @@
       <div id="heatmap-grid"></div>
     </div>
     <div id="heatmap-legend">
+      <div class="hm-legend-label">Sleep score legend</div>
       <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#C8613A"></span>Ember</span><span class="hm-legend-meta">0-40</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#C8613A;width:0%"></div></div><div class="hm-legend-foot">Pyramid · 0%</div></div>
       <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#D4A853"></span>Ochre</span><span class="hm-legend-meta">41-55</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#D4A853;width:0%"></div></div><div class="hm-legend-foot">Cube · 0%</div></div>
       <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#4D7C5A"></span>Moss</span><span class="hm-legend-meta">56-70</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#4D7C5A;width:0%"></div></div><div class="hm-legend-foot">Cylinder · 0%</div></div>
@@ -3594,7 +3601,9 @@
     function renderHeatmapLegend(items) {
       const legend = document.getElementById('heatmap-legend');
       if (!legend) return;
-      legend.innerHTML = bucketStats(items).map(bucket => `
+      legend.innerHTML = `
+        <div class="hm-legend-label">Sleep score legend</div>
+        ${bucketStats(items).map(bucket => `
         <div class="hm-legend-item">
           <div class="hm-legend-top">
             <span class="hm-legend-name"><span class="hm-legend-swatch" style="background:${bucket.color}"></span>${bucket.label}</span>
@@ -3603,7 +3612,7 @@
           <div class="hm-legend-track"><div class="hm-legend-fill" style="background:${bucket.color};width:${Math.max(bucket.pct, bucket.count ? 4 : 0)}%"></div></div>
           <div class="hm-legend-foot">${bucket.shape} · ${bucket.pct}%</div>
         </div>
-      `).join('');
+      `).join('')}`;
     }
 
     // ── Fetch ─────────────────────────────────────────────────
