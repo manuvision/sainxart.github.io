@@ -497,6 +497,7 @@
     .hm-legend-label {
       display: flex;
       align-items: center;
+      gap: 0.42rem;
       font-size: 0.58rem;
       text-transform: uppercase;
       letter-spacing: 0.14em;
@@ -556,6 +557,14 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         column-gap: 1rem;
         row-gap: 0.75rem;
+      }
+      .hm-legend-label {
+        display: block;
+        grid-column: auto;
+        line-height: 1.35;
+      }
+      .hm-legend-label span {
+        display: block;
       }
     }
     @media (max-width: 720px) {
