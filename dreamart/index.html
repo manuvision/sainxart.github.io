@@ -25,8 +25,8 @@
   <meta name="twitter:description" content="Every night since May 23, 2025. Sleep data turned into generative sculptures." />
   <meta name="twitter:image" content="https://manu.vision/dreamart/og-card.png" />
   <script>
-    // Redirect /dreamart and /dreamart/ to /dreamart/index.html
-    if (!location.pathname.endsWith('index.html')) {
+    // Redirect /dreamart and /dreamart/ to /dreamart/index.html, while allowing test pages.
+    if (!location.pathname.endsWith('.html')) {
       location.replace(location.pathname.replace(/\/?$/, '/index.html') + location.search + location.hash);
     }
   </script>
@@ -121,7 +121,8 @@
     /* Calendar text+icon pill button (lives in gallery-controls) */
     #cal-btn,
     #sort-btn,
-    #wrap-btn {
+    #wrap-btn,
+    #how-btn {
       display: inline-flex;
       align-items: center;
       gap: 0.45rem;
@@ -143,13 +144,16 @@
     #sort-btn:hover,
     #sort-btn.active,
     #wrap-btn:hover,
-    #wrap-btn.active {
+    #wrap-btn.active,
+    #how-btn:hover,
+    #how-btn.active {
       border-color: rgba(240,171,252,0.64);
       background: rgba(240,171,252,0.18);
       color: #f8d4ff;
     }
 
     #wrap-btn {
+      display: none;
       margin-left: auto;
       border-color: rgba(255,110,219,0.78);
       background: rgba(255,110,219,0.16);
@@ -161,6 +165,18 @@
       border-color: rgba(255,155,236,0.92);
       background: rgba(255,110,219,0.24);
       color: #ffd1f5;
+    }
+    #how-btn {
+      margin-left: auto;
+      border-color: rgba(246,184,90,0.58);
+      background: rgba(246,184,90,0.1);
+      color: var(--link);
+    }
+    #how-btn:hover,
+    #how-btn.active {
+      border-color: rgba(246,184,90,0.82);
+      background: rgba(246,184,90,0.18);
+      color: var(--link-hover);
     }
 
     /* ── Calendar panel — drops from #gallery-controls ──────── */
@@ -362,7 +378,8 @@
     /* ── Heatmap ──────────────────────────────────────────────── */
     #heatmap-section {
       padding: 2rem 1.5rem 1.75rem;
-      max-width: 1200px;
+      width: 100%;
+      max-width: none;
       margin: 0 auto;
       border-bottom: 1px solid var(--border);
     }
@@ -376,6 +393,7 @@
     }
 
     #heatmap-wrap {
+      width: 100%;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       padding-bottom: 0.25rem;
@@ -399,6 +417,7 @@
     #heatmap-grid {
       display: grid;
       grid-auto-flow: column;
+      width: max-content;
     }
 
     .hm-cell {
@@ -457,33 +476,79 @@
 
     /* Legend */
     #heatmap-legend {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.5rem;
       margin-top: 0.85rem;
-      flex-wrap: wrap;
     }
     .hm-legend-label {
-      font-size: 0.58rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--dim);
-      margin-right: 0.1rem;
-    }
-    .hm-legend-item {
       display: flex;
       align-items: center;
-      gap: 0.3rem;
+      font-size: 0.58rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text);
+      grid-column: 1 / -1;
+    }
+    .hm-legend-label span {
+      white-space: nowrap;
+    }
+    .hm-legend-item {
+      display: grid;
+      gap: 0.34rem;
       font-size: 0.58rem;
       color: var(--dim);
       text-transform: uppercase;
       letter-spacing: 0.08em;
+      min-width: 0;
+    }
+    .hm-legend-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.4rem;
+      min-width: 0;
+    }
+    .hm-legend-name {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      min-width: 0;
+      color: var(--muted);
+    }
+    .hm-legend-meta {
+      color: var(--text);
+      white-space: nowrap;
     }
     .hm-legend-swatch {
       width: 9px;
       height: 9px;
       border-radius: 2px;
       flex-shrink: 0;
+    }
+    .hm-legend-track {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .hm-legend-fill {
+      height: 100%;
+      border-radius: inherit;
+      min-width: 2px;
+    }
+    @media (max-width: 720px) {
+      #heatmap-legend {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .hm-legend-label {
+        display: block;
+        grid-column: auto;
+        line-height: 1.35;
+      }
+      .hm-legend-label span {
+        display: block;
+      }
     }
 
     /* ── Grid ────────────────────────────────────────────────── */
@@ -1012,9 +1077,9 @@
       gap: 0.45rem;
       padding: 0.4rem 0.7rem 0.4rem 0.6rem;
       border-radius: 8px;
-      border: 1px solid var(--pink-line);
-      background: var(--pink-soft);
-      color: var(--pink);
+      border: 1px solid rgba(246,184,90,0.58);
+      background: rgba(246,184,90,0.1);
+      color: var(--link);
       cursor: pointer;
       font-size: 0.65rem;
       font-family: var(--font-ui);
@@ -1024,9 +1089,9 @@
       white-space: nowrap;
     }
     #info-btn:hover, #info-btn.active {
-      color: #f8d4ff;
-      border-color: rgba(240,171,252,0.64);
-      background: rgba(240,171,252,0.18);
+      color: var(--link-hover);
+      border-color: rgba(246,184,90,0.82);
+      background: rgba(246,184,90,0.18);
     }
 
     /* ── About modal ─────────────────────────────────────────── */
@@ -1362,6 +1427,12 @@
       object-fit: cover;
       display: block;
     }
+    .wrap-hero video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
     .wrap-hero::after {
       content: '';
       position: absolute;
@@ -1389,6 +1460,95 @@
     .wrap-card.no-image .wrap-stat-grid.full-width {
       grid-template-columns: 1fr;
     }
+    .wrap-mini-heatmap {
+      display: grid;
+      grid-template-columns: repeat(var(--heatmap-cols), minmax(0, 1fr));
+      grid-template-rows: repeat(var(--heatmap-rows), minmax(0, 1fr));
+      gap: 2px;
+      margin-top: 0.4rem;
+      padding: 0.72rem;
+      border: 0;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.035);
+      width: min(100%, calc((var(--heatmap-cols) * 26px) + ((var(--heatmap-cols) - 1) * 2px) + 1.44rem));
+      align-self: center;
+    }
+    .wrap-mini-cell {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1 / 1;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.07);
+    }
+    .wrap-card.system-slide .wrap-content {
+      justify-content: flex-start;
+    }
+    .wrap-decoder {
+      display: grid;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+      padding: 0.7rem;
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.035);
+    }
+    .wrap-points {
+      display: grid;
+      gap: 0.45rem;
+      margin-top: 0.1rem;
+      color: var(--muted);
+      font-size: 0.74rem;
+      line-height: 1.42;
+    }
+    .wrap-point strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+    .wrap-decoder-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto minmax(80px, 1.4fr) auto;
+      align-items: center;
+      gap: 0.55rem;
+      color: var(--muted);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .wrap-decoder-head {
+      color: var(--dim);
+      font-size: 0.52rem;
+      letter-spacing: 0.14em;
+    }
+    .wrap-decoder-head span:nth-last-child(-n + 2) {
+      text-align: right;
+    }
+    .wrap-decoder-row i {
+      width: 0.62rem;
+      height: 0.62rem;
+      border-radius: 3px;
+      display: block;
+    }
+    .wrap-decoder-name {
+      color: var(--text);
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-style: italic;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+    .wrap-decoder-track {
+      display: block;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .wrap-decoder-fill {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      min-width: 2px;
+    }
     .wrap-eyebrow {
       color: var(--pink);
       font-size: 0.64rem;
@@ -1407,6 +1567,9 @@
       color: var(--muted);
       font-size: 0.82rem;
       line-height: 1.5;
+    }
+    .wrap-copy.emphasis {
+      color: var(--text);
     }
     .wrap-stat-grid {
       display: grid;
@@ -1432,6 +1595,37 @@
       font-size: 0.58rem;
       letter-spacing: 0.14em;
       text-transform: uppercase;
+    }
+    a.wrap-stat {
+      display: block;
+      text-decoration: none;
+    }
+    a.wrap-stat strong {
+      color: var(--link);
+      font-size: 0.95rem;
+      overflow-wrap: anywhere;
+    }
+    a.wrap-stat:hover {
+      border-color: rgba(246,184,90,0.52);
+      background: rgba(246,184,90,0.09);
+    }
+    .wrap-card.thanks-slide .wrap-stat-grid {
+      grid-template-columns: 1fr;
+    }
+    .wrap-card.thanks-slide a.wrap-stat {
+      text-align: center;
+      border-color: rgba(246,184,90,0.56);
+      background: rgba(246,184,90,0.1);
+      padding: 0.78rem;
+    }
+    .wrap-card.thanks-slide a.wrap-stat strong {
+      color: var(--link);
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .wrap-card.thanks-slide a.wrap-stat span {
+      display: none;
     }
     .wrap-bars {
       display: flex;
@@ -1480,19 +1674,6 @@
       text-transform: uppercase;
       cursor: pointer;
     }
-    #wrap-next.wrap-love {
-      border-color: rgba(246,184,90,0.64);
-      background: rgba(246,184,90,0.12);
-      color: var(--link);
-      min-width: 96px;
-      justify-content: center;
-      text-align: center;
-    }
-    #wrap-next.wrap-love:hover {
-      border-color: rgba(255,208,138,0.86);
-      background: rgba(246,184,90,0.2);
-      color: var(--link-hover);
-    }
     .wrap-nav button:disabled {
       opacity: 0.35;
       cursor: default;
@@ -1503,75 +1684,237 @@
       letter-spacing: 0.14em;
       text-transform: uppercase;
     }
-    #love-popover {
+    @media (max-width: 520px) {
+      .wrap-card h2 { font-size: 1.65rem; }
+      .wrap-stat-grid { grid-template-columns: 1fr; }
+      .wrap-mini-heatmap { gap: 0.11rem; padding: 0.65rem; }
+    }
+
+    /* ── How it works interactive modal ─────────────────────── */
+    #how-overlay {
       display: none;
       position: fixed;
       inset: 0;
       z-index: 1140;
-      place-items: center;
-      padding: 1.25rem;
-      background: rgba(4,4,10,0.62);
+      background: rgba(4,4,10,0.94);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      padding: 2.5rem 1.25rem;
+      overflow: auto;
+      animation: fade-in 0.25s ease;
+    }
+    #how-overlay.open { display: grid; place-items: center; }
+    #how-panel {
+      width: min(100%, 980px);
+      border: 1px solid rgba(167,139,250,0.36);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(14,14,28,0.98), rgba(8,8,18,0.98));
+      box-shadow: 0 34px 120px rgba(0,0,0,0.75);
+      padding: clamp(1rem, 3vw, 1.45rem);
+    }
+    #how-close {
+      position: fixed;
+      top: 1.25rem;
+      right: 1.25rem;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      cursor: pointer;
+      font: 0.9rem var(--font-ui);
+    }
+    #how-close:hover { color: var(--text); border-color: rgba(255,255,255,0.24); }
+    .how-head {
+      display: grid;
+      gap: 0.45rem;
+      margin-bottom: 0.95rem;
+    }
+    .how-eyebrow {
+      color: var(--link);
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .how-head h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2.25rem, 7vw, 4.2rem);
+      font-style: italic;
+      font-weight: 300;
+      line-height: 0.95;
+    }
+    .how-stage {
+      display: grid;
+      grid-template-columns: minmax(260px, 0.78fr) minmax(0, 1.22fr);
+      gap: clamp(1rem, 3vw, 1.45rem);
+      align-items: stretch;
+    }
+    .how-controls {
+      display: grid;
+      align-content: start;
+      gap: 0.78rem;
+      padding: 0.85rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.035);
+    }
+    .how-control {
+      display: grid;
+      gap: 0.42rem;
+      padding: 0.72rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      background: rgba(5,5,14,0.5);
+    }
+    .how-control label,
+    .how-meta-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      color: var(--purple);
+      font-size: 0.62rem;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+    .how-control label span:last-child {
+      color: var(--link);
+    }
+    .how-control input {
+      width: 100%;
+      accent-color: var(--pink);
+    }
+    .how-control small {
+      color: var(--dim);
+      font-size: 0.68rem;
+      line-height: 1.45;
+    }
+    .how-reset {
+      width: 100%;
+      padding: 0.68rem;
+      border: 1px solid rgba(240,171,252,0.38);
+      border-radius: 10px;
+      background: rgba(240,171,252,0.1);
+      color: var(--pink);
+      cursor: pointer;
+      font: 0.65rem var(--font-ui);
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+    .how-preview {
+      min-height: 540px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(167,139,250,0.32);
+      border-radius: 18px;
+      background: #05050d;
+      isolation: isolate;
+    }
+    .how-preview img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transform: scale(1.025);
+      transition: opacity 0.38s ease, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .how-preview img.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .how-preview::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(180deg, transparent 36%, rgba(4,4,10,0.18) 54%, rgba(4,4,10,0.9) 100%);
+      pointer-events: none;
+    }
+    .how-info {
+      position: absolute;
+      left: clamp(0.9rem, 3vw, 1.25rem);
+      right: clamp(0.9rem, 3vw, 1.25rem);
+      bottom: clamp(0.9rem, 3vw, 1.25rem);
+      z-index: 2;
+      display: grid;
+      gap: 0.7rem;
+    }
+    .how-pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .how-pill {
+      width: fit-content;
+      max-width: 100%;
+      padding: 0.45rem 0.58rem;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 7px;
+      background: rgba(10,10,22,0.76);
+      color: var(--text);
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
     }
-    #love-popover.open { display: grid; }
-    .love-card {
-      width: min(100%, 390px);
-      border: 1px solid rgba(246,184,90,0.5);
-      border-radius: 18px;
-      background: rgba(14,14,28,0.96);
-      box-shadow: 0 22px 70px rgba(0,0,0,0.58), 0 0 0 1px rgba(246,184,90,0.08);
-      padding: 1.35rem;
-      color: var(--text);
-    }
-    .love-card h2 {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.55rem;
+    .how-title {
       font-family: var(--font-display);
+      font-size: clamp(2rem, 6vw, 3.8rem);
       font-style: italic;
       font-weight: 300;
-      font-size: 2rem;
-      line-height: 1;
-      text-align: center;
+      line-height: 0.95;
     }
-    .love-card p {
-      margin-top: 0.7rem;
-      color: var(--muted);
-      font-size: 0.86rem;
+    .how-reading {
+      max-width: 42rem;
+      color: #d8d3f6;
+      font-size: 0.9rem;
       line-height: 1.55;
+      text-shadow: 0 1px 20px rgba(0,0,0,0.55);
     }
-    .love-actions {
-      display: grid;
-      gap: 0.6rem;
-      margin-top: 1.1rem;
-    }
-    .love-actions a,
-    .love-actions button {
+    .how-actions {
       display: flex;
-      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.55rem;
       align-items: center;
-      border-radius: 8px;
-      border: 1px solid rgba(167,139,250,0.36);
-      background: rgba(167,139,250,0.1);
-      color: var(--pink);
-      min-height: 42px;
-      font-family: var(--font-ui);
-      font-size: 0.68rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      text-decoration: none;
-      cursor: pointer;
     }
-    .love-actions a:first-child {
-      border-color: rgba(246,184,90,0.62);
-      background: rgba(246,184,90,0.14);
+    .how-open-entry {
+      border: 1px solid rgba(246,184,90,0.56);
+      border-radius: 9px;
+      background: rgba(246,184,90,0.13);
       color: var(--link);
+      cursor: pointer;
+      padding: 0.58rem 0.7rem;
+      font: 0.62rem var(--font-ui);
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
     }
-    @media (max-width: 520px) {
-      .wrap-card h2 { font-size: 1.65rem; }
-      .wrap-stat-grid { grid-template-columns: 1fr; }
+    .how-open-entry:hover {
+      border-color: rgba(246,184,90,0.86);
+      color: var(--link-hover);
+    }
+    .how-match-note {
+      color: var(--dim);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    @media (max-width: 820px) {
+      #how-overlay { padding: 3.6rem 1rem 1.2rem; align-items: start; }
+      .how-stage { grid-template-columns: 1fr; }
+      .how-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .how-control { gap: 0.32rem; padding: 0.58rem; }
+      .how-control small { display: none; }
+      .how-reset { grid-column: 1 / -1; }
+      .how-preview { min-height: min(68vh, 600px); }
+    }
+    @media (max-width: 560px) {
+      #how-panel { border-radius: 16px; }
+      .how-head h2 { font-size: clamp(2.1rem, 14vw, 3.2rem); }
+      .how-control label { font-size: 0.54rem; letter-spacing: 0.1em; }
+      .how-preview { min-height: 500px; }
     }
   </style>
 </head>
@@ -1579,12 +1922,11 @@
 
   <header>
     <h1>Dream Art</h1>
-    <p>One dreamscape per night, visualized from data.</p>
+    <p>Turning daily sleep data into art.</p>
     <nav>
-      <a href="https://manu.vision">← manu.vision</a>
       <div class="nav-info-row">
-        <button id="info-btn" aria-label="About this project">
-          About this project
+        <button id="info-btn" aria-label="How It Works">
+          How It Works
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
             <circle cx="7.5" cy="7.5" r="6.25" stroke="currentColor" stroke-width="1.2"/>
             <path d="M7.5 6.5V11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
@@ -1715,12 +2057,12 @@
       <div id="heatmap-grid"></div>
     </div>
     <div id="heatmap-legend">
-      <span class="hm-legend-label">Sleep score</span>
-      <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#C8613A"></div>Poor</div>
-      <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#D4A853"></div>Fair</div>
-      <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#4D7C5A"></div>Moderate</div>
-      <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#3A78B8"></div>Good</div>
-      <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#8B5CF6"></div>Optimal</div>
+      <div class="hm-legend-label"><span>Sleep score</span> <span>legend (0-100)</span></div>
+      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#C8613A"></span>Ember - pyramid · 0% (0)</span><span class="hm-legend-meta">0-40</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#C8613A;width:0%"></div></div></div>
+      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#D4A853"></span>Ochre - cube · 0% (0)</span><span class="hm-legend-meta">41-55</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#D4A853;width:0%"></div></div></div>
+      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#4D7C5A"></span>Moss - cylinder · 0% (0)</span><span class="hm-legend-meta">56-70</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#4D7C5A;width:0%"></div></div></div>
+      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#3A78B8"></span>Slate - torus · 0% (0)</span><span class="hm-legend-meta">71-85</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#3A78B8;width:0%"></div></div></div>
+      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#8B5CF6"></span>Aurora - sphere · 0% (0)</span><span class="hm-legend-meta">86-100</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#8B5CF6;width:0%"></div></div></div>
     </div>
   </section>
   <div id="hm-tooltip" aria-hidden="true"></div>
@@ -1788,7 +2130,66 @@
     </div>
   </div>
 
-  <div id="wrap-overlay" role="dialog" aria-modal="true" aria-label="Highlights" hidden>
+  <div id="how-overlay" role="dialog" aria-modal="true" aria-labelledby="how-title" hidden>
+    <button id="how-close" aria-label="Close">✕</button>
+    <div id="how-panel">
+      <div class="how-head">
+        <p class="how-eyebrow">Interactive archive</p>
+        <h2 id="how-title">Playground</h2>
+      </div>
+
+      <div class="how-stage">
+        <div class="how-controls" id="how-controls">
+          <div class="how-control">
+            <label for="how-score">Sleep score <span id="how-score-value">72</span></label>
+            <input id="how-score" data-how-key="score" type="range" min="0" max="100" value="72" />
+            <small>Chooses the shape family and dominant color range.</small>
+          </div>
+          <div class="how-control">
+            <label for="how-duration">Sleep length <span id="how-duration-value">64</span></label>
+            <input id="how-duration" data-how-key="duration" type="range" min="0" max="100" value="64" />
+            <small>Pulls the composition toward smaller or larger forms.</small>
+          </div>
+          <div class="how-control">
+            <label for="how-rem">REM rhythm <span id="how-rem-value">58</span></label>
+            <input id="how-rem" data-how-key="rem" type="range" min="0" max="100" value="58" />
+            <small>Influences rotation, looseness, and motion.</small>
+          </div>
+          <div class="how-control">
+            <label for="how-recovery">Recovery <span id="how-recovery-value">70</span></label>
+            <input id="how-recovery" data-how-key="recovery" type="range" min="0" max="100" value="70" />
+            <small>Changes how calmly the objects float in the frame.</small>
+          </div>
+          <div class="how-control">
+            <label for="how-hrv">HRV steadiness <span id="how-hrv-value">52</span></label>
+            <input id="how-hrv" data-how-key="hrv" type="range" min="0" max="100" value="52" />
+            <small>Guides clustering, spacing, and visual tension.</small>
+          </div>
+          <button class="how-reset" id="how-reset" type="button">Reset signals</button>
+        </div>
+
+        <div class="how-preview" id="how-preview" aria-live="polite">
+          <img id="how-img-a" alt="" />
+          <img id="how-img-b" alt="" />
+          <div class="how-info">
+            <div class="how-pill-row">
+              <span class="how-pill" id="how-date">Archive match</span>
+              <span class="how-pill" id="how-score-pill">Score --</span>
+              <span class="how-pill" id="how-shape">Shape</span>
+            </div>
+            <h3 class="how-title" id="how-match-title">Move the sliders</h3>
+            <p class="how-reading" id="how-reading">The archive will surface the closest matching dreamscape.</p>
+            <div class="how-actions">
+              <button class="how-open-entry" id="how-open-entry" type="button">Open entry</button>
+              <span class="how-match-note" id="how-match-note">Preloading archive matches</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="wrap-overlay" role="dialog" aria-modal="true" aria-label="About this project" hidden>
     <button id="wrap-close" aria-label="Close">✕</button>
     <div id="wrap-panel">
       <div id="wrap-slide"></div>
@@ -1796,17 +2197,6 @@
         <button id="wrap-prev">Previous</button>
         <span id="wrap-count">0 / 0</span>
         <button id="wrap-next">Next</button>
-      </div>
-    </div>
-    <div id="love-popover" role="dialog" aria-modal="true" aria-labelledby="love-title" hidden>
-      <div class="love-card">
-        <h2 id="love-title">❤️ <span id="love-count">0</span></h2>
-        <p>Enjoying this project? Consider tipping the artist.</p>
-        <div class="love-actions">
-          <a href="https://www.paypal.com/paypalme/manuelsainsily" target="_blank" rel="noopener">Tip the artist</a>
-          <button id="love-learn" type="button">Learn more</button>
-          <button id="love-share-wrap" type="button">Share highlights</button>
-        </div>
       </div>
     </div>
   </div>
@@ -1898,6 +2288,222 @@
         Ember: 'This night becomes ember pyramids: sharper forms that turn a harder night into something alert, angular, and still alive.'
       };
       return `${passages[meta.palette]} The more intimate signals stay abstracted: length shapes the scale, deeper rest adds weight, dream-rich sleep loosens the motion, and recovery changes how high the forms seem to float.`;
+    }
+
+    function clamp01(value) {
+      return Math.max(0, Math.min(1, value));
+    }
+
+    function seededFraction(seed) {
+      let hash = 2166136261;
+      const text = String(seed ?? '');
+      for (let i = 0; i < text.length; i += 1) {
+        hash ^= text.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return ((hash >>> 0) % 1000) / 1000;
+    }
+
+    function numericMetric(item, keys, fallback) {
+      for (const key of keys) {
+        const value = Number(item?.[key]);
+        if (Number.isFinite(value)) return value;
+      }
+      return fallback;
+    }
+
+    function normalizeMetric(value, min, max) {
+      if (!Number.isFinite(value)) return 0.5;
+      return clamp01((value - min) / (max - min));
+    }
+
+    function howFingerprint(item) {
+      const score = Number.isFinite(Number(item?.sleepScore)) ? Number(item.sleepScore) : 72;
+      const seed = item?.date || item?.label || score;
+      const durationFallback = 50 + (score - 50) * 0.22 + (seededFraction(`${seed}:duration`) - 0.5) * 42;
+      const remFallback = 50 + (seededFraction(`${seed}:rem`) - 0.5) * 76;
+      const recoveryFallback = 50 + (score - 50) * 0.42 + (seededFraction(`${seed}:recovery`) - 0.5) * 32;
+      const hrvFallback = 50 + (seededFraction(`${seed}:hrv`) - 0.5) * 82;
+      const duration = numericMetric(item, ['durationScore', 'sleepDurationScore', 'totalSleepScore', 'totalSleep'], durationFallback);
+      const rem = numericMetric(item, ['remScore', 'remSleepScore', 'remSleep'], remFallback);
+      const recovery = numericMetric(item, ['readinessScore', 'recoveryScore', 'readiness', 'recovery'], recoveryFallback);
+      const hrv = numericMetric(item, ['hrvScore', 'hrvBalanceScore', 'hrv', 'averageHrv'], hrvFallback);
+
+      return {
+        score: clamp01(score / 100),
+        duration: normalizeMetric(duration, 0, 100),
+        rem: normalizeMetric(rem, 0, 100),
+        recovery: normalizeMetric(recovery, 0, 100),
+        hrv: normalizeMetric(hrv, 0, 100)
+      };
+    }
+
+    function buildHowPool(items) {
+      return sortItems(items)
+        .filter(item => item.imageData && Number.isFinite(Number(item.sleepScore)))
+        .map(item => ({ item, fingerprint: howFingerprint(item) }));
+    }
+
+    function howTargetFingerprint() {
+      return {
+        score: howTarget.score / 100,
+        duration: howTarget.duration / 100,
+        rem: howTarget.rem / 100,
+        recovery: howTarget.recovery / 100,
+        hrv: howTarget.hrv / 100
+      };
+    }
+
+    function howDistance(a, b) {
+      return (
+        Math.abs(a.score - b.score) * 2.8 +
+        Math.abs(a.duration - b.duration) * 0.86 +
+        Math.abs(a.rem - b.rem) * 0.72 +
+        Math.abs(a.recovery - b.recovery) * 0.94 +
+        Math.abs(a.hrv - b.hrv) * 0.72
+      );
+    }
+
+    function howClosestMatch(target) {
+      const candidates = howPool.length ? howPool : buildHowPool(allItems);
+      if (!candidates.length) return null;
+      const targetMeta = scoreMeta(Math.round(target.score * 100));
+      const bandCandidates = targetMeta
+        ? candidates.filter(entry => scoreMeta(entry.item.sleepScore)?.palette === targetMeta.palette)
+        : candidates;
+      if (!bandCandidates.length) return null;
+      const loaded = bandCandidates.filter(entry => howLoadedImages.has(entry.item.imageData));
+      const source = loaded.length ? loaded : bandCandidates;
+      return source
+        .map(entry => ({ ...entry, distance: howDistance(target, entry.fingerprint) }))
+        .sort((a, b) => a.distance - b.distance || dateValue(b.item) - dateValue(a.item))[0]?.item || null;
+    }
+
+    function preloadHowImages() {
+      if (howPreloadStarted || !allItems.length) return;
+      howPreloadStarted = true;
+      howPool = buildHowPool(allItems);
+      howPreloadedCount = 0;
+      howPool.forEach(({ item }) => {
+        const img = new Image();
+        img.decoding = 'async';
+        img.onload = () => {
+          howLoadedImages.add(item.imageData);
+          howPreloadedCount += 1;
+          if (howOverlay.classList.contains('open')) updateHowMatch(true);
+        };
+        img.onerror = () => {
+          howPreloadedCount += 1;
+        };
+        img.src = item.imageData;
+      });
+    }
+
+    function scheduleHowPreload() {
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(preloadHowImages, { timeout: 2500 });
+      } else {
+        window.setTimeout(preloadHowImages, 1200);
+      }
+    }
+
+    function setHowImage(item) {
+      if (!item || item === howCurrentItem) return;
+      const nextImg = howShowingA ? howImgB : howImgA;
+      const prevImg = howShowingA ? howImgA : howImgB;
+      nextImg.alt = item.label || 'Dreamscape archive match';
+      nextImg.src = item.imageData;
+      nextImg.classList.add('active');
+      prevImg.classList.remove('active');
+      howShowingA = !howShowingA;
+      howCurrentItem = item;
+    }
+
+    function describeHowMatch(item) {
+      const meta = scoreMeta(item?.sleepScore);
+      if (!meta) return 'The archive match keeps the signal abstract, letting form and atmosphere carry the reading.';
+      const score = Number(item.sleepScore);
+      const tone = score >= 86 ? 'luminous' : score >= 71 ? 'clear' : score >= 56 ? 'grounded' : score >= 41 ? 'compact' : 'alert';
+      return `The nearest archive match turns this signal into ${meta.palette.toLowerCase()} ${meta.primitive.toLowerCase()} forms: ${tone} in color, with scale, rhythm, spacing, and suspension shaped by the other sliders.`;
+    }
+
+    function updateHowControlLabels() {
+      Object.keys(howTarget).forEach(key => {
+        const el = document.getElementById(`how-${key}-value`);
+        if (el) el.textContent = howTarget[key];
+      });
+    }
+
+    function updateHowMatch(quiet = false) {
+      updateHowControlLabels();
+      const item = howClosestMatch(howTargetFingerprint());
+      if (!item) {
+        howMatchTitle.textContent = 'No archive match yet';
+        howDate.textContent = 'No match';
+        howScorePill.textContent = `Score ${howTarget.score}`;
+        howScorePill.style.color = scoreColor(howTarget.score) || '';
+        const meta = scoreMeta(howTarget.score);
+        howShape.textContent = meta ? `${meta.palette} · ${meta.primitive}` : 'Dreamscape';
+        howReading.textContent = 'There is no preloaded dreamscape in this score band yet.';
+        return;
+      }
+      const meta = scoreMeta(item.sleepScore);
+      const label = item.label || mysteryDateLabel(item);
+      howDate.textContent = label;
+      howScorePill.textContent = `Score ${item.sleepScore ?? '--'}`;
+      howScorePill.style.color = scoreColor(item.sleepScore) || '';
+      howShape.textContent = meta ? `${meta.palette} · ${meta.primitive}` : 'Dreamscape';
+      howMatchTitle.textContent = label;
+      howReading.textContent = item.reading || describeHowMatch(item);
+      const loaded = howLoadedImages.size;
+      const total = howPool.length || allItems.length;
+      howMatchNote.textContent = total ? `${loaded}/${total} archive matches preloaded` : 'Preparing archive matches';
+      if (!quiet || item !== howCurrentItem) setHowImage(item);
+    }
+
+    function openHowModal() {
+      preloadHowImages();
+      calPanel.classList.remove('open');
+      sortPanel.classList.remove('open');
+      howOverlay.hidden = false;
+      howOverlay.classList.add('open');
+      howBtn.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      updateHowMatch();
+    }
+
+    function closeHowModal() {
+      howOverlay.classList.remove('open');
+      howOverlay.hidden = true;
+      howBtn.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    function resetHowSignals() {
+      Object.assign(howTarget, {
+        score: 72,
+        duration: 64,
+        rem: 58,
+        recovery: 70,
+        hrv: 52
+      });
+      document.querySelectorAll('[data-how-key]').forEach(input => {
+        input.value = howTarget[input.dataset.howKey];
+      });
+      updateHowMatch();
+    }
+
+    function openHowEntry() {
+      if (!howCurrentItem) return;
+      const idx = displayed.findIndex(item => item.date === howCurrentItem.date);
+      closeHowModal();
+      if (idx >= 0) {
+        openLightbox(idx);
+        return;
+      }
+      displayed = sortItems(allItems);
+      const fallback = displayed.findIndex(item => item.date === howCurrentItem.date);
+      if (fallback >= 0) openLightbox(fallback);
     }
 
     function todayDreamscape() {
@@ -2358,7 +2964,8 @@
           cursor += 68;
         });
 
-        const copy = fittedCanvasLines(ctx, slide.copy || '', contentW, maxCopyHeight, uiFont, 28, 20, 1.42);
+        const copyText = Array.isArray(slide.copy) ? slide.copy.join(' ') : slide.copy || '';
+        const copy = fittedCanvasLines(ctx, copyText, contentW, maxCopyHeight, uiFont, 28, 20, 1.42);
         ctx.font = `400 ${copy.size}px ${uiFont}`;
         ctx.fillStyle = '#d8d2f2';
         cursor += 20;
@@ -2446,16 +3053,25 @@
     const wrapPrev    = document.getElementById('wrap-prev');
     const wrapNext    = document.getElementById('wrap-next');
     const wrapCount   = document.getElementById('wrap-count');
-    const lovePopover = document.getElementById('love-popover');
-    const loveCountEl = document.getElementById('love-count');
-    const loveLearn   = document.getElementById('love-learn');
-    const loveShareWrap = document.getElementById('love-share-wrap');
     const readingOverlay = document.getElementById('reading-overlay');
     const readingClose = document.getElementById('reading-close');
     const readingCard = document.getElementById('reading-card');
     const readingPrev = document.getElementById('reading-prev');
     const readingNext = document.getElementById('reading-next');
     const readingCount = document.getElementById('reading-count');
+    const howBtn      = document.getElementById('how-btn');
+    const howOverlay  = document.getElementById('how-overlay');
+    const howClose    = document.getElementById('how-close');
+    const howReset    = document.getElementById('how-reset');
+    const howImgA     = document.getElementById('how-img-a');
+    const howImgB     = document.getElementById('how-img-b');
+    const howDate     = document.getElementById('how-date');
+    const howScorePill = document.getElementById('how-score-pill');
+    const howShape    = document.getElementById('how-shape');
+    const howMatchTitle = document.getElementById('how-match-title');
+    const howReading  = document.getElementById('how-reading');
+    const howMatchNote = document.getElementById('how-match-note');
+    const howOpenEntry = document.getElementById('how-open-entry');
     const filterPill  = document.getElementById('filter-pill');
     const filterLabel = document.getElementById('filter-label');
     const filterClear = document.getElementById('filter-clear');
@@ -2480,6 +3096,19 @@
     let readingIndex = 0;
     let readingItem = null;
     let readingRevealing = false;
+    let howPool = [];
+    let howCurrentItem = null;
+    let howShowingA = true;
+    let howPreloadStarted = false;
+    let howPreloadedCount = 0;
+    const howLoadedImages = new Set();
+    const howTarget = {
+      score: 72,
+      duration: 64,
+      rem: 58,
+      recovery: 70,
+      hrv: 52
+    };
 
     const sortLabels = {
       newest: 'Newest',
@@ -2548,6 +3177,27 @@
       return { label: 'Ember', color: '#C8613A' };
     }
 
+    const SCORE_BUCKET_META = [
+      { label: 'Ember', range: '0-40', shape: 'Pyramid', color: '#C8613A' },
+      { label: 'Ochre', range: '41-55', shape: 'Cube', color: '#D4A853' },
+      { label: 'Moss', range: '56-70', shape: 'Cylinder', color: '#4D7C5A' },
+      { label: 'Slate', range: '71-85', shape: 'Torus', color: '#3A78B8' },
+      { label: 'Aurora', range: '86-100', shape: 'Sphere', color: '#8B5CF6' }
+    ];
+
+    function bucketStats(items, order = SCORE_BUCKET_META.map(bucket => bucket.label)) {
+      const scored = items.filter(item => Number.isFinite(Number(item.sleepScore)));
+      return order.map(label => {
+        const meta = SCORE_BUCKET_META.find(bucket => bucket.label === label);
+        const count = scored.filter(item => scoreBucket(item.sleepScore).label === label).length;
+        return {
+          ...meta,
+          count,
+          pct: scored.length ? Math.round((count / scored.length) * 100) : 0
+        };
+      });
+    }
+
     function averageScore(items) {
       const scores = items.map(item => Number(item.sleepScore)).filter(Number.isFinite);
       if (!scores.length) return null;
@@ -2593,6 +3243,73 @@
       return best;
     }
 
+    function buildMiniHeatmap(items) {
+      const scoreMap = {};
+      const artworkSet = new Set();
+      items.forEach(item => {
+        if (!item.date) return;
+        artworkSet.add(item.date);
+        scoreMap[item.date] = item.sleepScore ?? null;
+      });
+      const startDate = new Date(HEATMAP_START + 'T12:00:00');
+      const latestDate = sortedByDateAsc(items).at(-1)?.date || today;
+      const todayDate = new Date(today + 'T12:00:00');
+      const latestArchiveDate = new Date(latestDate + 'T12:00:00');
+      const endDate = latestArchiveDate > todayDate ? latestArchiveDate : todayDate;
+      const totalDays = Math.round((endDate - startDate) / 864e5) + 1;
+      const rows = Math.max(13, Math.ceil(Math.sqrt(totalDays / 1.45)));
+      const cols = Math.ceil(totalDays / rows);
+      let html = `<div class="wrap-mini-heatmap" style="--heatmap-cols:${cols};--heatmap-rows:${rows}">`;
+      for (let dayOffset = 0; dayOffset < totalDays; dayOffset += 1) {
+        const d = new Date(startDate);
+        d.setDate(startDate.getDate() + dayOffset);
+        const dateStr = d.toISOString().split('T')[0];
+        const score = scoreMap[dateStr];
+        const color = score != null ? scoreColor(score) : artworkSet.has(dateStr) ? 'rgba(180,175,212,0.36)' : 'rgba(255,255,255,0.055)';
+        html += `<span class="wrap-mini-cell" title="${dateStr}${score != null ? ` · ${score}` : ''}" style="background:${color}"></span>`;
+      }
+      for (let i = totalDays; i < rows * cols; i += 1) {
+        html += '<span class="wrap-mini-cell" style="opacity:0"></span>';
+      }
+      html += '</div>';
+      return html;
+    }
+
+    function buildScoreDecoder(buckets = SCORE_BUCKET_META.map(bucket => ({ ...bucket, pct: 0, count: 0 }))) {
+      return `
+        <div class="wrap-decoder">
+          <div class="wrap-decoder-row wrap-decoder-head">
+            <span></span>
+            <span>Palette</span>
+            <span>Score range</span>
+            <span>Shape</span>
+            <span>Archive share</span>
+            <span>%</span>
+          </div>
+          ${buckets.map(({ label, range, shape, color, pct, count }) => `
+            <div class="wrap-decoder-row">
+              <i style="background:${color}"></i>
+              <span class="wrap-decoder-name">${label}</span>
+              <span>${range}</span>
+              <span>${shape}</span>
+              <span class="wrap-decoder-track"><span class="wrap-decoder-fill" style="background:${color};width:${Math.max(pct, count ? 4 : 0)}%"></span></span>
+              <span>${pct}%</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function buildReadingPoints() {
+      return `
+        <div class="wrap-points">
+          <div class="wrap-point"><strong>Score + readiness</strong> choose the palette range, primitive shape, object amount, and color position inside that range.</div>
+          <div class="wrap-point"><strong>Total sleep, deep sleep, REM, and HRV</strong> shape the composition: scale, clustering, rotation, and elevation.</div>
+          <div class="wrap-point"><strong>Date</strong> selects the material and generation seed, so similar biometrics can still become a different piece.</div>
+        </div>
+      `;
+    }
+
     function buildWrapSlides(items) {
       const dated = sortedByDateAsc(items);
       if (!dated.length) return [];
@@ -2605,32 +3322,30 @@
       const avg = averageScore(dated);
       const run = longestGeneratedRun(dated);
       const pause = longestGalleryPause(dated);
-      const bucketOrder = ['Aurora', 'Slate', 'Moss', 'Ochre', 'Ember'];
-      const buckets = bucketOrder.map(label => {
-        const sample = scored.find(item => scoreBucket(item.sleepScore).label === label);
-        const count = scored.filter(item => scoreBucket(item.sleepScore).label === label).length;
-        const color = sample ? scoreBucket(sample.sleepScore).color : {
-          Aurora: '#8B5CF6',
-          Slate: '#3A78B8',
-          Moss: '#4D7C5A',
-          Ochre: '#D4A853',
-          Ember: '#C8613A'
-        }[label];
-        return { label, count, color, pct: scored.length ? Math.round((count / scored.length) * 100) : 0 };
-      });
+      const buckets = bucketStats(scored, ['Aurora', 'Slate', 'Moss', 'Ochre', 'Ember']);
 
       return [
         {
-          eyebrow: 'Project highlights',
-          title: 'One Dreamscape A Night',
-          copy: 'Sleep data becomes a daily visual diary: score chooses the shape and palette, while readiness, sleep stages, HRV, and recovery steer scale, clustering, rotation, and suspension. Each score range leaves a different tint in the archive.',
-          bars: buckets,
-          stats: [
-            ['Dreamscapes', dated.length],
-            ['Average score', avg ?? '—'],
-            ['Highest score', highest ? highest.sleepScore : '—'],
-            ['Lowest score', lowest ? lowest.sleepScore : '—']
-          ]
+          eyebrow: 'Why',
+          title: 'Memory, Color, Geometry',
+          copy: 'I publicly launched this gallery in memory of my mother, Nathalie Déglas (1964-2026), an art teacher who loved visual experimentation and teaching, and in support of those still living with diabetes, including my mother-in-law.',
+          video: 'trailer.mp4'
+        },
+        {
+          eyebrow: 'One dreamscape a night',
+          title: 'Data Turned Into Art',
+          copy: [
+            'Since May 23rd, 2025, I started tracking my sleep: turning biometrics into unique daily visual artifacts.',
+            `The heatmap shows the pulse: accumulated nights, visible pauses, and the score color of each of the ${dated.length} dreamscapes (and counting).`
+          ],
+          heatmap: buildMiniHeatmap(dated)
+        },
+        {
+          eyebrow: 'How to read it',
+          title: 'How to read it',
+          copy: 'Each dreamscape is built from a few visual rules:',
+          decoder: buildScoreDecoder(buckets),
+          points: buildReadingPoints()
         },
         {
           image: first.imageData,
@@ -2673,24 +3388,32 @@
           ]
         },
         {
-          image: midpoint.imageData,
-          eyebrow: 'Rhythm',
-          title: 'Streaks And Pauses',
-          copy: 'The calendar shows the pulse of the practice: stretches of daily translation, and the quiet gaps where the archive briefly disappears.',
+          eyebrow: 'Archive recap',
+          title: 'The Year In Signals',
+          copy: 'A compact snapshot of the archive so far: how many nights became dreamscapes, where the average landed, and the stretches of daily translation or quiet gaps where the archive briefly disappears.',
           stats: [
+            ['Dreamscapes', dated.length],
+            ['Average score', avg ?? '—'],
+            ['Highest score', highest ? highest.sleepScore : '—'],
+            ['Lowest score', lowest ? lowest.sleepScore : '—'],
             ['Longest streak', run ? `${run.length} nights` : '—'],
-            ['Streak dates', run ? `${fmtLabel(run.start)} - ${fmtLabel(run.end)}` : '—'],
             ['Longest pause', pause ? `${pause.length} nights` : '—'],
-            ['Pause dates', pause ? `${fmtLabel(pause.start)} - ${fmtLabel(pause.end)}` : '—']
+            ['Streak dates', run ? fmtRangeCompact(run.start, run.end) : '—'],
+            ['Pause dates', pause ? fmtRangeCompact(pause.start, pause.end) : '—']
           ]
         },
         {
           eyebrow: 'Thank you',
           title: 'Keep Following The Dreams',
-          copy: 'The project keeps growing beyond its first year. Share the highlights, and visit the gallery regularly to discover new daily dreamscapes.',
+          copy: [
+            'The project keeps growing beyond its first year. Share the highlights, and visit the gallery regularly to discover new daily dreamscapes. Inspired by the work of an artist friend, Josue Ibañez, exploring sleep as creative medium.',
+            'Enjoying this project? Consider tipping the artist.'
+          ],
+          emphasisCopyIndex: 1,
+          className: 'thanks-slide',
           stats: [
-            ['Website', 'manu.vision/dreamart'],
-            ['Instagram', '@manu.vision']
+            ['Tip the artist', 'Support the artist', 'https://www.paypal.com/paypalme/manuelsainsily'],
+            ['Instagram', 'Follow the artist', 'https://www.instagram.com/manu.vision/']
           ]
         }
       ].filter(Boolean);
@@ -2716,6 +3439,7 @@
           ? `${items.length} dreams · since May 23, 2025`
           : 'Every dream, since May 23, 2025';
       }
+      renderHeatmapLegend(items);
 
       const startDate = new Date(HEATMAP_START + 'T12:00:00');
       const todayDate = new Date(today + 'T12:00:00');
@@ -2734,13 +3458,15 @@
       const totalWeeks = Math.ceil(totalDays / 7);
 
       // ── Responsive cell size ────────────────────────────────
-      // Fill the available container width on desktop; enforce a 14 px floor
-      // on mobile so cells remain tap-friendly (adds horizontal scroll).
+      // Fill the available width on desktop. On mobile, keep cells tappable and
+      // allow horizontal scrolling when the full calendar exceeds the viewport.
       const GAP      = 2;
       const wrapEl   = document.getElementById('heatmap-wrap');
-      const wrapW    = wrapEl.getBoundingClientRect().width;
-      const idealCell = Math.floor((wrapW - (totalWeeks - 1) * GAP) / totalWeeks);
-      const CELL     = Math.max(14, idealCell);
+      const viewportW = document.documentElement.clientWidth || window.innerWidth || wrapEl.getBoundingClientRect().width;
+      const availableW = Math.max(280, viewportW - 48);
+      const idealCell = (availableW - (totalWeeks - 1) * GAP) / totalWeeks;
+      const minCell = viewportW <= 720 ? 12 : 4;
+      const CELL     = Math.max(minCell, idealCell);
       const STEP     = CELL + GAP;
 
       const grid        = document.getElementById('heatmap-grid');
@@ -2754,6 +3480,7 @@
       grid.style.gap              = `${GAP}px`;
 
       const totalWidth = totalWeeks * STEP - GAP;
+      grid.style.width = totalWidth + 'px';
       monthLabels.style.width = totalWidth + 'px';
 
       let current         = new Date(gridStart);
@@ -2876,6 +3603,22 @@
       });
     }
 
+    function renderHeatmapLegend(items) {
+      const legend = document.getElementById('heatmap-legend');
+      if (!legend) return;
+      legend.innerHTML = `
+        <div class="hm-legend-label"><span>Sleep score</span> <span>legend (0-100)</span></div>
+        ${bucketStats(items).map(bucket => `
+        <div class="hm-legend-item">
+          <div class="hm-legend-top">
+            <span class="hm-legend-name"><span class="hm-legend-swatch" style="background:${bucket.color}"></span>${bucket.label} - ${bucket.shape.toLowerCase()} · ${bucket.pct}% (${bucket.count})</span>
+            <span class="hm-legend-meta">${bucket.range}</span>
+          </div>
+          <div class="hm-legend-track"><div class="hm-legend-fill" style="background:${bucket.color};width:${Math.max(bucket.pct, bucket.count ? 4 : 0)}%"></div></div>
+        </div>
+      `).join('')}`;
+    }
+
     // ── Fetch ─────────────────────────────────────────────────
     async function load() {
       try {
@@ -2890,6 +3633,7 @@
         }
         applyFilter(null);
         renderHeatmap(allItems);
+        scheduleHowPreload();
         // Honor a #YYYY-MM-DD deep link if one is present — opens the lightbox
         // straight onto that night's artwork.
         const hashDate = decodeURIComponent(location.hash.replace(/^#/, ''));
@@ -3071,6 +3815,14 @@
       return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
+    function fmtCompactDate(d) {
+      return new Date(d + 'T12:00:00').toLocaleDateString('en-GB');
+    }
+
+    function fmtRangeCompact(start, end) {
+      return `${fmtCompactDate(start)}-${fmtCompactDate(end)}`;
+    }
+
     function renderWrapSlide() {
       const slide = wrapSlides[wrapIndex];
       if (!slide) {
@@ -3078,14 +3830,18 @@
         wrapCount.textContent = '0 / 0';
         wrapPrev.disabled = true;
         wrapNext.disabled = true;
-        wrapNext.classList.remove('wrap-love');
         return;
       }
 
       const fullWidthStats = slide.stats && slide.stats.length <= 2 && slide.stats.some(([, value]) => String(value).length > 12);
       const stats = slide.stats ? `
         <div class="wrap-stat-grid ${fullWidthStats ? 'full-width' : ''}">
-          ${slide.stats.map(([label, value]) => `
+          ${slide.stats.map(([label, value, href]) => href ? `
+            <a class="wrap-stat" href="${escapeHtml(href)}" target="_blank" rel="noopener">
+              <strong>${escapeHtml(value)}</strong>
+              <span>${escapeHtml(label)}</span>
+            </a>
+          ` : `
             <div class="wrap-stat">
               <strong>${escapeHtml(value)}</strong>
               <span>${escapeHtml(label)}</span>
@@ -3107,14 +3863,28 @@
           `).join('')}
         </div>
       ` : '';
+      const copy = Array.isArray(slide.copy)
+        ? slide.copy.map((line, index) => `<p class="wrap-copy ${index === slide.emphasisCopyIndex ? 'emphasis' : ''}">${escapeHtml(line)}</p>`).join('')
+        : `<p class="wrap-copy">${escapeHtml(slide.copy)}</p>`;
+      const heatmap = slide.heatmap || '';
+      const decoder = slide.decoder || '';
+      const points = slide.points || '';
+      const media = slide.video
+        ? `<div class="wrap-hero"><video src="${escapeHtml(slide.video)}" muted loop playsinline autoplay></video></div>`
+        : slide.image
+          ? `<div class="wrap-hero"><img src="${escapeHtml(slide.image)}" alt=""></div>`
+          : '';
 
       wrapSlide.innerHTML = `
-        <article class="wrap-card ${slide.image ? '' : 'no-image'}">
-          ${slide.image ? `<div class="wrap-hero"><img src="${escapeHtml(slide.image)}" alt=""></div>` : ''}
+        <article class="wrap-card ${media ? '' : 'no-image'} ${slide.heatmap ? 'system-slide' : ''} ${slide.className || ''}">
+          ${media}
           <div class="wrap-content">
             <div class="wrap-eyebrow">${escapeHtml(slide.eyebrow)}</div>
             <h2>${escapeHtml(slide.title)}</h2>
-            <p class="wrap-copy">${escapeHtml(slide.copy)}</p>
+            ${copy}
+            ${heatmap}
+            ${decoder}
+            ${points}
             ${stats}
             ${bars}
           </div>
@@ -3124,11 +3894,9 @@
       wrapPrev.disabled = wrapIndex === 0;
       wrapNext.disabled = false;
       if (wrapIndex === wrapSlides.length - 1) {
-        wrapNext.classList.add('wrap-love');
-        wrapNext.textContent = `❤️ ${wrapLoveCount}`;
-        wrapNext.setAttribute('aria-label', `Love the highlights. ${wrapLoveCount} loves`);
+        wrapNext.textContent = 'Done';
+        wrapNext.setAttribute('aria-label', 'Close about this project');
       } else {
-        wrapNext.classList.remove('wrap-love');
         wrapNext.textContent = 'Next';
         wrapNext.setAttribute('aria-label', 'Next');
       }
@@ -3139,20 +3907,25 @@
       wrapIndex = 0;
       calPanel.classList.remove('open');
       sortPanel.classList.remove('open');
+      if (aboutOverlay) {
+        aboutOverlay.classList.remove('open');
+        aboutOverlay.hidden = true;
+      }
       updateSortUI();
       renderWrapSlide();
       wrapOverlay.hidden = false;
       wrapOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
       wrapBtn.classList.add('active');
+      infoBtn.classList.add('active');
     }
 
     function closeWrap() {
       wrapOverlay.classList.remove('open');
       wrapOverlay.hidden = true;
-      closeLovePopover();
       document.body.style.overflow = '';
       wrapBtn.classList.remove('active');
+      infoBtn.classList.remove('active');
     }
 
     function prevWrapSlide() {
@@ -3168,60 +3941,7 @@
         renderWrapSlide();
         return;
       }
-      loveWrap();
-    }
-
-    function openLovePopover() {
-      loveCountEl.textContent = wrapLoveCount;
-      lovePopover.hidden = false;
-      lovePopover.classList.add('open');
-    }
-
-    function closeLovePopover() {
-      lovePopover.classList.remove('open');
-      lovePopover.hidden = true;
-    }
-
-    async function loveWrap() {
-      wrapNext.disabled = true;
-      const previous = wrapLoveCount;
-      wrapLoveCount += 1;
-      renderWrapSlide();
-      openLovePopover();
-      try {
-        wrapLoveCount = await incrementLove('wrap');
-        loveCountEl.textContent = wrapLoveCount;
-      } catch (error) {
-        console.error('Could not save wrap love', error);
-        wrapLoveCount = previous;
-        loveCountEl.textContent = wrapLoveCount;
-      } finally {
-        renderWrapSlide();
-      }
-    }
-
-    async function exportWrapSlides(button = loveShareWrap) {
-      if (!wrapSlides.length) wrapSlides = buildWrapSlides(allItems);
-      if (!wrapSlides.length) return;
-      button.disabled = true;
-      const originalText = button.textContent;
-      try {
-        for (let i = 0; i < wrapSlides.length; i++) {
-          button.textContent = `Export ${i + 1}/${wrapSlides.length}`;
-          const blob = await createWrapExportImage(wrapSlides[i], i, wrapSlides.length);
-          downloadBlob(blob, `dream-art-highlights-${String(i + 1).padStart(2, '0')}.png`);
-          await new Promise(resolve => setTimeout(resolve, 120));
-        }
-        button.textContent = 'Saved';
-      } catch (error) {
-        console.error('Could not export wrap', error);
-        button.textContent = 'Try again';
-      } finally {
-        setTimeout(() => {
-          button.textContent = originalText;
-          button.disabled = false;
-        }, 1400);
-      }
+      closeWrap();
     }
 
     wrapBtn.addEventListener('click', () => {
@@ -3231,17 +3951,28 @@
     wrapClose.addEventListener('click', closeWrap);
     wrapPrev.addEventListener('click', prevWrapSlide);
     wrapNext.addEventListener('click', nextWrapSlide);
-    loveShareWrap.addEventListener('click', () => exportWrapSlides(loveShareWrap));
-    loveLearn.addEventListener('click', () => {
-      closeWrap();
-      openAbout();
-    });
-    lovePopover.addEventListener('click', e => {
-      if (e.target === lovePopover) closeLovePopover();
-    });
     wrapOverlay.addEventListener('click', e => {
       if (e.target === wrapOverlay) closeWrap();
     });
+    if (howBtn && howOverlay) {
+      howBtn.addEventListener('click', () => {
+        howOverlay.classList.contains('open') ? closeHowModal() : openHowModal();
+      });
+    }
+    if (howClose) howClose.addEventListener('click', closeHowModal);
+    if (howReset) howReset.addEventListener('click', resetHowSignals);
+    if (howOpenEntry) howOpenEntry.addEventListener('click', openHowEntry);
+    if (howOverlay) {
+      document.querySelectorAll('[data-how-key]').forEach(input => {
+        input.addEventListener('input', () => {
+          howTarget[input.dataset.howKey] = Number(input.value);
+          updateHowMatch();
+        });
+      });
+      howOverlay.addEventListener('click', e => {
+        if (e.target === howOverlay) closeHowModal();
+      });
+    }
 
     // Single date
     document.getElementById('single-apply').addEventListener('click', () => {
@@ -3400,13 +4131,13 @@
         return;
       }
       if (wrapOverlay.classList.contains('open')) {
-        if (lovePopover.classList.contains('open')) {
-          if (e.key === 'Escape') closeLovePopover();
-          return;
-        }
         if (e.key === 'Escape')      closeWrap();
         if (e.key === 'ArrowLeft')   prevWrapSlide();
         if (e.key === 'ArrowRight')  nextWrapSlide();
+        return;
+      }
+      if (howOverlay.classList.contains('open')) {
+        if (e.key === 'Escape') closeHowModal();
         return;
       }
       const about = document.getElementById('about-overlay');
@@ -3459,7 +4190,7 @@
       if (trailerVideo && !trailerVideo.paused) trailerVideo.pause();
     }
     infoBtn.addEventListener('click', () => {
-      aboutOverlay.classList.contains('open') ? closeAbout() : openAbout();
+      wrapOverlay.classList.contains('open') ? closeWrap() : openWrap();
     });
     aboutClose.addEventListener('click', closeAbout);
     aboutWrapLink.addEventListener('click', () => {
@@ -3469,6 +4200,13 @@
     // Click outside the panel closes (the backdrop is the overlay itself)
     aboutOverlay.addEventListener('click', (e) => {
       if (e.target === aboutOverlay) closeAbout();
+    });
+
+    let heatmapResizeTimer = null;
+    window.addEventListener('resize', () => {
+      if (!allItems.length) return;
+      clearTimeout(heatmapResizeTimer);
+      heatmapResizeTimer = setTimeout(() => renderHeatmap(allItems), 120);
     });
 
     load();
