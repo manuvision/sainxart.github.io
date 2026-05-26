@@ -473,11 +473,10 @@
 
     /* Legend */
     #heatmap-legend {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.5rem;
       margin-top: 0.85rem;
-      flex-wrap: wrap;
     }
     .hm-legend-label {
       font-size: 0.58rem;
@@ -487,19 +486,57 @@
       margin-right: 0.1rem;
     }
     .hm-legend-item {
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
+      display: grid;
+      gap: 0.34rem;
       font-size: 0.58rem;
       color: var(--dim);
       text-transform: uppercase;
       letter-spacing: 0.08em;
+      min-width: 0;
+    }
+    .hm-legend-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.4rem;
+      min-width: 0;
+    }
+    .hm-legend-name {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      min-width: 0;
+    }
+    .hm-legend-meta {
+      color: var(--muted);
+      white-space: nowrap;
     }
     .hm-legend-swatch {
       width: 9px;
       height: 9px;
       border-radius: 2px;
       flex-shrink: 0;
+    }
+    .hm-legend-track {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .hm-legend-fill {
+      height: 100%;
+      border-radius: inherit;
+      min-width: 2px;
+    }
+    .hm-legend-foot {
+      color: var(--dim);
+      font-size: 0.5rem;
+      letter-spacing: 0.1em;
+    }
+    @media (max-width: 720px) {
+      #heatmap-legend {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
     /* ── Grid ────────────────────────────────────────────────── */
@@ -1413,9 +1450,8 @@
     }
     .wrap-mini-heatmap {
       display: grid;
-      grid-template-columns: repeat(var(--heatmap-weeks), minmax(0, 1fr));
-      grid-template-rows: repeat(7, minmax(0, 1fr));
-      grid-auto-flow: column;
+      grid-template-columns: repeat(var(--heatmap-cols), minmax(0, 1fr));
+      grid-template-rows: repeat(var(--heatmap-rows), minmax(0, 1fr));
       gap: 2px;
       margin-top: 0.4rem;
       padding: 0.72rem;
@@ -1423,9 +1459,10 @@
       border-radius: 14px;
       background: rgba(255,255,255,0.035);
       width: 100%;
-      aspect-ratio: var(--heatmap-weeks) / 7;
-      max-height: 14rem;
-      min-height: 0;
+      aspect-ratio: var(--heatmap-cols) / var(--heatmap-rows);
+      flex: 1 1 auto;
+      max-height: none;
+      min-height: 13rem;
       align-self: center;
     }
     .wrap-mini-cell {
@@ -1436,11 +1473,11 @@
       box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18);
     }
     .wrap-card.system-slide .wrap-content {
-      justify-content: center;
+      justify-content: flex-start;
     }
     .wrap-decoder {
       display: grid;
-      gap: 0.4rem;
+      gap: 0.5rem;
       margin-top: 0.25rem;
       padding: 0.7rem;
       border: 1px solid rgba(255,255,255,0.09);
@@ -1461,7 +1498,7 @@
     }
     .wrap-decoder-row {
       display: grid;
-      grid-template-columns: auto 1fr auto auto;
+      grid-template-columns: auto 1fr auto auto minmax(80px, 1.4fr) auto;
       align-items: center;
       gap: 0.55rem;
       color: var(--muted);
@@ -1473,6 +1510,9 @@
       color: var(--dim);
       font-size: 0.52rem;
       letter-spacing: 0.14em;
+    }
+    .wrap-decoder-head span:nth-last-child(-n + 2) {
+      text-align: right;
     }
     .wrap-decoder-row i {
       width: 0.62rem;
@@ -1487,6 +1527,19 @@
       font-style: italic;
       letter-spacing: 0;
       text-transform: none;
+    }
+    .wrap-decoder-track {
+      display: block;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .wrap-decoder-fill {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      min-width: 2px;
     }
     .wrap-eyebrow {
       color: var(--pink);
@@ -1547,6 +1600,24 @@
     a.wrap-stat:hover {
       border-color: rgba(246,184,90,0.52);
       background: rgba(246,184,90,0.09);
+    }
+    .wrap-card.thanks-slide .wrap-stat-grid {
+      grid-template-columns: 1fr;
+    }
+    .wrap-card.thanks-slide a.wrap-stat {
+      text-align: center;
+      border-color: rgba(246,184,90,0.56);
+      background: rgba(246,184,90,0.1);
+      padding: 0.78rem;
+    }
+    .wrap-card.thanks-slide a.wrap-stat strong {
+      color: var(--link);
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .wrap-card.thanks-slide a.wrap-stat span {
+      display: none;
     }
     .wrap-bars {
       display: flex;
@@ -1978,12 +2049,11 @@
       <div id="heatmap-grid"></div>
     </div>
     <div id="heatmap-legend">
-      <span class="hm-legend-label">Sleep score</span>
-      <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#C8613A"></div>Poor</div>
-      <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#D4A853"></div>Fair</div>
-      <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#4D7C5A"></div>Moderate</div>
-      <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#3A78B8"></div>Good</div>
-      <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:#8B5CF6"></div>Optimal</div>
+      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#C8613A"></span>Ember</span><span class="hm-legend-meta">0-40</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#C8613A;width:0%"></div></div><div class="hm-legend-foot">Pyramid · 0%</div></div>
+      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#D4A853"></span>Ochre</span><span class="hm-legend-meta">41-55</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#D4A853;width:0%"></div></div><div class="hm-legend-foot">Cube · 0%</div></div>
+      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#4D7C5A"></span>Moss</span><span class="hm-legend-meta">56-70</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#4D7C5A;width:0%"></div></div><div class="hm-legend-foot">Cylinder · 0%</div></div>
+      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#3A78B8"></span>Slate</span><span class="hm-legend-meta">71-85</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#3A78B8;width:0%"></div></div><div class="hm-legend-foot">Torus · 0%</div></div>
+      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#8B5CF6"></span>Aurora</span><span class="hm-legend-meta">86-100</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#8B5CF6;width:0%"></div></div><div class="hm-legend-foot">Sphere · 0%</div></div>
     </div>
   </section>
   <div id="hm-tooltip" aria-hidden="true"></div>
@@ -3098,6 +3168,27 @@
       return { label: 'Ember', color: '#C8613A' };
     }
 
+    const SCORE_BUCKET_META = [
+      { label: 'Ember', range: '0-40', shape: 'Pyramid', color: '#C8613A' },
+      { label: 'Ochre', range: '41-55', shape: 'Cube', color: '#D4A853' },
+      { label: 'Moss', range: '56-70', shape: 'Cylinder', color: '#4D7C5A' },
+      { label: 'Slate', range: '71-85', shape: 'Torus', color: '#3A78B8' },
+      { label: 'Aurora', range: '86-100', shape: 'Sphere', color: '#8B5CF6' }
+    ];
+
+    function bucketStats(items, order = SCORE_BUCKET_META.map(bucket => bucket.label)) {
+      const scored = items.filter(item => Number.isFinite(Number(item.sleepScore)));
+      return order.map(label => {
+        const meta = SCORE_BUCKET_META.find(bucket => bucket.label === label);
+        const count = scored.filter(item => scoreBucket(item.sleepScore).label === label).length;
+        return {
+          ...meta,
+          count,
+          pct: scored.length ? Math.round((count / scored.length) * 100) : 0
+        };
+      });
+    }
+
     function averageScore(items) {
       const scores = items.map(item => Number(item.sleepScore)).filter(Number.isFinite);
       if (!scores.length) return null;
@@ -3156,14 +3247,10 @@
       const todayDate = new Date(today + 'T12:00:00');
       const latestArchiveDate = new Date(latestDate + 'T12:00:00');
       const endDate = latestArchiveDate > todayDate ? latestArchiveDate : todayDate;
-      const startDow = startDate.getDay();
       const totalDays = Math.round((endDate - startDate) / 864e5) + 1;
-      const totalCells = startDow + totalDays;
-      const weeks = Math.ceil(totalCells / 7);
-      let html = `<div class="wrap-mini-heatmap" style="--heatmap-weeks:${weeks}">`;
-      for (let i = 0; i < startDow; i += 1) {
-        html += '<span class="wrap-mini-cell" style="opacity:0"></span>';
-      }
+      const rows = Math.max(10, Math.ceil(Math.sqrt(totalDays / 2.2)));
+      const cols = Math.ceil(totalDays / rows);
+      let html = `<div class="wrap-mini-heatmap" style="--heatmap-cols:${cols};--heatmap-rows:${rows}">`;
       for (let dayOffset = 0; dayOffset < totalDays; dayOffset += 1) {
         const d = new Date(startDate);
         d.setDate(startDate.getDate() + dayOffset);
@@ -3172,21 +3259,14 @@
         const color = score != null ? scoreColor(score) : artworkSet.has(dateStr) ? 'rgba(180,175,212,0.36)' : 'rgba(255,255,255,0.055)';
         html += `<span class="wrap-mini-cell" title="${dateStr}${score != null ? ` · ${score}` : ''}" style="background:${color}"></span>`;
       }
-      for (let i = totalCells; i < weeks * 7; i += 1) {
+      for (let i = totalDays; i < rows * cols; i += 1) {
         html += '<span class="wrap-mini-cell" style="opacity:0"></span>';
       }
       html += '</div>';
       return html;
     }
 
-    function buildScoreDecoder() {
-      const rows = [
-        ['Ember', '0-40', 'Pyramid', '#C8613A'],
-        ['Ochre', '41-55', 'Cube', '#D4A853'],
-        ['Moss', '56-70', 'Cylinder', '#4D7C5A'],
-        ['Slate', '71-85', 'Torus', '#3A78B8'],
-        ['Aurora', '86-100', 'Sphere', '#8B5CF6']
-      ];
+    function buildScoreDecoder(buckets = SCORE_BUCKET_META.map(bucket => ({ ...bucket, pct: 0, count: 0 }))) {
       return `
         <div class="wrap-decoder">
           <div class="wrap-decoder-row wrap-decoder-head">
@@ -3194,13 +3274,17 @@
             <span>Palette</span>
             <span>Score range</span>
             <span>Shape</span>
+            <span>Archive share</span>
+            <span>%</span>
           </div>
-          ${rows.map(([name, range, shape, color]) => `
+          ${buckets.map(({ label, range, shape, color, pct, count }) => `
             <div class="wrap-decoder-row">
               <i style="background:${color}"></i>
-              <span class="wrap-decoder-name">${name}</span>
+              <span class="wrap-decoder-name">${label}</span>
               <span>${range}</span>
               <span>${shape}</span>
+              <span class="wrap-decoder-track"><span class="wrap-decoder-fill" style="background:${color};width:${Math.max(pct, count ? 4 : 0)}%"></span></span>
+              <span>${pct}%</span>
             </div>
           `).join('')}
         </div>
@@ -3229,19 +3313,7 @@
       const avg = averageScore(dated);
       const run = longestGeneratedRun(dated);
       const pause = longestGalleryPause(dated);
-      const bucketOrder = ['Aurora', 'Slate', 'Moss', 'Ochre', 'Ember'];
-      const buckets = bucketOrder.map(label => {
-        const sample = scored.find(item => scoreBucket(item.sleepScore).label === label);
-        const count = scored.filter(item => scoreBucket(item.sleepScore).label === label).length;
-        const color = sample ? scoreBucket(sample.sleepScore).color : {
-          Aurora: '#8B5CF6',
-          Slate: '#3A78B8',
-          Moss: '#4D7C5A',
-          Ochre: '#D4A853',
-          Ember: '#C8613A'
-        }[label];
-        return { label, count, color, pct: scored.length ? Math.round((count / scored.length) * 100) : 0 };
-      });
+      const buckets = bucketStats(scored, ['Aurora', 'Slate', 'Moss', 'Ochre', 'Ember']);
 
       return [
         {
@@ -3263,9 +3335,8 @@
           eyebrow: 'How to read it',
           title: 'How to read it',
           copy: 'Each dreamscape is built from a few visual rules:',
-          decoder: buildScoreDecoder(),
-          points: buildReadingPoints(),
-          bars: buckets
+          decoder: buildScoreDecoder(buckets),
+          points: buildReadingPoints()
         },
         {
           image: first.imageData,
@@ -3318,8 +3389,8 @@
             ['Lowest score', lowest ? lowest.sleepScore : '—'],
             ['Longest streak', run ? `${run.length} nights` : '—'],
             ['Longest pause', pause ? `${pause.length} nights` : '—'],
-            ['Streak dates', run ? `${fmtLabel(run.start)} - ${fmtLabel(run.end)}` : '—'],
-            ['Pause dates', pause ? `${fmtLabel(pause.start)} - ${fmtLabel(pause.end)}` : '—']
+            ['Streak dates', run ? fmtRangeCompact(run.start, run.end) : '—'],
+            ['Pause dates', pause ? fmtRangeCompact(pause.start, pause.end) : '—']
           ]
         },
         {
@@ -3330,9 +3401,10 @@
             'Enjoying this project? Consider tipping the artist.'
           ],
           emphasisCopyIndex: 1,
+          className: 'thanks-slide',
           stats: [
-            ['Tip the artist', 'paypal.me/manuelsainsily', 'https://www.paypal.com/paypalme/manuelsainsily'],
-            ['Instagram', '@manu.vision', 'https://www.instagram.com/manu.vision/']
+            ['Tip the artist', 'Support the artist', 'https://www.paypal.com/paypalme/manuelsainsily'],
+            ['Instagram', 'Follow the artist', 'https://www.instagram.com/manu.vision/']
           ]
         }
       ].filter(Boolean);
@@ -3358,6 +3430,7 @@
           ? `${items.length} dreams · since May 23, 2025`
           : 'Every dream, since May 23, 2025';
       }
+      renderHeatmapLegend(items);
 
       const startDate = new Date(HEATMAP_START + 'T12:00:00');
       const todayDate = new Date(today + 'T12:00:00');
@@ -3516,6 +3589,21 @@
           document.getElementById('grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       });
+    }
+
+    function renderHeatmapLegend(items) {
+      const legend = document.getElementById('heatmap-legend');
+      if (!legend) return;
+      legend.innerHTML = bucketStats(items).map(bucket => `
+        <div class="hm-legend-item">
+          <div class="hm-legend-top">
+            <span class="hm-legend-name"><span class="hm-legend-swatch" style="background:${bucket.color}"></span>${bucket.label}</span>
+            <span class="hm-legend-meta">${bucket.range}</span>
+          </div>
+          <div class="hm-legend-track"><div class="hm-legend-fill" style="background:${bucket.color};width:${Math.max(bucket.pct, bucket.count ? 4 : 0)}%"></div></div>
+          <div class="hm-legend-foot">${bucket.shape} · ${bucket.pct}%</div>
+        </div>
+      `).join('');
     }
 
     // ── Fetch ─────────────────────────────────────────────────
@@ -3714,6 +3802,14 @@
       return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
+    function fmtCompactDate(d) {
+      return new Date(d + 'T12:00:00').toLocaleDateString('en-GB');
+    }
+
+    function fmtRangeCompact(start, end) {
+      return `${fmtCompactDate(start)}-${fmtCompactDate(end)}`;
+    }
+
     function renderWrapSlide() {
       const slide = wrapSlides[wrapIndex];
       if (!slide) {
@@ -3767,7 +3863,7 @@
           : '';
 
       wrapSlide.innerHTML = `
-        <article class="wrap-card ${media ? '' : 'no-image'} ${slide.heatmap ? 'system-slide' : ''}">
+        <article class="wrap-card ${media ? '' : 'no-image'} ${slide.heatmap ? 'system-slide' : ''} ${slide.className || ''}">
           ${media}
           <div class="wrap-content">
             <div class="wrap-eyebrow">${escapeHtml(slide.eyebrow)}</div>
