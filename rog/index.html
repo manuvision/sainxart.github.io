@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rogue ASCII</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main id="game" aria-label="ASCII roguelike game">
+      <section class="stats" aria-label="Game stats"></section>
+      <section class="stage-wrap" aria-label="3D ASCII map">
+        <div class="stage" aria-label="Layered ASCII world"></div>
+      </section>
+      <section class="legend" aria-label="Legend">
+        <p><span class="hero">@</span> You</p>
+        <p><span class="tree">T</span> Tree</p>
+        <p><span class="rock">R</span> Rock</p>
+        <p><span class="chest">.</span> Chest</p>
+        <p><span class="monster">M</span> Monster</p>
+      </section>
+      <section class="hud">
+        <div>
+          <p class="level">lv <span data-level>1</span></p>
+          <p class="hp">hp <span data-hp>10/10</span></p>
+        </div>
+        <div class="log"></div>
+      </section>
+      <section class="controls" aria-label="Controls">
+        <button data-action="interact">Act</button>
+        <button data-action="restart">Reroll</button>
+      </section>
+      <section class="overlay" hidden>
+        <div>
+          <p class="overlay-kicker"></p>
+          <h1 class="overlay-title"></h1>
+          <p class="overlay-copy"></p>
+          <button data-action="restart">Restart</button>
+        </div>
+      </section>
+    </main>
+    <script src="./src/main.js" type="module"></script>
+  </body>
+</html>
