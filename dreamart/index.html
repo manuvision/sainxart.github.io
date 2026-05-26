@@ -426,6 +426,18 @@
       transition: opacity 0.12s;
       position: relative;
     }
+    @media (max-width: 720px) {
+      .hm-cell.hm-data::before {
+        content: '';
+        position: absolute;
+        inset: -11px;
+        min-width: 44px;
+        min-height: 44px;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+      }
+    }
     .hm-cell.hm-gap {
       background: transparent;
       pointer-events: none;
@@ -2263,6 +2275,21 @@
       if (score >= 41) return '#D4A853'; // Ochre — amber
       return '#C8613A';                  // Ember — rust
     }
+    function hexToRgb(hex) {
+      const clean = String(hex || '').replace('#', '');
+      if (clean.length !== 6) return null;
+      const value = Number.parseInt(clean, 16);
+      if (!Number.isFinite(value)) return null;
+      return {
+        r: (value >> 16) & 255,
+        g: (value >> 8) & 255,
+        b: value & 255,
+      };
+    }
+    function rgba(hex, alpha) {
+      const rgb = hexToRgb(hex);
+      return rgb ? `rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})` : `rgba(255,255,255,${alpha})`;
+    }
 
     // Bracket label + primitive shape from sleep score — mirrors lib/prompt.ts
     function scoreMeta(score) {
@@ -2525,6 +2552,7 @@
       const palette = meta?.palette ?? 'Unknown';
       const primitive = meta?.primitive ?? 'Form';
       const range = meta?.label ?? 'Unscored';
+      const color = scoreColor(item.sleepScore);
       return [
         {
           eyebrow: 'Today’s dreamscape',
@@ -2532,7 +2560,7 @@
           copy: `${mysteryDateLabel(item)} is hidden for a moment. Start with the signal: a sleep score of ${score}, translated into a ${palette.toLowerCase()} visual register.`,
           facts: [
             ['Date', mysteryDateLabel(item)],
-            ['Signal', `${range}${item.sleepScore != null ? ` · ${item.sleepScore}` : ''}`],
+            ['Signal', `${range}${item.sleepScore != null ? ` · ${item.sleepScore}` : ''}`, color],
           ],
         },
         {
@@ -2542,7 +2570,7 @@
             ? `The score chooses the visual family: ${palette.toLowerCase()} color and ${primitive.toLowerCase()} geometry. The intimate measurements stay abstracted inside scale, clustering, height, rotation, and atmosphere.`
             : 'This night keeps its score quiet, leaving the dreamscape to be read through form, spacing, and atmosphere.',
           facts: [
-            ['Palette', palette],
+            ['Palette', palette, color],
             ['Primitive', primitive],
           ],
         },
@@ -2561,9 +2589,9 @@
 
       const facts = step.facts ? `
         <div class="reading-facts">
-          ${step.facts.map(([label, value]) => `
-            <div class="reading-fact">
-              <strong>${escapeHtml(value)}</strong>
+          ${step.facts.map(([label, value, color]) => `
+            <div class="reading-fact" ${color ? `style="border-color:${rgba(color, 0.45)};background:${rgba(color, 0.14)}"` : ''}>
+              <strong ${color ? `style="color:${escapeHtml(color)}"` : ''}>${escapeHtml(value)}</strong>
               <span>${escapeHtml(label)}</span>
             </div>
           `).join('')}
@@ -3075,7 +3103,12 @@
     const filterPill  = document.getElementById('filter-pill');
     const filterLabel = document.getElementById('filter-label');
     const filterClear = document.getElementById('filter-clear');
-    const today       = new Date().toISOString().split('T')[0];
+    function localISODate(date = new Date()) {
+      const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+      return local.toISOString().split('T')[0];
+    }
+
+    const today       = localISODate();
 
     // Set date inputs max to today
     ['single-date','range-from','range-to'].forEach(id => {
@@ -3465,7 +3498,7 @@
       const viewportW = document.documentElement.clientWidth || window.innerWidth || wrapEl.getBoundingClientRect().width;
       const availableW = Math.max(280, viewportW - 48);
       const idealCell = (availableW - (totalWeeks - 1) * GAP) / totalWeeks;
-      const minCell = viewportW <= 720 ? 12 : 4;
+      const minCell = viewportW <= 720 ? 22 : 4;
       const CELL     = Math.max(minCell, idealCell);
       const STEP     = CELL + GAP;
 
