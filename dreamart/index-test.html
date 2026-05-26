@@ -514,9 +514,10 @@
       align-items: center;
       gap: 0.3rem;
       min-width: 0;
+      color: var(--muted);
     }
     .hm-legend-meta {
-      color: var(--muted);
+      color: var(--text);
       white-space: nowrap;
     }
     .hm-legend-swatch {
@@ -535,11 +536,6 @@
       height: 100%;
       border-radius: inherit;
       min-width: 2px;
-    }
-    .hm-legend-foot {
-      color: var(--dim);
-      font-size: 0.5rem;
-      letter-spacing: 0.1em;
     }
     @media (max-width: 720px) {
       #heatmap-legend {
@@ -2062,11 +2058,11 @@
     </div>
     <div id="heatmap-legend">
       <div class="hm-legend-label"><span>Sleep score</span> <span>legend (0-100)</span></div>
-      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#C8613A"></span>Ember</span><span class="hm-legend-meta">0-40</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#C8613A;width:0%"></div></div><div class="hm-legend-foot">Pyramid · 0%</div></div>
-      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#D4A853"></span>Ochre</span><span class="hm-legend-meta">41-55</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#D4A853;width:0%"></div></div><div class="hm-legend-foot">Cube · 0%</div></div>
-      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#4D7C5A"></span>Moss</span><span class="hm-legend-meta">56-70</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#4D7C5A;width:0%"></div></div><div class="hm-legend-foot">Cylinder · 0%</div></div>
-      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#3A78B8"></span>Slate</span><span class="hm-legend-meta">71-85</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#3A78B8;width:0%"></div></div><div class="hm-legend-foot">Torus · 0%</div></div>
-      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#8B5CF6"></span>Aurora</span><span class="hm-legend-meta">86-100</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#8B5CF6;width:0%"></div></div><div class="hm-legend-foot">Sphere · 0%</div></div>
+      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#C8613A"></span>Ember - pyramid · 0% (0)</span><span class="hm-legend-meta">0-40</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#C8613A;width:0%"></div></div></div>
+      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#D4A853"></span>Ochre - cube · 0% (0)</span><span class="hm-legend-meta">41-55</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#D4A853;width:0%"></div></div></div>
+      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#4D7C5A"></span>Moss - cylinder · 0% (0)</span><span class="hm-legend-meta">56-70</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#4D7C5A;width:0%"></div></div></div>
+      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#3A78B8"></span>Slate - torus · 0% (0)</span><span class="hm-legend-meta">71-85</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#3A78B8;width:0%"></div></div></div>
+      <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#8B5CF6"></span>Aurora - sphere · 0% (0)</span><span class="hm-legend-meta">86-100</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#8B5CF6;width:0%"></div></div></div>
     </div>
   </section>
   <div id="hm-tooltip" aria-hidden="true"></div>
@@ -3615,11 +3611,10 @@
         ${bucketStats(items).map(bucket => `
         <div class="hm-legend-item">
           <div class="hm-legend-top">
-            <span class="hm-legend-name"><span class="hm-legend-swatch" style="background:${bucket.color}"></span>${bucket.label}</span>
+            <span class="hm-legend-name"><span class="hm-legend-swatch" style="background:${bucket.color}"></span>${bucket.label} - ${bucket.shape.toLowerCase()} · ${bucket.pct}% (${bucket.count})</span>
             <span class="hm-legend-meta">${bucket.range}</span>
           </div>
           <div class="hm-legend-track"><div class="hm-legend-fill" style="background:${bucket.color};width:${Math.max(bucket.pct, bucket.count ? 4 : 0)}%"></div></div>
-          <div class="hm-legend-foot">${bucket.shape} · ${bucket.pct}%</div>
         </div>
       `).join('')}`;
     }
