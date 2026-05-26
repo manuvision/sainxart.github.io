@@ -487,8 +487,11 @@
       font-size: 0.58rem;
       text-transform: uppercase;
       letter-spacing: 0.14em;
-      color: var(--muted);
+      color: var(--text);
       grid-column: 1 / -1;
+    }
+    .hm-legend-label span {
+      white-space: nowrap;
     }
     .hm-legend-item {
       display: grid;
@@ -543,7 +546,9 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
       .hm-legend-label {
+        display: block;
         grid-column: auto;
+        line-height: 1.35;
       }
     }
 
@@ -1478,7 +1483,6 @@
       aspect-ratio: 1 / 1;
       border-radius: 2px;
       background: rgba(255,255,255,0.07);
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18);
     }
     .wrap-card.system-slide .wrap-content {
       justify-content: flex-start;
@@ -2057,7 +2061,7 @@
       <div id="heatmap-grid"></div>
     </div>
     <div id="heatmap-legend">
-      <div class="hm-legend-label">Sleep score legend</div>
+      <div class="hm-legend-label"><span>Sleep score</span> <span>legend (0-100)</span></div>
       <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#C8613A"></span>Ember</span><span class="hm-legend-meta">0-40</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#C8613A;width:0%"></div></div><div class="hm-legend-foot">Pyramid · 0%</div></div>
       <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#D4A853"></span>Ochre</span><span class="hm-legend-meta">41-55</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#D4A853;width:0%"></div></div><div class="hm-legend-foot">Cube · 0%</div></div>
       <div class="hm-legend-item"><div class="hm-legend-top"><span class="hm-legend-name"><span class="hm-legend-swatch" style="background:#4D7C5A"></span>Moss</span><span class="hm-legend-meta">56-70</span></div><div class="hm-legend-track"><div class="hm-legend-fill" style="background:#4D7C5A;width:0%"></div></div><div class="hm-legend-foot">Cylinder · 0%</div></div>
@@ -3607,7 +3611,7 @@
       const legend = document.getElementById('heatmap-legend');
       if (!legend) return;
       legend.innerHTML = `
-        <div class="hm-legend-label">Sleep score legend</div>
+        <div class="hm-legend-label"><span>Sleep score</span> <span>legend (0-100)</span></div>
         ${bucketStats(items).map(bucket => `
         <div class="hm-legend-item">
           <div class="hm-legend-top">
