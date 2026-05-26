@@ -176,15 +176,15 @@ button:hover {
 }
 
 .leaf-layer-1 {
-  filter: blur(0.4px) drop-shadow(2px 5px 1px rgba(0, 0, 0, 0.18));
+  filter: blur(0.3px) drop-shadow(2px 5px 1px rgba(0, 0, 0, 0.22));
 }
 
 .leaf-layer-2 {
-  filter: blur(0.8px) drop-shadow(4px 9px 1px rgba(0, 0, 0, 0.2));
+  filter: blur(0.65px) drop-shadow(4px 9px 1px rgba(0, 0, 0, 0.25));
 }
 
 .leaf-layer-3 {
-  filter: blur(1.4px) drop-shadow(6px 13px 2px rgba(0, 0, 0, 0.22));
+  filter: blur(1px) drop-shadow(6px 13px 2px rgba(0, 0, 0, 0.28));
 }
 
 .layer.leaf-layer .cell {
@@ -201,15 +201,15 @@ button:hover {
 }
 
 .leaf-1 {
-  color: rgba(69, 112, 101, 0.44);
+  color: rgba(82, 132, 111, 0.68);
 }
 
 .leaf-2 {
-  color: rgba(94, 139, 111, 0.52);
+  color: rgba(105, 156, 123, 0.74);
 }
 
 .leaf-3 {
-  color: rgba(128, 163, 121, 0.58);
+  color: rgba(143, 181, 132, 0.82);
 }
 
 .empty {

@@ -355,7 +355,7 @@ function renderLeafLayer(depth) {
   layer.className = `layer leaf-layer leaf-layer-${depth}`;
   layer.style.setProperty('--grid-size', gridSize);
   layer.style.transform = `translate3d(${-(origin.x * parallax) + Math.sin(drift + depth) * 13}px, ${-(origin.y * parallax) + Math.cos(drift * 0.8 + depth) * 13}px, ${150 + depth * 72}px) scale(${1.08 + depth * 0.11})`;
-  layer.style.opacity = String(0.08 + depth * 0.04);
+  layer.style.opacity = String(0.18 + depth * 0.07);
   layer.style.zIndex = String(16 + depth);
 
   for (let y = 0; y < gridSize; y += 1) {
