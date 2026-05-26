@@ -530,6 +530,9 @@
       min-width: 0;
       color: var(--muted);
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.045em;
     }
     .hm-legend-meta {
       color: var(--text);
@@ -579,6 +582,27 @@
       .hm-legend-label span {
         display: block;
       }
+      .hm-legend-item {
+        font-size: 0.53rem;
+        letter-spacing: 0.03em;
+      }
+      .hm-legend-name,
+      .hm-legend-meta {
+        letter-spacing: 0.01em;
+      }
+      .hm-legend-top {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) max-content;
+        gap: 0.28rem;
+      }
+    }
+    @media (max-width: 720px) and (max-aspect-ratio: 1/1) {
+      #heatmap-legend {
+        grid-template-columns: 1fr;
+      }
+      .hm-legend-item {
+        font-size: 0.52rem;
+      }
     }
     @media (max-width: 430px) {
       header {
@@ -610,7 +634,7 @@
       .hm-legend-label,
       .hm-legend-item {
         font-size: 0.56rem;
-        letter-spacing: 0.09em;
+        letter-spacing: 0.055em;
       }
       .hm-legend-top {
         display: grid;
@@ -621,6 +645,10 @@
         gap: 0.28rem;
         overflow: hidden;
         text-overflow: ellipsis;
+        letter-spacing: 0.02em;
+      }
+      .hm-legend-meta {
+        letter-spacing: 0.02em;
       }
       .hm-legend-swatch {
         width: 8px;
@@ -951,6 +979,12 @@
       border-radius: 10px;
       padding: 0.74rem;
     }
+    .reading-fact.tinted {
+      background:
+        linear-gradient(135deg, rgba(var(--fact-rgb), 0.24), rgba(var(--fact-rgb), 0.08)),
+        rgba(255,255,255,0.035);
+      border-color: rgba(var(--fact-rgb), 0.5);
+    }
     .reading-fact strong {
       display: block;
       color: var(--text);
@@ -964,6 +998,24 @@
       font-size: 0.58rem;
       letter-spacing: 0.13em;
       text-transform: uppercase;
+    }
+    .reading-palette-pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.55rem;
+    }
+    .reading-palette-swatch {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.18rem;
+      flex-shrink: 0;
+    }
+    .reading-palette-dot {
+      width: 0.56rem;
+      height: 0.56rem;
+      border-radius: 999px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
     }
     .reading-image-wrap {
       position: absolute;
@@ -2476,15 +2528,53 @@
       const rgb = hexToRgb(hex);
       return rgb ? `rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})` : `rgba(255,255,255,${alpha})`;
     }
+    function rgbTriplet(hex) {
+      const rgb = hexToRgb(hex);
+      return rgb ? `${rgb.r},${rgb.g},${rgb.b}` : '255,255,255';
+    }
 
     // Bracket label + primitive shape from sleep score — mirrors lib/prompt.ts
     function scoreMeta(score) {
       if (score == null) return null;
-      if (score >= 86) return { label: 'Optimal',  primitive: 'Sphere',   palette: 'Aurora' };
-      if (score >= 71) return { label: 'Good',     primitive: 'Torus',    palette: 'Slate'  };
-      if (score >= 56) return { label: 'Moderate', primitive: 'Cylinder', palette: 'Moss'   };
-      if (score >= 41) return { label: 'Fair',     primitive: 'Cube',     palette: 'Ochre'  };
-      return            { label: 'Poor',     primitive: 'Pyramid',  palette: 'Ember'  };
+      const ranges = [
+        {
+          min: 86, max: 100, label: 'Optimal', primitive: 'Sphere', palette: 'Aurora',
+          labels: ['blue-violet', 'luminous violet', 'pink-magenta violet'],
+          swatches: [['#4F55B7', '#6D6FD8', '#8E91EA'], ['#6B3FD2', '#8B5CF6', '#AA86FF'], ['#A9448A', '#D86BB8', '#EA91CE']]
+        },
+        {
+          min: 71, max: 85, label: 'Good', primitive: 'Torus', palette: 'Slate',
+          labels: ['powder cyan-blue', 'cinematic blue', 'slate indigo'],
+          swatches: [['#4E91B1', '#7AB8D4', '#A3D3E8'], ['#285A8F', '#3A78B8', '#5A98D4'], ['#202B59', '#2D3F7A', '#4B5E9D']]
+        },
+        {
+          min: 56, max: 70, label: 'Moderate', primitive: 'Cylinder', palette: 'Moss',
+          labels: ['yellow-green moss', 'moss green', 'blue-green teal'],
+          swatches: [['#647E33', '#86A848', '#A5C967'], ['#365A41', '#4D7C5A', '#6A9A73'], ['#2E5E5C', '#3F7A78', '#5A9995']]
+        },
+        {
+          min: 41, max: 55, label: 'Fair', primitive: 'Cube', palette: 'Ochre',
+          labels: ['deep ochre', 'warm amber', 'pale amber'],
+          swatches: [['#5D3E0E', '#7C5412', '#A8751F'], ['#A0772B', '#D4A853', '#E6C26F'], ['#C7A764', '#F0DFB0', '#F6EBCF']]
+        },
+        {
+          min: 0, max: 40, label: 'Poor', primitive: 'Pyramid', palette: 'Ember',
+          labels: ['deep brown-red', 'rich rust', 'burnt orange-red'],
+          swatches: [['#4E1D12', '#7C3018', '#A94A2B'], ['#8F341F', '#C8613A', '#E07D53'], ['#B84D22', '#E58550', '#F0A273']]
+        }
+      ];
+      const range = ranges.find(entry => score >= entry.min && score <= entry.max) || ranges[2];
+      const span = Math.max(1, range.max - range.min);
+      const t = clamp01((score - range.min) / span);
+      const toneIndex = t < 0.33 ? 0 : t < 0.66 ? 1 : 2;
+      return {
+        label: range.label,
+        primitive: range.primitive,
+        palette: range.palette,
+        hueLabel: range.labels[toneIndex],
+        hueSwatches: range.swatches[toneIndex],
+        hueColor: range.swatches[toneIndex][1]
+      };
     }
 
     function dreamReading(item) {
@@ -2509,7 +2599,7 @@
 
     function seededFraction(seed) {
       let hash = 2166136261;
-      const text = String(seed ?? '');
+      const text = String(seed == null ? '' : seed);
       for (let i = 0; i < text.length; i += 1) {
         hash ^= text.charCodeAt(i);
         hash = Math.imul(hash, 16777619);
@@ -2519,7 +2609,7 @@
 
     function numericMetric(item, keys, fallback) {
       for (const key of keys) {
-        const value = Number(item?.[key]);
+        const value = Number(item && item[key]);
         if (Number.isFinite(value)) return value;
       }
       return fallback;
@@ -2531,8 +2621,8 @@
     }
 
     function howFingerprint(item) {
-      const score = Number.isFinite(Number(item?.sleepScore)) ? Number(item.sleepScore) : 72;
-      const seed = item?.date || item?.label || score;
+      const score = Number.isFinite(Number(item && item.sleepScore)) ? Number(item.sleepScore) : 72;
+      const seed = (item && (item.date || item.label)) || score;
       const durationFallback = 50 + (score - 50) * 0.22 + (seededFraction(`${seed}:duration`) - 0.5) * 42;
       const remFallback = 50 + (seededFraction(`${seed}:rem`) - 0.5) * 76;
       const recoveryFallback = 50 + (score - 50) * 0.42 + (seededFraction(`${seed}:recovery`) - 0.5) * 32;
@@ -2582,14 +2672,18 @@
       if (!candidates.length) return null;
       const targetMeta = scoreMeta(Math.round(target.score * 100));
       const bandCandidates = targetMeta
-        ? candidates.filter(entry => scoreMeta(entry.item.sleepScore)?.palette === targetMeta.palette)
+        ? candidates.filter(entry => {
+            const meta = scoreMeta(entry.item.sleepScore);
+            return meta && meta.palette === targetMeta.palette;
+          })
         : candidates;
       if (!bandCandidates.length) return null;
       const loaded = bandCandidates.filter(entry => howLoadedImages.has(entry.item.imageData));
       const source = loaded.length ? loaded : bandCandidates;
-      return source
+      const matches = source
         .map(entry => ({ ...entry, distance: howDistance(target, entry.fingerprint) }))
-        .sort((a, b) => a.distance - b.distance || dateValue(b.item) - dateValue(a.item))[0]?.item || null;
+        .sort((a, b) => a.distance - b.distance || dateValue(b.item) - dateValue(a.item));
+      return matches.length ? matches[0].item : null;
     }
 
     function preloadHowImages() {
@@ -2633,7 +2727,7 @@
     }
 
     function describeHowMatch(item) {
-      const meta = scoreMeta(item?.sleepScore);
+      const meta = scoreMeta(item && item.sleepScore);
       if (!meta) return 'The archive match keeps the signal abstract, letting form and atmosphere carry the reading.';
       const score = Number(item.sleepScore);
       const tone = score >= 86 ? 'luminous' : score >= 71 ? 'clear' : score >= 56 ? 'grounded' : score >= 41 ? 'compact' : 'alert';
@@ -2663,7 +2757,7 @@
       const meta = scoreMeta(item.sleepScore);
       const label = item.label || mysteryDateLabel(item);
       howDate.textContent = label;
-      howScorePill.textContent = `Score ${item.sleepScore ?? '--'}`;
+        howScorePill.textContent = `Score ${item.sleepScore == null ? '--' : item.sleepScore}`;
       howScorePill.style.color = scoreColor(item.sleepScore) || '';
       howShape.textContent = meta ? `${meta.palette} · ${meta.primitive}` : 'Dreamscape';
       howMatchTitle.textContent = label;
@@ -2724,7 +2818,7 @@
     }
 
     function mysteryDateLabel(item) {
-      if (!item?.date) return 'Today';
+      if (!item || !item.date) return 'Today';
       return new Date(`${item.date}T12:00:00`).toLocaleDateString('en-US', {
         month: 'long',
         day: 'numeric',
@@ -2735,10 +2829,12 @@
     function buildReadingSteps(item) {
       const meta = scoreMeta(item.sleepScore);
       const score = item.sleepScore != null ? item.sleepScore : 'quiet';
-      const palette = meta?.palette ?? 'Unknown';
-      const primitive = meta?.primitive ?? 'Form';
-      const range = meta?.label ?? 'Unscored';
+      const palette = meta && meta.palette ? meta.palette : 'Unknown';
+      const primitive = meta && meta.primitive ? meta.primitive : 'Form';
       const color = scoreColor(item.sleepScore);
+      const hueLabel = meta && meta.hueLabel ? meta.hueLabel : palette;
+      const hueColor = meta && meta.hueColor ? meta.hueColor : color;
+      const range = meta && meta.label ? meta.label : 'Unscored';
       return [
         {
           eyebrow: 'Today’s dreamscape',
@@ -2746,17 +2842,17 @@
           copy: `${mysteryDateLabel(item)} is hidden for a moment. Start with the signal: a sleep score of ${score}, translated into a ${palette.toLowerCase()} visual register.`,
           facts: [
             ['Date', mysteryDateLabel(item)],
-            ['Signal', `${range}${item.sleepScore != null ? ` · ${item.sleepScore}` : ''}`, color],
+            ['Signal', `${range}${item.sleepScore != null ? ` · ${item.sleepScore}` : ''}`, hueColor],
           ],
         },
         {
           eyebrow: 'How to read it',
-          title: `${palette} · ${primitive}`,
+          title: `${hueLabel} · ${primitive}`,
           copy: meta
-            ? `The score chooses the visual family: ${palette.toLowerCase()} color and ${primitive.toLowerCase()} geometry. The intimate measurements stay abstracted inside scale, clustering, height, rotation, and atmosphere.`
+            ? `The score chooses the visual family: ${hueLabel.toLowerCase()} color and ${primitive.toLowerCase()} geometry. The intimate measurements stay abstracted inside scale, clustering, height, rotation, and atmosphere.`
             : 'This night keeps its score quiet, leaving the dreamscape to be read through form, spacing, and atmosphere.',
           facts: [
-            ['Palette', palette, color],
+            [`${palette} palette`, hueLabel, hueColor, meta ? meta.hueSwatches : null],
             ['Primitive', primitive],
           ],
         },
@@ -2775,9 +2871,12 @@
 
       const facts = step.facts ? `
         <div class="reading-facts">
-          ${step.facts.map(([label, value, color]) => `
-            <div class="reading-fact" ${color ? `style="border-color:${rgba(color, 0.45)};background:${rgba(color, 0.14)}"` : ''}>
-              <strong ${color ? `style="color:${escapeHtml(color)}"` : ''}>${escapeHtml(value)}</strong>
+          ${step.facts.map(([label, value, color, swatches]) => `
+            <div class="reading-fact ${color ? 'tinted' : ''}" ${color ? `style="--fact-rgb:${rgbTriplet(color)}"` : ''}>
+              <strong class="${swatches ? 'reading-palette-pill' : ''}" ${color ? `style="color:${escapeHtml(color)}"` : ''}>
+                <span>${escapeHtml(value)}</span>
+                ${swatches ? `<span class="reading-palette-swatch">${swatches.map(swatch => `<span class="reading-palette-dot" style="background:${escapeHtml(swatch)}"></span>`).join('')}</span>` : ''}
+              </strong>
               <span>${escapeHtml(label)}</span>
             </div>
           `).join('')}
@@ -2838,13 +2937,14 @@
 
     function openReadingEntry() {
       closeReadingMode();
-      const idx = displayed.findIndex(item => item.date === readingItem?.date);
+      const readingDate = readingItem && readingItem.date;
+      const idx = displayed.findIndex(item => item.date === readingDate);
       if (idx >= 0) {
         openLightbox(idx);
         return;
       }
       displayed = sortItems(allItems);
-      const fallback = displayed.findIndex(item => item.date === readingItem?.date);
+      const fallback = displayed.findIndex(item => item.date === readingDate);
       if (fallback >= 0) openLightbox(fallback);
     }
 
@@ -2950,7 +3050,7 @@
     }
 
     function wrapCanvasText(ctx, text, maxWidth) {
-      const words = String(text ?? '').trim().split(/\s+/).filter(Boolean);
+      const words = String(text == null ? '' : text).trim().split(/\s+/).filter(Boolean);
       const lines = [];
       let line = '';
       for (const word of words) {
@@ -3011,7 +3111,7 @@
     }
 
     async function createPublicShareCard(item) {
-      await document.fonts?.ready;
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
       const image = await loadCardImage(item.imageData);
       const canvas = document.createElement('canvas');
       canvas.width = 1080;
@@ -3092,7 +3192,7 @@
     }
 
     async function createWrapExportImage(slide, index, total) {
-      await document.fonts?.ready;
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
       const canvas = document.createElement('canvas');
       canvas.width = 1080;
       canvas.height = 1350;
@@ -3343,8 +3443,8 @@
     function sortItems(items) {
       const sorted = [...items];
       sorted.sort((a, b) => {
-        const aScore = a.sleepScore ?? -1;
-        const bScore = b.sleepScore ?? -1;
+        const aScore = a.sleepScore == null ? -1 : a.sleepScore;
+        const bScore = b.sleepScore == null ? -1 : b.sleepScore;
         if (activeSort === 'oldest') return dateValue(a) - dateValue(b);
         if (activeSort === 'score-high') return (bScore - aScore) || (dateValue(b) - dateValue(a));
         if (activeSort === 'score-low') return (aScore - bScore) || (dateValue(b) - dateValue(a));
@@ -3369,7 +3469,7 @@
     }
 
     function escapeHtml(value) {
-      return String(value ?? '').replace(/[&<>"']/g, char => ({
+      return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({
         '&': '&amp;',
         '<': '&lt;',
         '>': '&gt;',
@@ -3468,10 +3568,11 @@
       items.forEach(item => {
         if (!item.date) return;
         artworkSet.add(item.date);
-        scoreMap[item.date] = item.sleepScore ?? null;
+        scoreMap[item.date] = item.sleepScore == null ? null : item.sleepScore;
       });
       const startDate = new Date(HEATMAP_START + 'T12:00:00');
-      const latestDate = sortedByDateAsc(items).at(-1)?.date || today;
+      const orderedDates = sortedByDateAsc(items);
+      const latestDate = orderedDates.length ? orderedDates[orderedDates.length - 1].date : today;
       const todayDate = new Date(today + 'T12:00:00');
       const latestArchiveDate = new Date(latestDate + 'T12:00:00');
       const endDate = latestArchiveDate > todayDate ? latestArchiveDate : todayDate;
@@ -3570,7 +3671,7 @@
           title: first.label || fmtLabel(first.date),
           copy: `${fmtLabel(first.date)} opened the archive: the first recorded night turned into a visual object instead of staying only as a number.`,
           stats: [
-            ['Sleep score', first.sleepScore ?? '—'],
+            ['Sleep score', first.sleepScore == null ? '—' : first.sleepScore],
             ['Palette', scoreBucket(first.sleepScore).label]
           ]
         },
@@ -3580,7 +3681,7 @@
           title: latest.label || fmtLabel(latest.date),
           copy: 'The project is still alive and accumulating, one night at a time, with each new image extending the same private visual diary.',
           stats: [
-            ['Sleep score', latest.sleepScore ?? '—'],
+            ['Sleep score', latest.sleepScore == null ? '—' : latest.sleepScore],
             ['Palette', scoreBucket(latest.sleepScore).label]
           ]
         },
@@ -3610,7 +3711,7 @@
           copy: 'A compact snapshot of the archive so far: how many nights became dreamscapes, where the average landed, and the stretches of daily translation or quiet gaps where the archive briefly disappears.',
           stats: [
             ['Dreamscapes', dated.length],
-            ['Average score', avg ?? '—'],
+            ['Average score', avg == null ? '—' : avg],
             ['Highest score', highest ? highest.sleepScore : '—'],
             ['Lowest score', lowest ? lowest.sleepScore : '—'],
             ['Longest streak', run ? `${run.length} nights` : '—'],
@@ -3646,7 +3747,7 @@
       items.forEach(item => {
         if (!item.date) return;
         artworkSet.add(item.date);
-        scoreMap[item.date] = item.sleepScore ?? null;
+        scoreMap[item.date] = item.sleepScore == null ? null : item.sleepScore;
       });
 
       // Update the title with the live count
@@ -4283,9 +4384,9 @@
       lbPrev.disabled    = current === 0;
       lbNext.disabled    = current === displayed.length - 1;
       lbCounter.textContent = `${current + 1} / ${displayed.length}`;
-      lbLove.textContent = `❤️ ${item.loveCount ?? 0}`;
+      lbLove.textContent = `❤️ ${item.loveCount == null ? 0 : item.loveCount}`;
       lbLove.disabled = false;
-      lbLove.setAttribute('aria-label', `Love this dream. ${item.loveCount ?? 0} loves`);
+      lbLove.setAttribute('aria-label', `Love this dream. ${item.loveCount == null ? 0 : item.loveCount} loves`);
     }
     function prevImg() { if (current > 0) { current--; showLightbox(); } }
     function nextImg() { if (current < displayed.length - 1) { current++; showLightbox(); } }
@@ -4304,7 +4405,7 @@
       const item = displayed[current];
       const target = loveTargetFor(item);
       if (!item || !target) return;
-      const previous = item.loveCount ?? 0;
+      const previous = item.loveCount == null ? 0 : item.loveCount;
       item.loveCount = previous + 1;
       lbLove.textContent = `❤️ ${item.loveCount}`;
       lbLove.disabled = true;
