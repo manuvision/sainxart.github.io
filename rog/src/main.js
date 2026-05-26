@@ -22,6 +22,7 @@ const levelEl = document.querySelector('[data-level]');
 let state = createGame(99912);
 let bestTurns = Number(localStorage.getItem(BEST_KEY)) || null;
 let audioContext;
+let touchStart = null;
 
 function rng(seed) {
   return () => {
@@ -438,6 +439,56 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'ArrowRight') move({ x: 1, y: 0 });
   if (event.key === ' ') interact();
   if (event.key.toLowerCase() === 'r') restart(state.seed + 1);
+});
+
+document.addEventListener('touchstart', (event) => {
+  if (event.touches.length !== 1) return;
+  const touch = event.touches[0];
+  touchStart = {
+    x: touch.clientX,
+    y: touch.clientY,
+    time: Date.now(),
+    target: event.target,
+  };
+}, { passive: true });
+
+document.addEventListener('touchmove', (event) => {
+  if (touchStart) event.preventDefault();
+}, { passive: false });
+
+document.addEventListener('touchend', (event) => {
+  if (!touchStart) return;
+  if (touchStart.target instanceof Element && touchStart.target.closest('button')) {
+    touchStart = null;
+    return;
+  }
+
+  const touch = event.changedTouches[0];
+  const dx = touch.clientX - touchStart.x;
+  const dy = touch.clientY - touchStart.y;
+  const absX = Math.abs(dx);
+  const absY = Math.abs(dy);
+  const elapsed = Date.now() - touchStart.time;
+  const swipeDistance = 36;
+  const tapDistance = 12;
+
+  event.preventDefault();
+
+  if (Math.max(absX, absY) >= swipeDistance) {
+    if (absX > absY) {
+      move({ x: Math.sign(dx), y: 0 });
+    } else {
+      move({ x: 0, y: Math.sign(dy) });
+    }
+  } else if (Math.max(absX, absY) <= tapDistance && elapsed < 420) {
+    interact();
+  }
+
+  touchStart = null;
+}, { passive: false });
+
+document.addEventListener('touchcancel', () => {
+  touchStart = null;
 });
 
 document.querySelectorAll('[data-action="interact"]').forEach((button) => {
