@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap");
+
 :root {
   --bg: #242526;
   --panel: rgba(14, 15, 18, 0.62);
@@ -28,7 +30,10 @@ body {
   overflow: hidden;
   background: var(--bg);
   color: var(--text);
-  font-family: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
+  font-family: "Pixelify Sans", "Silkscreen", "Press Start 2P", "SFMono-Regular", "Consolas", monospace;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+  text-rendering: geometricPrecision;
 }
 
 button {
@@ -135,18 +140,34 @@ button:hover {
     0 0 18px rgba(129, 123, 215, 0.16);
 }
 
-.layer.foreground {
+.layer.leaf-layer {
   pointer-events: none;
-  opacity: 0.48;
-  filter: drop-shadow(0 0 20px rgba(65, 106, 108, 0.18));
-  z-index: 14;
+  filter: drop-shadow(3px 8px 1px rgba(0, 0, 0, 0.2));
+  mask-image: radial-gradient(circle at center, transparent 0 16%, black 34%, black 62%, transparent 86%);
+  -webkit-mask-image: radial-gradient(circle at center, transparent 0 16%, black 34%, black 62%, transparent 86%);
 }
 
-.layer.foreground .cell {
-  font-size: clamp(30px, 5.7vw, 84px);
+.layer.leaf-layer .cell {
+  font-size: clamp(22px, 4.2vw, 62px);
+}
+
+.leaf {
+  color: rgba(92, 139, 113, 0.82);
   text-shadow:
-    0 0 10px currentColor,
-    0 0 26px rgba(0, 0, 0, 0.44);
+    3px 7px 0 rgba(0, 0, 0, 0.18),
+    0 0 10px rgba(92, 139, 113, 0.12);
+}
+
+.leaf-1 {
+  color: rgba(69, 112, 101, 0.44);
+}
+
+.leaf-2 {
+  color: rgba(94, 139, 111, 0.52);
+}
+
+.leaf-3 {
+  color: rgba(128, 163, 121, 0.58);
 }
 
 .empty {

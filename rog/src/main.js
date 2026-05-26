@@ -324,7 +324,7 @@ function renderAmbientLayer(depth) {
   return layer;
 }
 
-function renderMapLayer(className, z, foreground = false) {
+function renderMapLayer(className, z) {
   const layer = document.createElement('div');
   const origin = cameraOrigin();
   layer.className = `layer ${className}`;
@@ -335,10 +335,6 @@ function renderMapLayer(className, z, foreground = false) {
     for (let x = 0; x < VIEW_SIZE; x += 1) {
       const point = { x: origin.x + x, y: origin.y + y };
       const tile = state.level.tiles[point.y][point.x];
-      if (foreground && tile !== 'tree' && tile !== 'rock') {
-        addGridCell(layer, '', 'empty');
-        continue;
-      }
       const [char, cls] = glyph(tile, point);
       addGridCell(layer, char, cls);
     }
@@ -346,17 +342,38 @@ function renderMapLayer(className, z, foreground = false) {
   return layer;
 }
 
+function renderLeafLayer(depth) {
+  const layer = document.createElement('div');
+  const gridSize = 12;
+  const origin = cameraOrigin();
+  const drift = state.turn * (0.18 + depth * 0.05);
+  const parallax = 1.1 + depth * 0.62;
+  layer.className = `layer leaf-layer leaf-layer-${depth}`;
+  layer.style.setProperty('--grid-size', gridSize);
+  layer.style.transform = `translate3d(${-(origin.x * parallax) + Math.sin(drift) * 5}px, ${-(origin.y * parallax) + Math.cos(drift * 0.8) * 5}px, ${140 + depth * 58}px) scale(${1 + depth * 0.08})`;
+  layer.style.opacity = String(0.08 + depth * 0.045);
+  layer.style.zIndex = String(16 + depth);
+
+  for (let y = 0; y < gridSize; y += 1) {
+    for (let x = 0; x < gridSize; x += 1) {
+      const noise = Math.abs(Math.sin((x + state.seed * 0.001) * 9.73 + (y + depth * 3.1) * 14.21));
+      const scatter = (x * 7 + y * 11 + depth * 5) % 17;
+      const visible = noise > 0.94 || (scatter === 0 && noise > 0.64);
+      addGridCell(layer, visible ? '8' : '', visible ? `leaf leaf-${depth}` : 'empty');
+    }
+  }
+  return layer;
+}
+
 function render() {
   const origin = cameraOrigin();
-  const offsetX = state.hero.x - MAP_SIZE / 2;
-  const offsetY = state.hero.y - MAP_SIZE / 2;
-  const foregroundX = offsetX * 2.4;
-  const foregroundY = offsetY * 2.4;
   stage.replaceChildren(
     renderAmbientLayer(2),
     renderAmbientLayer(1),
     renderMapLayer('focus', 'translate3d(0, 0, 80px)'),
-    renderMapLayer('foreground', `translate3d(${foregroundX}px, ${foregroundY}px, 150px) scale(1.03)`, true),
+    renderLeafLayer(1),
+    renderLeafLayer(2),
+    renderLeafLayer(3),
   );
   stage.style.setProperty('--tilt-x', '0deg');
   stage.style.setProperty('--tilt-y', '0deg');
