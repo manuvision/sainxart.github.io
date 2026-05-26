@@ -3458,13 +3458,13 @@
       const totalWeeks = Math.ceil(totalDays / 7);
 
       // ── Responsive cell size ────────────────────────────────
-      // Fill the available container width on desktop; enforce a 14 px floor
-      // on mobile so cells remain tap-friendly (adds horizontal scroll).
+      // Fill the available container width. On narrow screens the cells shrink
+      // with the viewport instead of forcing horizontal overflow.
       const GAP      = 2;
       const wrapEl   = document.getElementById('heatmap-wrap');
       const wrapW    = wrapEl.getBoundingClientRect().width;
       const idealCell = Math.floor((wrapW - (totalWeeks - 1) * GAP) / totalWeeks);
-      const CELL     = Math.max(14, idealCell);
+      const CELL     = Math.max(4, idealCell);
       const STEP     = CELL + GAP;
 
       const grid        = document.getElementById('heatmap-grid');
