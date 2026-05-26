@@ -331,9 +331,9 @@
       display: none;
       padding: 0.35rem 0.9rem;
       border-radius: 99px;
-      border: 1px solid var(--pink-line);
-      background: var(--pink-soft);
-      color: var(--pink);
+      border: 1px solid rgba(246,184,90,0.52);
+      background: rgba(246,184,90,0.12);
+      color: var(--link);
       font-size: 0.65rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
@@ -388,7 +388,7 @@
       font-size: 0.62rem;
       text-transform: uppercase;
       letter-spacing: 0.15em;
-      color: var(--dim);
+      color: var(--text);
       margin-bottom: 1rem;
     }
 
@@ -461,7 +461,7 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 9px;
+      font-size: 15px;
       line-height: 1;
       color: rgba(255,255,255,0.95);
       font-weight: 700;
@@ -1520,7 +1520,7 @@
     }
     .wrap-decoder-row {
       display: grid;
-      grid-template-columns: auto minmax(4.8rem, 1fr) minmax(7.2rem, 8.2rem) minmax(12rem, 12rem) 2rem;
+      grid-template-columns: auto minmax(4.8rem, 1fr) minmax(7.2rem, 8.2rem) minmax(12rem, 12rem) 3.4rem;
       align-items: center;
       gap: 0.55rem;
       color: var(--muted);
@@ -1545,11 +1545,11 @@
     }
     .wrap-decoder-name {
       color: var(--text);
-      font-family: var(--font-display);
-      font-size: 0.9rem;
-      font-style: italic;
-      letter-spacing: 0;
-      text-transform: none;
+      font-family: inherit;
+      font-size: inherit;
+      font-style: normal;
+      letter-spacing: inherit;
+      text-transform: uppercase;
     }
     .wrap-decoder-track {
       display: block;
@@ -1634,11 +1634,18 @@
       background: rgba(246,184,90,0.1);
       padding: 0.78rem;
     }
+    .wrap-card.thanks-slide a.wrap-stat.follow-action {
+      border-color: var(--pink-line);
+      background: var(--pink-soft);
+    }
     .wrap-card.thanks-slide a.wrap-stat strong {
       color: var(--link);
       font-size: 0.68rem;
       letter-spacing: 0.14em;
       text-transform: uppercase;
+    }
+    .wrap-card.thanks-slide a.wrap-stat.follow-action strong {
+      color: var(--pink);
     }
     .wrap-card.thanks-slide a.wrap-stat span {
       display: none;
@@ -1702,10 +1709,11 @@
     }
     @media (max-width: 520px) {
       .wrap-card h2 { font-size: 1.65rem; }
-      .wrap-stat-grid { grid-template-columns: 1fr; }
+      .wrap-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .wrap-card.thanks-slide .wrap-stat-grid { grid-template-columns: 1fr; }
       .wrap-mini-heatmap { gap: 0.11rem; padding: 0.65rem; }
       .wrap-decoder-row {
-        grid-template-columns: auto minmax(3.9rem, 1fr) minmax(5.8rem, 6.4rem) minmax(7.6rem, 7.6rem) 1.7rem;
+        grid-template-columns: auto minmax(3.9rem, 1fr) minmax(5.8rem, 6.4rem) minmax(7.6rem, 7.6rem) 2.9rem;
         gap: 0.38rem;
       }
       .wrap-decoder-track {
@@ -2074,7 +2082,7 @@
 
   <!-- ── Heatmap ──────────────────────────────────────────── -->
   <section id="heatmap-section">
-    <div id="heatmap-title">Every dream, since May 23, 2025</div>
+    <div id="heatmap-title">Every dreamscape, since May 23, 2025</div>
     <div id="heatmap-wrap">
       <div id="heatmap-month-labels"></div>
       <div id="heatmap-grid"></div>
@@ -3335,7 +3343,7 @@
               <span class="wrap-decoder-name">${label}</span>
               <span class="wrap-decoder-rule">${shape} ${range}</span>
               <span class="wrap-decoder-track"><span class="wrap-decoder-fill" style="background:${color};width:${Math.max(pct, count ? 4 : 0)}%"></span></span>
-              <span>${pct}%</span>
+              <span>${pct}% (${count})</span>
             </div>
           `).join('')}
         </div>
@@ -3455,7 +3463,7 @@
           className: 'thanks-slide',
           stats: [
             ['Tip the artist', 'Support the artist', 'https://www.paypal.com/paypalme/manuelsainsily'],
-            ['Instagram', 'Follow the artist', 'https://www.instagram.com/manu.vision/']
+            ['Instagram', 'Follow the artist', 'https://www.instagram.com/manu.vision/', 'follow-action']
           ]
         }
       ].filter(Boolean);
@@ -3478,8 +3486,8 @@
       const titleEl = document.getElementById('heatmap-title');
       if (titleEl) {
         titleEl.textContent = items.length > 0
-          ? `${items.length} dreams · since May 23, 2025`
-          : 'Every dream, since May 23, 2025';
+          ? `${items.length} dreamscapes · since May 23, 2025`
+          : 'Every dreamscape, since May 23, 2025';
       }
       renderHeatmapLegend(items);
 
@@ -3875,11 +3883,11 @@
         return;
       }
 
-      const fullWidthStats = slide.stats && slide.stats.length <= 2 && slide.stats.some(([, value]) => String(value).length > 12);
-      const stats = slide.stats ? `
-        <div class="wrap-stat-grid ${fullWidthStats ? 'full-width' : ''}">
-          ${slide.stats.map(([label, value, href]) => href ? `
-            <a class="wrap-stat" href="${escapeHtml(href)}" target="_blank" rel="noopener">
+      const isThanksSlide = String(slide.className || '').includes('thanks-slide');
+      const renderStats = (rows, className = '') => rows && rows.length ? `
+        <div class="wrap-stat-grid ${className}">
+          ${rows.map(([label, value, href, actionClass]) => href ? `
+            <a class="wrap-stat ${actionClass || ''}" href="${escapeHtml(href)}" target="_blank" rel="noopener">
               <strong>${escapeHtml(value)}</strong>
               <span>${escapeHtml(label)}</span>
             </a>
@@ -3891,6 +3899,8 @@
           `).join('')}
         </div>
       ` : '';
+      const fullWidthStats = !isThanksSlide && slide.stats && slide.stats.length <= 2 && slide.stats.some(([, value]) => String(value).length > 12);
+      const stats = isThanksSlide ? '' : renderStats(slide.stats, fullWidthStats ? 'full-width' : '');
 
       const bars = slide.bars ? `
         <div class="wrap-bars">
@@ -3905,9 +3915,16 @@
           `).join('')}
         </div>
       ` : '';
-      const copy = Array.isArray(slide.copy)
-        ? slide.copy.map((line, index) => `<p class="wrap-copy ${index === slide.emphasisCopyIndex ? 'emphasis' : ''}">${escapeHtml(line)}</p>`).join('')
-        : `<p class="wrap-copy">${escapeHtml(slide.copy)}</p>`;
+      const copy = isThanksSlide && Array.isArray(slide.copy)
+        ? `
+          <p class="wrap-copy">${escapeHtml(slide.copy[0] || '')}</p>
+          ${renderStats((slide.stats || []).filter(([, value]) => String(value).toLowerCase().includes('follow')), '')}
+          <p class="wrap-copy emphasis">${escapeHtml(slide.copy[1] || '')}</p>
+          ${renderStats((slide.stats || []).filter(([, value]) => !String(value).toLowerCase().includes('follow')), '')}
+        `
+        : Array.isArray(slide.copy)
+          ? slide.copy.map((line, index) => `<p class="wrap-copy ${index === slide.emphasisCopyIndex ? 'emphasis' : ''}">${escapeHtml(line)}</p>`).join('')
+          : `<p class="wrap-copy">${escapeHtml(slide.copy)}</p>`;
       const heatmap = slide.heatmap || '';
       const decoder = slide.decoder || '';
       const points = slide.points || '';
