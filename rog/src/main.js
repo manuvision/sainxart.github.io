@@ -81,6 +81,16 @@ function createMap(seed) {
   return { tiles };
 }
 
+function createLeafLayers(seed) {
+  return Array.from({ length: 3 }, (_, depthIndex) => {
+    const depth = depthIndex + 1;
+    const rand = rng(seed + 7001 + depth * 933);
+    return Array.from({ length: MAP_SIZE }, () =>
+      Array.from({ length: MAP_SIZE }, () => rand() < 0.055 + depth * 0.012),
+    );
+  });
+}
+
 function reachableTiles(level, start) {
   const queue = [start];
   const visited = new Set([key(start)]);
@@ -107,6 +117,7 @@ function createGame(seed) {
   const rand = rng(seed);
   const hero = { x: 20, y: 20 };
   const level = createMap(seed);
+  const leafLayers = createLeafLayers(seed);
   const occupied = new Set([key(hero)]);
   const reachable = reachableTiles(level, hero);
 
@@ -146,6 +157,7 @@ function createGame(seed) {
     hero,
     hp: MAX_HP,
     level,
+    leafLayers,
     monsters,
     chests,
     kills: 0,
@@ -379,24 +391,21 @@ function renderMapLayer(className, z) {
 
 function renderLeafLayer(depth) {
   const layer = document.createElement('div');
-  const gridSize = 10 + depth * 2;
   const origin = cameraOrigin();
   const drift = state.turn * (0.34 + depth * 0.12);
-  const parallax = 2.2 + depth * 1.4;
+  const parallaxX = -(state.hero.x - MAP_SIZE / 2) * depth * 3.2;
+  const parallaxY = -(state.hero.y - MAP_SIZE / 2) * depth * 3.2;
   layer.className = `layer leaf-layer leaf-layer-${depth}`;
-  layer.style.setProperty('--grid-size', gridSize);
-  layer.style.transform = `translate3d(${-(origin.x * parallax) + Math.sin(drift + depth) * 13}px, ${-(origin.y * parallax) + Math.cos(drift * 0.8 + depth) * 13}px, ${150 + depth * 72}px) scale(${1.08 + depth * 0.11})`;
+  layer.style.setProperty('--grid-size', VIEW_SIZE);
+  layer.style.transform = `translate3d(${parallaxX + Math.sin(drift + depth) * 9}px, ${parallaxY + Math.cos(drift * 0.8 + depth) * 9}px, ${150 + depth * 72}px) scale(${1.16 + depth * 0.12})`;
   layer.style.opacity = String(0.18 + depth * 0.07);
   layer.style.zIndex = String(16 + depth);
 
-  for (let y = 0; y < gridSize; y += 1) {
-    for (let x = 0; x < gridSize; x += 1) {
-      const px = x + depth * 5.37;
-      const py = y + depth * 9.91;
-      const noise = Math.abs(Math.sin((px + state.seed * 0.001) * (8.7 + depth) + py * (13.1 - depth * 0.7)));
-      const scatter = (x * (5 + depth) + y * (9 + depth * 2) + depth * 11) % (18 + depth * 3);
-      const visible = noise > 0.945 || (scatter === 0 && noise > 0.7);
-      addGridCell(layer, visible ? '8' : '', visible ? `leaf leaf-${depth}` : 'empty', (x * 47 + y * 83 + depth * 211) % 1100);
+  for (let y = 0; y < VIEW_SIZE; y += 1) {
+    for (let x = 0; x < VIEW_SIZE; x += 1) {
+      const point = { x: origin.x + x, y: origin.y + y };
+      const hasLeaf = state.leafLayers[depth - 1][point.y][point.x];
+      addGridCell(layer, hasLeaf ? '8' : '', hasLeaf ? `canopy-leaf leaf-${depth}` : 'empty', (point.x * 47 + point.y * 83 + depth * 211) % 1100);
     }
   }
   return layer;
