@@ -393,6 +393,7 @@
     }
 
     #heatmap-wrap {
+      width: 100%;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       padding-bottom: 0.25rem;
@@ -416,6 +417,7 @@
     #heatmap-grid {
       display: grid;
       grid-auto-flow: column;
+      width: max-content;
     }
 
     .hm-cell {
@@ -3255,7 +3257,7 @@
       const latestArchiveDate = new Date(latestDate + 'T12:00:00');
       const endDate = latestArchiveDate > todayDate ? latestArchiveDate : todayDate;
       const totalDays = Math.round((endDate - startDate) / 864e5) + 1;
-      const rows = Math.max(10, Math.ceil(Math.sqrt(totalDays / 2.2)));
+      const rows = Math.max(13, Math.ceil(Math.sqrt(totalDays / 1.45)));
       const cols = Math.ceil(totalDays / rows);
       let html = `<div class="wrap-mini-heatmap" style="--heatmap-cols:${cols};--heatmap-rows:${rows}">`;
       for (let dayOffset = 0; dayOffset < totalDays; dayOffset += 1) {
