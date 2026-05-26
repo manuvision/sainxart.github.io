@@ -395,6 +395,7 @@
     #heatmap-wrap {
       width: 100%;
       overflow-x: auto;
+      overflow-y: hidden;
       -webkit-overflow-scrolling: touch;
       padding-bottom: 0.25rem;
     }
@@ -1494,6 +1495,7 @@
     }
     .wrap-card.system-slide .wrap-content {
       justify-content: flex-start;
+      overflow: hidden;
     }
     .wrap-decoder {
       display: grid;
@@ -1518,7 +1520,7 @@
     }
     .wrap-decoder-row {
       display: grid;
-      grid-template-columns: auto 1fr auto auto minmax(80px, 1.4fr) auto;
+      grid-template-columns: auto minmax(4.8rem, 1fr) minmax(7.2rem, 8.2rem) minmax(12rem, 12rem) 2rem;
       align-items: center;
       gap: 0.55rem;
       color: var(--muted);
@@ -1531,7 +1533,8 @@
       font-size: 0.52rem;
       letter-spacing: 0.14em;
     }
-    .wrap-decoder-head span:nth-last-child(-n + 2) {
+    .wrap-decoder-head span:nth-last-child(-n + 2),
+    .wrap-decoder-rule {
       text-align: right;
     }
     .wrap-decoder-row i {
@@ -1551,6 +1554,7 @@
     .wrap-decoder-track {
       display: block;
       height: 7px;
+      width: 12rem;
       border-radius: 999px;
       background: rgba(255,255,255,0.08);
       overflow: hidden;
@@ -1700,6 +1704,13 @@
       .wrap-card h2 { font-size: 1.65rem; }
       .wrap-stat-grid { grid-template-columns: 1fr; }
       .wrap-mini-heatmap { gap: 0.11rem; padding: 0.65rem; }
+      .wrap-decoder-row {
+        grid-template-columns: auto minmax(3.9rem, 1fr) minmax(5.8rem, 6.4rem) minmax(7.6rem, 7.6rem) 1.7rem;
+        gap: 0.38rem;
+      }
+      .wrap-decoder-track {
+        width: 7.6rem;
+      }
     }
 
     /* ── How it works interactive modal ─────────────────────── */
@@ -3314,8 +3325,7 @@
           <div class="wrap-decoder-row wrap-decoder-head">
             <span></span>
             <span>Palette</span>
-            <span>Score range</span>
-            <span>Shape</span>
+            <span>Shape range</span>
             <span>Archive share</span>
             <span>%</span>
           </div>
@@ -3323,8 +3333,7 @@
             <div class="wrap-decoder-row">
               <i style="background:${color}"></i>
               <span class="wrap-decoder-name">${label}</span>
-              <span>${range}</span>
-              <span>${shape}</span>
+              <span class="wrap-decoder-rule">${shape} ${range}</span>
               <span class="wrap-decoder-track"><span class="wrap-decoder-fill" style="background:${color};width:${Math.max(pct, count ? 4 : 0)}%"></span></span>
               <span>${pct}%</span>
             </div>
