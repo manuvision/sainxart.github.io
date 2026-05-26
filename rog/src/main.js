@@ -128,7 +128,9 @@ function currentLevel() {
 }
 
 function lineOfSight(from, to) {
-  if (from.x !== to.x && from.y !== to.y) return false;
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  if (dx !== 0 && dy !== 0 && Math.abs(dx) !== Math.abs(dy)) return false;
   const step = { x: Math.sign(to.x - from.x), y: Math.sign(to.y - from.y) };
   let cursor = { x: from.x + step.x, y: from.y + step.y };
   const tiles = currentLevel().tiles;
