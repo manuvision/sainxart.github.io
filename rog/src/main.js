@@ -19,10 +19,14 @@ const overlayCopy = document.querySelector('.overlay-copy');
 const hpEl = document.querySelector('[data-hp]');
 const levelEl = document.querySelector('[data-level]');
 
-let state = createGame(99912);
+let state = createGame(randomSeed());
 let bestTurns = Number(localStorage.getItem(BEST_KEY)) || null;
 let audioContext;
 let touchStart = null;
+
+function randomSeed() {
+  return 90000 + Math.floor(Math.random() * 99990000);
+}
 
 function rng(seed) {
   return () => {
@@ -77,23 +81,50 @@ function createMap(seed) {
   return { tiles };
 }
 
+function reachableTiles(level, start) {
+  const queue = [start];
+  const visited = new Set([key(start)]);
+
+  while (queue.length) {
+    const current = queue.shift();
+    for (const dir of dirs) {
+      const next = { x: current.x + dir.x, y: current.y + dir.y };
+      const k = key(next);
+      if (!inBounds(next) || visited.has(k)) continue;
+      if (blocked(level.tiles[next.y][next.x])) continue;
+      visited.add(k);
+      queue.push(next);
+    }
+  }
+
+  return Array.from(visited, (tileKey) => {
+    const [x, y] = tileKey.split(',').map(Number);
+    return { x, y };
+  });
+}
+
 function createGame(seed) {
   const rand = rng(seed);
   const hero = { x: 20, y: 20 };
   const level = createMap(seed);
   const occupied = new Set([key(hero)]);
+  const reachable = reachableTiles(level, hero);
 
   function place(minDistance = 7) {
     for (let i = 0; i < 900; i += 1) {
-      const point = { x: 1 + Math.floor(rand() * (MAP_SIZE - 2)), y: 1 + Math.floor(rand() * (MAP_SIZE - 2)) };
+      const point = reachable[Math.floor(rand() * reachable.length)];
       const k = key(point);
-      if (blocked(level.tiles[point.y][point.x])) continue;
       if (dist(point, hero) < minDistance) continue;
       if (occupied.has(k)) continue;
       occupied.add(k);
       return point;
     }
-    return { x: 1, y: 1 };
+    const fallback = reachable.find((point) => !occupied.has(key(point)) && !same(point, hero));
+    if (fallback) {
+      occupied.add(key(fallback));
+      return fallback;
+    }
+    return { ...hero };
   }
 
   const monsters = Array.from({ length: 14 }, (_, i) => ({
@@ -399,7 +430,7 @@ function render() {
   }
 }
 
-function restart(seed = 90000 + Math.floor(Math.random() * 9999)) {
+function restart(seed = randomSeed()) {
   state = createGame(seed);
   render();
 }
