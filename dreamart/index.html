@@ -1779,13 +1779,32 @@
       text-transform: uppercase;
     }
     @media (max-width: 520px) {
-      .wrap-card h2 { font-size: 1.65rem; }
+      .wrap-card.no-image .wrap-content {
+        justify-content: flex-start;
+        padding: 1.05rem;
+        gap: 0.58rem;
+        overflow-y: auto;
+      }
+      .wrap-card h2 { font-size: 1.48rem; line-height: 1; }
+      .wrap-copy { font-size: 0.7rem; line-height: 1.38; }
+      .wrap-eyebrow { font-size: 0.56rem; letter-spacing: 0.18em; }
       .wrap-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .wrap-card.thanks-slide .wrap-stat-grid { grid-template-columns: 1fr; }
       .wrap-mini-heatmap { gap: 0.11rem; padding: 0.65rem; }
+      .wrap-stat { padding: 0.54rem; }
+      .wrap-stat strong { font-size: 0.95rem; }
+      .wrap-stat span { font-size: 0.5rem; letter-spacing: 0.1em; }
+      .wrap-points { font-size: 0.64rem; line-height: 1.34; gap: 0.36rem; }
+      .wrap-decoder { padding: 0.62rem; gap: 0.46rem; }
       .wrap-decoder-row {
         grid-template-columns: auto minmax(3.9rem, 1fr) minmax(5.8rem, 6.4rem) minmax(0, 1fr) minmax(4.15rem, 4.15rem);
         gap: 0.38rem;
+        font-size: 0.52rem;
+        letter-spacing: 0.07em;
+      }
+      .wrap-decoder-head {
+        font-size: 0.45rem;
+        letter-spacing: 0.09em;
       }
     }
     @media (max-width: 430px) {
