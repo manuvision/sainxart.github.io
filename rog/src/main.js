@@ -307,7 +307,7 @@ function renderAmbientLayer(depth) {
   const chars = ['.', ':', ';', 'o', 'O', '#', '+'];
   layer.className = `layer back back-${depth}`;
   layer.style.setProperty('--grid-size', '18');
-  layer.style.transform = `translate3d(${-(origin.x * depth * 4.5) + Math.sin(drift / 8) * 14}px, ${-(origin.y * depth * 3.2) + Math.cos(drift / 10) * 10}px, ${-320 - depth * 160}px) scale(${1.95 + depth * 0.34})`;
+  layer.style.transform = `translate3d(${-(origin.x * depth * 3.6) + Math.sin(drift / 8) * 14}px, ${-(origin.y * depth * 3.6) + Math.cos(drift / 10) * 10}px, ${-220 - depth * 120}px) scale(${1.42 + depth * 0.18})`;
   layer.style.opacity = String(0.18 + depth * 0.04);
   layer.style.filter = `blur(${depth * 1.6}px) brightness(${0.72 - depth * 0.04})`;
   layer.style.zIndex = String(2 - depth);
@@ -350,16 +350,16 @@ function render() {
   const origin = cameraOrigin();
   const offsetX = state.hero.x - MAP_SIZE / 2;
   const offsetY = state.hero.y - MAP_SIZE / 2;
-  const foregroundX = offsetX * 6;
-  const foregroundY = offsetY * 3.5;
+  const foregroundX = offsetX * 2.4;
+  const foregroundY = offsetY * 2.4;
   stage.replaceChildren(
     renderAmbientLayer(2),
     renderAmbientLayer(1),
-    renderMapLayer('focus', 'translate3d(0, 0, 96px)'),
-    renderMapLayer('foreground', `translate3d(${foregroundX}px, ${foregroundY}px, 210px) scale(1.08)`, true),
+    renderMapLayer('focus', 'translate3d(0, 0, 80px)'),
+    renderMapLayer('foreground', `translate3d(${foregroundX}px, ${foregroundY}px, 150px) scale(1.03)`, true),
   );
-  stage.style.setProperty('--tilt-x', `${offsetY * -0.035}deg`);
-  stage.style.setProperty('--tilt-y', `${offsetX * 0.04}deg`);
+  stage.style.setProperty('--tilt-x', '0deg');
+  stage.style.setProperty('--tilt-y', '0deg');
 
   const total = state.kills + state.monsters.length;
   statsEl.innerHTML = [

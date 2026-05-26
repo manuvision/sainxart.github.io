@@ -81,8 +81,8 @@ button:hover {
   position: absolute;
   inset: 0;
   display: grid;
-  perspective: 860px;
-  perspective-origin: 50% 41%;
+  perspective: 1400px;
+  perspective-origin: 50% 50%;
   place-items: center;
   transform-style: preserve-3d;
   z-index: 3;
@@ -92,13 +92,13 @@ button:hover {
   --tilt-x: 0deg;
   --tilt-y: 0deg;
   position: relative;
-  width: min(88vh, 68vw, 900px);
+  width: min(78vh, 62vw, 820px);
   aspect-ratio: 1;
   transform:
-    rotateX(calc(58deg + var(--tilt-x)))
-    rotateZ(-2deg)
+    rotateX(var(--tilt-x))
+    rotateZ(0deg)
     rotateY(var(--tilt-y))
-    translateZ(10px);
+    translateZ(0);
   transform-style: preserve-3d;
   transition: transform 220ms ease;
 }
@@ -121,7 +121,7 @@ button:hover {
   font-weight: 700;
   line-height: 1;
   text-shadow: 0 0 12px currentColor;
-  transform: rotateX(-58deg);
+  transform: translateZ(0);
 }
 
 .layer.back .cell {
@@ -137,13 +137,13 @@ button:hover {
 
 .layer.foreground {
   pointer-events: none;
-  opacity: 0.72;
+  opacity: 0.48;
   filter: drop-shadow(0 0 20px rgba(65, 106, 108, 0.18));
   z-index: 14;
 }
 
 .layer.foreground .cell {
-  font-size: clamp(34px, 6.1vw, 92px);
+  font-size: clamp(30px, 5.7vw, 84px);
   text-shadow:
     0 0 10px currentColor,
     0 0 26px rgba(0, 0, 0, 0.44);
