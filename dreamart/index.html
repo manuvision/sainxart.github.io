@@ -1714,6 +1714,9 @@
     .wrap-copy.emphasis {
       color: var(--text);
     }
+    .wrap-card.thanks-slide .wrap-copy.emphasis {
+      margin-top: 0.55rem;
+    }
     .wrap-stat-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4190,9 +4193,8 @@
       const copy = isThanksSlide && Array.isArray(slide.copy)
         ? `
           <p class="wrap-copy">${escapeHtml(slide.copy[0] || '')}</p>
-          ${renderStats((slide.stats || []).filter(([, value]) => String(value).toLowerCase().includes('follow')), '')}
           <p class="wrap-copy emphasis">${escapeHtml(slide.copy[1] || '')}</p>
-          ${renderStats((slide.stats || []).filter(([, value]) => !String(value).toLowerCase().includes('follow')), '')}
+          ${renderStats(slide.stats || [], '')}
         `
         : Array.isArray(slide.copy)
           ? slide.copy.map((line, index) => `<p class="wrap-copy ${index === slide.emphasisCopyIndex ? 'emphasis' : ''}">${escapeHtml(line)}</p>`).join('')
