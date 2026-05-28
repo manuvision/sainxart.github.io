@@ -1106,21 +1106,8 @@
       transition: opacity 0.3s ease;
     }
     #lb-img.loaded { opacity: 1; }
-    #lb-embed {
-      width: min(92vw, 420px);
-      height: min(72vh, 620px);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      box-shadow: 0 32px 100px rgba(0,0,0,0.8);
-      background: #05050c;
-      display: none;
-    }
-    #lb-embed.active {
-      display: block;
-    }
     @media (max-height: 760px) {
       #lb-img { max-height: 46vh; }
-      #lb-embed { height: 54vh; }
       #lb-img-wrap { gap: 0.52rem; }
     }
     #lb-date {
@@ -1443,7 +1430,6 @@
       gap: 0.75rem;
       flex-wrap: wrap;
       margin-top: 0.1rem;
-      margin-bottom: 2.15rem;
     }
     .lb-action {
       display: inline-flex;
@@ -1466,6 +1452,22 @@
       background: rgba(240,171,252,0.18);
       border-color: rgba(240,171,252,0.64);
       color: #f8d4ff;
+    }
+    #lb-instagram {
+      width: min(100%, 22rem);
+      justify-content: center;
+      padding: 0.78rem 1rem;
+      margin-bottom: 2.15rem;
+      border-color: rgba(255,190,88,0.7);
+      background: rgba(255,190,88,0.13);
+      color: #ffd08a;
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+    }
+    #lb-instagram:hover {
+      background: rgba(255,190,88,0.2);
+      border-color: rgba(255,208,138,0.88);
+      color: #ffe2ad;
     }
 
     /* ── Trailer card inside the About modal ─────────────────── */
@@ -2500,16 +2502,15 @@
     </button>
     <div id="lb-img-wrap">
       <img id="lb-img" src="" alt="Dream art" />
-      <iframe id="lb-embed" title="Instagram reel" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
       <div id="lb-date"></div>
       <div class="lb-meta" id="lb-meta"></div>
       <div class="lb-reading" id="lb-reading"></div>
       <div class="lb-actions">
-        <a class="lb-action" id="lb-instagram" href="#" target="_blank" rel="noopener noreferrer">Open reel</a>
         <button class="lb-action" id="lb-copy" type="button">Copy link</button>
         <button class="lb-action" id="lb-love" type="button" aria-label="Love this dream">❤️ 0</button>
         <button class="lb-action" id="lb-card" type="button">Save card</button>
       </div>
+      <a class="lb-action" id="lb-instagram" href="#" target="_blank" rel="noopener noreferrer">Watch video</a>
     </div>
     <button class="lb-nav" id="lb-next" aria-label="Next">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -3385,7 +3386,6 @@
     const empty       = document.getElementById('empty');
     const lightbox    = document.getElementById('lightbox');
     const lbImg       = document.getElementById('lb-img');
-    const lbEmbed     = document.getElementById('lb-embed');
     const lbDate      = document.getElementById('lb-date');
     const lbClose     = document.getElementById('lb-close');
     const lbPrev      = document.getElementById('lb-prev');
@@ -4384,8 +4384,6 @@
       document.body.style.overflow = '';
       lbImg.classList.remove('loaded');
       lbImg.hidden = false;
-      lbEmbed.classList.remove('active');
-      lbEmbed.src = '';
       // Clear the deep-link hash so reload doesn't keep re-opening the same image.
       if (location.hash) history.replaceState(null, '', location.pathname + location.search);
     }
@@ -4393,20 +4391,12 @@
       lbImg.classList.remove('loaded');
       lbImg.src = '';
       lbImg.hidden = false;
-      lbEmbed.classList.remove('active');
-      lbEmbed.src = '';
       const item = displayed[current];
       const embedUrl = instagramEmbedUrl(item.instagramUrl);
-      if (embedUrl) {
-        lbImg.hidden = true;
-        lbEmbed.src = embedUrl;
-        lbEmbed.classList.add('active');
-      } else {
-        setTimeout(() => {
-          lbImg.src = item.imageData;
-          lbImg.onload = () => lbImg.classList.add('loaded');
-        }, 20);
-      }
+      setTimeout(() => {
+        lbImg.src = item.imageData;
+        lbImg.onload = () => lbImg.classList.add('loaded');
+      }, 20);
       // Lightbox label mirrors the grid label: full date, plus a colored
       // score chip when the entry has one.
       lbDate.textContent = item.label || '';
