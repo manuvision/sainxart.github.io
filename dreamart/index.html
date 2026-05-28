@@ -1106,8 +1106,21 @@
       transition: opacity 0.3s ease;
     }
     #lb-img.loaded { opacity: 1; }
+    #lb-embed {
+      width: min(92vw, 420px);
+      height: min(72vh, 620px);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: 0 32px 100px rgba(0,0,0,0.8);
+      background: #05050c;
+      display: none;
+    }
+    #lb-embed.active {
+      display: block;
+    }
     @media (max-height: 760px) {
       #lb-img { max-height: 46vh; }
+      #lb-embed { height: 54vh; }
       #lb-img-wrap { gap: 0.52rem; }
     }
     #lb-date {
@@ -1447,6 +1460,7 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
       transition: background 0.18s, border-color 0.18s, color 0.18s;
+      text-decoration: none;
     }
     .lb-action:hover {
       background: rgba(240,171,252,0.18);
@@ -2486,10 +2500,12 @@
     </button>
     <div id="lb-img-wrap">
       <img id="lb-img" src="" alt="Dream art" />
+      <iframe id="lb-embed" title="Instagram reel" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
       <div id="lb-date"></div>
       <div class="lb-meta" id="lb-meta"></div>
       <div class="lb-reading" id="lb-reading"></div>
       <div class="lb-actions">
+        <a class="lb-action" id="lb-instagram" href="#" target="_blank" rel="noopener noreferrer">Open reel</a>
         <button class="lb-action" id="lb-copy" type="button">Copy link</button>
         <button class="lb-action" id="lb-love" type="button" aria-label="Love this dream">❤️ 0</button>
         <button class="lb-action" id="lb-card" type="button">Save card</button>
@@ -2599,6 +2615,22 @@
         Ember: 'This night becomes ember pyramids: sharper forms that turn a harder night into something alert, angular, and still alive.'
       };
       return `${passages[meta.palette]} The more intimate signals stay abstracted: length shapes the scale, deeper rest adds weight, dream-rich sleep loosens the motion, and recovery changes how high the forms seem to float.`;
+    }
+
+    function instagramEmbedUrl(value) {
+      if (!value) return '';
+      try {
+        const url = new URL(value);
+        const host = url.hostname.toLowerCase();
+        if (!['instagram.com', 'www.instagram.com', 'm.instagram.com'].includes(host)) return '';
+        const parts = url.pathname.split('/').filter(Boolean);
+        const type = parts[0];
+        const shortcode = parts[1];
+        if (!['p', 'reel', 'tv'].includes(type) || !shortcode) return '';
+        return `https://www.instagram.com/${type}/${shortcode}/embed`;
+      } catch {
+        return '';
+      }
     }
 
     function clamp01(value) {
@@ -3353,6 +3385,7 @@
     const empty       = document.getElementById('empty');
     const lightbox    = document.getElementById('lightbox');
     const lbImg       = document.getElementById('lb-img');
+    const lbEmbed     = document.getElementById('lb-embed');
     const lbDate      = document.getElementById('lb-date');
     const lbClose     = document.getElementById('lb-close');
     const lbPrev      = document.getElementById('lb-prev');
@@ -3363,6 +3396,7 @@
     const lbCopy      = document.getElementById('lb-copy');
     const lbLove      = document.getElementById('lb-love');
     const lbCard      = document.getElementById('lb-card');
+    const lbInstagram = document.getElementById('lb-instagram');
     const calBtn      = document.getElementById('cal-btn');
     const calPanel    = document.getElementById('cal-panel');
     const calClearBtn = document.getElementById('cal-clear-btn');
@@ -4349,17 +4383,30 @@
       lightbox.classList.remove('open');
       document.body.style.overflow = '';
       lbImg.classList.remove('loaded');
+      lbImg.hidden = false;
+      lbEmbed.classList.remove('active');
+      lbEmbed.src = '';
       // Clear the deep-link hash so reload doesn't keep re-opening the same image.
       if (location.hash) history.replaceState(null, '', location.pathname + location.search);
     }
     function showLightbox() {
       lbImg.classList.remove('loaded');
       lbImg.src = '';
+      lbImg.hidden = false;
+      lbEmbed.classList.remove('active');
+      lbEmbed.src = '';
       const item = displayed[current];
-      setTimeout(() => {
-        lbImg.src = item.imageData;
-        lbImg.onload = () => lbImg.classList.add('loaded');
-      }, 20);
+      const embedUrl = instagramEmbedUrl(item.instagramUrl);
+      if (embedUrl) {
+        lbImg.hidden = true;
+        lbEmbed.src = embedUrl;
+        lbEmbed.classList.add('active');
+      } else {
+        setTimeout(() => {
+          lbImg.src = item.imageData;
+          lbImg.onload = () => lbImg.classList.add('loaded');
+        }, 20);
+      }
       // Lightbox label mirrors the grid label: full date, plus a colored
       // score chip when the entry has one.
       lbDate.textContent = item.label || '';
@@ -4394,6 +4441,15 @@
       lbLove.textContent = `❤️ ${item.loveCount == null ? 0 : item.loveCount}`;
       lbLove.disabled = false;
       lbLove.setAttribute('aria-label', `Love this dream. ${item.loveCount == null ? 0 : item.loveCount} loves`);
+      if (lbInstagram) {
+        if (embedUrl) {
+          lbInstagram.href = item.instagramUrl;
+          lbInstagram.style.display = '';
+        } else {
+          lbInstagram.href = '#';
+          lbInstagram.style.display = 'none';
+        }
+      }
     }
     function prevImg() { if (current > 0) { current--; showLightbox(); } }
     function nextImg() { if (current < displayed.length - 1) { current++; showLightbox(); } }
