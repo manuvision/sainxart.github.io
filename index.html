@@ -529,21 +529,27 @@
                 linear-gradient(160deg, #05070d 0%, #101827 50%, #05070d 100%);
             background-size: 120px 120px, 150px 150px, 130px 130px, 180px 180px, 110px 110px, 140px 140px, cover, cover;
         }
-        .experiment-card-bg.visual-colorpop {
+        .experiment-card-bg.visual-rg-games {
             background:
-                linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px 42px),
-                conic-gradient(from 45deg at 50% 50%, #ff4d5a, #ffd84d, #53e36e, #57a6ff, #b45cff, #ff4d5a);
-            background-size: 42px 42px, cover;
-            filter: saturate(1.15);
-        }
-        .experiment-card-bg.visual-fruitmerge {
-            background:
-                linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px 38px),
-                radial-gradient(circle at 28% 28%, #ff4d5a 0 44px, transparent 45px),
-                radial-gradient(circle at 68% 30%, #ffd84d 0 38px, transparent 39px),
-                radial-gradient(circle at 48% 62%, #53e36e 0 58px, transparent 59px),
+                linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px 40px),
+                conic-gradient(from 45deg at 50% 50%, rgba(255, 77, 90, 0.7), rgba(255, 216, 77, 0.7), rgba(83, 227, 110, 0.68), rgba(87, 166, 255, 0.7), rgba(180, 92, 255, 0.7), rgba(255, 77, 90, 0.7)),
                 linear-gradient(160deg, #111827 0%, #1f2937 48%, #05070d 100%);
-            background-size: 38px 38px, cover, cover, cover, cover;
+            background-size: 40px 40px, cover, cover;
+            filter: saturate(1.12);
+        }
+        .experiment-card-bg.visual-rg-games::before {
+            content: '👾 🎮 🕹️ 👾 🎮 🕹️ 👾 🎮 🕹️ 👾 🎮 🕹️';
+            position: absolute;
+            inset: -24px;
+            display: block;
+            color: white;
+            font-size: 2.4rem;
+            line-height: 1.75;
+            letter-spacing: 0;
+            word-spacing: 18px;
+            opacity: 0.74;
+            transform: rotate(-12deg);
+            text-shadow: 0 8px 20px rgba(0, 0, 0, 0.32);
         }
         .experiment-card-content {
             position: relative;
@@ -1397,22 +1403,13 @@
                         <div class="experiment-link-hint"><span>Open experiment</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg></div>
                     </div>
                 </a>
-                <a href="https://manuvision.itch.io/colorpop" target="_blank" rel="noopener" class="experiment-card reveal-scale delay-3">
-                    <div class="experiment-card-bg visual-colorpop"></div>
+                <a href="https://manuvision.itch.io" target="_blank" rel="noopener" class="experiment-card reveal-scale delay-3">
+                    <div class="experiment-card-bg visual-rg-games"></div>
                     <div class="experiment-card-content">
                         <div class="experiment-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8" cy="10" r="1.5"/><circle cx="16" cy="10" r="1.5"/><path d="M8 15h8"/><path d="M12 4v-2"/></svg></div>
-                        <h3>ColorPop</h3>
-                        <p>A fast, color-matching Android arcade game built for the RG Rotate handheld.</p>
-                        <div class="experiment-link-hint"><span>Play on itch.io</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg></div>
-                    </div>
-                </a>
-                <a href="https://manuvision.itch.io/fruitmerge" target="_blank" rel="noopener" class="experiment-card reveal-scale delay-4">
-                    <div class="experiment-card-bg visual-fruitmerge"></div>
-                    <div class="experiment-card-content">
-                        <div class="experiment-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c3.5 0 6 2.6 6 6.2 0 5.2-4 10.8-6 10.8S6 14.4 6 9.2C6 5.6 8.5 3 12 3z"/><path d="M12 3c0-1.2.7-2 2-2"/><path d="M9 8h.01"/><path d="M15 8h.01"/><path d="M9.5 13c1.5 1.2 3.5 1.2 5 0"/></svg></div>
-                        <h3>FruitMerge</h3>
-                        <p>A compact fruit-merging puzzle game tuned for Android play on the RG Rotate.</p>
-                        <div class="experiment-link-hint"><span>Play on itch.io</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg></div>
+                        <h3>Itch.io Games</h3>
+                        <p>A growing collection of small game experiments, including Android games made for the RG Rotate handheld.</p>
+                        <div class="experiment-link-hint"><span>View on itch.io</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg></div>
                     </div>
                 </a>
             </div>
