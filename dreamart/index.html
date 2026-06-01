@@ -3184,24 +3184,9 @@
 
       const pad = 56;
       const contentX = cardX + pad;
-      const maxWidth = cardW - pad * 2;
       const bottom = cardY + cardH - pad;
-      const reading = dreamReading(item);
-      const fitted = fittedCanvasLines(ctx, reading, maxWidth - 44, 230, uiFont, 25, 18, 1.42);
-      const readingHeight = fitted.lines.length * fitted.lineHeight + 34;
-      const readingY = bottom - readingHeight;
 
-      drawRoundedRect(ctx, contentX, readingY, maxWidth, readingHeight, 16, 'rgba(14,14,28,0.68)', 'rgba(167,139,250,0.34)', 1.5);
-      ctx.fillStyle = '#f1efff';
-      ctx.font = `400 ${fitted.size}px ${uiFont}`;
-      ctx.letterSpacing = '0px';
-      let textY = readingY + 39;
-      for (const line of fitted.lines) {
-        ctx.fillText(line, contentX + 22, textY);
-        textY += fitted.lineHeight;
-      }
-
-      const pillY = readingY - 64;
+      const pillY = bottom - 46;
 
       ctx.font = `700 20px ${uiFont}`;
       ctx.letterSpacing = '3px';
