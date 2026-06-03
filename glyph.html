@@ -517,8 +517,8 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
     <div class="section" data-tab="tune">
       <div class="section-title">Grid</div>
       <div class="slider-row">
-        <input type="range" id="gridSlider" min="4" max="80" value="8" step="1">
-        <span class="slider-val" id="gridVal">8</span>
+        <input type="range" id="gridSlider" min="4" max="80" value="32" step="1">
+        <span class="slider-val" id="gridVal">32</span>
       </div>
       <div class="toggle-row">
         <span class="toggle-label">Animate Grid</span>
@@ -756,7 +756,7 @@ const STATE_DEFS = [
 
 const app = {
   mediaEl:null, mediaType:null,
-  grid:8, bgColor:'#000000', aspectRatio:'original',
+  grid:32, bgColor:'#000000', aspectRatio:'original',
   fillSolid:false, invert:false, scaleMin:1.0, scaleMax:1.0,
   // per-state
   colors:         STATE_DEFS.map(s => s.defaultColor),
