@@ -1488,12 +1488,14 @@ function applyImagePalette() {
 }
 
 /* Reset: image palette + all glyphs → square */
+const DEFAULT_GLYPH_IDS = ['square','x-mark','sq-out','ring','asterisk','dots-4','dot-sm'];
 function applyDefaultGlyphs() {
-  const sq = SHAPE_IMGS['square'];
-  for (let i = 0; i < 7; i++) {
-    const go = () => assignSVGToState(i, sq, 'Square');
-    if (sq.complete && sq.naturalWidth > 0) go(); else sq.onload = go;
-  }
+  DEFAULT_GLYPH_IDS.forEach((id, i) => {
+    const sh = SHAPES.find(s => s.id === id);
+    const img = SHAPE_IMGS[id];
+    const go = () => assignSVGToState(i, img, sh.name);
+    if (img.complete && img.naturalWidth > 0) go(); else img.onload = go;
+  });
 }
 
 /* Glyph preset: circle → tri-dn → tri-up → diamond → heart → leaf → rounded */
@@ -1832,6 +1834,7 @@ document.getElementById('autoRandom').addEventListener('change', e => {
   app.autoRandom = e.target.checked;
   if (e.target.checked) { app.autoRandomLastMs = 0; ensureLoop(); }
 });
+applyDefaultGlyphs();
 </script>
 </body>
 </html>
