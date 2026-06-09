@@ -522,6 +522,75 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
       </div>
     </div>
 
+    <div class="section" data-tab="input" id="primControlsSection" style="display:none">
+      <div class="section-title">Shape Controls</div>
+      <div class="slider-row">
+        <span class="slider-label" style="min-width:44px">Scale</span>
+        <input type="range" id="primScale" min="0.2" max="3" value="1" step="0.05">
+        <span class="slider-val" id="primScaleVal">1.0×</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label" style="min-width:44px">X</span>
+        <input type="range" id="primOffX" min="-400" max="400" value="0" step="1">
+        <span class="slider-val" id="primOffXVal">0</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label" style="min-width:44px">Y</span>
+        <input type="range" id="primOffY" min="-400" max="400" value="0" step="1">
+        <span class="slider-val" id="primOffYVal">0</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label" style="min-width:44px">Z</span>
+        <input type="range" id="primOffZ" min="-300" max="300" value="0" step="1">
+        <span class="slider-val" id="primOffZVal">0</span>
+      </div>
+      <div id="primParams-torus">
+        <div class="slider-row">
+          <span class="slider-label" style="min-width:44px">Major R</span>
+          <input type="range" id="prim-torus-R" min="60" max="250" value="140" step="1">
+          <span class="slider-val" id="prim-torus-RVal">140</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label" style="min-width:44px">Tube R</span>
+          <input type="range" id="prim-torus-r" min="10" max="150" value="68" step="1">
+          <span class="slider-val" id="prim-torus-rVal">68</span>
+        </div>
+      </div>
+      <div id="primParams-sphere" style="display:none">
+        <div class="slider-row">
+          <span class="slider-label" style="min-width:44px">Radius</span>
+          <input type="range" id="prim-sphere-R" min="50" max="260" value="195" step="1">
+          <span class="slider-val" id="prim-sphere-RVal">195</span>
+        </div>
+      </div>
+      <div id="primParams-cube" style="display:none">
+        <div class="slider-row">
+          <span class="slider-label" style="min-width:44px">Size</span>
+          <input type="range" id="prim-cube-a" min="60" max="260" value="175" step="1">
+          <span class="slider-val" id="prim-cube-aVal">175</span>
+        </div>
+      </div>
+      <div id="primParams-cylinder" style="display:none">
+        <div class="slider-row">
+          <span class="slider-label" style="min-width:44px">Radius</span>
+          <input type="range" id="prim-cylinder-R" min="40" max="230" value="132" step="1">
+          <span class="slider-val" id="prim-cylinder-RVal">132</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label" style="min-width:44px">Height</span>
+          <input type="range" id="prim-cylinder-H" min="50" max="520" value="300" step="5">
+          <span class="slider-val" id="prim-cylinder-HVal">300</span>
+        </div>
+      </div>
+      <div id="primParams-pyramid" style="display:none">
+        <div class="slider-row">
+          <span class="slider-label" style="min-width:44px">Base</span>
+          <input type="range" id="prim-pyramid-a" min="60" max="260" value="152" step="1">
+          <span class="slider-val" id="prim-pyramid-aVal">152</span>
+        </div>
+      </div>
+    </div>
+
     <div class="section" data-tab="input">
       <div class="section-title">Aspect Ratio</div>
       <div class="btn-group">
@@ -1099,6 +1168,15 @@ let primRotY      = 0.0;
 let primVelX      = 0.0;
 let primVelY      = 0.003;
 
+const primParams = {
+  scale: 1.0, offX: 0, offY: 0, offZ: 0,
+  torus:    { R: 140, r: 68 },
+  sphere:   { R: 195 },
+  cube:     { a: 175 },
+  cylinder: { R: 132, H: 300 },
+  pyramid:  { a: 152 },
+};
+
 function haltonP(idx, base) {
   let f = 1, r = 0;
   while (idx > 0) { f /= base; r += f * (idx % base); idx = Math.floor(idx / base); }
@@ -1108,10 +1186,11 @@ function haltonP(idx, base) {
 function generatePrimitiveParticles(shape) {
   const pts = [];
   const N = shape === 'torus' ? 4500 : shape === 'sphere' ? 3500 : 3200;
+  const pp = primParams[shape];
 
   switch (shape) {
     case 'sphere': {
-      const R = 195;
+      const R = pp.R;
       for (let i = 0; i < N; i++) {
         const phi   = Math.acos(1 - 2 * (i + 0.5) / N);
         const theta = i * GOLDEN_P;
@@ -1121,7 +1200,7 @@ function generatePrimitiveParticles(shape) {
       break;
     }
     case 'torus': {
-      const R = 140, r = 68;
+      const R = pp.R, r = pp.r;
       for (let i = 0; i < N; i++) {
         const u = i * GOLDEN_P, v = i * GOLDEN_P * PHI_P;
         pts.push({ x: (R + r*Math.cos(v))*Math.cos(u), y: r*Math.sin(v),
@@ -1130,7 +1209,7 @@ function generatePrimitiveParticles(shape) {
       break;
     }
     case 'cube': {
-      const a = 175, pf = Math.floor(N / 6);
+      const a = pp.a, pf = Math.floor(N / 6);
       const faceGen = [
         (u,v) => ({x:u, y:v, z:a}),  (u,v) => ({x:u, y:v, z:-a}),
         (u,v) => ({x:a, y:u, z:v}),  (u,v) => ({x:-a, y:u, z:v}),
@@ -1146,7 +1225,7 @@ function generatePrimitiveParticles(shape) {
       break;
     }
     case 'cylinder': {
-      const R = 132, H = 300, sp = Math.floor(N*0.7), cp = Math.floor(N*0.15);
+      const R = pp.R, H = pp.H, sp = Math.floor(N*0.7), cp = Math.floor(N*0.15);
       for (let i = 0; i < sp; i++) {
         const theta = i * GOLDEN_P;
         pts.push({ x: R*Math.cos(theta), y: (haltonP(i,3)*2-1)*(H/2),
@@ -1163,8 +1242,7 @@ function generatePrimitiveParticles(shape) {
       break;
     }
     case 'pyramid': {
-      // Square pyramid with equilateral triangular side faces
-      const a = 152, h = a * Math.SQRT2;
+      const a = pp.a, h = a * Math.SQRT2;
       const apexY = h*0.6, baseY = -h*0.4;
       const apex = [0, apexY, 0];
       const base4 = [[a,baseY,a],[a,baseY,-a],[-a,baseY,-a],[-a,baseY,a]];
@@ -1187,6 +1265,16 @@ function generatePrimitiveParticles(shape) {
       break;
     }
   }
+
+  // Auto-center: subtract centroid so shape is always at origin
+  if (pts.length > 0) {
+    const n = pts.length;
+    const ocx = pts.reduce((s,p) => s+p.x, 0) / n;
+    const ocy = pts.reduce((s,p) => s+p.y, 0) / n;
+    const ocz = pts.reduce((s,p) => s+p.z, 0) / n;
+    pts.forEach(p => { p.x -= ocx; p.y -= ocy; p.z -= ocz; });
+  }
+
   return pts;
 }
 
@@ -1211,6 +1299,8 @@ function drawPrimitive(now) {
   const pulse       = (Math.sin(t * 0.42) * 0.5 + 0.5) * N;
   const projScale   = pw * 0.00138;
   const perspStr    = 0.00165;
+  const sc   = primParams.scale;
+  const oX   = primParams.offX, oY = primParams.offY, oZ = primParams.offZ;
   const cosX = Math.cos(primRotX), sinX = Math.sin(primRotX);
   const cosY = Math.cos(primRotY), sinY = Math.sin(primRotY);
 
@@ -1220,7 +1310,7 @@ function drawPrimitive(now) {
     const p  = primParticles[idx];
     const s  = 1 + Math.sin(p.f*22 - t*1.9 + p.phase)*0.055
                  + Math.sin(p.f*11 + t*0.7)*0.03;
-    let px = p.x*s, py = p.y*s, pz = p.z*s;
+    let px = p.x*sc*s, py = p.y*sc*s, pz = p.z*sc*s;
 
     // Rotate Y then X
     const x3 = px*cosY + pz*sinY;
@@ -1228,11 +1318,12 @@ function drawPrimitive(now) {
     const y3 = py*cosX - z3*sinX;
     const z4 = py*sinX + z3*cosX;
 
-    const persp = 1 / (1 + z4 * perspStr);
-    const sx = cx + x3 * projScale * persp;
-    const sy = cy + y3 * projScale * persp;
+    const zEff  = z4 + oZ;
+    const persp = 1 / (1 + zEff * perspStr);
+    const sx = cx + x3 * projScale * persp + oX;
+    const sy = cy + y3 * projScale * persp + oY;
 
-    const depth = Math.max(0, Math.min(1, 0.5 - z4 / 440));
+    const depth = Math.max(0, Math.min(1, 0.5 - zEff / 440));
     const dp    = Math.abs(idx - pulse);
     const glow  = Math.exp(-(dp*dp) / (N * 4.5));
 
@@ -1252,6 +1343,11 @@ function drawPrimitive(now) {
   }
 }
 
+function updatePrimParamsUI(shape) {
+  ['torus','sphere','cube','cylinder','pyramid'].forEach(s =>
+    document.getElementById('primParams-'+s).style.display = s === shape ? '' : 'none');
+}
+
 function initPrimitive(shape) {
   primShape     = shape;
   primParticles = generatePrimitiveParticles(shape);
@@ -1259,6 +1355,7 @@ function initPrimitive(shape) {
 
   document.querySelectorAll('[data-pshape]').forEach(b =>
     b.classList.toggle('active', b.dataset.pshape === shape));
+  updatePrimParamsUI(shape);
 
   stopCamera();
   if (app.mediaEl && app.mediaEl.pause) app.mediaEl.pause();
@@ -1275,6 +1372,7 @@ function initPrimitive(shape) {
   document.getElementById('primitiveBtn').textContent = '⏹ Stop 3D';
   document.getElementById('primitiveBtn').classList.add('active');
   document.getElementById('primitiveShapeRow').style.display = 'block';
+  document.getElementById('primControlsSection').style.display = 'block';
 
   setupCanvas();
   app.statesDirty = true;
@@ -1291,6 +1389,7 @@ function stopPrimitive() {
   document.getElementById('primitiveBtn').textContent = '◈ 3D Shape';
   document.getElementById('primitiveBtn').classList.remove('active');
   document.getElementById('primitiveShapeRow').style.display = 'none';
+  document.getElementById('primControlsSection').style.display = 'none';
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1901,6 +2000,51 @@ document.getElementById('primitiveBtn').addEventListener('click', () => {
 });
 document.querySelectorAll('[data-pshape]').forEach(btn => {
   btn.addEventListener('click', () => initPrimitive(btn.dataset.pshape));
+});
+
+// ── Universal shape transform ────────────────────────────────────
+document.getElementById('primScale').addEventListener('input', e => {
+  primParams.scale = parseFloat(e.target.value);
+  document.getElementById('primScaleVal').textContent = primParams.scale.toFixed(2) + '×';
+});
+document.getElementById('primOffX').addEventListener('input', e => {
+  primParams.offX = parseInt(e.target.value);
+  document.getElementById('primOffXVal').textContent = e.target.value;
+});
+document.getElementById('primOffY').addEventListener('input', e => {
+  primParams.offY = parseInt(e.target.value);
+  document.getElementById('primOffYVal').textContent = e.target.value;
+});
+document.getElementById('primOffZ').addEventListener('input', e => {
+  primParams.offZ = parseInt(e.target.value);
+  document.getElementById('primOffZVal').textContent = e.target.value;
+});
+
+// ── Shape-specific params ────────────────────────────────────────
+function primRegen(paramSetter) {
+  paramSetter();
+  primParticles = generatePrimitiveParticles(primShape);
+}
+document.getElementById('prim-torus-R').addEventListener('input', e => {
+  primRegen(() => { primParams.torus.R = parseInt(e.target.value); document.getElementById('prim-torus-RVal').textContent = e.target.value; });
+});
+document.getElementById('prim-torus-r').addEventListener('input', e => {
+  primRegen(() => { primParams.torus.r = parseInt(e.target.value); document.getElementById('prim-torus-rVal').textContent = e.target.value; });
+});
+document.getElementById('prim-sphere-R').addEventListener('input', e => {
+  primRegen(() => { primParams.sphere.R = parseInt(e.target.value); document.getElementById('prim-sphere-RVal').textContent = e.target.value; });
+});
+document.getElementById('prim-cube-a').addEventListener('input', e => {
+  primRegen(() => { primParams.cube.a = parseInt(e.target.value); document.getElementById('prim-cube-aVal').textContent = e.target.value; });
+});
+document.getElementById('prim-cylinder-R').addEventListener('input', e => {
+  primRegen(() => { primParams.cylinder.R = parseInt(e.target.value); document.getElementById('prim-cylinder-RVal').textContent = e.target.value; });
+});
+document.getElementById('prim-cylinder-H').addEventListener('input', e => {
+  primRegen(() => { primParams.cylinder.H = parseInt(e.target.value); document.getElementById('prim-cylinder-HVal').textContent = e.target.value; });
+});
+document.getElementById('prim-pyramid-a').addEventListener('input', e => {
+  primRegen(() => { primParams.pyramid.a = parseInt(e.target.value); document.getElementById('prim-pyramid-aVal').textContent = e.target.value; });
 });
 
 /* ══════════════════════════════════════════════════════════════════
