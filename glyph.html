@@ -126,13 +126,15 @@ input[type=color]::-webkit-color-swatch { border: none; border-radius: 6px; }
 
 /* camera button row */
 .camera-btn-row { display: flex; gap: 6px; padding: 4px 16px 12px; }
-#cameraBtn, #cameraFlipBtn {
+#cameraBtn, #cameraFlipBtn, #primitiveBtn {
   background: #2c2c2e; color: #fff; border: none; border-radius: 10px;
   padding: 10px; font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer;
   transition: all 0.18s;
 }
 #cameraBtn { flex: 1; }
-#cameraBtn:hover, #cameraFlipBtn:hover { background: #3a3a3c; }
+#primitiveBtn { flex: 1; }
+#cameraBtn:hover, #cameraFlipBtn:hover, #primitiveBtn:hover { background: #3a3a3c; }
+#primitiveBtn.active { background: rgba(10,132,255,0.18); color: #0a84ff; }
 
 /* ── State rows ─────────────────────────────────────────────────── */
 .state-row {
@@ -501,6 +503,22 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
       <div class="camera-btn-row">
         <button id="cameraBtn">📷 Camera</button>
         <button id="cameraFlipBtn" style="display:none;flex:0 0 auto" title="Flip camera">🔄</button>
+      </div>
+      <div class="camera-btn-row" style="padding-top:0">
+        <button id="primitiveBtn">◈ 3D Shape</button>
+      </div>
+      <div id="primitiveShapeRow" style="display:none;padding:0 16px 10px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div class="btn-group">
+            <button class="btn active" data-pshape="torus">Torus</button>
+            <button class="btn" data-pshape="sphere">Sphere</button>
+            <button class="btn" data-pshape="cube">Cube</button>
+          </div>
+          <div class="btn-group">
+            <button class="btn" data-pshape="cylinder">Cylinder</button>
+            <button class="btn" data-pshape="pyramid">Pyramid</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -990,8 +1008,9 @@ function ensureLoop() {
     updateGridAnim(now);
     updateDepthAnim(now);
     updateAutoRandom(now);
+    if (app.mediaType === 'primitive') drawPrimitive(now);
     const anyFlicker = app.flickerEnabled.some(Boolean) && app.uploadedShapes.length > 0;
-    if (app.mediaType === 'video' || anyFlicker || app.needsDraw || app.isRecording || app.gridAnim || app.depthAnim || app.autoRandom) {
+    if (app.mediaType === 'video' || app.mediaType === 'primitive' || anyFlicker || app.needsDraw || app.isRecording || app.gridAnim || app.depthAnim || app.autoRandom) {
       drawFrame();
       compositeFrame();
       app.needsDraw = false;
@@ -1059,6 +1078,219 @@ function compositeFrame() {
     const dw = rw * ws,        dx = (rw - dw) / 2;
     rctx.drawImage(perspCanvas, 0, sy, rw, sh, dx, dy, dw, dh);
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   3D PRIMITIVE PARTICLE ENGINE
+══════════════════════════════════════════════════════════════════ */
+const TAU_P    = Math.PI * 2;
+const PHI_P    = (1 + Math.sqrt(5)) / 2;
+const GOLDEN_P = TAU_P * (1 - 1 / PHI_P);
+
+const primitiveCanvas = document.createElement('canvas');
+const primitiveCtx    = primitiveCanvas.getContext('2d');
+primitiveCanvas.width  = 1080;
+primitiveCanvas.height = 1080;
+
+let primShape     = 'torus';
+let primParticles = [];
+let primRotX      = 0.3;
+let primRotY      = 0.0;
+let primVelX      = 0.0;
+let primVelY      = 0.003;
+
+function haltonP(idx, base) {
+  let f = 1, r = 0;
+  while (idx > 0) { f /= base; r += f * (idx % base); idx = Math.floor(idx / base); }
+  return r;
+}
+
+function generatePrimitiveParticles(shape) {
+  const pts = [];
+  const N = shape === 'torus' ? 4500 : shape === 'sphere' ? 3500 : 3200;
+
+  switch (shape) {
+    case 'sphere': {
+      const R = 195;
+      for (let i = 0; i < N; i++) {
+        const phi   = Math.acos(1 - 2 * (i + 0.5) / N);
+        const theta = i * GOLDEN_P;
+        pts.push({ x: R*Math.sin(phi)*Math.cos(theta), y: R*Math.cos(phi),
+                   z: R*Math.sin(phi)*Math.sin(theta), f: i/N, phase: haltonP(i,5)*TAU_P });
+      }
+      break;
+    }
+    case 'torus': {
+      const R = 140, r = 68;
+      for (let i = 0; i < N; i++) {
+        const u = i * GOLDEN_P, v = i * GOLDEN_P * PHI_P;
+        pts.push({ x: (R + r*Math.cos(v))*Math.cos(u), y: r*Math.sin(v),
+                   z: (R + r*Math.cos(v))*Math.sin(u), f: i/N, phase: haltonP(i,5)*TAU_P });
+      }
+      break;
+    }
+    case 'cube': {
+      const a = 175, pf = Math.floor(N / 6);
+      const faceGen = [
+        (u,v) => ({x:u, y:v, z:a}),  (u,v) => ({x:u, y:v, z:-a}),
+        (u,v) => ({x:a, y:u, z:v}),  (u,v) => ({x:-a, y:u, z:v}),
+        (u,v) => ({x:u, y:a, z:v}),  (u,v) => ({x:u, y:-a, z:v}),
+      ];
+      faceGen.forEach((gen, fi) => {
+        for (let i = 0; i < pf; i++) {
+          const gi = fi*pf+i;
+          const u = (haltonP(i,2)*2-1)*a, v = (haltonP(i,3)*2-1)*a;
+          pts.push({ ...gen(u,v), f: gi/N, phase: haltonP(gi,5)*TAU_P });
+        }
+      });
+      break;
+    }
+    case 'cylinder': {
+      const R = 132, H = 300, sp = Math.floor(N*0.7), cp = Math.floor(N*0.15);
+      for (let i = 0; i < sp; i++) {
+        const theta = i * GOLDEN_P;
+        pts.push({ x: R*Math.cos(theta), y: (haltonP(i,3)*2-1)*(H/2),
+                   z: R*Math.sin(theta), f: i/N, phase: haltonP(i,5)*TAU_P });
+      }
+      for (let ci = 0; ci < 2; ci++) {
+        for (let i = 0; i < cp; i++) {
+          const gi = sp + ci*cp + i;
+          const r = Math.sqrt(haltonP(i,2)) * R, theta = (i + ci*137)*GOLDEN_P;
+          pts.push({ x: r*Math.cos(theta), y: ci===0 ? H/2 : -H/2,
+                     z: r*Math.sin(theta), f: gi/N, phase: haltonP(gi,5)*TAU_P });
+        }
+      }
+      break;
+    }
+    case 'pyramid': {
+      // Square pyramid with equilateral triangular side faces
+      const a = 152, h = a * Math.SQRT2;
+      const apexY = h*0.6, baseY = -h*0.4;
+      const apex = [0, apexY, 0];
+      const base4 = [[a,baseY,a],[a,baseY,-a],[-a,baseY,-a],[-a,baseY,a]];
+      const pTri = Math.floor(N*0.21), pBase = N - 4*pTri;
+      for (let fi = 0; fi < 4; fi++) {
+        const v0=base4[fi], v1=base4[(fi+1)%4], v2=apex;
+        for (let i = 0; i < pTri; i++) {
+          const gi  = fi*pTri+i;
+          const sq  = Math.sqrt(haltonP(i,2));
+          const u = 1-sq, v = sq*haltonP(i,3), w = sq*(1-haltonP(i,3));
+          pts.push({ x: u*v0[0]+v*v1[0]+w*v2[0], y: u*v0[1]+v*v1[1]+w*v2[1],
+                     z: u*v0[2]+v*v1[2]+w*v2[2], f: gi/N, phase: haltonP(gi,5)*TAU_P });
+        }
+      }
+      for (let i = 0; i < pBase; i++) {
+        const gi = 4*pTri+i;
+        pts.push({ x: (haltonP(i,2)*2-1)*a, y: baseY,
+                   z: (haltonP(i,3)*2-1)*a, f: gi/N, phase: haltonP(gi,5)*TAU_P });
+      }
+      break;
+    }
+  }
+  return pts;
+}
+
+function drawPrimitive(now) {
+  if (app.mediaType !== 'primitive') return;
+  const t   = now * 0.001;
+  const pw  = primitiveCanvas.width, ph = primitiveCanvas.height;
+  const cx  = pw / 2, cy = ph / 2;
+  const N   = primParticles.length;
+
+  // Inertial auto-rotation
+  if (!drag.active) {
+    primRotY += primVelY + 0.0025;
+    primRotX += primVelX;
+    primVelX *= 0.96;
+    primVelY *= 0.96;
+  }
+
+  primitiveCtx.fillStyle = '#000000';
+  primitiveCtx.fillRect(0, 0, pw, ph);
+
+  const pulse       = (Math.sin(t * 0.42) * 0.5 + 0.5) * N;
+  const projScale   = pw * 0.00138;
+  const perspStr    = 0.00165;
+  const cosX = Math.cos(primRotX), sinX = Math.sin(primRotX);
+  const cosY = Math.cos(primRotY), sinY = Math.sin(primRotY);
+
+  const render = [];
+
+  for (let idx = 0; idx < N; idx++) {
+    const p  = primParticles[idx];
+    const s  = 1 + Math.sin(p.f*22 - t*1.9 + p.phase)*0.055
+                 + Math.sin(p.f*11 + t*0.7)*0.03;
+    let px = p.x*s, py = p.y*s, pz = p.z*s;
+
+    // Rotate Y then X
+    const x3 = px*cosY + pz*sinY;
+    const z3 = -px*sinY + pz*cosY;
+    const y3 = py*cosX - z3*sinX;
+    const z4 = py*sinX + z3*cosX;
+
+    const persp = 1 / (1 + z4 * perspStr);
+    const sx = cx + x3 * projScale * persp;
+    const sy = cy + y3 * projScale * persp;
+
+    const depth = Math.max(0, Math.min(1, 0.5 - z4 / 440));
+    const dp    = Math.abs(idx - pulse);
+    const glow  = Math.exp(-(dp*dp) / (N * 4.5));
+
+    render.push({ x: sx, y: sy, z: z4,
+      alpha: Math.min(1, 0.07 + depth*0.87 + glow*0.6),
+      size:  Math.max(0.3, 0.4 + depth*2.2 + glow*2.8) });
+  }
+
+  render.sort((a, b) => a.z - b.z);
+
+  for (const r of render) {
+    const v = Math.round(r.alpha * 255);
+    primitiveCtx.fillStyle = `rgb(${v},${v},${v})`;
+    primitiveCtx.beginPath();
+    primitiveCtx.arc(r.x, r.y, r.size, 0, TAU_P);
+    primitiveCtx.fill();
+  }
+}
+
+function initPrimitive(shape) {
+  primShape     = shape;
+  primParticles = generatePrimitiveParticles(shape);
+  primRotX = 0.3; primRotY = 0.0; primVelX = 0.0; primVelY = 0.003;
+
+  document.querySelectorAll('[data-pshape]').forEach(b =>
+    b.classList.toggle('active', b.dataset.pshape === shape));
+
+  stopCamera();
+  if (app.mediaEl && app.mediaEl.pause) app.mediaEl.pause();
+
+  app.mediaEl   = primitiveCanvas;
+  app.mediaType = 'primitive';
+
+  document.getElementById('preview-placeholder').style.display = 'none';
+  canvas.style.display   = 'block';
+  document.getElementById('export-bar').style.display  = 'flex';
+  document.getElementById('video-controls').style.display = 'none';
+  document.getElementById('m-video-section').style.display = 'none';
+  document.getElementById('uploadTitle').textContent = '◈ 3D Shape';
+  document.getElementById('primitiveBtn').textContent = '⏹ Stop 3D';
+  document.getElementById('primitiveBtn').classList.add('active');
+  document.getElementById('primitiveShapeRow').style.display = 'block';
+
+  setupCanvas();
+  app.statesDirty = true;
+  ensureLoop();
+}
+
+function stopPrimitive() {
+  app.mediaEl   = null;
+  app.mediaType = null;
+  canvas.style.display   = 'none';
+  document.getElementById('export-bar').style.display  = 'none';
+  document.getElementById('preview-placeholder').style.display = 'block';
+  document.getElementById('uploadTitle').textContent = 'Upload Image or Video';
+  document.getElementById('primitiveBtn').textContent = '◈ 3D Shape';
+  document.getElementById('primitiveBtn').classList.remove('active');
+  document.getElementById('primitiveShapeRow').style.display = 'none';
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1664,6 +1896,12 @@ document.getElementById('cameraBtn').addEventListener('click', () => {
 document.getElementById('cameraFlipBtn').addEventListener('click', () => {
   startCamera(cameraFacing === 'environment' ? 'user' : 'environment');
 });
+document.getElementById('primitiveBtn').addEventListener('click', () => {
+  if (app.mediaType === 'primitive') stopPrimitive(); else initPrimitive(primShape);
+});
+document.querySelectorAll('[data-pshape]').forEach(btn => {
+  btn.addEventListener('click', () => initPrimitive(btn.dataset.pshape));
+});
 
 /* ══════════════════════════════════════════════════════════════════
    MOBILE EXPORT BUTTONS
@@ -1743,11 +1981,17 @@ preview.addEventListener('mousedown', e => {
 });
 window.addEventListener('mousemove', e => {
   if (!drag.active) return;
-  app.rotY += (e.clientX - drag.lastX) * 0.35;
-  app.rotX -= (e.clientY - drag.lastY) * 0.35;
-  app.rotX  = Math.max(-80, Math.min(80, app.rotX));
+  const dx = e.clientX - drag.lastX, dy = e.clientY - drag.lastY;
   drag.lastX = e.clientX; drag.lastY = e.clientY;
-  applyTransform();
+  if (app.mediaType === 'primitive') {
+    primRotY += dx * 0.006; primRotX += dy * 0.006;
+    primVelY = dx * 0.0006; primVelX = dy * 0.0006;
+  } else {
+    app.rotY += dx * 0.35;
+    app.rotX -= dy * 0.35;
+    app.rotX  = Math.max(-80, Math.min(80, app.rotX));
+    applyTransform();
+  }
 });
 window.addEventListener('mouseup', () => { drag.active = false; });
 
@@ -1787,12 +2031,19 @@ preview.addEventListener('touchstart', e => {
 preview.addEventListener('touchmove', e => {
   e.preventDefault();
   if (e.touches.length === 1 && touch.active) {
-    app.rotY += (e.touches[0].clientX - touch.lastX) * 0.45;
-    app.rotX -= (e.touches[0].clientY - touch.lastY) * 0.45;
-    app.rotX  = Math.max(-80, Math.min(80, app.rotX));
+    const dx = e.touches[0].clientX - touch.lastX;
+    const dy = e.touches[0].clientY - touch.lastY;
     touch.lastX = e.touches[0].clientX;
     touch.lastY = e.touches[0].clientY;
-    applyTransform();
+    if (app.mediaType === 'primitive') {
+      primRotY += dx * 0.006; primRotX += dy * 0.006;
+      primVelY = dx * 0.0006; primVelX = dy * 0.0006;
+    } else {
+      app.rotY += dx * 0.45;
+      app.rotX -= dy * 0.45;
+      app.rotX  = Math.max(-80, Math.min(80, app.rotX));
+      applyTransform();
+    }
   } else if (e.touches.length === 2) {
     const dist = Math.hypot(
       e.touches[1].clientX - e.touches[0].clientX,
@@ -1835,6 +2086,10 @@ document.getElementById('autoRandom').addEventListener('change', e => {
   if (e.target.checked) { app.autoRandomLastMs = 0; ensureLoop(); }
 });
 applyDefaultGlyphs();
+
+// Auto-start with a random 3D primitive
+const _pStart = ['torus','sphere','cube','cylinder','pyramid'];
+initPrimitive(_pStart[Math.floor(Math.random() * _pStart.length)]);
 </script>
 </body>
 </html>
