@@ -2144,6 +2144,11 @@ function switchMobileTab(tabName) {
     t.classList.toggle('active', t.dataset.tab === tabName));
   document.querySelectorAll('.section[data-tab]').forEach(s =>
     s.classList.toggle('m-active', s.dataset.tab === tabName));
+  // primControlsSection is governed by inline style on desktop; on mobile,
+  // also gate by active tab so it doesn't bleed into Tune/States/Export
+  const pcs = document.getElementById('primControlsSection');
+  const primRunning = typeof app !== 'undefined' && app.mediaType === 'primitive';
+  pcs.style.display = (primRunning && tabName === 'input') ? 'block' : 'none';
 }
 
 document.querySelectorAll('.m-tab').forEach(tab =>
