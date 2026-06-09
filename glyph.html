@@ -1196,11 +1196,11 @@ let primVelY      = 0.003;
 const primParams = {
   scale: 1.0, offX: 0, offY: 0, offZ: 0,
   baseRotX: 0, baseRotY: 0, baseRotZ: 0,
-  torus:    { R: 140, r: 68 },
-  sphere:   { R: 195 },
-  cube:     { a: 175 },
-  cylinder: { R: 132, H: 300 },
-  pyramid:  { a: 152 },
+  torus:    { R: 128, r: 52 },
+  sphere:   { R: 180 },
+  cube:     { a: 108 },
+  cylinder: { R: 118, H: 210 },
+  pyramid:  { a: 260 },
 };
 
 function haltonP(idx, base) {
@@ -1211,11 +1211,12 @@ function haltonP(idx, base) {
 
 function generatePrimitiveParticles(shape) {
   const pts = [];
-  const N = shape === 'torus' ? 4500 : shape === 'sphere' ? 3500 : 3200;
+  const N = shape === 'sphere' ? 6000 : shape === 'torus' ? 5500 : 3600;
   const pp = primParams[shape];
 
   switch (shape) {
     case 'sphere': {
+      // Fibonacci sphere — uniform, no ridges at high N
       const R = pp.R;
       for (let i = 0; i < N; i++) {
         const phi   = Math.acos(1 - 2 * (i + 0.5) / N);
@@ -1226,9 +1227,11 @@ function generatePrimitiveParticles(shape) {
       break;
     }
     case 'torus': {
+      // Independent Halton(2,3) for u/v — avoids the correlated helix artifact
       const R = pp.R, r = pp.r;
       for (let i = 0; i < N; i++) {
-        const u = i * GOLDEN_P, v = i * GOLDEN_P * PHI_P;
+        const u = haltonP(i, 2) * TAU_P;
+        const v = haltonP(i, 3) * TAU_P;
         pts.push({ x: (R + r*Math.cos(v))*Math.cos(u), y: r*Math.sin(v),
                    z: (R + r*Math.cos(v))*Math.sin(u), f: i/N, phase: haltonP(i,5)*TAU_P });
       }
@@ -1268,26 +1271,33 @@ function generatePrimitiveParticles(shape) {
       break;
     }
     case 'pyramid': {
-      const a = pp.a, h = a * Math.SQRT2;
-      const apexY = h*0.6, baseY = -h*0.4;
-      const apex = [0, apexY, 0];
-      const base4 = [[a,baseY,a],[a,baseY,-a],[-a,baseY,-a],[-a,baseY,a]];
-      const pTri = Math.floor(N*0.21), pBase = N - 4*pTri;
-      for (let fi = 0; fi < 4; fi++) {
-        const v0=base4[fi], v1=base4[(fi+1)%4], v2=apex;
-        for (let i = 0; i < pTri; i++) {
-          const gi  = fi*pTri+i;
-          const sq  = Math.sqrt(haltonP(i,2));
-          const u = 1-sq, v = sq*haltonP(i,3), w = sq*(1-haltonP(i,3));
+      // Regular tetrahedron: 3-sided equilateral base, apex pointing up (−Y)
+      const a = pp.a;
+      const R_base = a / Math.sqrt(3);             // circumradius of equilateral base
+      const H      = a * Math.sqrt(2 / 3);         // height of regular tetrahedron
+      const apexPt = [0, -H, 0];                   // apex up (negative Y = up in canvas)
+      const base3  = [
+        [R_base,                              0,  0],
+        [R_base * Math.cos(2*Math.PI/3), 0,  R_base * Math.sin(2*Math.PI/3)],
+        [R_base * Math.cos(4*Math.PI/3), 0,  R_base * Math.sin(4*Math.PI/3)],
+      ];
+      const faces = [
+        [apexPt, base3[0], base3[1]],
+        [apexPt, base3[1], base3[2]],
+        [apexPt, base3[2], base3[0]],
+        [base3[0], base3[2], base3[1]], // base (wound consistently)
+      ];
+      const pPerFace = Math.floor(N / 4);
+      faces.forEach((face, fi) => {
+        const [v0, v1, v2] = face;
+        for (let i = 0; i < pPerFace; i++) {
+          const gi = fi*pPerFace + i;
+          const sq = Math.sqrt(haltonP(i, 2));
+          const u  = 1 - sq, v = sq * haltonP(i, 3), w = sq * (1 - haltonP(i, 3));
           pts.push({ x: u*v0[0]+v*v1[0]+w*v2[0], y: u*v0[1]+v*v1[1]+w*v2[1],
                      z: u*v0[2]+v*v1[2]+w*v2[2], f: gi/N, phase: haltonP(gi,5)*TAU_P });
         }
-      }
-      for (let i = 0; i < pBase; i++) {
-        const gi = 4*pTri+i;
-        pts.push({ x: (haltonP(i,2)*2-1)*a, y: baseY,
-                   z: (haltonP(i,3)*2-1)*a, f: gi/N, phase: haltonP(gi,5)*TAU_P });
-      }
+      });
       break;
     }
   }
@@ -1393,7 +1403,7 @@ function updatePrimParamsUI(shape) {
 function initPrimitive(shape) {
   primShape     = shape;
   primParticles = generatePrimitiveParticles(shape);
-  primRotX = 0.0; primRotY = 0.0; primVelX = 0.0; primVelY = 0.003;
+  primRotX = Math.PI / 6; primRotY = 0.0; primVelX = 0.0; primVelY = 0.003;
 
   document.querySelectorAll('[data-pshape]').forEach(b =>
     b.classList.toggle('active', b.dataset.pshape === shape));
