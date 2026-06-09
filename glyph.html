@@ -1216,13 +1216,13 @@ function generatePrimitiveParticles(shape) {
 
   switch (shape) {
     case 'sphere': {
-      // Fibonacci sphere — uniform, no ridges at high N
+      // Halton(2,3) uniform sphere — no spiral/ridge artifacts
       const R = pp.R;
       for (let i = 0; i < N; i++) {
-        const phi   = Math.acos(1 - 2 * (i + 0.5) / N);
-        const theta = i * GOLDEN_P;
+        const phi   = Math.acos(2 * haltonP(i, 2) - 1);
+        const theta = TAU_P * haltonP(i, 3);
         pts.push({ x: R*Math.sin(phi)*Math.cos(theta), y: R*Math.cos(phi),
-                   z: R*Math.sin(phi)*Math.sin(theta), f: i/N, phase: haltonP(i,5)*TAU_P });
+                   z: R*Math.sin(phi)*Math.sin(theta), f: i/N, phase: haltonP(i,7)*TAU_P });
       }
       break;
     }
