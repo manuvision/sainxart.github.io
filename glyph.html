@@ -524,6 +524,10 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
 
     <div class="section" data-tab="input" id="primControlsSection" style="display:none">
       <div class="section-title">Shape Controls</div>
+      <div class="toggle-row">
+        <span class="toggle-label">Glyph Dither</span>
+        <label class="toggle"><input type="checkbox" id="glyphsEnabledToggle"><span class="toggle-track"></span></label>
+      </div>
       <div class="slider-row">
         <span class="slider-label" style="min-width:44px">Scale</span>
         <input type="range" id="primScale" min="0.2" max="3" value="1" step="0.05">
@@ -858,6 +862,7 @@ const STATE_DEFS = [
 
 const app = {
   mediaEl:null, mediaType:null,
+  glyphsEnabled: false,
   grid:32, bgColor:'#000000', aspectRatio:'original',
   fillSolid:false, invert:false, scaleMin:1.0, scaleMax:1.0,
   // per-state
@@ -918,8 +923,8 @@ function cropRect(srcW, srcH, tw, th) {
 
 function setupCanvas() {
   const el = app.mediaEl; if (!el) return;
-  const srcW = el.videoWidth || el.naturalWidth || 800;
-  const srcH = el.videoHeight || el.naturalHeight || 600;
+  const srcW = el.videoWidth || el.naturalWidth || el.width || 800;
+  const srcH = el.videoHeight || el.naturalHeight || el.height || 600;
   const ar = app.aspectRatio;
   if (ar === '1:1') {
     const sz = Math.min(srcW, srcH);
@@ -1023,8 +1028,8 @@ function drawFrame() {
   const amp = 12;
   const effectiveRotX = app.rotX + (app.depthAnim ? amp * Math.sin(app.depthAnimPhase) : 0);
   const effectiveRotY = app.rotY + (app.depthAnim ? amp * Math.cos(app.depthAnimPhase) : 0);
-  const srcW = el.videoWidth || el.naturalWidth || 800;
-  const srcH = el.videoHeight || el.naturalHeight || 600;
+  const srcW = el.videoWidth || el.naturalWidth || el.width || 800;
+  const srcH = el.videoHeight || el.naturalHeight || el.height || 600;
 
   let sx = 0, sy = 0, sW = srcW, sH = srcH;
   const ar = app.aspectRatio;
@@ -1095,7 +1100,11 @@ function ensureLoop() {
     if (app.mediaType === 'primitive') drawPrimitive(now);
     const anyFlicker = app.flickerEnabled.some(Boolean) && app.uploadedShapes.length > 0;
     if (app.mediaType === 'video' || app.mediaType === 'primitive' || anyFlicker || app.needsDraw || app.isRecording || app.gridAnim || app.depthAnim || app.autoRandom) {
-      drawFrame();
+      if (app.mediaType === 'primitive' && !app.glyphsEnabled) {
+        ctx.drawImage(primitiveCanvas, 0, 0, canvas.width, canvas.height);
+      } else {
+        drawFrame();
+      }
       compositeFrame();
       app.needsDraw = false;
     }
@@ -1564,6 +1573,16 @@ document.querySelectorAll('[data-ratio]').forEach(btn => {
     btn.classList.add('active'); app.aspectRatio = btn.dataset.ratio;
     if (app.mediaEl) { setupCanvas(); app.statesDirty = true; requestDraw(); }
   });
+});
+document.getElementById('glyphsEnabledToggle').addEventListener('change', e => {
+  app.glyphsEnabled = e.target.checked;
+  if (e.target.checked) {
+    app.grid = 32;
+    document.getElementById('gridSlider').value = 32;
+    document.getElementById('gridVal').textContent = '32';
+    app.statesDirty = true;
+  }
+  requestDraw();
 });
 document.getElementById('gridSlider').addEventListener('input', e => {
   app.grid = parseInt(e.target.value);
@@ -2275,8 +2294,7 @@ document.getElementById('autoRandom').addEventListener('change', e => {
 applyDefaultGlyphs();
 
 // Auto-start with a random 3D primitive
-const _pStart = ['torus','sphere','cube','cylinder','pyramid'];
-initPrimitive(_pStart[Math.floor(Math.random() * _pStart.length)]);
+initPrimitive('sphere');
 </script>
 </body>
 </html>
