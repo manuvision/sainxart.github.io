@@ -544,6 +544,21 @@ canvas { max-width: 100%; max-height: 100%; display: block; image-rendering: pix
         <input type="range" id="primOffZ" min="-300" max="300" value="0" step="1">
         <span class="slider-val" id="primOffZVal">0</span>
       </div>
+      <div class="slider-row">
+        <span class="slider-label" style="min-width:44px">Rot X</span>
+        <input type="range" id="primRotXSlider" min="-180" max="180" value="0" step="1">
+        <span class="slider-val" id="primRotXSVal">0°</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label" style="min-width:44px">Rot Y</span>
+        <input type="range" id="primRotYSlider" min="-180" max="180" value="0" step="1">
+        <span class="slider-val" id="primRotYSVal">0°</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label" style="min-width:44px">Rot Z</span>
+        <input type="range" id="primRotZSlider" min="-180" max="180" value="0" step="1">
+        <span class="slider-val" id="primRotZSVal">0°</span>
+      </div>
       <div id="primParams-torus">
         <div class="slider-row">
           <span class="slider-label" style="min-width:44px">Major R</span>
@@ -1170,6 +1185,7 @@ let primVelY      = 0.003;
 
 const primParams = {
   scale: 1.0, offX: 0, offY: 0, offZ: 0,
+  baseRotX: 0, baseRotY: 0, baseRotZ: 0,
   torus:    { R: 140, r: 68 },
   sphere:   { R: 195 },
   cube:     { a: 175 },
@@ -1301,8 +1317,12 @@ function drawPrimitive(now) {
   const perspStr    = 0.00165;
   const sc   = primParams.scale;
   const oX   = primParams.offX, oY = primParams.offY, oZ = primParams.offZ;
-  const cosX = Math.cos(primRotX), sinX = Math.sin(primRotX);
-  const cosY = Math.cos(primRotY), sinY = Math.sin(primRotY);
+  const cosX = Math.cos(primRotX + primParams.baseRotX);
+  const sinX = Math.sin(primRotX + primParams.baseRotX);
+  const cosY = Math.cos(primRotY + primParams.baseRotY);
+  const sinY = Math.sin(primRotY + primParams.baseRotY);
+  const cosZ = Math.cos(primParams.baseRotZ);
+  const sinZ = Math.sin(primParams.baseRotZ);
 
   const render = [];
 
@@ -1312,16 +1332,18 @@ function drawPrimitive(now) {
                  + Math.sin(p.f*11 + t*0.7)*0.03;
     let px = p.x*sc*s, py = p.y*sc*s, pz = p.z*sc*s;
 
-    // Rotate Y then X
+    // Rotate Y → X → Z
     const x3 = px*cosY + pz*sinY;
     const z3 = -px*sinY + pz*cosY;
     const y3 = py*cosX - z3*sinX;
     const z4 = py*sinX + z3*cosX;
+    const x4 = x3*cosZ - y3*sinZ;
+    const y4 = x3*sinZ + y3*cosZ;
 
     const zEff  = z4 + oZ;
     const persp = 1 / (1 + zEff * perspStr);
-    const sx = cx + x3 * projScale * persp + oX;
-    const sy = cy + y3 * projScale * persp + oY;
+    const sx = cx + x4 * projScale * persp + oX;
+    const sy = cy + y4 * projScale * persp + oY;
 
     const depth = Math.max(0, Math.min(1, 0.5 - zEff / 440));
     const dp    = Math.abs(idx - pulse);
@@ -2018,6 +2040,18 @@ document.getElementById('primOffY').addEventListener('input', e => {
 document.getElementById('primOffZ').addEventListener('input', e => {
   primParams.offZ = parseInt(e.target.value);
   document.getElementById('primOffZVal').textContent = e.target.value;
+});
+document.getElementById('primRotXSlider').addEventListener('input', e => {
+  primParams.baseRotX = parseInt(e.target.value) * Math.PI / 180;
+  document.getElementById('primRotXSVal').textContent = e.target.value + '°';
+});
+document.getElementById('primRotYSlider').addEventListener('input', e => {
+  primParams.baseRotY = parseInt(e.target.value) * Math.PI / 180;
+  document.getElementById('primRotYSVal').textContent = e.target.value + '°';
+});
+document.getElementById('primRotZSlider').addEventListener('input', e => {
+  primParams.baseRotZ = parseInt(e.target.value) * Math.PI / 180;
+  document.getElementById('primRotZSVal').textContent = e.target.value + '°';
 });
 
 // ── Shape-specific params ────────────────────────────────────────
