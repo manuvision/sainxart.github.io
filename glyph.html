@@ -1354,6 +1354,15 @@ function drawPrimitive(now) {
       size:  Math.max(0.3, 0.4 + depth*2.2 + glow*2.8) });
   }
 
+  // alpha-weighted centroid correction so optical center matches canvas center
+  let wX = 0, wY = 0, wSum = 0;
+  for (const r of render) { wX += r.x * r.alpha; wY += r.y * r.alpha; wSum += r.alpha; }
+  if (wSum > 0) {
+    const dX = (cx + oX) - wX / wSum;
+    const dY = (cy + oY) - wY / wSum;
+    for (const r of render) { r.x += dX; r.y += dY; }
+  }
+
   render.sort((a, b) => a.z - b.z);
 
   for (const r of render) {
@@ -1373,7 +1382,7 @@ function updatePrimParamsUI(shape) {
 function initPrimitive(shape) {
   primShape     = shape;
   primParticles = generatePrimitiveParticles(shape);
-  primRotX = 0.3; primRotY = 0.0; primVelX = 0.0; primVelY = 0.003;
+  primRotX = 0.0; primRotY = 0.0; primVelX = 0.0; primVelY = 0.003;
 
   document.querySelectorAll('[data-pshape]').forEach(b =>
     b.classList.toggle('active', b.dataset.pshape === shape));
