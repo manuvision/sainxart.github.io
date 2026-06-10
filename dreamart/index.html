@@ -793,6 +793,10 @@
       letter-spacing: 0.1em;
       text-transform: uppercase;
     }
+    #gallery-sentinel {
+      height: 1px;
+      margin-top: 2rem;
+    }
 
     /* ── Lightbox ────────────────────────────────────────────── */
     #lightbox {
@@ -2478,6 +2482,7 @@
   <main>
     <div id="grid"></div>
     <div id="empty">No artworks found</div>
+    <div id="gallery-sentinel" aria-hidden="true"></div>
   </main>
 
   <div id="reading-overlay" role="dialog" aria-modal="true" aria-label="Today’s dreamscape reading" hidden>
@@ -2527,6 +2532,22 @@
   <script>
     const API = 'https://dreamart.manu.vision/api/gallery/public';
     const LOVE_API = 'https://dreamart.manu.vision/api/love';
+    const IMAGE_OPTIMIZER = 'https://dreamart.manu.vision/_next/image';
+    const THUMB_WIDTH = 384;
+    const PREVIEW_WIDTH = 640;
+    const THUMB_QUALITY = 25;
+    const GRID_INITIAL_COUNT = 36;
+    const GRID_BATCH_COUNT = 36;
+
+    function thumbnailUrl(src, width = THUMB_WIDTH, quality = THUMB_QUALITY) {
+      if (!src || !/^https?:\/\//.test(src)) return src;
+      const params = new URLSearchParams({
+        url: src,
+        w: String(width),
+        q: String(quality),
+      });
+      return `${IMAGE_OPTIMIZER}?${params.toString()}`;
+    }
 
     // Sleep-score → range color, mirrors getScoreColor() in lib/prompt.ts so
     // the public gallery's "May 21 · 92" tints exactly match the private app.
@@ -2719,9 +2740,7 @@
           })
         : candidates;
       if (!bandCandidates.length) return null;
-      const loaded = bandCandidates.filter(entry => howLoadedImages.has(entry.item.imageData));
-      const source = loaded.length ? loaded : bandCandidates;
-      const matches = source
+      const matches = bandCandidates
         .map(entry => ({ ...entry, distance: howDistance(target, entry.fingerprint) }))
         .sort((a, b) => a.distance - b.distance || dateValue(b.item) - dateValue(a.item));
       return matches.length ? matches[0].item : null;
@@ -2732,7 +2751,7 @@
       howPreloadStarted = true;
       howPool = buildHowPool(allItems);
       howPreloadedCount = 0;
-      howPool.forEach(({ item }) => {
+      howPool.slice(0, 12).forEach(({ item }) => {
         const img = new Image();
         img.decoding = 'async';
         img.onload = () => {
@@ -2743,7 +2762,7 @@
         img.onerror = () => {
           howPreloadedCount += 1;
         };
-        img.src = item.imageData;
+        img.src = thumbnailUrl(item.imageData, PREVIEW_WIDTH);
       });
     }
 
@@ -2760,7 +2779,7 @@
       const nextImg = howShowingA ? howImgB : howImgA;
       const prevImg = howShowingA ? howImgA : howImgB;
       nextImg.alt = item.label || 'Dreamscape archive match';
-      nextImg.src = item.imageData;
+      nextImg.src = thumbnailUrl(item.imageData, PREVIEW_WIDTH);
       nextImg.classList.add('active');
       prevImg.classList.remove('active');
       howShowingA = !howShowingA;
@@ -2805,7 +2824,9 @@
       howReading.textContent = item.reading || describeHowMatch(item);
       const loaded = howLoadedImages.size;
       const total = howPool.length || allItems.length;
-      howMatchNote.textContent = total ? `${loaded}/${total} archive matches preloaded` : 'Preparing archive matches';
+      howMatchNote.textContent = total
+        ? (loaded ? `${loaded} preview thumbnails warmed` : 'Preview loads on demand')
+        : 'Preparing archive matches';
       if (!quiet || item !== howCurrentItem) setHowImage(item);
     }
 
@@ -3369,6 +3390,7 @@
 
     const grid        = document.getElementById('grid');
     const empty       = document.getElementById('empty');
+    const gallerySentinel = document.getElementById('gallery-sentinel');
     const lightbox    = document.getElementById('lightbox');
     const lbImg       = document.getElementById('lb-img');
     const lbDate      = document.getElementById('lb-date');
@@ -3442,6 +3464,9 @@
     let readingIndex = 0;
     let readingItem = null;
     let readingRevealing = false;
+    let renderedCount = GRID_INITIAL_COUNT;
+    let galleryImageObserver = null;
+    let galleryLoadObserver = null;
     let howPool = [];
     let howCurrentItem = null;
     let howShowingA = true;
@@ -3995,6 +4020,7 @@
     // ── Render ────────────────────────────────────────────────
     function applyFilter(filter) {
       activeFilter = filter;
+      renderedCount = GRID_INITIAL_COUNT;
       displayed = filter
         ? allItems.filter(d => d.date >= filter.start && d.date <= filter.end)
         : allItems;
@@ -4032,9 +4058,59 @@
       render();
     }
 
+    function ensureGalleryImageObserver() {
+      if (galleryImageObserver || !('IntersectionObserver' in window)) return galleryImageObserver;
+      galleryImageObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const img = entry.target;
+          galleryImageObserver.unobserve(img);
+          const src = img.dataset.src;
+          if (src && !img.src) img.src = src;
+        });
+      }, { rootMargin: '900px 0px' });
+      return galleryImageObserver;
+    }
+
+    function observeGalleryImage(img) {
+      const observer = ensureGalleryImageObserver();
+      if (observer) {
+        observer.observe(img);
+      } else if (img.dataset.src) {
+        img.src = img.dataset.src;
+      }
+    }
+
+    function loadMoreGalleryItems() {
+      const dailyMystery = !activeFilter && activeSort === 'newest' ? todayDreamscape() : null;
+      const visibleTotal = dailyMystery
+        ? displayed.filter(item => item.date !== dailyMystery.date).length
+        : displayed.length;
+      if (renderedCount >= visibleTotal) return;
+      renderedCount = Math.min(renderedCount + GRID_BATCH_COUNT, visibleTotal);
+      render();
+    }
+
+    function updateGalleryLoadObserver(hasMore) {
+      if (!gallerySentinel) return;
+      gallerySentinel.hidden = !hasMore;
+      if (!('IntersectionObserver' in window)) return;
+      if (!galleryLoadObserver) {
+        galleryLoadObserver = new IntersectionObserver((entries) => {
+          if (entries.some(entry => entry.isIntersecting)) loadMoreGalleryItems();
+        }, { rootMargin: '1200px 0px' });
+        galleryLoadObserver.observe(gallerySentinel);
+      }
+    }
+
     function render() {
       grid.innerHTML = '';
-      if (displayed.length === 0) { empty.style.display = 'block'; return; }
+      if (galleryImageObserver) galleryImageObserver.disconnect();
+      if (displayed.length === 0) {
+        empty.style.display = 'block';
+        updateGalleryLoadObserver(false);
+        return;
+      }
       empty.style.display = 'none';
 
       const dailyMystery = !activeFilter && activeSort === 'newest' ? todayDreamscape() : null;
@@ -4071,8 +4147,9 @@
       const visibleItems = dailyMystery
         ? displayed.filter(item => item.date !== dailyMystery.date)
         : displayed;
+      const renderedItems = visibleItems.slice(0, renderedCount);
 
-      visibleItems.forEach((item) => {
+      renderedItems.forEach((item) => {
         const i = displayed.findIndex(entry => entry.date === item.date);
         const wrap = document.createElement('div');
         wrap.className = 'item';
@@ -4081,12 +4158,14 @@
         cell.className = 'cell';
 
         const img = document.createElement('img');
-        img.src = item.imageData;
+        img.dataset.src = thumbnailUrl(item.imageData);
         img.alt = item.label || 'Dream art';
         img.loading = 'lazy';
+        img.decoding = 'async';
         img.onload  = () => { img.classList.add('loaded'); cell.classList.add('loaded'); };
         img.onerror = () => { cell.classList.add('loaded'); };
         cell.appendChild(img);
+        observeGalleryImage(img);
         cell.addEventListener('click', () => openLightbox(i));
 
         const dateEl = document.createElement('div');
@@ -4112,6 +4191,8 @@
         wrap.appendChild(dateEl);
         grid.appendChild(wrap);
       });
+
+      updateGalleryLoadObserver(renderedCount < visibleItems.length);
     }
 
     // ── Calendar ──────────────────────────────────────────────
