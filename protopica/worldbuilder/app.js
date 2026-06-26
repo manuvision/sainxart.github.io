@@ -2,6 +2,10 @@ const STORAGE_KEY = "worldbuilder.mvp.v1";
 const LEGACY_STORAGE_KEY = "worldgraph.mvp.v1";
 const THEME_KEY = "worldbuilder.theme";
 const COLORS = ["#3866d6", "#b54708", "#039855", "#7f56d9", "#d92d20", "#0086c9", "#c11574", "#344054"];
+const GRAPH_MIN_SCALE = 0.05;
+const GRAPH_FIT_MIN_SCALE = 0.005;
+const GRAPH_MAX_SCALE = 2.4;
+const GRAPH_FIT_PADDING = 150;
 
 const emptyGraphView = {
   scale: 1,
@@ -20,6 +24,7 @@ let selectedConnectionId = state.selectedConnectionId || null;
 let selectedEventId = state.selectedEventId || null;
 let selectedLocationId = state.selectedLocationId || null;
 let dragState = null;
+let graphPointers = new Map();
 let graphSize = { width: 900, height: 620 };
 
 const elements = {
@@ -489,6 +494,9 @@ function setActiveView(view) {
   if (view === "graph" && ["event", "location"].includes(activeTab)) setActiveTab("character");
   saveState();
   render();
+  if (view === "graph") {
+    requestAnimationFrame(() => renderGraph(getWorld()));
+  }
 }
 
 function setActiveTab(tab) {
@@ -1292,34 +1300,139 @@ function resetGraphView() {
   graphView = { ...emptyGraphView };
 }
 
-function zoomGraph(multiplier) {
-  const nextScale = Math.min(2.2, Math.max(0.35, graphView.scale * multiplier));
-  const centerX = graphSize.width / 2;
-  const centerY = graphSize.height / 2;
-  graphView.x = centerX - (centerX - graphView.x) * (nextScale / graphView.scale);
-  graphView.y = centerY - (centerY - graphView.y) * (nextScale / graphView.scale);
-  graphView.scale = nextScale;
+function getGraphViewportPoint(clientX, clientY) {
+  const rect = elements.graphSvg.getBoundingClientRect();
+  return {
+    x: clientX - rect.left,
+    y: clientY - rect.top,
+  };
+}
+
+function getGraphViewportCenter() {
+  return {
+    x: graphSize.width / 2,
+    y: graphSize.height / 2,
+  };
+}
+
+function viewportToGraphPoint(point) {
+  return {
+    x: (point.x - graphView.x) / graphView.scale,
+    y: (point.y - graphView.y) / graphView.scale,
+  };
+}
+
+function setGraphScale(nextScale, anchor = getGraphViewportCenter(), graphAnchor = viewportToGraphPoint(anchor)) {
+  const clampedScale = clamp(nextScale, GRAPH_MIN_SCALE, GRAPH_MAX_SCALE);
+  if (!Number.isFinite(clampedScale) || !Number.isFinite(anchor.x) || !Number.isFinite(anchor.y)) return;
+
+  graphView.x = anchor.x - graphAnchor.x * clampedScale;
+  graphView.y = anchor.y - graphAnchor.y * clampedScale;
+  graphView.scale = clampedScale;
   renderGraph(getWorld());
+}
+
+function zoomGraph(multiplier, anchor) {
+  updateGraphSize();
+  setGraphScale(graphView.scale * multiplier, anchor || getGraphViewportCenter());
+}
+
+function rememberGraphPointer(event) {
+  graphPointers.set(event.pointerId, {
+    x: event.clientX,
+    y: event.clientY,
+  });
+}
+
+function releaseGraphPointer(event) {
+  graphPointers.delete(event.pointerId);
+  try {
+    if (elements.graphSvg.hasPointerCapture?.(event.pointerId)) {
+      elements.graphSvg.releasePointerCapture(event.pointerId);
+    }
+  } catch (error) {
+    console.warn("Could not release graph pointer.", error);
+  }
+}
+
+function getPinchGeometry(pointerIds) {
+  const first = graphPointers.get(pointerIds[0]);
+  const second = graphPointers.get(pointerIds[1]);
+  if (!first || !second) return null;
+
+  const midpoint = getGraphViewportPoint((first.x + second.x) / 2, (first.y + second.y) / 2);
+  return {
+    distance: Math.max(Math.hypot(second.x - first.x, second.y - first.y), 1),
+    midpoint,
+  };
+}
+
+function startGraphPinch() {
+  const pointerIds = Array.from(graphPointers.keys()).slice(0, 2);
+  const geometry = getPinchGeometry(pointerIds);
+  if (!geometry) return false;
+
+  if (dragState?.type === "node") saveState();
+  const anchorGraphPoint = viewportToGraphPoint(geometry.midpoint);
+  dragState = {
+    type: "pinch",
+    pointerIds,
+    startDistance: geometry.distance,
+    startScale: graphView.scale,
+    anchorGraphX: anchorGraphPoint.x,
+    anchorGraphY: anchorGraphPoint.y,
+  };
+  return true;
+}
+
+function continuePanAfterPinch() {
+  const [pointerId, point] = graphPointers.entries().next().value || [];
+  if (pointerId === undefined || !point) {
+    dragState = null;
+    return;
+  }
+
+  dragState = {
+    type: "pan",
+    pointerId,
+    startX: point.x,
+    startY: point.y,
+    originX: graphView.x,
+    originY: graphView.y,
+  };
+}
+
+function zoomGraphAroundPointer(event) {
+  const anchor = getGraphViewportPoint(event.clientX, event.clientY);
+  const wheelAmount = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
+  const multiplier = clamp(Math.exp(-wheelAmount * 0.0016), 0.82, 1.18);
+  zoomGraph(multiplier, anchor);
 }
 
 function fitGraph() {
   const world = getWorld();
-  if (!world.characters.length) return;
+  if (activeView !== "graph" || elements.graphView.classList.contains("hidden")) return;
 
-  const padding = 120;
+  if (!world.characters.length) {
+    resetGraphView();
+    renderGraph(world);
+    return;
+  }
+
+  updateGraphSize();
   const xs = world.characters.map((character) => character.x);
   const ys = world.characters.map((character) => character.y);
-  const minX = Math.min(...xs) - padding;
-  const maxX = Math.max(...xs) + padding;
-  const minY = Math.min(...ys) - padding;
-  const maxY = Math.max(...ys) + padding;
+  const minX = Math.min(...xs) - GRAPH_FIT_PADDING;
+  const maxX = Math.max(...xs) + GRAPH_FIT_PADDING;
+  const minY = Math.min(...ys) - GRAPH_FIT_PADDING;
+  const maxY = Math.max(...ys) + GRAPH_FIT_PADDING;
   const width = Math.max(maxX - minX, 1);
   const height = Math.max(maxY - minY, 1);
-  const scale = Math.min(graphSize.width / width, graphSize.height / height, 1.4);
+  const scale = clamp(Math.min(graphSize.width / width, graphSize.height / height), GRAPH_FIT_MIN_SCALE, GRAPH_MAX_SCALE);
 
-  graphView.scale = Math.max(0.35, scale);
-  graphView.x = (graphSize.width - width * graphView.scale) / 2 - minX * graphView.scale;
-  graphView.y = (graphSize.height - height * graphView.scale) / 2 - minY * graphView.scale;
+  graphView.scale = scale;
+  graphView.x = (graphSize.width - width * scale) / 2 - minX * scale;
+  graphView.y = (graphSize.height - height * scale) / 2 - minY * scale;
   renderGraph(world);
 }
 
@@ -1343,14 +1456,18 @@ function autoLayout() {
 }
 
 function screenToGraph(event) {
-  const rect = elements.graphSvg.getBoundingClientRect();
-  return {
-    x: (event.clientX - rect.left - graphView.x) / graphView.scale,
-    y: (event.clientY - rect.top - graphView.y) / graphView.scale,
-  };
+  return viewportToGraphPoint(getGraphViewportPoint(event.clientX, event.clientY));
 }
 
 function startGraphPointer(event) {
+  event.preventDefault();
+  rememberGraphPointer(event);
+  elements.graphSvg.setPointerCapture(event.pointerId);
+
+  if (graphPointers.size >= 2 && startGraphPinch()) {
+    return;
+  }
+
   const node = event.target.closest(".node");
   const edge = event.target.closest(".edge");
 
@@ -1370,7 +1487,6 @@ function startGraphPointer(event) {
       offsetX: point.x - character.x,
       offsetY: point.y - character.y,
     };
-    elements.graphSvg.setPointerCapture(event.pointerId);
     render();
     return;
   }
@@ -1396,11 +1512,26 @@ function startGraphPointer(event) {
     originX: graphView.x,
     originY: graphView.y,
   };
-  elements.graphSvg.setPointerCapture(event.pointerId);
 }
 
 function moveGraphPointer(event) {
+  if (graphPointers.has(event.pointerId)) rememberGraphPointer(event);
+
+  if (dragState?.type === "pinch") {
+    event.preventDefault();
+    const geometry = getPinchGeometry(dragState.pointerIds);
+    if (!geometry) return;
+
+    setGraphScale(
+      dragState.startScale * (geometry.distance / dragState.startDistance),
+      geometry.midpoint,
+      { x: dragState.anchorGraphX, y: dragState.anchorGraphY },
+    );
+    return;
+  }
+
   if (!dragState || dragState.pointerId !== event.pointerId) return;
+  event.preventDefault();
 
   if (dragState.type === "node") {
     const world = getWorld();
@@ -1421,8 +1552,26 @@ function moveGraphPointer(event) {
 }
 
 function endGraphPointer(event) {
-  if (!dragState || dragState.pointerId !== event.pointerId) return;
-  if (dragState.type === "node") {
+  const endedDrag = dragState;
+  const endedPinchPointer = endedDrag?.type === "pinch" && endedDrag.pointerIds.includes(event.pointerId);
+  const endedPrimaryPointer = endedDrag?.pointerId === event.pointerId;
+
+  releaseGraphPointer(event);
+
+  if (!endedDrag) return;
+
+  if (endedDrag.type === "pinch" && endedPinchPointer) {
+    if (graphPointers.size >= 2) {
+      startGraphPinch();
+      return;
+    }
+    continuePanAfterPinch();
+    return;
+  }
+
+  if (!endedPrimaryPointer) return;
+
+  if (endedDrag.type === "node") {
     saveState();
     render();
   }
@@ -1672,7 +1821,7 @@ function bindEvents() {
     "wheel",
     (event) => {
       event.preventDefault();
-      zoomGraph(event.deltaY < 0 ? 1.08 : 0.92);
+      zoomGraphAroundPointer(event);
     },
     { passive: false },
   );
