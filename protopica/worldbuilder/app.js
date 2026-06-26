@@ -1,4 +1,6 @@
-const STORAGE_KEY = "worldgraph.mvp.v1";
+const STORAGE_KEY = "worldbuilder.mvp.v1";
+const LEGACY_STORAGE_KEY = "worldgraph.mvp.v1";
+const THEME_KEY = "worldbuilder.theme";
 const COLORS = ["#3866d6", "#b54708", "#039855", "#7f56d9", "#d92d20", "#0086c9", "#c11574", "#344054"];
 
 const emptyGraphView = {
@@ -10,6 +12,7 @@ const emptyGraphView = {
 let state = normalizeState(loadState());
 let graphView = { ...emptyGraphView };
 let activeView = state.activeView || "graph";
+let currentTheme = loadTheme();
 let activeTab = "character";
 let selectedColor = COLORS[0];
 let selectedCharacterImage = "";
@@ -110,6 +113,7 @@ const elements = {
   connectionTab: document.querySelector("#connectionTab"),
   eventTab: document.querySelector("#eventTab"),
   locationTab: document.querySelector("#locationTab"),
+  themeToggleButton: document.querySelector("#themeToggleButton"),
   importButton: document.querySelector("#importButton"),
   importFile: document.querySelector("#importFile"),
   exportButton: document.querySelector("#exportButton"),
@@ -287,9 +291,37 @@ function createSeedLocations(chars) {
   ];
 }
 
+function loadTheme() {
+  try {
+    return localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
+  } catch (error) {
+    console.warn("Could not load Worldbuilder theme.", error);
+    return "light";
+  }
+}
+
+function applyTheme(theme) {
+  currentTheme = theme === "dark" ? "dark" : "light";
+  document.body.dataset.theme = currentTheme;
+
+  const nextLabel = currentTheme === "dark" ? "Switch to light UI" : "Switch to dark UI";
+  elements.themeToggleButton.setAttribute("aria-label", nextLabel);
+  elements.themeToggleButton.setAttribute("title", nextLabel);
+
+  try {
+    localStorage.setItem(THEME_KEY, currentTheme);
+  } catch (error) {
+    console.warn("Could not save Worldbuilder theme.", error);
+  }
+}
+
+function toggleTheme() {
+  applyTheme(currentTheme === "dark" ? "light" : "dark");
+}
+
 function loadState() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
     if (!raw) {
       return createSeedState();
     }
@@ -301,7 +333,7 @@ function loadState() {
 
     return parsed;
   } catch (error) {
-    console.warn("Could not load saved graph.", error);
+    console.warn("Could not load saved Worldbuilder state.", error);
     return createSeedState();
   }
 }
@@ -391,7 +423,7 @@ function saveState() {
     return true;
   } catch (error) {
     window.alert("That image is too large to save locally. Try a smaller file.");
-    console.warn("Could not save Worldgraph state.", error);
+    console.warn("Could not save Worldbuilder state.", error);
     return false;
   }
 }
@@ -1446,7 +1478,7 @@ function exportJson() {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = "worldgraph-export.json";
+  anchor.download = "worldbuilder-export.json";
   anchor.click();
   URL.revokeObjectURL(url);
 }
@@ -1466,7 +1498,7 @@ function importJson(file) {
       render();
       fitGraph();
     } catch (error) {
-      window.alert("That JSON file does not match the Worldgraph format.");
+      window.alert("That JSON file does not match the Worldbuilder format.");
       console.warn(error);
     }
   });
@@ -1474,6 +1506,8 @@ function importJson(file) {
 }
 
 function bindEvents() {
+  elements.themeToggleButton.addEventListener("click", toggleTheme);
+
   elements.worldForm.addEventListener("submit", (event) => {
     event.preventDefault();
     const name = elements.worldName.value.trim();
@@ -1662,6 +1696,7 @@ function bindEvents() {
 }
 
 bindEvents();
+applyTheme(currentTheme);
 setActiveTab(activeView === "timeline" ? "event" : activeView === "map" ? "location" : "character");
 render();
 saveState();
