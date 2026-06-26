@@ -6,6 +6,7 @@ const GRAPH_MIN_SCALE = 0.05;
 const GRAPH_FIT_MIN_SCALE = 0.005;
 const GRAPH_MAX_SCALE = 2.4;
 const GRAPH_FIT_PADDING = 150;
+const GRAPH_FOCUS_SCALE = 1.05;
 
 const emptyGraphView = {
   scale: 1,
@@ -1409,6 +1410,32 @@ function zoomGraphAroundPointer(event) {
   zoomGraph(multiplier, anchor);
 }
 
+function centerGraphOnCharacter(characterId) {
+  const world = getWorld();
+  const character = world?.characters.find((item) => item.id === characterId);
+  if (!character || activeView !== "graph" || elements.graphView.classList.contains("hidden")) return;
+
+  updateGraphSize();
+  const scale = clamp(Math.max(graphView.scale, GRAPH_FOCUS_SCALE), GRAPH_MIN_SCALE, GRAPH_MAX_SCALE);
+  graphView.scale = scale;
+  graphView.x = graphSize.width / 2 - character.x * scale;
+  graphView.y = graphSize.height / 2 - character.y * scale;
+  renderGraph(world);
+}
+
+function focusCharacterInGraph(characterId) {
+  const world = getWorld();
+  if (!world?.characters.some((character) => character.id === characterId)) return;
+
+  state.selectedCharacterId = characterId;
+  selectedConnectionId = null;
+  activeView = "graph";
+  setActiveTab("character");
+  saveState();
+  render();
+  requestAnimationFrame(() => centerGraphOnCharacter(characterId));
+}
+
 function fitGraph() {
   const world = getWorld();
   if (activeView !== "graph" || elements.graphView.classList.contains("hidden")) return;
@@ -1677,10 +1704,11 @@ function bindEvents() {
     selectedConnectionId = null;
     selectedEventId = null;
     selectedLocationId = null;
+    activeView = "graph";
     resetGraphView();
     saveState();
     render();
-    fitGraph();
+    requestAnimationFrame(fitGraph);
   });
 
   elements.worldTitleInput.addEventListener("change", () => {
@@ -1703,11 +1731,7 @@ function bindEvents() {
   elements.characterList.addEventListener("click", (event) => {
     const item = event.target.closest("[data-character-id]");
     if (!item) return;
-    state.selectedCharacterId = item.dataset.characterId;
-    selectedConnectionId = null;
-    setActiveTab("character");
-    saveState();
-    render();
+    focusCharacterInGraph(item.dataset.characterId);
   });
 
   elements.newCharacterButton.addEventListener("click", clearCharacterForm);

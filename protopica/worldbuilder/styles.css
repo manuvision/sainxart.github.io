@@ -763,16 +763,6 @@ body[data-theme="dark"] .timeline-view {
   position: relative;
 }
 
-.timeline-list::before {
-  background: linear-gradient(180deg, rgba(56, 102, 214, 0), rgba(56, 102, 214, 0.5), rgba(56, 102, 214, 0));
-  bottom: 0;
-  content: "";
-  left: 20px;
-  position: absolute;
-  top: 0;
-  width: 2px;
-}
-
 .timeline-card {
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid var(--line);
@@ -786,6 +776,17 @@ body[data-theme="dark"] .timeline-view {
   position: relative;
   text-align: left;
   width: calc(100% - 44px);
+}
+
+.timeline-card:not(:last-child)::after {
+  background: rgba(56, 102, 214, 0.46);
+  content: "";
+  height: calc(100% + 14px);
+  left: -24px;
+  position: absolute;
+  top: 27px;
+  width: 2px;
+  z-index: 0;
 }
 
 body[data-theme="dark"] .timeline-card {
@@ -802,6 +803,7 @@ body[data-theme="dark"] .timeline-card {
   position: absolute;
   top: 20px;
   width: 14px;
+  z-index: 1;
 }
 
 body[data-theme="dark"] .timeline-card::before {
