@@ -1,6 +1,6 @@
 const STORAGE_KEY = "worldbuilder.mvp.v1";
 const LEGACY_STORAGE_KEY = "worldgraph.mvp.v1";
-const THEME_KEY = "worldbuilder.theme";
+const THEME_KEY = "worldbuilder.theme.v2";
 const COLORS = ["#3866d6", "#b54708", "#039855", "#7f56d9", "#d92d20", "#0086c9", "#c11574", "#344054"];
 const GRAPH_MIN_SCALE = 0.05;
 const GRAPH_FIT_MIN_SCALE = 0.005;
