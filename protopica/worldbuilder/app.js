@@ -232,6 +232,7 @@ function createSeedState() {
         events,
         locations,
         mapImage: "",
+        mapImageSize: null,
       },
     ],
   };
@@ -473,6 +474,7 @@ function normalizeWorld(world) {
     events: Array.isArray(world.events) ? world.events : null,
     locations: Array.isArray(world.locations) ? world.locations : null,
     mapImage: typeof world.mapImage === "string" ? world.mapImage : "",
+    mapImageSize: normalizeMapImageSize(world.mapImageSize),
   };
 
   normalized.characters = normalized.characters.map((character, index) => ({
@@ -583,6 +585,16 @@ function truncate(value, max = 26) {
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function normalizeMapImageSize(size) {
+  if (!size || !Number.isFinite(size.width) || !Number.isFinite(size.height) || size.width <= 0 || size.height <= 0) {
+    return null;
+  }
+  return {
+    width: size.width,
+    height: size.height,
+  };
 }
 
 function escapeHtml(value) {
@@ -872,10 +884,69 @@ function parseTimelineNumber(value) {
   return match ? Number(match[0].replace(/,/g, "")) : null;
 }
 
+function getMapImageRect(world = getWorld()) {
+  const canvasRect = elements.mapCanvas.getBoundingClientRect();
+  const size = normalizeMapImageSize(world?.mapImageSize);
+  if (!world?.mapImage || !size || !canvasRect.width || !canvasRect.height) {
+    return {
+      left: 0,
+      top: 0,
+      width: canvasRect.width,
+      height: canvasRect.height,
+    };
+  }
+
+  const imageRatio = size.width / size.height;
+  const canvasRatio = canvasRect.width / canvasRect.height;
+  let width = canvasRect.width;
+  let height = canvasRect.height;
+
+  if (imageRatio > canvasRatio) {
+    width = canvasRect.height * imageRatio;
+  } else {
+    height = canvasRect.width / imageRatio;
+  }
+
+  return {
+    left: (canvasRect.width - width) / 2,
+    top: (canvasRect.height - height) / 2,
+    width,
+    height,
+  };
+}
+
+function getMapPinStyle(location, world = getWorld()) {
+  const rect = getMapImageRect(world);
+  if (!rect.width || !rect.height) {
+    return `left:${location.x}%; top:${location.y}%`;
+  }
+  const left = rect.left + (Number(location.x) / 100) * rect.width;
+  const top = rect.top + (Number(location.y) / 100) * rect.height;
+  return `left:${left}px; top:${top}px`;
+}
+
+function updateMapPinPositions(world = getWorld()) {
+  if (!world) return;
+  elements.mapPins.querySelectorAll("[data-location-id]").forEach((pin) => {
+    const location = world.locations.find((item) => item.id === pin.dataset.locationId);
+    if (!location) return;
+    pin.setAttribute("style", getMapPinStyle(location, world));
+  });
+}
+
+function getMapImagePoint(event, world = getWorld()) {
+  const canvasRect = elements.mapCanvas.getBoundingClientRect();
+  const imageRect = getMapImageRect(world);
+  const x = clamp(((event.clientX - canvasRect.left - imageRect.left) / imageRect.width) * 100, 0, 100);
+  const y = clamp(((event.clientY - canvasRect.top - imageRect.top) / imageRect.height) * 100, 0, 100);
+  return { x, y };
+}
+
 function renderMap(world) {
   elements.mapCanvas.classList.toggle("has-image", Boolean(world.mapImage));
   elements.mapImageLayer.style.backgroundImage = world.mapImage ? `url("${world.mapImage}")` : "";
   elements.mapImagePrompt.hidden = Boolean(world.mapImage);
+  loadMapImageSize(world);
 
   if (!world.locations.length) {
     elements.mapPins.innerHTML = "";
@@ -892,7 +963,7 @@ function renderMap(world) {
       const imageStyle = character?.avatarImage ? `background-image:url("${character.avatarImage}")` : `background:${color}`;
       const imageClass = character?.avatarImage ? " has-image" : "";
       return `
-        <button class="map-pin ${location.id === selectedLocationId ? "active" : ""}" type="button" data-location-id="${location.id}" style="left:${location.x}%; top:${location.y}%">
+        <button class="map-pin ${location.id === selectedLocationId ? "active" : ""}" type="button" data-location-id="${location.id}" style="${getMapPinStyle(location, world)}">
           <span class="pin-head${imageClass}" style="${imageStyle}"><span>${escapeHtml(marker || "?")}</span></span>
           <span class="pin-label">${escapeHtml(location.name)}</span>
         </button>
@@ -1435,12 +1506,16 @@ function deleteSelectedLocation() {
 function setMapImage(dataUrl) {
   const world = getWorld();
   const previousImage = world.mapImage;
+  const previousSize = world.mapImageSize;
   world.mapImage = dataUrl;
+  world.mapImageSize = null;
   activeView = "map";
   touchWorld(world);
   if (!saveState()) {
     world.mapImage = previousImage;
+    world.mapImageSize = previousSize;
   }
+  loadMapImageSize(world);
   render();
 }
 
@@ -1448,10 +1523,28 @@ function clearMapImage() {
   const world = getWorld();
   if (!world.mapImage) return;
   world.mapImage = "";
+  world.mapImageSize = null;
   activeView = "map";
   touchWorld(world);
   saveState();
   render();
+}
+
+function loadMapImageSize(world = getWorld()) {
+  if (!world?.mapImage || world.mapImageSize) return;
+
+  const image = new Image();
+  image.addEventListener("load", () => {
+    const latestWorld = getWorld();
+    if (latestWorld?.id !== world.id || latestWorld.mapImage !== world.mapImage) return;
+    latestWorld.mapImageSize = {
+      width: image.naturalWidth || image.width,
+      height: image.naturalHeight || image.height,
+    };
+    saveState();
+    renderMap(latestWorld);
+  });
+  image.src = world.mapImage;
 }
 
 function setCharacterImage(dataUrl) {
@@ -1631,6 +1724,28 @@ function centerGraphOnCharacter(characterId) {
   renderGraph(world);
 }
 
+function centerGraphOnConnection(connectionId) {
+  const world = getWorld();
+  const connection = world?.connections.find((item) => item.id === connectionId);
+  if (!connection || activeView !== "graph" || elements.graphView.classList.contains("hidden")) return;
+
+  const source = world.characters.find((character) => character.id === connection.source);
+  const target = world.characters.find((character) => character.id === connection.target);
+  if (!source || !target) return;
+
+  updateGraphSize();
+  const midpointX = (source.x + target.x) / 2;
+  const midpointY = (source.y + target.y) / 2;
+  const width = Math.max(Math.abs(target.x - source.x) + GRAPH_FIT_PADDING * 2, 1);
+  const height = Math.max(Math.abs(target.y - source.y) + GRAPH_FIT_PADDING * 2, 1);
+  const scale = clamp(Math.min(graphSize.width / width, graphSize.height / height), GRAPH_FIT_MIN_SCALE, GRAPH_MAX_SCALE);
+
+  graphView.scale = scale;
+  graphView.x = graphSize.width / 2 - midpointX * scale;
+  graphView.y = graphSize.height / 2 - midpointY * scale;
+  renderGraph(world);
+}
+
 function focusCharacterInGraph(characterId) {
   const world = getWorld();
   if (!world?.characters.some((character) => character.id === characterId)) return;
@@ -1732,6 +1847,7 @@ function startGraphPointer(event) {
     state.selectedCharacterId = connection?.source || state.selectedCharacterId;
     setActiveTab("connection");
     render();
+    requestAnimationFrame(() => centerGraphOnConnection(selectedConnectionId));
     return;
   }
 
@@ -1842,9 +1958,9 @@ function moveMapPointer(event) {
   const location = world.locations.find((item) => item.id === dragState.locationId);
   if (!location) return;
 
-  const rect = elements.mapCanvas.getBoundingClientRect();
-  location.x = clamp(((event.clientX - rect.left) / rect.width) * 100, 5, 95);
-  location.y = clamp(((event.clientY - rect.top) / rect.height) * 100, 10, 90);
+  const point = getMapImagePoint(event, world);
+  location.x = point.x;
+  location.y = point.y;
   touchWorld(world);
   renderMap(world);
 }
@@ -1989,8 +2105,13 @@ function bindEvents() {
     const item = event.target.closest("[data-connection-id]");
     if (!item) return;
     selectedConnectionId = item.dataset.connectionId;
+    const connection = getConnection();
+    state.selectedCharacterId = connection?.source || state.selectedCharacterId;
+    activeView = "graph";
     setActiveTab("connection");
+    saveState();
     render();
+    requestAnimationFrame(() => centerGraphOnConnection(selectedConnectionId));
   });
 
   elements.newEventButton.addEventListener("click", clearEventForm);
@@ -2086,6 +2207,7 @@ function bindEvents() {
   window.addEventListener("resize", () => {
     updateGraphSize();
     renderGraph(getWorld());
+    updateMapPinPositions(getWorld());
   });
 }
 
