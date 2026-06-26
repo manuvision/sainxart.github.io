@@ -580,7 +580,9 @@ body[data-theme="dark"] .tab.active {
 }
 
 .stage-views {
+  height: 100%;
   min-height: 0;
+  overflow: hidden;
   position: relative;
 }
 
@@ -595,7 +597,9 @@ body[data-theme="dark"] .tab.active {
     linear-gradient(90deg, rgba(32, 35, 40, 0.045) 1px, transparent 1px),
     #fbfaf5;
   background-size: 28px 28px;
+  height: 100%;
   min-height: 0;
+  overflow: hidden;
   position: relative;
   touch-action: none;
 }
