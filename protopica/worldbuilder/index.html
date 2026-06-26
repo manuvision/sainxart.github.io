@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Worldbuilder</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23202328'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-family='Arial,sans-serif' font-size='34' font-weight='800' fill='%23fffdf8'%3EW%3C/text%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="styles.css?v=select-focus-connection" />
+    <link rel="stylesheet" href="styles.css?v=open-audio-lore-bible-3" />
   </head>
   <body data-theme="dark">
     <div class="app-shell">
@@ -19,14 +19,22 @@
         </div>
 
         <div class="top-actions">
-          <button class="icon-button fireplace-toggle" id="fireplaceToggleButton" type="button" aria-label="Play fireplace ambience" title="Play fireplace ambience">
-            <svg class="fireplace-icon fireplace-icon-play" viewBox="0 0 24 24" aria-hidden="true">
+          <label class="visually-hidden" for="ambienceSelect">Ambience sound</label>
+          <select class="compact-select ambience-select" id="ambienceSelect" title="Ambience sound" aria-label="Ambience sound">
+            <option value="fireplace">Fireplace</option>
+            <option value="rain">Rain</option>
+            <option value="forest">Forest</option>
+            <option value="night">Night</option>
+          </select>
+          <button class="icon-button ambience-toggle" id="ambienceToggleButton" type="button" aria-label="Play fireplace ambience" title="Play fireplace ambience">
+            <svg class="ambience-icon ambience-icon-play" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M8 5v14l11-7Z" />
             </svg>
-            <svg class="fireplace-icon fireplace-icon-pause" viewBox="0 0 24 24" aria-hidden="true">
+            <svg class="ambience-icon ambience-icon-pause" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M8 5v14M16 5v14" />
             </svg>
           </button>
+          <audio id="ambienceAudio" class="visually-hidden" preload="none" loop aria-hidden="true"></audio>
           <button class="icon-button" id="themeToggleButton" type="button" aria-label="Switch to dark UI" title="Switch to dark UI">
             <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5 8.5 8.5 0 1 0 20.5 14.5Z" />
@@ -42,6 +50,11 @@
               <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
             </svg>
           </button>
+          <label class="visually-hidden" for="exportFormatSelect">Export format</label>
+          <select class="compact-select export-select" id="exportFormatSelect" title="Export format" aria-label="Export format">
+            <option value="json">JSON</option>
+            <option value="lore">Lore bible (.md)</option>
+          </select>
           <button class="icon-button" id="exportButton" type="button" aria-label="Export JSON" title="Export JSON">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 21V9m0 0 4 4m-4-4-4 4" />
@@ -544,6 +557,6 @@
       </main>
     </div>
 
-    <script src="app.js?v=delete-connections"></script>
+    <script src="app.js?v=open-audio-lore-bible-6"></script>
   </body>
 </html>

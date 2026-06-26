@@ -8,7 +8,45 @@ const GRAPH_MAX_SCALE = 2.4;
 const GRAPH_FIT_PADDING = 150;
 const GRAPH_FOCUS_SCALE = 1.05;
 const DEFAULT_THEME = "dark";
-const FIREPLACE_BUFFER_SECONDS = 12;
+const DEFAULT_AMBIENCE = "fireplace";
+const AMBIENCE_PROFILES = {
+  fireplace: {
+    label: "fireplace",
+    volume: 0.44,
+    source: "https://upload.wikimedia.org/wikipedia/commons/8/80/Bones_breaking_wood_fire_ice_crackling.ogg",
+    sourceTitle: "Bones breaking wood fire ice crackling",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Bones_breaking_wood_fire_ice_crackling.ogg",
+    credit: "stephan",
+    license: "Public domain",
+  },
+  rain: {
+    label: "rain",
+    volume: 0.5,
+    source: "https://upload.wikimedia.org/wikipedia/commons/8/8a/Sound_of_rain.ogg",
+    sourceTitle: "Sound of rain",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Sound_of_rain.ogg",
+    credit: "Effib",
+    license: "CC BY-SA 3.0",
+  },
+  forest: {
+    label: "forest",
+    volume: 0.52,
+    source: "https://upload.wikimedia.org/wikipedia/commons/6/66/Sound_of_Forest_%28Mookambika_wildlife_sanctuary%29.ogg",
+    sourceTitle: "Sound of Forest (Mookambika wildlife sanctuary)",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Sound_of_Forest_(Mookambika_wildlife_sanctuary).ogg",
+    credit: "Manojk",
+    license: "CC BY-SA 3.0",
+  },
+  night: {
+    label: "night",
+    volume: 0.46,
+    source: "https://upload.wikimedia.org/wikipedia/commons/f/fe/Nature_sounds_ambience_in_a_Dordogne_pond.ogg",
+    sourceTitle: "Nature sounds ambience in a Dordogne pond",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Nature_sounds_ambience_in_a_Dordogne_pond.ogg",
+    credit: "Glaneur de sons",
+    license: "CC BY 3.0",
+  },
+};
 
 const emptyGraphView = {
   scale: 1,
@@ -29,12 +67,15 @@ let selectedLocationId = state.selectedLocationId || null;
 let dragState = null;
 let graphPointers = new Map();
 let graphSize = { width: 900, height: 620 };
-let fireplaceAudio = null;
-let fireplacePlaying = false;
+let ambienceAudio = null;
+let ambiencePlaying = false;
+let activeAmbience = DEFAULT_AMBIENCE;
 
 const elements = {
   worldMeta: document.querySelector("#worldMeta"),
-  fireplaceToggleButton: document.querySelector("#fireplaceToggleButton"),
+  ambienceSelect: document.querySelector("#ambienceSelect"),
+  ambienceToggleButton: document.querySelector("#ambienceToggleButton"),
+  ambienceAudioElement: document.querySelector("#ambienceAudio"),
   worldForm: document.querySelector("#worldForm"),
   worldName: document.querySelector("#worldName"),
   focusWorldName: document.querySelector("#focusWorldName"),
@@ -133,6 +174,7 @@ const elements = {
   themeToggleButton: document.querySelector("#themeToggleButton"),
   importButton: document.querySelector("#importButton"),
   importFile: document.querySelector("#importFile"),
+  exportFormatSelect: document.querySelector("#exportFormatSelect"),
   exportButton: document.querySelector("#exportButton"),
 };
 
@@ -338,98 +380,102 @@ function toggleTheme() {
   applyTheme(currentTheme === "dark" ? "light" : "dark");
 }
 
-function updateFireplaceButton() {
-  elements.fireplaceToggleButton.classList.toggle("active", fireplacePlaying);
-  const label = fireplacePlaying ? "Pause fireplace ambience" : "Play fireplace ambience";
-  elements.fireplaceToggleButton.setAttribute("aria-label", label);
-  elements.fireplaceToggleButton.setAttribute("title", label);
+function getAmbienceProfile(profileId = activeAmbience) {
+  return AMBIENCE_PROFILES[profileId] || AMBIENCE_PROFILES[DEFAULT_AMBIENCE];
 }
 
-function createFireplaceAudio() {
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContextClass) return null;
-
-  const context = new AudioContextClass();
-  const source = context.createBufferSource();
-  const highpass = context.createBiquadFilter();
-  const lowpass = context.createBiquadFilter();
-  const gain = context.createGain();
-
-  source.buffer = createFireplaceBuffer(context);
-  source.loop = true;
-  highpass.type = "highpass";
-  highpass.frequency.value = 90;
-  lowpass.type = "lowpass";
-  lowpass.frequency.value = 3200;
-  gain.gain.value = 0.16;
-
-  source.connect(highpass);
-  highpass.connect(lowpass);
-  lowpass.connect(gain);
-  gain.connect(context.destination);
-  source.start();
-
-  return { context, gain, source };
+function updateAmbienceControl() {
+  const profile = getAmbienceProfile();
+  elements.ambienceSelect.value = activeAmbience;
+  elements.ambienceToggleButton.classList.toggle("active", ambiencePlaying);
+  const label = ambiencePlaying ? `Pause ${profile.label} ambience` : `Play ${profile.label} ambience`;
+  elements.ambienceToggleButton.setAttribute("aria-label", label);
+  elements.ambienceToggleButton.setAttribute("title", label);
 }
 
-function createFireplaceBuffer(context) {
-  const sampleRate = context.sampleRate;
-  const length = Math.floor(sampleRate * FIREPLACE_BUFFER_SECONDS);
-  const buffer = context.createBuffer(1, length, sampleRate);
-  const data = buffer.getChannelData(0);
-  const crackles = [];
+function createAmbienceAudio(profileId = activeAmbience) {
+  const profile = getAmbienceProfile(profileId);
+  const audio = elements.ambienceAudioElement;
+  if (!audio) return null;
 
-  for (let i = 0; i < 70; i += 1) {
-    crackles.push({
-      start: Math.floor(Math.random() * length),
-      duration: Math.floor(sampleRate * (0.018 + Math.random() * 0.08)),
-      gain: 0.25 + Math.random() * 0.7,
-      tone: 0.35 + Math.random() * 0.65,
-    });
+  if (audio.dataset.profile !== profileId) {
+    audio.pause();
+    audio.src = profile.source;
+    audio.dataset.profile = profileId;
+    audio.load();
   }
 
-  let ember = 0;
-  for (let i = 0; i < length; i += 1) {
-    ember = ember * 0.992 + (Math.random() * 2 - 1) * 0.008;
-    data[i] = ember;
-  }
-
-  crackles.forEach((crackle) => {
-    for (let age = 0; age < crackle.duration; age += 1) {
-      const index = crackle.start + age;
-      if (index >= length) break;
-      const decay = 1 - age / crackle.duration;
-      data[index] += (Math.random() * 2 - 1) * crackle.gain * decay * decay * crackle.tone;
-    }
-  });
-
-  for (let i = 0; i < length; i += 1) {
-    const edgeFade = Math.min(i / (sampleRate * 0.25), (length - i) / (sampleRate * 0.25), 1);
-    data[i] *= Math.max(0, edgeFade);
-  }
-
-  return buffer;
+  audio.loop = true;
+  audio.preload = "auto";
+  audio.volume = profile.volume;
+  return audio;
 }
 
-async function toggleFireplace() {
+function stopAmbienceAudio() {
+  if (!ambienceAudio) return;
+  ambienceAudio.pause();
   try {
-    if (!fireplaceAudio) {
-      fireplaceAudio = createFireplaceAudio();
-    }
-    if (!fireplaceAudio) return;
-
-    if (fireplacePlaying) {
-      await fireplaceAudio.context.suspend();
-      fireplacePlaying = false;
-    } else {
-      await fireplaceAudio.context.resume();
-      fireplacePlaying = true;
-    }
+    ambienceAudio.currentTime = 0;
   } catch (error) {
-    console.warn("Could not control fireplace ambience.", error);
-    fireplacePlaying = false;
+    // Some browsers cannot seek an audio element before metadata is ready.
   }
-  updateFireplaceButton();
+  ambienceAudio = null;
+}
+
+function setAmbienceProfile(profileId) {
+  activeAmbience = AMBIENCE_PROFILES[profileId] ? profileId : DEFAULT_AMBIENCE;
+  const shouldResume = ambiencePlaying;
+  ambiencePlaying = false;
+  stopAmbienceAudio();
+
+  if (shouldResume) {
+    ambienceAudio = createAmbienceAudio(activeAmbience);
+    playAmbienceAudio("Could not switch ambience.");
+  }
+
+  updateAmbienceControl();
+}
+
+function playAmbienceAudio(errorMessage = "Could not control ambience.") {
+  if (!ambienceAudio) {
+    ambienceAudio = createAmbienceAudio(activeAmbience);
+  }
+  if (!ambienceAudio) {
+    ambiencePlaying = false;
+    updateAmbienceControl();
+    return;
+  }
+
+  ambiencePlaying = true;
+  updateAmbienceControl();
+
+  const audio = ambienceAudio;
+  const playPromise = audio.play();
+  if (playPromise && typeof playPromise.catch === "function") {
+    playPromise
+      .then(() => {
+        if (audio !== ambienceAudio) return;
+        ambiencePlaying = true;
+        updateAmbienceControl();
+      })
+      .catch((error) => {
+        if (audio !== ambienceAudio) return;
+        console.warn(errorMessage, error);
+        ambiencePlaying = false;
+        updateAmbienceControl();
+      });
+  }
+}
+
+function toggleAmbience() {
+  if (ambiencePlaying) {
+    if (ambienceAudio) ambienceAudio.pause();
+    ambiencePlaying = false;
+    updateAmbienceControl();
+    return;
+  }
+
+  playAmbienceAudio();
 }
 
 function loadState() {
@@ -1117,6 +1163,7 @@ function updateControlStates(world) {
   const hasTwoCharacters = world.characters.length >= 2;
 
   elements.exportButton.disabled = !hasWorlds;
+  elements.exportFormatSelect.disabled = !hasWorlds;
   elements.deleteWorldButton.disabled = !hasWorlds;
   elements.clearMapImageButton.disabled = !world.mapImage;
   elements.autoLayoutButton.disabled = !hasCharacters;
@@ -1126,6 +1173,7 @@ function updateControlStates(world) {
   elements.newConnectionButton.disabled = !hasTwoCharacters;
   elements.connectionTab.disabled = !hasTwoCharacters;
   elements.connectionForm.querySelector(".primary-button").disabled = !hasTwoCharacters;
+  updateExportControl();
 }
 
 function renderGraph(world) {
@@ -1983,14 +2031,162 @@ function endMapPointer(event) {
   render();
 }
 
-function exportJson() {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+function downloadTextFile(content, filename, type) {
+  const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = "worldbuilder-export.json";
+  anchor.download = filename;
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
   anchor.click();
-  URL.revokeObjectURL(url);
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportJson() {
+  downloadTextFile(JSON.stringify(state, null, 2), "worldbuilder-export.json", "application/json");
+}
+
+function exportLoreBible() {
+  const world = getWorld();
+  if (!world) return;
+  const filename = `${slugify(world.name || "worldbuilder")}-lore-bible.md`;
+  downloadTextFile(buildLoreBible(world), filename, "text/markdown");
+}
+
+function exportSelectedFormat() {
+  if (elements.exportFormatSelect.value === "lore") {
+    exportLoreBible();
+  } else {
+    exportJson();
+  }
+}
+
+function updateExportControl() {
+  const isLoreBible = elements.exportFormatSelect.value === "lore";
+  const label = isLoreBible ? "Export lore bible" : "Export JSON";
+  elements.exportButton.setAttribute("aria-label", label);
+  elements.exportButton.setAttribute("title", label);
+}
+
+function buildLoreBible(world) {
+  const charactersById = new Map(world.characters.map((character) => [character.id, character]));
+  const lines = [];
+
+  lines.push(`# ${plainMarkdown(world.name || "Untitled World")}`);
+  lines.push("");
+  lines.push(`Generated: ${new Date().toLocaleString()}`);
+  lines.push(`Updated: ${formatDateTime(world.updatedAt || world.createdAt)}`);
+  lines.push("");
+  lines.push("## Overview");
+  lines.push(`- Characters: ${world.characters.length}`);
+  lines.push(`- Connections: ${world.connections.length}`);
+  lines.push(`- Timeline events: ${world.events.length}`);
+  lines.push(`- Places: ${world.locations.length}`);
+  lines.push(`- Map background: ${world.mapImage ? "Attached in app data" : "Not attached"}`);
+  lines.push("");
+
+  lines.push("## Characters");
+  if (!world.characters.length) {
+    lines.push("No characters yet.");
+  } else {
+    world.characters.forEach((character) => {
+      lines.push(`### ${plainMarkdown(character.name || "Unnamed character")}`);
+      addLoreLine(lines, "Role", character.role);
+      addLoreLine(lines, "Faction", character.faction);
+      addLoreLine(lines, "Status", character.status);
+      addLoreLine(lines, "Map / graph icon", character.avatarImage ? "Attached in app data" : "");
+      addLoreBlock(lines, "Notes", character.notes);
+      lines.push("");
+    });
+  }
+
+  lines.push("## Connections");
+  if (!world.connections.length) {
+    lines.push("No connections yet.");
+  } else {
+    world.connections.forEach((connection) => {
+      const source = charactersById.get(connection.source)?.name || "Unknown";
+      const target = charactersById.get(connection.target)?.name || "Unknown";
+      lines.push(`### ${plainMarkdown(source)} -> ${plainMarkdown(target)}`);
+      addLoreLine(lines, "Type", connection.type);
+      addLoreLine(lines, "Label", connection.label);
+      addLoreLine(lines, "Strength", `${connection.strength || 3}/5`);
+      addLoreBlock(lines, "Notes", connection.notes);
+      lines.push("");
+    });
+  }
+
+  lines.push("## Timeline");
+  if (!world.events.length) {
+    lines.push("No events yet.");
+  } else {
+    [...world.events].sort(compareEvents).forEach((event) => {
+      const character = charactersById.get(event.characterId);
+      const dateLabel = [event.era, event.date].filter(Boolean).join(" / ") || "Undated";
+      lines.push(`### ${plainMarkdown(event.title || "Untitled event")}`);
+      addLoreLine(lines, "Date", dateLabel);
+      addLoreLine(lines, "Category", event.category);
+      addLoreLine(lines, "Character", character?.name || "");
+      addLoreBlock(lines, "Impact", event.impact);
+      addLoreBlock(lines, "Notes", event.notes);
+      lines.push("");
+    });
+  }
+
+  lines.push("## Places");
+  if (!world.locations.length) {
+    lines.push("No places yet.");
+  } else {
+    world.locations.forEach((location) => {
+      const keeper = charactersById.get(location.characterId);
+      lines.push(`### ${plainMarkdown(location.name || "Unnamed place")}`);
+      addLoreLine(lines, "Type", location.type);
+      addLoreLine(lines, "Region", location.region);
+      addLoreLine(lines, "Linked character", keeper?.name || "");
+      addLoreLine(lines, "Map position", `${Math.round((location.x || 0) * 100)}%, ${Math.round((location.y || 0) * 100)}%`);
+      addLoreBlock(lines, "Notes", location.notes);
+      lines.push("");
+    });
+  }
+
+  return `${lines.join("\n").replace(/\n{3,}/g, "\n\n").trim()}\n`;
+}
+
+function addLoreLine(lines, label, value) {
+  const text = plainMarkdown(value);
+  if (text) lines.push(`- ${label}: ${text}`);
+}
+
+function addLoreBlock(lines, label, value) {
+  const text = plainMarkdown(value);
+  if (!text) return;
+  lines.push(`- ${label}:`);
+  text.split("\n").forEach((line) => {
+    lines.push(`  ${line}`);
+  });
+}
+
+function plainMarkdown(value) {
+  return String(value || "")
+    .replace(/\r/g, "")
+    .trim();
+}
+
+function slugify(value) {
+  const slug = String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || "worldbuilder";
+}
+
+function formatDateTime(value) {
+  if (!value) return "Unknown";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
 }
 
 function importJson(file) {
@@ -2017,7 +2213,8 @@ function importJson(file) {
 
 function bindEvents() {
   elements.themeToggleButton.addEventListener("click", toggleTheme);
-  elements.fireplaceToggleButton.addEventListener("click", toggleFireplace);
+  elements.ambienceToggleButton.addEventListener("click", toggleAmbience);
+  elements.ambienceSelect.addEventListener("change", () => setAmbienceProfile(elements.ambienceSelect.value));
 
   elements.worldForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -2207,7 +2404,8 @@ function bindEvents() {
   elements.autoLayoutButton.addEventListener("click", autoLayout);
   elements.zoomInButton.addEventListener("click", () => zoomGraph(1.14));
   elements.zoomOutButton.addEventListener("click", () => zoomGraph(0.86));
-  elements.exportButton.addEventListener("click", exportJson);
+  elements.exportFormatSelect.addEventListener("change", updateExportControl);
+  elements.exportButton.addEventListener("click", exportSelectedFormat);
   elements.importButton.addEventListener("click", () => elements.importFile.click());
   elements.importFile.addEventListener("change", () => {
     const file = elements.importFile.files?.[0];
@@ -2224,7 +2422,8 @@ function bindEvents() {
 
 bindEvents();
 applyTheme(currentTheme);
-updateFireplaceButton();
+updateAmbienceControl();
+updateExportControl();
 setActiveTab(activeView === "timeline" ? "event" : activeView === "map" ? "location" : "character");
 render();
 saveState();
