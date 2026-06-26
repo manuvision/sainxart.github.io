@@ -662,9 +662,36 @@ function renderTimeline(world) {
 }
 
 function compareEvents(a, b) {
-  const aText = `${a.era || ""} ${a.date || ""}`.trim();
-  const bText = `${b.era || ""} ${b.date || ""}`.trim();
-  return aText.localeCompare(bText, undefined, { numeric: true, sensitivity: "base" }) || a.title.localeCompare(b.title);
+  const aKey = getTimelineSortKey(a);
+  const bKey = getTimelineSortKey(b);
+
+  if (aKey.hasNumber && bKey.hasNumber && aKey.number !== bKey.number) {
+    return aKey.number - bKey.number;
+  }
+
+  if (aKey.hasNumber !== bKey.hasNumber) {
+    return aKey.hasNumber ? -1 : 1;
+  }
+
+  return (
+    aKey.label.localeCompare(bKey.label, undefined, { numeric: true, sensitivity: "base" }) ||
+    a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
+  );
+}
+
+function getTimelineSortKey(event) {
+  const label = `${event.era || ""} ${event.date || ""}`.trim();
+  const number = parseTimelineNumber(event.date) ?? parseTimelineNumber(event.era);
+  return {
+    hasNumber: Number.isFinite(number),
+    number,
+    label,
+  };
+}
+
+function parseTimelineNumber(value) {
+  const match = String(value || "").match(/[+-]?\d[\d,]*(?:\.\d+)?/);
+  return match ? Number(match[0].replace(/,/g, "")) : null;
 }
 
 function renderMap(world) {
