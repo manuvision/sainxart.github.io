@@ -104,6 +104,7 @@ const elements = {
   connectionLabel: document.querySelector("#connectionLabel"),
   connectionNotes: document.querySelector("#connectionNotes"),
   clearConnectionButton: document.querySelector("#clearConnectionButton"),
+  deleteConnectionButton: document.querySelector("#deleteConnectionButton"),
   connectionList: document.querySelector("#connectionList"),
   eventForm: document.querySelector("#eventForm"),
   eventId: document.querySelector("#eventId"),
@@ -1046,6 +1047,8 @@ function renderConnectionForm(world) {
     elements.connectionLabel.value = "";
     elements.connectionNotes.value = "";
   }
+
+  elements.deleteConnectionButton.disabled = !connection;
 }
 
 function renderEventForm(world) {
@@ -1386,6 +1389,13 @@ function deleteConnection(connectionId) {
   touchWorld(world);
   saveState();
   render();
+}
+
+function deleteSelectedConnection() {
+  const connection = getConnection();
+  if (!connection) return;
+
+  deleteConnection(connection.id);
 }
 
 function addOrUpdateEvent(formData) {
@@ -2094,6 +2104,7 @@ function bindEvents() {
   });
 
   elements.clearConnectionButton.addEventListener("click", clearConnectionForm);
+  elements.deleteConnectionButton.addEventListener("click", deleteSelectedConnection);
 
   elements.connectionList.addEventListener("click", (event) => {
     const deleteButton = event.target.closest("[data-delete-connection]");
