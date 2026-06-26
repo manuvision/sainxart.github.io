@@ -7,6 +7,8 @@ const GRAPH_FIT_MIN_SCALE = 0.005;
 const GRAPH_MAX_SCALE = 2.4;
 const GRAPH_FIT_PADDING = 150;
 const GRAPH_FOCUS_SCALE = 1.05;
+const DEFAULT_THEME = "dark";
+const FIREPLACE_BUFFER_SECONDS = 12;
 
 const emptyGraphView = {
   scale: 1,
@@ -27,16 +29,23 @@ let selectedLocationId = state.selectedLocationId || null;
 let dragState = null;
 let graphPointers = new Map();
 let graphSize = { width: 900, height: 620 };
+let fireplaceAudio = null;
+let fireplacePlaying = false;
 
 const elements = {
   worldMeta: document.querySelector("#worldMeta"),
+  fireplaceToggleButton: document.querySelector("#fireplaceToggleButton"),
   worldForm: document.querySelector("#worldForm"),
   worldName: document.querySelector("#worldName"),
   focusWorldName: document.querySelector("#focusWorldName"),
   deleteWorldButton: document.querySelector("#deleteWorldButton"),
   worldList: document.querySelector("#worldList"),
+  contextPanelTitle: document.querySelector("#contextPanelTitle"),
   characterList: document.querySelector("#characterList"),
   newCharacterButton: document.querySelector("#newCharacterButton"),
+  newConnectionButton: document.querySelector("#newConnectionButton"),
+  newRailEventButton: document.querySelector("#newRailEventButton"),
+  newRailLocationButton: document.querySelector("#newRailLocationButton"),
   emptyAddCharacter: document.querySelector("#emptyAddCharacter"),
   worldTitleInput: document.querySelector("#worldTitleInput"),
   worldStats: document.querySelector("#worldStats"),
@@ -57,6 +66,7 @@ const elements = {
   zoomInButton: document.querySelector("#zoomInButton"),
   zoomOutButton: document.querySelector("#zoomOutButton"),
   timelineList: document.querySelector("#timelineList"),
+  eventList: document.querySelector("#eventList"),
   timelineEmpty: document.querySelector("#timelineEmpty"),
   newEventButton: document.querySelector("#newEventButton"),
   emptyAddEvent: document.querySelector("#emptyAddEvent"),
@@ -299,10 +309,11 @@ function createSeedLocations(chars) {
 
 function loadTheme() {
   try {
-    return localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    return savedTheme === "light" || savedTheme === "dark" ? savedTheme : DEFAULT_THEME;
   } catch (error) {
     console.warn("Could not load Worldbuilder theme.", error);
-    return "light";
+    return DEFAULT_THEME;
   }
 }
 
@@ -323,6 +334,100 @@ function applyTheme(theme) {
 
 function toggleTheme() {
   applyTheme(currentTheme === "dark" ? "light" : "dark");
+}
+
+function updateFireplaceButton() {
+  elements.fireplaceToggleButton.classList.toggle("active", fireplacePlaying);
+  const label = fireplacePlaying ? "Pause fireplace ambience" : "Play fireplace ambience";
+  elements.fireplaceToggleButton.setAttribute("aria-label", label);
+  elements.fireplaceToggleButton.setAttribute("title", label);
+}
+
+function createFireplaceAudio() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return null;
+
+  const context = new AudioContextClass();
+  const source = context.createBufferSource();
+  const highpass = context.createBiquadFilter();
+  const lowpass = context.createBiquadFilter();
+  const gain = context.createGain();
+
+  source.buffer = createFireplaceBuffer(context);
+  source.loop = true;
+  highpass.type = "highpass";
+  highpass.frequency.value = 90;
+  lowpass.type = "lowpass";
+  lowpass.frequency.value = 3200;
+  gain.gain.value = 0.16;
+
+  source.connect(highpass);
+  highpass.connect(lowpass);
+  lowpass.connect(gain);
+  gain.connect(context.destination);
+  source.start();
+
+  return { context, gain, source };
+}
+
+function createFireplaceBuffer(context) {
+  const sampleRate = context.sampleRate;
+  const length = Math.floor(sampleRate * FIREPLACE_BUFFER_SECONDS);
+  const buffer = context.createBuffer(1, length, sampleRate);
+  const data = buffer.getChannelData(0);
+  const crackles = [];
+
+  for (let i = 0; i < 70; i += 1) {
+    crackles.push({
+      start: Math.floor(Math.random() * length),
+      duration: Math.floor(sampleRate * (0.018 + Math.random() * 0.08)),
+      gain: 0.25 + Math.random() * 0.7,
+      tone: 0.35 + Math.random() * 0.65,
+    });
+  }
+
+  let ember = 0;
+  for (let i = 0; i < length; i += 1) {
+    ember = ember * 0.992 + (Math.random() * 2 - 1) * 0.008;
+    data[i] = ember;
+  }
+
+  crackles.forEach((crackle) => {
+    for (let age = 0; age < crackle.duration; age += 1) {
+      const index = crackle.start + age;
+      if (index >= length) break;
+      const decay = 1 - age / crackle.duration;
+      data[index] += (Math.random() * 2 - 1) * crackle.gain * decay * decay * crackle.tone;
+    }
+  });
+
+  for (let i = 0; i < length; i += 1) {
+    const edgeFade = Math.min(i / (sampleRate * 0.25), (length - i) / (sampleRate * 0.25), 1);
+    data[i] *= Math.max(0, edgeFade);
+  }
+
+  return buffer;
+}
+
+async function toggleFireplace() {
+  try {
+    if (!fireplaceAudio) {
+      fireplaceAudio = createFireplaceAudio();
+    }
+    if (!fireplaceAudio) return;
+
+    if (fireplacePlaying) {
+      await fireplaceAudio.context.suspend();
+      fireplacePlaying = false;
+    } else {
+      await fireplaceAudio.context.resume();
+      fireplacePlaying = true;
+    }
+  } catch (error) {
+    console.warn("Could not control fireplace ambience.", error);
+    fireplacePlaying = false;
+  }
+  updateFireplaceButton();
 }
 
 function loadState() {
@@ -489,10 +594,11 @@ function escapeHtml(value) {
 }
 
 function setActiveView(view) {
+  if (!["graph", "timeline", "map"].includes(view)) return;
   activeView = view;
-  if (view === "timeline") setActiveTab("event");
-  if (view === "map") setActiveTab("location");
-  if (view === "graph" && ["event", "location"].includes(activeTab)) setActiveTab("character");
+  if (!isEditorAvailableForView(activeTab, view)) {
+    activeTab = getDefaultEditorForView(view);
+  }
   saveState();
   render();
   if (view === "graph") {
@@ -501,12 +607,35 @@ function setActiveView(view) {
 }
 
 function setActiveTab(tab) {
-  activeTab = tab;
+  const nextTab = isEditorAvailableForView(tab) ? tab : getDefaultEditorForView(activeView);
+  activeTab = nextTab;
+  renderEditorTabs();
+}
+
+function getAvailableEditors(view = activeView) {
+  if (view === "timeline") return ["event"];
+  if (view === "map") return ["location"];
+  return ["character", "connection"];
+}
+
+function getDefaultEditorForView(view = activeView) {
+  return getAvailableEditors(view)[0];
+}
+
+function isEditorAvailableForView(tab, view = activeView) {
+  return getAvailableEditors(view).includes(tab);
+}
+
+function renderEditorTabs() {
+  const availableEditors = getAvailableEditors();
+
   document.querySelectorAll("[data-editor]").forEach((form) => {
-    form.classList.toggle("hidden", form.dataset.editor !== tab);
+    form.classList.toggle("hidden", form.dataset.editor !== activeTab);
   });
   document.querySelectorAll("[data-tab]").forEach((button) => {
-    const isActive = button.dataset.tab === tab;
+    const isAvailable = availableEditors.includes(button.dataset.tab);
+    const isActive = button.dataset.tab === activeTab;
+    button.classList.toggle("hidden", !isAvailable);
     button.classList.toggle("active", isActive);
     button.setAttribute("aria-selected", String(isActive));
   });
@@ -518,6 +647,9 @@ function render() {
 
   state.selectedWorldId = world.id;
   syncSelections(world);
+  if (activeView === "graph" && activeTab === "connection" && world.characters.length < 2) {
+    activeTab = "character";
+  }
   elements.worldMeta.textContent = `${state.worlds.length} world${state.worlds.length === 1 ? "" : "s"}`;
   elements.worldTitleInput.value = world.name;
   elements.worldStats.textContent = `${world.characters.length} characters / ${world.connections.length} links / ${world.events.length} events / ${world.locations.length} places`;
@@ -526,9 +658,11 @@ function render() {
   elements.mapEmpty.hidden = world.locations.length > 0 || !world.mapImage;
 
   renderViews();
+  setActiveTab(activeTab);
   renderWorlds(world);
   renderCharacters(world);
   renderConnections(world);
+  renderEventList(world);
   renderTimeline(world);
   renderMap(world);
   renderCharacterForm(world);
@@ -559,6 +693,25 @@ function renderViews() {
     const isActive = button.dataset.view === activeView;
     button.classList.toggle("active", isActive);
     button.setAttribute("aria-selected", String(isActive));
+  });
+
+  const panelTitles = {
+    graph: "Graph",
+    timeline: "Events",
+    map: "Places",
+  };
+  const contextActions = {
+    graph: ["character", "connection"],
+    timeline: ["event"],
+    map: ["location"],
+  };
+
+  elements.contextPanelTitle.textContent = panelTitles[activeView] || "Graph";
+  document.querySelectorAll("[data-context-view]").forEach((panel) => {
+    panel.classList.toggle("hidden", panel.dataset.contextView !== activeView);
+  });
+  document.querySelectorAll("[data-context-action]").forEach((button) => {
+    button.classList.toggle("hidden", !contextActions[activeView]?.includes(button.dataset.contextAction));
   });
 
   elements.graphView.classList.toggle("hidden", activeView !== "graph");
@@ -633,6 +786,31 @@ function renderConnections(world) {
     .join("");
 }
 
+function renderEventList(world) {
+  if (!world.events.length) {
+    elements.eventList.innerHTML = `<div class="item-meta">No events yet</div>`;
+    return;
+  }
+
+  const charactersById = new Map(world.characters.map((character) => [character.id, character]));
+  elements.eventList.innerHTML = [...world.events]
+    .sort(compareEvents)
+    .map((event) => {
+      const character = charactersById.get(event.characterId);
+      const dateLabel = [event.era, event.date].filter(Boolean).join(" / ") || "Undated";
+      const meta = [dateLabel, character?.name || event.category].filter(Boolean).join(" / ");
+      return `
+        <button class="event-item ${event.id === selectedEventId ? "active" : ""}" type="button" data-event-id="${event.id}">
+          <span class="item-main">
+            <span class="item-title">${escapeHtml(event.title)}</span>
+            <span class="item-meta">${escapeHtml(meta)}</span>
+          </span>
+        </button>
+      `;
+    })
+    .join("");
+}
+
 function renderTimeline(world) {
   if (!world.events.length) {
     elements.timelineList.innerHTML = "";
@@ -701,7 +879,7 @@ function renderMap(world) {
 
   if (!world.locations.length) {
     elements.mapPins.innerHTML = "";
-    elements.locationStrip.innerHTML = "";
+    elements.locationStrip.innerHTML = `<div class="item-meta">No places yet</div>`;
     return;
   }
 
@@ -871,6 +1049,7 @@ function updateControlStates(world) {
   elements.fitButton.disabled = !hasCharacters;
   elements.zoomInButton.disabled = !hasCharacters;
   elements.zoomOutButton.disabled = !hasCharacters;
+  elements.newConnectionButton.disabled = !hasTwoCharacters;
   elements.connectionTab.disabled = !hasTwoCharacters;
   elements.connectionForm.querySelector(".primary-button").disabled = !hasTwoCharacters;
 }
@@ -1123,6 +1302,8 @@ function addOrUpdateConnection(formData) {
 
 function clearConnectionForm() {
   selectedConnectionId = null;
+  activeView = "graph";
+  setActiveTab("connection");
   render();
   elements.connectionLabel.focus();
 }
@@ -1710,6 +1891,7 @@ function importJson(file) {
 
 function bindEvents() {
   elements.themeToggleButton.addEventListener("click", toggleTheme);
+  elements.fireplaceToggleButton.addEventListener("click", toggleFireplace);
 
   elements.worldForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -1762,6 +1944,7 @@ function bindEvents() {
   });
 
   elements.newCharacterButton.addEventListener("click", clearCharacterForm);
+  elements.newConnectionButton.addEventListener("click", clearConnectionForm);
   elements.emptyAddCharacter.addEventListener("click", clearCharacterForm);
   elements.clearCharacterButton.addEventListener("click", clearCharacterForm);
   elements.deleteCharacterButton.addEventListener("click", deleteSelectedCharacter);
@@ -1811,6 +1994,7 @@ function bindEvents() {
   });
 
   elements.newEventButton.addEventListener("click", clearEventForm);
+  elements.newRailEventButton.addEventListener("click", clearEventForm);
   elements.emptyAddEvent.addEventListener("click", clearEventForm);
   elements.clearEventButton.addEventListener("click", clearEventForm);
   elements.deleteEventButton.addEventListener("click", deleteSelectedEvent);
@@ -1829,8 +2013,18 @@ function bindEvents() {
     saveState();
     render();
   });
+  elements.eventList.addEventListener("click", (event) => {
+    const item = event.target.closest("[data-event-id]");
+    if (!item) return;
+    selectedEventId = item.dataset.eventId;
+    activeView = "timeline";
+    setActiveTab("event");
+    saveState();
+    render();
+  });
 
   elements.newLocationButton.addEventListener("click", clearLocationForm);
+  elements.newRailLocationButton.addEventListener("click", clearLocationForm);
   elements.emptyAddLocation.addEventListener("click", clearLocationForm);
   elements.clearLocationButton.addEventListener("click", clearLocationForm);
   elements.deleteLocationButton.addEventListener("click", deleteSelectedLocation);
@@ -1897,6 +2091,7 @@ function bindEvents() {
 
 bindEvents();
 applyTheme(currentTheme);
+updateFireplaceButton();
 setActiveTab(activeView === "timeline" ? "event" : activeView === "map" ? "location" : "character");
 render();
 saveState();

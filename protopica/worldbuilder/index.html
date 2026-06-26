@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Worldbuilder</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23202328'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-family='Arial,sans-serif' font-size='34' font-weight='800' fill='%23fffdf8'%3EW%3C/text%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="styles.css?v=timeline-centerline" />
+    <link rel="stylesheet" href="styles.css?v=context-rail-audio" />
   </head>
-  <body>
+  <body data-theme="dark">
     <div class="app-shell">
       <header class="topbar">
         <div class="brand">
@@ -19,6 +19,14 @@
         </div>
 
         <div class="top-actions">
+          <button class="icon-button fireplace-toggle" id="fireplaceToggleButton" type="button" aria-label="Play fireplace ambience" title="Play fireplace ambience">
+            <svg class="fireplace-icon fireplace-icon-play" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 5v14l11-7Z" />
+            </svg>
+            <svg class="fireplace-icon fireplace-icon-pause" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 5v14M16 5v14" />
+            </svg>
+          </button>
           <button class="icon-button" id="themeToggleButton" type="button" aria-label="Switch to dark UI" title="Switch to dark UI">
             <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5 8.5 8.5 0 1 0 20.5 14.5Z" />
@@ -45,7 +53,7 @@
       </header>
 
       <main class="workspace">
-        <aside class="panel left-panel" aria-label="Worlds and characters">
+        <aside class="panel left-panel" aria-label="World navigation">
           <section class="panel-section">
             <div class="section-head">
               <h2>Worlds</h2>
@@ -78,19 +86,51 @@
             <div class="world-list" id="worldList" role="list"></div>
           </section>
 
-          <section class="panel-section grow">
+          <section class="panel-section grow context-panel">
             <div class="section-head">
-              <h2>Cast</h2>
-              <button class="icon-button small" id="newCharacterButton" type="button" aria-label="New character" title="New character">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M19 8v6M16 11h6" />
-                </svg>
-              </button>
+              <h2 id="contextPanelTitle">Graph</h2>
+              <div class="section-actions">
+                <button class="icon-button small" id="newCharacterButton" type="button" aria-label="New character" title="New character" data-context-action="character">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M19 8v6M16 11h6" />
+                  </svg>
+                </button>
+                <button class="icon-button small" id="newConnectionButton" type="button" aria-label="New connection" title="New connection" data-context-action="connection">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.2 1.2" />
+                    <path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.2-1.2" />
+                    <path d="M12 5v6M9 8h6" />
+                  </svg>
+                </button>
+                <button class="icon-button small" id="newRailEventButton" type="button" aria-label="New event" title="New event" data-context-action="event">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                </button>
+                <button class="icon-button small" id="newRailLocationButton" type="button" aria-label="New place" title="New place" data-context-action="location">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
-            <div class="character-list" id="characterList" role="list"></div>
+            <div class="context-view" data-context-view="graph">
+              <div class="rail-subhead">Cast</div>
+              <div class="character-list" id="characterList" role="list"></div>
+              <div class="rail-subhead">Connections</div>
+              <div class="connection-list" id="connectionList" role="list"></div>
+            </div>
+
+            <div class="context-view hidden" data-context-view="timeline">
+              <div class="event-list" id="eventList" role="list"></div>
+            </div>
+
+            <div class="context-view hidden" data-context-view="map">
+              <div class="location-strip" id="locationStrip" role="list"></div>
+            </div>
           </section>
         </aside>
 
@@ -256,7 +296,6 @@
                   </button>
                 </div>
               </div>
-              <div class="location-strip" id="locationStrip" role="list"></div>
             </div>
           </div>
         </section>
@@ -387,7 +426,6 @@
               <button class="secondary-button" id="clearConnectionButton" type="button">New</button>
             </div>
 
-            <div class="connection-list" id="connectionList" role="list"></div>
           </form>
 
           <form class="editor-panel hidden" id="eventForm" data-editor="event" autocomplete="off">
@@ -500,6 +538,6 @@
       </main>
     </div>
 
-    <script src="app.js?v=timeline-numeric-sort"></script>
+    <script src="app.js?v=context-rail-audio"></script>
   </body>
 </html>
