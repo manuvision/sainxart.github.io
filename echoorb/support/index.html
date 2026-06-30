@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EchoOrb Support | Manu.Vision</title>
+    <meta name="description" content="Support page for EchoOrb, an iOS app by Manu.Vision.">
+    <link rel="icon" type="image/svg+xml" href="../../images/mv.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #05050a;
+            --panel: #10111a;
+            --panel-border: #2a2d3d;
+            --text: #f8fafc;
+            --muted: #a7adbd;
+            --yellow: #ffd45a;
+            --purple: #a76bff;
+            --green: #58df74;
+        }
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 18% 12%, rgba(167, 107, 255, 0.22), transparent 34rem),
+                radial-gradient(circle at 88% 78%, rgba(88, 223, 116, 0.14), transparent 30rem),
+                var(--bg);
+            color: var(--text);
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.65;
+            padding: 32px 18px;
+        }
+        main {
+            width: min(860px, 100%);
+            margin: 0 auto;
+        }
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text);
+            text-decoration: none;
+            margin-bottom: 42px;
+            font-family: "Space Grotesk", Inter, sans-serif;
+            font-weight: 700;
+        }
+        .brand img { width: 30px; height: 30px; }
+        .brand span { color: var(--purple); }
+        .card {
+            background: color-mix(in srgb, var(--panel) 92%, transparent);
+            border: 1px solid var(--panel-border);
+            border-radius: 24px;
+            padding: clamp(24px, 5vw, 56px);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+        }
+        .eyebrow {
+            color: var(--green);
+            font-family: "Space Grotesk", Inter, sans-serif;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-size: 0.82rem;
+            margin-bottom: 10px;
+        }
+        h1, h2 {
+            font-family: "Space Grotesk", Inter, sans-serif;
+            line-height: 1.1;
+        }
+        h1 {
+            font-size: clamp(2.3rem, 8vw, 4.4rem);
+            color: var(--yellow);
+            margin-bottom: 12px;
+        }
+        .updated {
+            color: var(--muted);
+            margin-bottom: 34px;
+            font-weight: 600;
+        }
+        h2 {
+            font-size: 1.3rem;
+            color: var(--purple);
+            margin: 30px 0 8px;
+        }
+        p, li { color: var(--muted); font-size: 1rem; }
+        strong { color: var(--text); }
+        ul { padding-left: 1.25rem; margin-top: 8px; }
+        li + li { margin-top: 6px; }
+        a { color: var(--yellow); }
+        .quick-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 24px 0 2px;
+        }
+        .quick-links a {
+            display: inline-flex;
+            align-items: center;
+            min-height: 42px;
+            padding: 0 16px;
+            border: 1px solid color-mix(in srgb, var(--yellow) 42%, transparent);
+            border-radius: 999px;
+            color: var(--text);
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.06);
+            font-weight: 700;
+        }
+        .footer {
+            margin-top: 32px;
+            color: var(--muted);
+            font-size: 0.92rem;
+            text-align: center;
+        }
+        @media (max-width: 520px) {
+            body { padding-top: 24px; }
+            .card { border-radius: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <a class="brand" href="https://manu.vision">
+            <img src="../../images/mv.svg" alt="">
+            <span>Manu.Vision</span>
+        </a>
+
+        <article class="card">
+            <div class="eyebrow">EchoOrb</div>
+            <h1>Support</h1>
+            <p class="updated">Last updated: June 30, 2026</p>
+
+            <p>
+                EchoOrb is an iOS app by Manu.Vision that transforms sound into 3D visual and haptic signatures. This page covers common questions and ways to get help.
+            </p>
+
+            <div class="quick-links" aria-label="Quick links">
+                <a href="#getting-started">Getting Started</a>
+                <a href="#echoorb-plus">EchoOrb+</a>
+                <a href="#permissions">Permissions</a>
+                <a href="#contact">Contact</a>
+            </div>
+
+            <h2 id="getting-started">Getting Started</h2>
+            <p>
+                EchoOrb opens with built-in sample sounds. Tap Play to hear and feel a sound, drag the orb to explore the 3D signature, and scrub the waveform to move through playback.
+            </p>
+
+            <h2 id="echoorb-plus">EchoOrb+</h2>
+            <p>
+                EchoOrb+ is a one-time in-app purchase that unlocks microphone recording, audio and video imports, and image and video exports.
+            </p>
+            <ul>
+                <li>If your purchase does not appear, tap <strong>Restore</strong> on the EchoOrb+ screen.</li>
+                <li>TestFlight purchases are sandbox purchases and do not charge real money.</li>
+                <li>App Store purchases and refunds are handled by Apple through your Apple Account.</li>
+            </ul>
+
+            <h2 id="permissions">Microphone, Photos, and Files</h2>
+            <p>
+                EchoOrb asks for microphone access only when you record audio. It asks for Photos or file access only when you import media or save an export. You can manage these permissions in the iOS Settings app.
+            </p>
+
+            <h2>Import and Export Help</h2>
+            <ul>
+                <li>If a video or audio file does not import, try a common format such as MP4, MOV, M4A, WAV, or MP3.</li>
+                <li>If saving to Photos fails, check that EchoOrb has permission to add items to your photo library.</li>
+                <li>Large videos may take longer to analyze or export, especially on older devices.</li>
+            </ul>
+
+            <h2>Privacy</h2>
+            <p>
+                EchoOrb processes recordings, imports, and exports locally on your device. Read the full <a href="https://manu.vision/echoorb/privacypolicy/">EchoOrb Privacy Policy</a>.
+            </p>
+
+            <h2 id="contact">Contact</h2>
+            <p>
+                For support, bug reports, or feedback, contact Manu.Vision through <a href="https://manu.vision">manu.vision</a> or Instagram at <a href="https://www.instagram.com/manu.vision/">@manu.vision</a>.
+            </p>
+        </article>
+
+        <p class="footer">An app by Manu.Vision.</p>
+    </main>
+</body>
+</html>
