@@ -551,6 +551,13 @@
             transform: rotate(-12deg);
             text-shadow: 0 8px 20px rgba(0, 0, 0, 0.32);
         }
+        .experiment-card-bg.visual-popcolor {
+            background:
+                url('images/projects/popcolor-icon.png') center 22% / min(78%, 340px) auto no-repeat,
+                radial-gradient(circle at 50% 28%, rgba(255, 216, 77, 0.18), transparent 48%),
+                linear-gradient(160deg, #05070d 0%, #101827 56%, #05070d 100%);
+            opacity: 0.92;
+        }
         .experiment-card-content {
             position: relative;
             z-index: 2;
@@ -1365,12 +1372,12 @@
         </div>
     </section>
 
-    <!-- Experiments Section -->
+    <!-- Projects Section -->
     <section class="experiments" id="experiments">
         <div class="container">
             <div class="section-header">
-                <div class="section-eyebrow reveal">Creative Projects</div>
-                <h2 class="section-title reveal delay-1">Experiments</h2>
+                <div class="section-eyebrow reveal">Creative Experiments</div>
+                <h2 class="section-title reveal delay-1">Projects</h2>
             </div>
             <div class="experiments-grid">
                 <a href="https://manu.vision/dreamart/index.html" target="_blank" class="experiment-card reveal-scale">
@@ -1394,6 +1401,16 @@
                         <div class="experiment-link-hint"><span>Open experiment</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg></div>
                     </div>
                 </a>
+                <a href="https://apps.apple.com/ca/app/popcolor/id6775361048" target="_blank" rel="noopener" class="experiment-card reveal-scale delay-2">
+                    <div class="experiment-card-bg visual-popcolor"></div>
+                    <div class="experiment-card-content">
+                        <div class="experiment-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="5"/><path d="M8 9h2"/><path d="M14 9h2"/><path d="M9 15h6"/><path d="M12 4v16"/></svg></div>
+                        <h3>PopColor</h3>
+                        <p>A fast 60-second arcade puzzle iOS game about speed, focus, and colorful chain reactions.</p>
+                        <div class="experiment-link-hint"><span>View on App Store</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg></div>
+                    </div>
+                </a>
+                <!--
                 <a href="https://manu.vision/mbm/index.html" target="_blank" class="experiment-card reveal-scale delay-2">
                     <div class="experiment-card-bg visual-mbm"></div>
                     <div class="experiment-card-content">
@@ -1412,6 +1429,7 @@
                         <div class="experiment-link-hint"><span>View on itch.io</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg></div>
                     </div>
                 </a>
+                -->
             </div>
         </div>
     </section>
