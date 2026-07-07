@@ -186,6 +186,7 @@
 
         /* Hero */
         .hero { min-height: 100vh; display: flex; align-items: center; position: relative; padding-top: 80px; }
+        .hero .container { overflow: visible; }
         .hero-bg { position: absolute; inset: 0; z-index: -1; }
         .hero-gradient {
             position: absolute; width: 150%; height: 150%; top: -25%; left: -25%;
@@ -278,22 +279,23 @@
             background: linear-gradient(90deg, #A78BFA, #C4B5FD);
             -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; }
+        .hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; overflow: visible; }
         .btn {
             display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px;
             border-radius: 12px; font-size: 1rem; font-weight: 500; text-decoration: none;
             transition: all 0.3s var(--transition-smooth); cursor: pointer; border: none;
-            position: relative; overflow: clip;
+            position: relative; overflow: clip; isolation: isolate;
         }
         .btn::before {
             content: ''; position: absolute; top: 50%; left: 50%;
             width: 0; height: 0; background: rgba(255, 255, 255, 0.3);
             border-radius: 50%; transform: translate(-50%, -50%);
-            transition: width 0.6s ease, height 0.6s ease;
+            transition: width 0.6s ease, height 0.6s ease; pointer-events: none; z-index: -1;
         }
         .btn:active::before { width: 300px; height: 300px; }
-        .btn-primary { background: var(--gradient-purple); color: white; box-shadow: 0 0px 16px rgba(139, 92, 246, 0.3); }
-        .btn-primary:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0px 16px rgba(139, 92, 246, 0.4); }
+        .btn-primary { background: var(--gradient-purple); color: white; box-shadow: 0 0 16px rgba(139, 92, 246, 0.3); }
+        .btn-primary:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 16px 36px rgba(139, 92, 246, 0.36), 0 0 18px rgba(139, 92, 246, 0.28); }
+        .btn:focus-visible { outline: 2px solid rgba(196, 181, 253, 0.85); outline-offset: 4px; }
         .btn-secondary { background: rgba(255, 255, 255, 0.05); color: var(--text-primary); border: 1px solid rgba(255, 255, 255, 0.1); }
         .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-3px); }
         .btn svg { width: 18px; height: 18px; transition: transform 0.3s ease; }
@@ -346,6 +348,16 @@
         .rotating-photo-img.active { opacity: 1; }
         .about-content h2 { font-family: var(--font-display); font-size: clamp(2rem, 4vw, 2.75rem); font-weight: 600; margin-bottom: 24px; letter-spacing: -0.02em; }
         .about-content p { color: var(--text-secondary); font-size: 1.0625rem; margin-bottom: 16px; line-height: 1.8; }
+        .about-content p.about-summary-end { margin-bottom: 6px; }
+        .about-more[hidden] { display: none; }
+        .about-toggle {
+            display: flex; align-items: center; gap: 8px; width: fit-content; color: var(--primary-violet);
+            background: none; border: none; padding: 0; margin-top: 0; margin-bottom: 10px;
+            font: inherit; font-weight: 500; cursor: pointer; transition: opacity 0.2s ease;
+        }
+        .about-toggle:hover { opacity: 0.78; }
+        .about-toggle svg { width: 16px; height: 16px; transition: transform 0.3s ease; }
+        .about-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
         .career-link {
             display: inline-flex; align-items: center; gap: 8px; color: var(--primary-violet);
             text-decoration: none; font-weight: 500; margin-top: 16px; margin-bottom: 24px;
@@ -354,6 +366,7 @@
         }
         .career-link:hover { background: rgba(139, 92, 246, 0.1); border-color: var(--primary-violet); }
         .career-link svg { width: 16px; height: 16px; }
+        .about-toggle + .career-link { display: flex; width: fit-content; margin-top: 26px; }
         .about-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
         .stat { text-align: center; }
         .stat-number { font-family: var(--font-display); font-size: 2.5rem; font-weight: 700; background: var(--gradient-purple); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
@@ -1375,15 +1388,21 @@
                     <p class="reveal-right delay-3">
                         Born in Guadeloupe and based in Montreal, he holds a Master's degree in Computer Science and over 15 years of corporate experience spanning IBM, Unity, and Adobe, working at the frontier of AI, XR, and haptics to build immersive worlds rooted in cultural heritage preservation.
                     </p>
-                    <p class="reveal-right delay-4">
+                    <p class="reveal-right delay-4 about-summary-end">
                         A TED speaker, he has lectured at top universities such as Harvard, MIT, Oxford, Stanford, Columbia, and McGill, and co-created the first GenAI course on MasterClass in 2024, ranked among the most watched on the platform.
                     </p>
-                    <p class="reveal-right delay-5">
-                        A designer and researcher turned advocate, he led the Canadian XR Design department at IBM (100+ members) and helped develop haptics patents at Immersion, before managing a team of 10 product designers at Unity on Digital Twins, then taking the stage at 50+ events across 100+ locations worldwide, including Unite main keynotes and GDC talks, reaching 2M+ people online and 2,000+ in person. He now brings that same edge to Adobe, prototyping next-generation creative workflows at the intersection of artificial intelligence and design systems.
-                    </p>
-                    <p class="reveal-right delay-6">
-                        His independent work in VFX and emerging tech such as real-time 3D and brain-computer interfaces has reached 10M+ people globally, with exhibitions drawing 20,000+ visitors at ARTECHOUSE (NYC), VIFF (Vancouver), and Sónar+D (Barcelona), including the ethical EEG scanning of 2,000+ participants. Recognized with the Mozilla Rise25 Award and an XR Guild Ethical Values nomination, he has been featured in Business Insider, Fast Company, and The Wall Street Journal, and at events organized by OpenAI, Adobe, Meta, NVIDIA, and Dell.
-                   </p>
+                    <div class="about-more" id="aboutMore" hidden>
+                        <p>
+                            A designer and researcher turned advocate, he led the Canadian XR Design department at IBM (100+ members) and helped develop haptics patents at Immersion, before managing a team of 10 product designers at Unity on Digital Twins, then taking the stage at 50+ events across 100+ locations worldwide, including Unite main keynotes and GDC talks, reaching 2M+ people online and 2,000+ in person. He now brings that same edge to Adobe, prototyping next-generation creative workflows at the intersection of artificial intelligence and design systems.
+                        </p>
+                        <p>
+                            His independent work in VFX and emerging tech such as real-time 3D and brain-computer interfaces has reached 10M+ people globally, with exhibitions drawing 20,000+ visitors at ARTECHOUSE (NYC), VIFF (Vancouver), and Sónar+D (Barcelona), including the ethical EEG scanning of 2,000+ participants. Recognized with the Mozilla Rise25 Award and an XR Guild Ethical Values nomination, he has been featured in Business Insider, Fast Company, and The Wall Street Journal, and at events organized by OpenAI, Adobe, Meta, NVIDIA, and Dell.
+                        </p>
+                    </div>
+                    <button type="button" class="about-toggle reveal-right delay-5" id="aboutToggle" aria-expanded="false" aria-controls="aboutMore">
+                        <span>Show more</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
                     <a href="https://linkedin.com/in/manuvision" target="_blank" class="career-link reveal-right delay-6">
                         View Full Career History
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
@@ -1990,6 +2009,17 @@
         // Auto-rotate every 4 seconds
         if (aboutPhotos.length > 0) {
             setInterval(rotateAboutPhoto, 4000);
+        }
+
+        const aboutToggle = document.getElementById('aboutToggle');
+        const aboutMore = document.getElementById('aboutMore');
+        if (aboutToggle && aboutMore) {
+            aboutToggle.addEventListener('click', () => {
+                const isExpanded = aboutToggle.getAttribute('aria-expanded') === 'true';
+                aboutMore.hidden = isExpanded;
+                aboutToggle.setAttribute('aria-expanded', String(!isExpanded));
+                aboutToggle.querySelector('span').textContent = isExpanded ? 'Show more' : 'Show less';
+            });
         }
 
         // Animated counter for stats
