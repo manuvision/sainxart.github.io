@@ -675,36 +675,58 @@
         .timeline-scroll::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.55); border-radius: 100px; }
         .timeline-track {
             position: relative; display: flex; align-items: stretch; gap: 24px;
-            min-width: max-content; padding: 34px 8px 4px;
+            min-width: max-content; padding: var(--timeline-track-top-padding, 34px) 8px 4px;
+            --timeline-line-center-y: 18px;
+            --timeline-track-top-padding: 34px;
         }
         .timeline-track::before {
-            content: ''; position: absolute; top: 18px; left: 20px; right: 20px; height: 2px;
+            content: ''; position: absolute; top: calc(var(--timeline-line-center-y) - 1px);
+            left: var(--timeline-line-left, 20px);
+            width: var(--timeline-line-width, calc(100% - 40px));
+            height: 2px;
             background: linear-gradient(90deg, rgba(245, 158, 11, 0.1), rgba(249, 115, 22, 0.48), rgba(239, 68, 68, 0.5));
         }
         .experience-node {
-            position: relative; flex: 0 0 164px; min-height: 126px; padding: 16px 14px;
-            border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 12px;
-            background: rgba(10, 10, 16, 0.78); color: inherit; text-align: left;
-            display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
-            cursor: pointer; transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+            position: relative; flex: 0 0 164px; padding: 0; border: 0; background: none;
+            color: inherit; text-align: left; cursor: pointer; font: inherit;
+            appearance: none; -webkit-appearance: none;
+            --timeline-dot-size: 18px;
+            --timeline-dot-radius: 9px;
+            --timeline-dot-left: 18px;
         }
         .experience-node::before {
-            content: ''; position: absolute; top: -27px; left: 18px; width: 18px; height: 18px;
+            content: ''; position: absolute;
+            top: calc(var(--timeline-line-center-y) - var(--timeline-track-top-padding) - var(--timeline-dot-radius));
+            left: var(--timeline-dot-left);
+            width: var(--timeline-dot-size); height: var(--timeline-dot-size);
             border-radius: 50%; background: linear-gradient(135deg, #F59E0B 0%, #F97316 52%, #EF4444 100%);
             border: 3px solid var(--dark-bg); box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15), 0 0 18px rgba(245, 158, 11, 0.42);
+            z-index: 2;
+        }
+        .experience-node-card {
+            min-height: 126px; height: 100%; padding: 16px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 12px;
+            background: rgba(10, 10, 16, 0.78);
+            display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
+            transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
         }
         .experience-node:hover,
         .experience-node:focus-visible {
+            outline: none;
+        }
+        .experience-node:hover .experience-node-card,
+        .experience-node:focus-visible .experience-node-card {
             transform: translateY(-4px); border-color: rgba(245, 158, 11, 0.34);
-            background: rgba(245, 158, 11, 0.08); outline: none;
+            background: rgba(245, 158, 11, 0.08);
         }
         .experience-node.small {
-            flex-basis: 124px; min-height: 106px; padding: 13px 12px;
+            flex-basis: 124px;
         }
+        .experience-node.small { --timeline-dot-size: 10px; --timeline-dot-radius: 5px; }
         .experience-node.small::before {
-            top: -23px; width: 10px; height: 10px;
             box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.13), 0 0 14px rgba(245, 158, 11, 0.34);
         }
+        .experience-node.small .experience-node-card { min-height: 106px; padding: 13px 12px; }
         .experience-year {
             color: #F59E0B; font-size: 0.72rem; font-weight: 700;
             letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px;
@@ -730,6 +752,10 @@
         }
         .timeline-lane.secondary .experience-node:hover,
         .timeline-lane.secondary .experience-node:focus-visible {
+            outline: none;
+        }
+        .timeline-lane.secondary .experience-node:hover .experience-node-card,
+        .timeline-lane.secondary .experience-node:focus-visible .experience-node-card {
             border-color: rgba(139, 92, 246, 0.34);
             background: rgba(139, 92, 246, 0.1);
         }
@@ -738,8 +764,19 @@
             .career-timeline-intro { margin-top: -20px; text-align: left; }
             .timeline-lane { margin-left: -8px; margin-right: -8px; border-radius: 12px; }
             .timeline-lane-header { flex-direction: column; gap: 6px; padding: 0 18px 8px; }
-            .experience-node { flex-basis: 158px; }
-            .experience-node.small { flex-basis: 126px; }
+            .timeline-scroll { padding: 12px 12px 20px; }
+            .timeline-track {
+                gap: 14px; padding: var(--timeline-track-top-padding, 30px) 0 4px;
+                --timeline-track-top-padding: 30px;
+            }
+            .timeline-track::before {
+                left: var(--timeline-line-left, 14px);
+                width: var(--timeline-line-width, calc(100% - 28px));
+            }
+            .experience-node { flex-basis: 140px; --timeline-dot-left: 14px; }
+            .experience-node-card { min-height: 112px; padding: 12px; }
+            .experience-node.small { flex-basis: 108px; }
+            .experience-node.small .experience-node-card { min-height: 96px; }
         }
         .experience-modal-overlay {
             position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8);
@@ -750,15 +787,25 @@
         }
         .experience-modal-overlay.active { opacity: 1; visibility: visible; }
         .experience-modal {
-            background: rgba(20, 20, 28, 0.98); border: 1px solid rgba(139, 92, 246, 0.4);
+            --experience-modal-accent: var(--primary-violet);
+            --experience-modal-border: rgba(139, 92, 246, 0.4);
+            --experience-modal-scrollbar: rgba(139, 92, 246, 0.3);
+            --experience-modal-dot-shadow: rgba(139, 92, 246, 0.5);
+            background: rgba(20, 20, 28, 0.98); border: 1px solid var(--experience-modal-border);
             border-radius: 20px; max-width: 640px; width: 100%; max-height: 85vh;
             overflow-y: auto; padding: 32px; position: relative;
             box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
-            scrollbar-width: thin; scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
+            scrollbar-width: thin; scrollbar-color: var(--experience-modal-scrollbar) transparent;
+        }
+        .experience-modal.career-theme {
+            --experience-modal-accent: #F59E0B;
+            --experience-modal-border: rgba(245, 158, 11, 0.42);
+            --experience-modal-scrollbar: rgba(245, 158, 11, 0.32);
+            --experience-modal-dot-shadow: rgba(245, 158, 11, 0.5);
         }
         .experience-modal::-webkit-scrollbar { width: 6px; }
         .experience-modal::-webkit-scrollbar-track { background: transparent; }
-        .experience-modal::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 3px; }
+        .experience-modal::-webkit-scrollbar-thumb { background: var(--experience-modal-scrollbar); border-radius: 3px; }
         .experience-modal-close {
             position: absolute; top: 16px; right: 16px; width: 32px; height: 32px;
             background: rgba(255, 255, 255, 0.1); border: none; border-radius: 8px;
@@ -767,7 +814,7 @@
         }
         .experience-modal-close:hover { background: rgba(255, 255, 255, 0.15); color: white; }
         .experience-modal-kicker {
-            color: var(--primary-violet); font-size: 0.75rem; font-weight: 700;
+            color: var(--experience-modal-accent); font-size: 0.75rem; font-weight: 700;
             letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; padding-right: 40px;
         }
         .experience-modal-title {
@@ -789,7 +836,7 @@
         }
         .experience-modal-highlights li::before {
             content: ''; position: absolute; left: 0; top: 0.72em; width: 6px; height: 6px;
-            border-radius: 50%; background: var(--primary-violet); box-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
+            border-radius: 50%; background: var(--experience-modal-accent); box-shadow: 0 0 8px var(--experience-modal-dot-shadow);
         }
         @media (max-width: 600px) {
             .experience-modal { padding: 24px 18px; }
@@ -2587,27 +2634,77 @@
                 node.dataset.experienceId = item.id;
                 node.setAttribute('aria-label', `${item.role} at ${item.org}, ${item.period}`);
                 node.innerHTML = `
-                    <div class="experience-year">${escapeHTML(item.year)}</div>
-                    <div class="experience-role">${escapeHTML(item.role)}</div>
-                    <div class="experience-org">${escapeHTML(item.org)}</div>
+                    <div class="experience-node-card">
+                        <div class="experience-year">${escapeHTML(item.year)}</div>
+                        <div class="experience-role">${escapeHTML(item.role)}</div>
+                        <div class="experience-org">${escapeHTML(item.org)}</div>
+                    </div>
                 `;
                 node.addEventListener('click', () => openExperienceModal(item.id));
                 tracks[item.lane].appendChild(node);
             });
 
             requestAnimationFrame(() => {
-                Object.values(tracks).forEach(track => {
-                    const scrollContainer = track.parentElement;
-                    scrollContainer.scrollLeft = scrollContainer.scrollWidth;
-                });
+                updateExperienceTimelineLayout();
             });
         }
 
+        function updateExperienceTimelineLayout() {
+            document.querySelectorAll('.timeline-track').forEach(track => {
+                updateExperienceTimelineLine(track);
+                alignExperienceTimelineTrack(track);
+            });
+        }
+
+        function updateExperienceTimelineLine(track) {
+            const nodes = track.querySelectorAll('.experience-node');
+            if (!nodes.length) return;
+
+            const getDotCenter = (node) => {
+                const dotStyle = window.getComputedStyle(node, '::before');
+                const dotLeft = parseFloat(dotStyle.left) || 0;
+                const dotWidth = parseFloat(dotStyle.width) || 0;
+                return node.offsetLeft + dotLeft + (dotWidth / 2);
+            };
+
+            const lineStart = getDotCenter(nodes[0]);
+            const lastNode = nodes[nodes.length - 1];
+            const lineEnd = lastNode.offsetLeft + lastNode.offsetWidth + 28;
+            track.style.setProperty('--timeline-line-left', `${lineStart}px`);
+            track.style.setProperty('--timeline-line-width', `${Math.max(lineEnd - lineStart, 24)}px`);
+        }
+
+        function alignExperienceTimelineTrack(track) {
+            const scrollContainer = track.parentElement;
+            if (!scrollContainer) return;
+
+            const nodes = track.querySelectorAll('.experience-node');
+            const latestNode = nodes[nodes.length - 1];
+            if (!latestNode) return;
+
+            const maxScroll = Math.max(0, scrollContainer.scrollWidth - scrollContainer.clientWidth);
+            const latestNodeCenter = latestNode.offsetLeft + (latestNode.offsetWidth / 2);
+            const targetScroll = latestNodeCenter - (scrollContainer.clientWidth / 2);
+            scrollContainer.scrollLeft = Math.min(Math.max(targetScroll, 0), maxScroll);
+        }
+
+        let experienceTimelineResizeTicking = false;
+        window.addEventListener('resize', () => {
+            if (experienceTimelineResizeTicking) return;
+            experienceTimelineResizeTicking = true;
+            requestAnimationFrame(() => {
+                updateExperienceTimelineLayout();
+                experienceTimelineResizeTicking = false;
+            });
+        }, { passive: true });
+
         function openExperienceModal(id) {
             const item = experienceItems.find(entry => entry.id === id);
-            const modal = document.getElementById('experienceModal');
-            if (!item || !modal) return;
+            const modalOverlay = document.getElementById('experienceModal');
+            const modal = modalOverlay ? modalOverlay.querySelector('.experience-modal') : null;
+            if (!item || !modalOverlay || !modal) return;
 
+            modal.classList.toggle('career-theme', item.lane === 'top');
             document.getElementById('experienceModalKicker').textContent = item.type;
             document.getElementById('experienceModalTitle').textContent = item.role;
             document.getElementById('experienceModalOrg').textContent = item.org;
@@ -2618,7 +2715,7 @@
             document.getElementById('experienceModalDesc').textContent = item.desc;
             document.getElementById('experienceModalHighlights').innerHTML = item.highlights.map(highlight => `<li>${escapeHTML(highlight)}</li>`).join('');
 
-            modal.classList.add('active');
+            modalOverlay.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
 
