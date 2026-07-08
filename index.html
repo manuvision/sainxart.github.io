@@ -766,7 +766,7 @@
             .timeline-lane-header { flex-direction: column; gap: 6px; padding: 0 18px 8px; }
             .timeline-scroll { padding: 12px 12px 20px; }
             .timeline-track {
-                gap: 14px; padding: var(--timeline-track-top-padding, 30px) 0 4px;
+                gap: 14px; padding: var(--timeline-track-top-padding, 30px) 12px 4px 0;
                 --timeline-track-top-padding: 30px;
             }
             .timeline-track::before {
@@ -2669,7 +2669,8 @@
 
             const lineStart = getDotCenter(nodes[0]);
             const lastNode = nodes[nodes.length - 1];
-            const lineEnd = lastNode.offsetLeft + lastNode.offsetWidth + 28;
+            const lineTail = window.matchMedia('(max-width: 700px)').matches ? 10 : 18;
+            const lineEnd = lastNode.offsetLeft + lastNode.offsetWidth + lineTail;
             track.style.setProperty('--timeline-line-left', `${lineStart}px`);
             track.style.setProperty('--timeline-line-width', `${Math.max(lineEnd - lineStart, 24)}px`);
         }
@@ -2678,14 +2679,8 @@
             const scrollContainer = track.parentElement;
             if (!scrollContainer) return;
 
-            const nodes = track.querySelectorAll('.experience-node');
-            const latestNode = nodes[nodes.length - 1];
-            if (!latestNode) return;
-
             const maxScroll = Math.max(0, scrollContainer.scrollWidth - scrollContainer.clientWidth);
-            const latestNodeCenter = latestNode.offsetLeft + (latestNode.offsetWidth / 2);
-            const targetScroll = latestNodeCenter - (scrollContainer.clientWidth / 2);
-            scrollContainer.scrollLeft = Math.min(Math.max(targetScroll, 0), maxScroll);
+            scrollContainer.scrollLeft = maxScroll;
         }
 
         let experienceTimelineResizeTicking = false;
