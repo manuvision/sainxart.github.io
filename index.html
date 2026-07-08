@@ -79,27 +79,33 @@
             width: 120%; height: 120%;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
             opacity: 0.025;
-            animation: noiseAnim 0.3s steps(3) infinite;
+            transform: translateZ(0);
         }
         @keyframes noiseAnim {
             0%, 100% { transform: translate(0, 0); }
             50% { transform: translate(-1%, -1%); }
         }
 
-        /* Animations */
-        .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s var(--transition-smooth), transform 0.8s var(--transition-smooth); }
-        .reveal.active { opacity: 1; transform: translateY(0); }
-        .reveal-left { opacity: 0; transform: translateX(-60px); transition: opacity 0.8s var(--transition-smooth), transform 0.8s var(--transition-smooth); }
-        .reveal-left.active { opacity: 1; transform: translateX(0); }
-        .reveal-right { opacity: 0; transform: translateX(60px); transition: opacity 0.8s var(--transition-smooth), transform 0.8s var(--transition-smooth); }
-        .reveal-right.active { opacity: 1; transform: translateX(0); }
-        .reveal-scale { opacity: 0; transform: scale(0.9); transition: opacity 0.6s var(--transition-smooth), transform 0.6s var(--transition-smooth); }
-        .reveal-scale.active { opacity: 1; transform: scale(1); }
+        /* Reveal hooks are kept in the markup, but content renders immediately to avoid scroll-time layout drift. */
+        .reveal,
+        .reveal-left,
+        .reveal-right,
+        .reveal-scale {
+            opacity: 1;
+            transform: none;
+        }
+        .reveal.active,
+        .reveal-left.active,
+        .reveal-right.active,
+        .reveal-scale.active {
+            opacity: 1;
+            transform: none;
+        }
         .delay-1 { transition-delay: 0.1s; } .delay-2 { transition-delay: 0.2s; } .delay-3 { transition-delay: 0.3s; }
         .delay-4 { transition-delay: 0.4s; } .delay-5 { transition-delay: 0.5s; }
         @media (max-width: 768px) {
-            .reveal-left { transform: translateX(-20px); }
-            .reveal-right { transform: translateX(20px); }
+            .reveal-left,
+            .reveal-right { transform: none; }
         }
 
         /* Layout */
@@ -116,7 +122,8 @@
         .scroll-progress {
             position: absolute; bottom: 0; left: 0; height: 3px;
             background: var(--gradient-purple);
-            width: 0%; transition: width 0.1s ease-out;
+            width: 100%; transform: scaleX(0); transform-origin: left center;
+            transition: none; will-change: transform;
             box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);
         }
         .nav.scrolled {
@@ -637,55 +644,156 @@
         /* Experience Section */
         .experience { background: var(--dark-bg); position: relative; }
         .experience::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent); }
-        .experience-content { max-width: 900px; margin: 0 auto; }
-        .experience-group { margin-bottom: 40px; }
-        .experience-group:last-of-type { margin-bottom: 48px; }
-        .experience-group-title {
-            font-family: var(--font-display); font-size: 1.1rem; font-weight: 600;
-            color: var(--primary-light-purple); margin-bottom: 16px; letter-spacing: -0.01em;
-            text-align: center;
+        .experience-content { max-width: 1120px; margin: 0 auto; }
+        .career-timeline-intro {
+            max-width: 680px; margin: -32px auto 40px; text-align: center;
+            color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7;
         }
-        .experience-badges {
-            display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+        .career-timeline { display: flex; flex-direction: column; gap: 34px; }
+        .timeline-lane {
+            border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px;
+            background: rgba(255, 255, 255, 0.02); padding: 22px 0 8px;
         }
-        .exp-badge {
-            display: inline-flex; align-items: center; padding: 8px 16px;
-            background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 100px; font-size: 0.85rem; font-weight: 500;
-            color: var(--text-primary); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: default;
+        .timeline-lane-header {
+            display: flex; align-items: baseline; justify-content: space-between; gap: 18px;
+            padding: 0 24px 10px;
         }
-        .experience.focus-mode .exp-badge {
-            opacity: 0.25; transform: scale(0.95);
-            border-color: rgba(139, 92, 246, 0.15);
+        .timeline-lane-title {
+            font-family: var(--font-display); font-size: 1rem; font-weight: 600;
+            color: white; letter-spacing: -0.01em;
         }
-        .experience.focus-mode .exp-badge.current-focus {
-            opacity: 1; transform: scale(1);
-            background: linear-gradient(135deg, rgba(255, 196, 0, 0.9) 0%, rgba(255, 77, 0, 0.9) 100%);
-            border-color: rgba(255, 170, 0, 0.65);
-            color: rgb(255, 255, 255);
-            box-shadow: 0 0 16px rgba(245, 158, 11, 0.3);
+        .timeline-lane-hint {
+            color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;
+            letter-spacing: 0.08em;
         }
-        .focus-toggle-container { text-align: center; margin-top: 16px; position: relative; padding: 20px 0; }
-        .focus-toggle {
-            position: relative; display: inline-flex; align-items: center; gap: 10px;
-            padding: 14px 28px; border-radius: 100px; font-size: 0.95rem; font-weight: 600;
-            cursor: pointer; border: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: linear-gradient(135deg, #F59E0B 0%, #F97316 50%, #EF4444 100%);
-            color: white; box-shadow: 0 0px 16px rgba(245, 158, 11, 0.5);
+        .timeline-scroll {
+            overflow-x: auto; overflow-y: visible; padding: 14px 18px 24px;
+            scrollbar-width: thin; scrollbar-color: rgba(245, 158, 11, 0.45) rgba(255, 255, 255, 0.05);
         }
-        .focus-toggle:hover {
-            transform: translateY(-2px); box-shadow: 0 0px 16px rgba(245, 158, 11, 0.6);
+        .timeline-scroll::-webkit-scrollbar { height: 8px; }
+        .timeline-scroll::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 100px; }
+        .timeline-scroll::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.55); border-radius: 100px; }
+        .timeline-track {
+            position: relative; display: flex; align-items: stretch; gap: 24px;
+            min-width: max-content; padding: 34px 8px 4px;
         }
-        .focus-toggle.active {
-            background: var(--gradient-purple);
-            box-shadow: 0 0px 16px rgba(139, 92, 246, 0.4);
+        .timeline-track::before {
+            content: ''; position: absolute; top: 18px; left: 20px; right: 20px; height: 2px;
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.1), rgba(249, 115, 22, 0.48), rgba(239, 68, 68, 0.5));
         }
-        .focus-toggle.active:hover {
-            box-shadow: 0 0px 16px rgba(139, 92, 246, 0.5);
+        .experience-node {
+            position: relative; flex: 0 0 164px; min-height: 126px; padding: 16px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 12px;
+            background: rgba(10, 10, 16, 0.78); color: inherit; text-align: left;
+            display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
+            cursor: pointer; transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
         }
-        .focus-toggle svg { width: 18px; height: 18px; transition: transform 0.3s ease; }
-        .focus-toggle.active svg { transform: rotate(180deg); }
+        .experience-node::before {
+            content: ''; position: absolute; top: -27px; left: 18px; width: 18px; height: 18px;
+            border-radius: 50%; background: linear-gradient(135deg, #F59E0B 0%, #F97316 52%, #EF4444 100%);
+            border: 3px solid var(--dark-bg); box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15), 0 0 18px rgba(245, 158, 11, 0.42);
+        }
+        .experience-node:hover,
+        .experience-node:focus-visible {
+            transform: translateY(-4px); border-color: rgba(245, 158, 11, 0.34);
+            background: rgba(245, 158, 11, 0.08); outline: none;
+        }
+        .experience-node.small {
+            flex-basis: 124px; min-height: 106px; padding: 13px 12px;
+        }
+        .experience-node.small::before {
+            top: -23px; width: 10px; height: 10px;
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.13), 0 0 14px rgba(245, 158, 11, 0.34);
+        }
+        .experience-year {
+            color: #F59E0B; font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px;
+        }
+        .experience-role {
+            color: white; font-family: var(--font-display); font-size: 0.86rem; font-weight: 600;
+            line-height: 1.22; margin-bottom: 6px;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .experience-org { color: var(--text-secondary); font-size: 0.78rem; line-height: 1.35; }
+        .timeline-lane.secondary .timeline-track::before {
+            background: linear-gradient(90deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.45), rgba(217, 70, 239, 0.44));
+        }
+        .timeline-lane.secondary .timeline-scroll {
+            scrollbar-color: rgba(139, 92, 246, 0.45) rgba(255, 255, 255, 0.05);
+        }
+        .timeline-lane.secondary .timeline-scroll::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.5);
+        }
+        .timeline-lane.secondary .experience-node::before {
+            background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.16), 0 0 18px rgba(139, 92, 246, 0.42);
+        }
+        .timeline-lane.secondary .experience-node:hover,
+        .timeline-lane.secondary .experience-node:focus-visible {
+            border-color: rgba(139, 92, 246, 0.34);
+            background: rgba(139, 92, 246, 0.1);
+        }
+        .timeline-lane.secondary .experience-year { color: var(--primary-light-purple); }
+        @media (max-width: 700px) {
+            .career-timeline-intro { margin-top: -20px; text-align: left; }
+            .timeline-lane { margin-left: -8px; margin-right: -8px; border-radius: 12px; }
+            .timeline-lane-header { flex-direction: column; gap: 6px; padding: 0 18px 8px; }
+            .experience-node { flex-basis: 158px; }
+            .experience-node.small { flex-basis: 126px; }
+        }
+        .experience-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            z-index: 1000; opacity: 0; visibility: hidden;
+            transition: all 0.3s ease; display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .experience-modal-overlay.active { opacity: 1; visibility: visible; }
+        .experience-modal {
+            background: rgba(20, 20, 28, 0.98); border: 1px solid rgba(139, 92, 246, 0.4);
+            border-radius: 20px; max-width: 640px; width: 100%; max-height: 85vh;
+            overflow-y: auto; padding: 32px; position: relative;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+            scrollbar-width: thin; scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
+        }
+        .experience-modal::-webkit-scrollbar { width: 6px; }
+        .experience-modal::-webkit-scrollbar-track { background: transparent; }
+        .experience-modal::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 3px; }
+        .experience-modal-close {
+            position: absolute; top: 16px; right: 16px; width: 32px; height: 32px;
+            background: rgba(255, 255, 255, 0.1); border: none; border-radius: 8px;
+            color: var(--text-muted); cursor: pointer; font-size: 20px;
+            display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;
+        }
+        .experience-modal-close:hover { background: rgba(255, 255, 255, 0.15); color: white; }
+        .experience-modal-kicker {
+            color: var(--primary-violet); font-size: 0.75rem; font-weight: 700;
+            letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; padding-right: 40px;
+        }
+        .experience-modal-title {
+            font-family: var(--font-display); font-size: 1.45rem; font-weight: 600;
+            color: white; margin-bottom: 6px; padding-right: 40px; line-height: 1.25;
+        }
+        .experience-modal-org { color: var(--text-primary); font-weight: 600; margin-bottom: 8px; }
+        .experience-modal-meta {
+            color: var(--text-muted); font-size: 0.82rem; margin-bottom: 18px;
+            display: flex; flex-wrap: wrap; gap: 8px 14px;
+        }
+        .experience-modal-desc { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7; margin-bottom: 18px; }
+        .experience-modal-highlights {
+            display: grid; gap: 10px; margin: 0; padding: 0; list-style: none;
+        }
+        .experience-modal-highlights li {
+            position: relative; padding-left: 18px; color: var(--text-secondary);
+            font-size: 0.88rem; line-height: 1.55;
+        }
+        .experience-modal-highlights li::before {
+            content: ''; position: absolute; left: 0; top: 0.72em; width: 6px; height: 6px;
+            border-radius: 50%; background: var(--primary-violet); box-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
+        }
+        @media (max-width: 600px) {
+            .experience-modal { padding: 24px 18px; }
+        }
         .spark-container {
             position: absolute; top: 50%; left: 50%; pointer-events: none;
             width: 0; height: 0;
@@ -1551,27 +1659,30 @@
     <section class="experience" id="experience">
         <div class="container">
             <div class="section-header">
-                <div class="section-eyebrow reveal">Corporate Experience</div>
-                <h2 class="section-title reveal delay-1">Full-Time Positions</h2>
+                <div class="section-eyebrow reveal">Career Path</div>
+                <h2 class="section-title reveal delay-1">Experience</h2>
             </div>
             <div class="experience-content">
-                <div class="experience-group">
-                    <h3 class="experience-group-title reveal">Companies I've recently worked for</h3>
-                    <div class="experience-badges reveal delay-1">
-                        <span class="exp-badge">Paysafe</span>
-                        <span class="exp-badge">IBM</span>
-                        <span class="exp-badge">Immersion</span>
-                        <span class="exp-badge">Unity</span>
-                        <span class="exp-badge current-focus">Adobe</span>
+                <p class="career-timeline-intro reveal delay-2">A scrollable view of full-time roles, internships, education, community work, and creative technology partnerships. Tap any node for a short summary.</p>
+                <div class="career-timeline reveal delay-3" aria-label="Career timeline">
+                    <div class="timeline-lane">
+                        <div class="timeline-lane-header">
+                            <h3 class="timeline-lane-title">Full-time Roles & Internships</h3>
+                            <div class="timeline-lane-hint">Swipe or scroll horizontally</div>
+                        </div>
+                        <div class="timeline-scroll" aria-label="Full-time roles and internships">
+                            <div class="timeline-track" id="careerTopTrack"></div>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="focus-toggle-container reveal delay-2">
-                    <button class="focus-toggle" id="focusToggle">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-                        Current Role
-                        <div class="spark-container" id="sparkContainer"></div>
-                    </button>
+                    <div class="timeline-lane secondary">
+                        <div class="timeline-lane-header">
+                            <h3 class="timeline-lane-title">Education / Independent Work</h3>
+                            <div class="timeline-lane-hint">Swipe or scroll horizontally</div>
+                        </div>
+                        <div class="timeline-scroll" aria-label="Education and independent work">
+                            <div class="timeline-track" id="careerBottomTrack"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1856,6 +1967,19 @@
         </div>
     </div>
 
+    <!-- Experience Modal -->
+    <div class="experience-modal-overlay" id="experienceModal" onclick="closeExperienceModal(event)">
+        <div class="experience-modal" onclick="event.stopPropagation()">
+            <button class="experience-modal-close" onclick="closeExperienceModal()">&times;</button>
+            <div class="experience-modal-kicker" id="experienceModalKicker"></div>
+            <h3 class="experience-modal-title" id="experienceModalTitle"></h3>
+            <div class="experience-modal-org" id="experienceModalOrg"></div>
+            <div class="experience-modal-meta" id="experienceModalMeta"></div>
+            <p class="experience-modal-desc" id="experienceModalDesc"></p>
+            <ul class="experience-modal-highlights" id="experienceModalHighlights"></ul>
+        </div>
+    </div>
+
     <!-- Mobile Apps Modal -->
     <div class="mobile-apps-modal-overlay" id="mobileAppsModal" onclick="closeMobileAppsModal(event)">
         <div class="mobile-apps-modal" onclick="event.stopPropagation()">
@@ -1923,20 +2047,11 @@
             document.body.style.overflow = '';
         }
 
-        // Scroll reveal
-        const revealElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
-        const revealOnScroll = () => {
-            const windowHeight = window.innerHeight;
-            revealElements.forEach(el => {
-                const elementTop = el.getBoundingClientRect().top;
-                if (elementTop < windowHeight - 100) el.classList.add('active');
-            });
-        };
-
         // Parallax
         const parallaxLayers = document.querySelectorAll('.parallax-layer');
         const handleParallax = () => {
             const scrolled = window.scrollY;
+            if (scrolled > window.innerHeight) return;
             parallaxLayers.forEach(layer => {
                 const speed = layer.dataset.speed || 0.5;
                 layer.style.transform = `translate3d(0, ${scrolled * speed}px, 0)`;
@@ -1945,35 +2060,40 @@
 
         // Nav scroll
         const nav = document.getElementById('nav');
+        const scrollProgress = document.getElementById('scrollProgress');
+        const sectionIds = ['home', 'about', 'highlights', 'experiments', 'experience', 'brands', 'speaking', 'press', 'contact'];
+        const sectionElements = sectionIds
+            .map(sectionId => ({ sectionId, section: document.getElementById(sectionId) }))
+            .filter(item => item.section);
+        const navLinks = document.querySelectorAll('.nav-links a');
+        let activeSectionId = '';
         const handleNavScroll = () => {
-            nav.classList.toggle('scrolled', window.scrollY > 50);
+            const scrollTop = window.scrollY;
+            nav.classList.toggle('scrolled', scrollTop > 50);
 
             // Update scroll progress bar
-            const scrollProgress = document.getElementById('scrollProgress');
-            const scrollTop = window.scrollY;
             const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const scrollPercent = (scrollTop / docHeight) * 100;
-            scrollProgress.style.width = scrollPercent + '%';
+            const scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            const scrollScale = Math.min(Math.max(scrollPercent / 100, 0), 1);
+            scrollProgress.style.transform = `scaleX(${scrollScale})`;
 
             // Highlight active nav section
-            const sections = ['home', 'about', 'highlights', 'experiments', 'experience', 'brands', 'speaking', 'press', 'contact'];
-            const navLinks = document.querySelectorAll('.nav-links a');
             let currentSection = 'home';
 
-            sections.forEach(sectionId => {
-                const section = document.getElementById(sectionId);
-                if (section) {
-                    const rect = section.getBoundingClientRect();
-                    if (rect.top <= 150 && rect.bottom > 150) {
-                        currentSection = sectionId;
-                    }
+            sectionElements.forEach(({ sectionId, section }) => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top <= 150 && rect.bottom > 150) {
+                    currentSection = sectionId;
                 }
             });
 
-            navLinks.forEach(link => {
-                const href = link.getAttribute('href').replace('#', '');
-                link.classList.toggle('active', href === currentSection || (href === 'brands' && currentSection === 'brands'));
-            });
+            if (currentSection !== activeSectionId) {
+                activeSectionId = currentSection;
+                navLinks.forEach(link => {
+                    const href = (link.getAttribute('href') || '').replace('#', '');
+                    link.classList.toggle('active', href === currentSection || (href === 'brands' && currentSection === 'brands'));
+                });
+            }
         };
 
         // Smooth scroll
@@ -2053,52 +2173,464 @@
         document.querySelectorAll('.stat-number[data-target], .csat-number[data-target]').forEach(el => statsObserver.observe(el));
 
         // Event listeners
-        window.addEventListener('scroll', () => { revealOnScroll(); handleParallax(); handleNavScroll(); }, { passive: true });
-        revealOnScroll(); handleNavScroll();
+        let scrollTicking = false;
+        const handleScroll = () => {
+            if (scrollTicking) return;
+            scrollTicking = true;
+            requestAnimationFrame(() => {
+                handleParallax();
+                handleNavScroll();
+                scrollTicking = false;
+            });
+        };
 
-        // Intersection Observer for performance
-        if ('IntersectionObserver' in window) {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
-            }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-            revealElements.forEach(el => observer.observe(el));
-        }
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        handleParallax();
+        handleNavScroll();
 
-        // Experience Focus Toggle with Magnetic Effect and Sparks
-        const focusToggle = document.getElementById('focusToggle');
-        const experienceSection = document.querySelector('.experience');
-        const sparkContainer = document.getElementById('sparkContainer');
+        const experienceItems = [
+            {
+                id: 'greencopper',
+                lane: 'top',
+                year: '2011',
+                role: 'UI/UX Designer',
+                org: 'Greencopper',
+                period: 'Nov 2011 - Jun 2012',
+                location: 'Montreal',
+                type: 'Internship',
+                size: 'small',
+                desc: 'Designed mobile and web experiences for live music, festivals, and event audiences.',
+                highlights: ['Worked on 120+ iOS and Android festival apps', 'Created visual systems for renowned events including Osheaga, Piknic Electronik, Igloofest, and Nuit Blanche']
+            },
+            {
+                id: 'eye-in',
+                lane: 'top',
+                year: '2013',
+                role: 'Sr. UI/UX Designer',
+                org: 'Eye-In Media',
+                period: 'Apr 2013 - Mar 2014',
+                location: 'Montreal',
+                type: 'Digital signage',
+                desc: 'Designed interfaces for digital signage, menu boards, guest WiFi, and public-facing service experiences.',
+                highlights: ['Designed for clients including McDonald’s, STM, L’Oréal, Desjardins, Ivanhoé Cambridge, and The Voice', 'Combined UI/UX, graphic design, HTML/CSS, print, and marketing work']
+            },
+            {
+                id: 'mg',
+                lane: 'top',
+                year: '2014',
+                role: 'UI/UX Design Lead',
+                org: 'MG',
+                period: 'May 2014 - Apr 2016',
+                location: 'Greater Montreal',
+                type: 'Design leadership',
+                desc: 'Led UI/UX work for high-traffic multi-device products and marketing experiences.',
+                highlights: ['Managed a team of UI/UX designers', 'Designed web, mobile, tablet, TV, console, watch, VR, and AR experiences', 'Created interfaces for products reaching 115M+ daily visitors']
+            },
+            {
+                id: 'sportvizor',
+                lane: 'bottom',
+                year: '2015',
+                role: 'UI/UX Design Lead Consultant',
+                org: 'Sportvizor',
+                period: 'Dec 2015 - Mar 2017',
+                location: 'Greater Montreal',
+                type: 'Consulting',
+                desc: 'Led product design consulting across responsive web, native mobile, wearables, and VR.',
+                highlights: ['Supported UX research, R&D, native iOS and Android design, and social/marketing assets', 'Helped guide a young sports technology product through design execution']
+            },
+            {
+                id: 'paysafe',
+                lane: 'top',
+                year: '2016',
+                role: 'UI/UX Design Lead',
+                org: 'Paysafe Group',
+                period: 'Apr 2016 - Mar 2017',
+                location: 'Montreal',
+                type: 'Product design',
+                size: 'major',
+                desc: 'Led UX/UI for mobile and web ordering products across iOS, Android, responsive web, and CMS surfaces.',
+                highlights: ['Led design for a suite of 3 iOS apps, 3 Android apps, a responsive website, and content management tools', 'Worked on fan-experience projects implemented at Bell Centre', 'Contributed to GOLO, Paysafe’s mobile ordering platform']
+            },
+            {
+                id: 'ibm',
+                lane: 'top',
+                year: '2017',
+                role: 'XR Design Lead Canada & Sr. UX Consultant',
+                org: 'IBM iX',
+                period: 'Apr 2017 - Aug 2019',
+                location: 'Montreal',
+                type: 'XR consulting',
+                size: 'major',
+                desc: 'Led immersive experience design and consulting at the intersection of strategy, creative vision, and transformational technology.',
+                highlights: ['Focused on AR/VR, AI/ML, UI/UX, and design thinking', 'Helped clients translate complex business challenges into human-centered digital products', 'Built the Canadian XR design practice inside IBM iX']
+            },
+            {
+                id: 'immersion',
+                lane: 'top',
+                year: '2019',
+                role: 'UX Design Lead & Haptics Researcher',
+                org: 'Immersion Corporation',
+                period: 'Sep 2019 - Jan 2021',
+                location: 'Greater Montreal',
+                type: 'AI/XR and haptics',
+                size: 'major',
+                desc: 'Joined Immersion’s research lab to define next-generation tactile, spatial, and multisensory interaction patterns.',
+                highlights: ['Advanced UX design for haptic technology used across billions of devices', 'Researched and contributed to new patentable haptic experiences', 'Worked on concepts such as the 5G Haptic Cuff and haptics experience design']
+            },
+            {
+                id: 'unity-design',
+                lane: 'top',
+                year: '2021',
+                role: 'XR Design Manager, Digital Twins',
+                org: 'Unity',
+                period: 'Feb 2021 - May 2023',
+                location: 'Montreal',
+                type: 'Design management',
+                size: 'major',
+                desc: 'Managed design teams building authoring tools and workflows for real-time 3D, digital twins, and immersive creation.',
+                highlights: ['Managed 10+ designers across products, industries, and time zones', 'Designed web, desktop, tablet, mobile, AR, and VR workflows', 'Focused on AEC, automotive, manufacturing, media, entertainment, AI, and the metaverse']
+            },
+            {
+                id: 'unity-advocate',
+                lane: 'top',
+                year: '2023',
+                role: 'Senior Advocate, Emerging Tech',
+                org: 'Unity',
+                period: 'May 2023 - Mar 2026',
+                location: 'Montreal / Hybrid',
+                type: 'AI and XR advocacy',
+                size: 'major',
+                desc: 'Represented Unity’s AI and XR initiatives through demos, keynotes, education, and product feedback loops.',
+                highlights: ['Spoke during Unity’s Unite 2023 keynote in Amsterdam', 'Presented Unity Muse live at GDC 2024', 'Delivered 50+ talks and demos with a 97.1% average global CSAT']
+            },
+            {
+                id: 'unity-streaming',
+                lane: 'top',
+                year: '2025',
+                role: 'Multimedia & Streaming Producer and Host',
+                org: 'Unity',
+                period: 'Oct 2025 - Mar 2026',
+                location: 'Remote',
+                type: 'Content and community',
+                size: 'major',
+                desc: 'Built scalable creator and player-facing content through livestreams, podcasts, technical showcases, and tutorials.',
+                highlights: ['Produced and hosted 12+ hours of Unite 2025 livestreams with 30+ surprise guests', 'Supported programming across Twitch, YouTube, Unity Learn, and Unity Direct', 'Helped GDC 2026 product content reach 1.5M+ views']
+            },
+            {
+                id: 'adobe-creative-tech',
+                lane: 'top',
+                year: '2026',
+                role: 'Sr. Creative Technologist - Pro Design',
+                org: 'Adobe',
+                period: 'Apr 2026 - Present',
+                location: 'Montreal / Remote',
+                type: 'Creative technology',
+                size: 'major',
+                current: true,
+                desc: 'Operates at the intersection of design systems, generative AI, and creative tooling to prototype and scale next-generation creative workflows.',
+                highlights: ['Designs and prototypes end-to-end creative pipelines with generative AI, procedural design, and automation', 'Builds demos, interactive experiences, scripts, and lightweight tooling', 'Partners with Product, Design, Engineering, marketing, and executive teams to translate technical concepts into creative workflows']
+            },
+            {
+                id: 'micro-cash',
+                lane: 'top',
+                year: '2009',
+                role: 'System Administrator',
+                org: 'Micro Cash',
+                period: 'Jun 2009 - Sep 2009',
+                location: 'Guadeloupe',
+                type: 'Internship',
+                size: 'small',
+                desc: 'Early technical internship focused on computer architecture, marketing, and systems administration.',
+                highlights: ['Built early foundations in technical operations and business communication']
+            },
+            {
+                id: 'lycee-faustin-fleret',
+                lane: 'bottom',
+                year: '2005',
+                role: 'Baccalauréat Scientifique',
+                org: 'Lycée Faustin-Fleret',
+                period: '2005 - 2008',
+                location: 'Guadeloupe',
+                type: 'Education',
+                size: 'small',
+                desc: 'Completed a scientific baccalaureate with honors, focused on physics and chemistry.',
+                highlights: ['Delegate and valedictorian throughout the program', 'Built the academic foundation for later computer science studies']
+            },
+            {
+                id: 'supinfo-degree',
+                lane: 'bottom',
+                year: '2008',
+                role: 'International MSc in Computer Science',
+                org: 'SUPINFO',
+                period: '2008 - 2013',
+                location: 'Guadeloupe / Montreal',
+                type: 'Education',
+                size: 'small',
+                desc: 'Completed SUPINFO’s international computer science program across the Guadeloupe and Montreal campuses.',
+                highlights: ['Obtained a Bachelor of Science in Computer Science in 2011', 'Obtained the International Master of Science in Computer Science in 2013', 'Served as community president, teacher, and laboratory member across RIA, Apple, and Oracle labs']
+            },
+            {
+                id: 'dfa',
+                lane: 'top',
+                year: '2009',
+                role: 'UI/UX Designer & Web Developer',
+                org: 'DFA Consulting',
+                period: 'Dec 2009 - Mar 2010',
+                location: 'Guadeloupe',
+                type: 'Internship',
+                size: 'small',
+                desc: 'Designed and developed web projects with HTML, CSS, PHP, CMS tooling, jQuery, Drupal, and Adobe Creative Suite.',
+                highlights: ['Combined web design, development, project management, and visual production']
+            },
+            {
+                id: 'la-poste',
+                lane: 'top',
+                year: '2010',
+                role: 'Network & System Administrator',
+                org: 'La Poste DSEM',
+                period: 'Jul 2010 - Oct 2010',
+                location: 'Guadeloupe',
+                type: 'Internship',
+                size: 'small',
+                desc: 'Worked across marketing, computer architecture, network administration, and system administration.',
+                highlights: ['Added network and infrastructure experience to an emerging design and technology practice']
+            },
+            {
+                id: 'itradelive',
+                lane: 'top',
+                year: '2010',
+                role: 'UI/UX Designer, Game Designer',
+                org: 'iTradeLive',
+                period: 'Dec 2010 - Apr 2011',
+                location: 'Greater Montreal',
+                type: 'Internship',
+                size: 'small',
+                desc: 'Designed websites and iOS game experiences across mobile and tablet formats.',
+                highlights: ['Early bridge between interface design, web production, and game design']
+            },
+            {
+                id: 'consortium',
+                lane: 'top',
+                year: '2011',
+                role: 'UI/UX Designer',
+                org: 'Consortium Evolution',
+                period: 'May 2011 - Jan 2012',
+                location: 'Greater Montreal',
+                type: 'Internship',
+                size: 'small',
+                desc: 'Created and managed branding, social media, marketing, PR, and web design for an NGO.',
+                highlights: ['Combined product design, communications, and project management']
+            },
+            {
+                id: 'supinfo',
+                lane: 'top',
+                year: '2012',
+                role: 'Teacher Assistant',
+                org: 'SUPINFO International University',
+                period: 'Jul 2012 - Jul 2013',
+                location: 'Paris',
+                type: 'Internship',
+                size: 'small',
+                desc: 'Taught web, Oracle, and Apple technology courses in French and English.',
+                highlights: ['Taught 150+ students across varying skill levels', 'Developed early teaching practice around software and web technologies']
+            },
+            {
+                id: 'haptics-club',
+                lane: 'bottom',
+                year: '2021',
+                role: 'Co-Founder & Biweekly Live Podcast Host',
+                org: 'Haptics Club',
+                period: 'Apr 2021 - Jun 2024',
+                location: 'Remote',
+                type: 'Community',
+                size: 'major',
+                desc: 'Co-founded an open haptics community and podcast interviewing professionals from industry and academia.',
+                highlights: ['Built from momentum after growing XR Family to 10K+ members on Clubhouse', 'Hosted biweekly conversations about tactile interfaces and haptics practice']
+            },
+            {
+                id: 'openai',
+                lane: 'bottom',
+                year: '2022',
+                role: 'Creative Partner, Ambassador, Speaker & Educator',
+                org: 'OpenAI',
+                period: 'Jan 2022 - Present',
+                location: 'Remote',
+                type: 'AI and culture',
+                size: 'major',
+                desc: 'Collaborates with OpenAI through alpha programs, cultural feedback, education, and responsible creative technology work.',
+                highlights: ['Joined early DALL-E 2, ChatGPT, and Sora programs', 'Presented AI work to 900+ people during a museum exhibition in Montreal', 'Co-created Protopica, later screened in NYC and presented in Washington, DC']
+            },
+            {
+                id: 'ted',
+                lane: 'bottom',
+                year: '2023',
+                role: 'TED Speaker',
+                org: 'TED Conferences',
+                period: 'Jul 2023 - Dec 2023',
+                location: 'Pointe-à-Pitre, Guadeloupe',
+                type: 'Speaking',
+                size: 'major',
+                desc: 'Delivered a TED talk about responsible AI and how emerging technology can help the Caribbean realize its full potential.',
+                highlights: ['Connected AI ethics, Caribbean futures, creativity, and cultural empowerment', 'Shared a public-facing narrative about inclusive technology and responsible innovation']
+            },
+            {
+                id: 'mcgill',
+                lane: 'bottom',
+                year: '2023',
+                role: 'XR Instructor',
+                org: 'McGill University',
+                period: 'Aug 2023 - Aug 2024',
+                location: 'Montreal',
+                type: 'Education',
+                desc: 'Taught XR interaction design through McGill University in partnership with Circuit Stream.',
+                highlights: ['Focused on augmented reality, virtual reality, and interaction design', 'Helped students build practical XR design skills']
+            },
+            {
+                id: 'lightspeed',
+                lane: 'bottom',
+                year: '2023',
+                role: 'AI Advisor for C-Suite Leaders',
+                org: 'Lightspeed Commerce',
+                period: 'Nov 2023 - Dec 2023',
+                location: 'Montreal / Remote',
+                type: 'Advisory',
+                desc: 'Advised business owners and executives on responsible AI adoption and emerging technology ethics.',
+                highlights: ['Spoke to 100+ business owners and Lightspeed’s C-suite team', 'Framed practical AI implementation through an ethical lens']
+            },
+            {
+                id: 'umass',
+                lane: 'bottom',
+                year: '2023',
+                role: 'Lecturer',
+                org: 'University of Massachusetts Boston',
+                period: 'Nov 2023 - Nov 2024',
+                location: 'Boston / Remote',
+                type: 'Education',
+                desc: 'Lectured for the Computer Science Club at UMass Boston, sharing career experience and emerging technology perspectives.',
+                highlights: ['Returned for multiple lectures', 'Focused on helping students connect computer science with creative technology careers']
+            },
+            {
+                id: 'ccrf',
+                lane: 'bottom',
+                year: '2023',
+                role: 'Councillor',
+                org: 'Children’s Cancer Research Fund',
+                period: 'Aug 2023 - Dec 2025',
+                location: 'Remote',
+                type: 'Seasonal impact work',
+                desc: 'Used creative technology to help teens and kids facing life-threatening illnesses bring imagination to life.',
+                highlights: ['Supported music, video, animation, VR, game design, and creative empowerment activities', 'Participated in Camp Norden programming']
+            },
+            {
+                id: 'masterclass',
+                lane: 'bottom',
+                year: '2024',
+                role: 'AI Ethics Instructor',
+                org: 'MasterClass',
+                period: 'Jun 2024 - Present',
+                location: 'Los Angeles / Remote',
+                type: 'Education',
+                size: 'major',
+                desc: 'Appeared in Episode 3 of the official GenAI MasterClass, Ethics, AI, and the Future.',
+                highlights: ['Taught alongside Ethan Mollick, Don Allen III, and Allie K. Miller', 'Shared ways to automate routine tasks and shape AI positively for the future']
+            },
+            {
+                id: 'adobe-ambassador',
+                lane: 'bottom',
+                year: '2025',
+                role: 'Brand Ambassador & Educator',
+                org: 'Adobe',
+                period: 'Mar 2025 - Present',
+                location: 'Remote',
+                type: 'Creative education',
+                size: 'major',
+                desc: 'Partners with Adobe to educate creative and marketing communities about AI-powered creative tools and workflows.',
+                highlights: ['Educates around Adobe Firefly, Experience Platform Agent Orchestrator, and GenStudio for Performance Marketing', 'Spoke at Adobe’s San Francisco headquarters and Adobe MAX 2025']
+            },
+            {
+                id: 'dell-pro-max',
+                lane: 'bottom',
+                year: '2025',
+                role: 'Technical Expert & Creator',
+                org: 'Dell Technologies',
+                period: 'Dec 2025 - Present',
+                location: 'Remote',
+                type: 'Dell Pro Max Ambassador',
+                desc: 'Evaluates high-performance workstation hardware and documents advanced local AI, rendering, and creative technology workflows.',
+                highlights: ['Stress-tests the Dell Pro Max T2 Tower with Nvidia RTX Pro 6000 Blackwell GPU and 96 GB VRAM', 'Shares R&D breakthroughs in machine learning, Gaussian Splatting, NeRFs, and game engines', 'Provides direct technical feedback to Dell and Nvidia engineering teams on tools and hardware performance', 'Represents the program alongside 40 selected global experts at major technology conferences']
+            }
+        ];
 
-        if (focusToggle) {
-            // Toggle focus mode
-            focusToggle.addEventListener('click', (e) => {
-                const isActive = focusToggle.classList.toggle('active');
-                experienceSection.classList.toggle('focus-mode', isActive);
-                createSparks(sparkContainer, isActive ? 'purple' : 'orange');
+        const escapeHTML = (value) => String(value).replace(/[&<>"']/g, char => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        })[char]);
+
+        function renderExperienceTimeline() {
+            const tracks = {
+                top: document.getElementById('careerTopTrack'),
+                bottom: document.getElementById('careerBottomTrack')
+            };
+            if (!tracks.top || !tracks.bottom) return;
+
+            Object.values(tracks).forEach(track => { track.innerHTML = ''; });
+
+            const sortedItems = [...experienceItems].sort((a, b) => Number(a.year) - Number(b.year));
+
+            sortedItems.forEach(item => {
+                const node = document.createElement('button');
+                node.type = 'button';
+                node.className = `experience-node${item.size === 'small' ? ' small' : ''}`;
+                node.dataset.experienceId = item.id;
+                node.setAttribute('aria-label', `${item.role} at ${item.org}, ${item.period}`);
+                node.innerHTML = `
+                    <div class="experience-year">${escapeHTML(item.year)}</div>
+                    <div class="experience-role">${escapeHTML(item.role)}</div>
+                    <div class="experience-org">${escapeHTML(item.org)}</div>
+                `;
+                node.addEventListener('click', () => openExperienceModal(item.id));
+                tracks[item.lane].appendChild(node);
             });
 
-            // Sparks animation
-            function createSparks(container, colorSet) {
-                const colors = colorSet === 'purple'
-                    ? ['#8B5CF6', '#A78BFA', '#7C3AED']
-                    : ['#F59E0B', '#F97316', '#EF4444'];
-
-                for (let i = 0; i < 12; i++) {
-                    const spark = document.createElement('div');
-                    spark.className = 'spark';
-                    const angle = (i / 12) * Math.PI * 2;
-                    const velocity = 50 + Math.random() * 50;
-                    const tx = Math.cos(angle) * velocity;
-                    const ty = Math.sin(angle) * velocity;
-                    spark.style.setProperty('--tx', `${tx}px`);
-                    spark.style.setProperty('--ty', `${ty}px`);
-                    spark.style.background = colors[Math.floor(Math.random() * colors.length)];
-                    spark.style.boxShadow = `0 0 6px ${colors[Math.floor(Math.random() * colors.length)]}`;
-                    container.appendChild(spark);
-                    setTimeout(() => spark.remove(), 600);
-                }
-            }
+            requestAnimationFrame(() => {
+                Object.values(tracks).forEach(track => {
+                    const scrollContainer = track.parentElement;
+                    scrollContainer.scrollLeft = scrollContainer.scrollWidth;
+                });
+            });
         }
+
+        function openExperienceModal(id) {
+            const item = experienceItems.find(entry => entry.id === id);
+            const modal = document.getElementById('experienceModal');
+            if (!item || !modal) return;
+
+            document.getElementById('experienceModalKicker').textContent = item.type;
+            document.getElementById('experienceModalTitle').textContent = item.role;
+            document.getElementById('experienceModalOrg').textContent = item.org;
+            document.getElementById('experienceModalMeta').innerHTML = `
+                <span>${escapeHTML(item.period)}</span>
+                <span>${escapeHTML(item.location)}</span>
+            `;
+            document.getElementById('experienceModalDesc').textContent = item.desc;
+            document.getElementById('experienceModalHighlights').innerHTML = item.highlights.map(highlight => `<li>${escapeHTML(highlight)}</li>`).join('');
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeExperienceModal(e) {
+            if (e && e.target !== e.currentTarget) return;
+            const modal = document.getElementById('experienceModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        renderExperienceTimeline();
 
         // Sparks for CTA buttons (purple sparks)
         document.querySelectorAll('.spark-btn').forEach(btn => {
@@ -2149,6 +2681,7 @@
                 closeVideoModal();
                 closeUniversityModal();
                 closeMuseumModal();
+                closeExperienceModal();
                 closeMobileAppsModal();
             }
         });
@@ -2839,9 +3372,19 @@
             }
         });
 
+        let globeIsVisible = !('IntersectionObserver' in window);
+        if ('IntersectionObserver' in window) {
+            const globeObserver = new IntersectionObserver((entries) => {
+                globeIsVisible = entries.some(entry => entry.isIntersecting);
+                if (globeIsVisible) renderer.render(scene, camera);
+            }, { threshold: 0, rootMargin: '320px 0px' });
+            globeObserver.observe(globeContainer);
+        }
+
         // Animation loop
         function animate() {
             requestAnimationFrame(animate);
+            if (!globeIsVisible) return;
 
             if (autoRotate) {
                 targetRotationY += 0.002;
@@ -2881,6 +3424,7 @@
         function initMarquee(trackSelector, speed = 1) {
             const track = document.querySelector(trackSelector);
             if (!track) return;
+            let hasStarted = false;
 
             // Wait for images to load before calculating width
             const images = track.querySelectorAll('img');
@@ -2888,6 +3432,9 @@
             const totalImages = images.length;
 
             function startAnimation() {
+                if (hasStarted) return;
+                hasStarted = true;
+
                 let position = 0;
                 // Calculate the width of just the first half (original content)
                 const items = track.querySelectorAll('.brand-item, .press-item');
@@ -2898,13 +3445,20 @@
                 }
 
                 let isPaused = false;
+                let isVisible = !('IntersectionObserver' in window);
                 let lastTime = performance.now();
+                if ('IntersectionObserver' in window) {
+                    const marqueeObserver = new IntersectionObserver((entries) => {
+                        isVisible = entries.some(entry => entry.isIntersecting);
+                    }, { threshold: 0, rootMargin: '220px 0px' });
+                    marqueeObserver.observe(track.closest('section') || track);
+                }
 
                 function animate(currentTime) {
                     const deltaTime = currentTime - lastTime;
                     lastTime = currentTime;
 
-                    if (!isPaused) {
+                    if (!isPaused && isVisible) {
                         position -= speed * deltaTime * 0.12;
 
                         // Seamless reset when first set scrolls out
