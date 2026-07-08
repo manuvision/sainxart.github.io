@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PopColor Challenge | Manu.Vision</title>
+    <meta name="description" content="Open a PopColor challenge and try to beat today's score.">
+    <meta property="og:title" content="PopColor Challenge">
+    <meta property="og:description" content="Someone challenged you to beat their PopColor score before today's board resets.">
+    <meta property="og:url" content="https://manu.vision/colorpop/challenge/">
+    <link rel="icon" type="image/svg+xml" href="../../images/mv.svg">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #05050a;
+            --panel: #10111a;
+            --panel-border: #2a2d3d;
+            --text: #f8fafc;
+            --muted: #a7adbd;
+            --yellow: #ffd45a;
+            --purple: #a76bff;
+            --green: #58df74;
+        }
+        body {
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background:
+                radial-gradient(circle at 18% 12%, rgba(167, 107, 255, 0.24), transparent 32rem),
+                radial-gradient(circle at 88% 78%, rgba(88, 223, 116, 0.15), transparent 28rem),
+                var(--bg);
+            color: var(--text);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            padding: 24px;
+            text-align: center;
+        }
+        main {
+            width: min(460px, 100%);
+            background: var(--panel);
+            border: 2px solid var(--panel-border);
+            padding: 28px 20px 22px;
+        }
+        .brand {
+            color: var(--green);
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        h1 {
+            color: var(--yellow);
+            font-size: clamp(28px, 9vw, 42px);
+            line-height: 1;
+            margin-bottom: 14px;
+            text-transform: uppercase;
+        }
+        p {
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.55;
+            margin: 0 auto 18px;
+            max-width: 34ch;
+        }
+        a, button {
+            width: 100%;
+            display: block;
+            border: 2px solid var(--text);
+            background: var(--text);
+            color: var(--bg);
+            font: inherit;
+            font-weight: 900;
+            text-decoration: none;
+            text-transform: uppercase;
+            padding: 15px 14px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        a.secondary {
+            background: transparent;
+            color: var(--text);
+        }
+        .hint {
+            margin-top: 16px;
+            margin-bottom: 0;
+            font-size: 12px;
+            color: #6f7689;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="brand">PopColor</div>
+        <h1>Challenge Received</h1>
+        <p>Open PopColor to try today's board and beat the score before the reset.</p>
+        <button id="openApp" type="button">Open PopColor</button>
+        <a class="secondary" href="https://apps.apple.com/ca/app/popcolor/id6775361048">Download Free</a>
+        <p class="hint">If PopColor does not open automatically, tap the button above.</p>
+    </main>
+
+    <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            var appUrl = 'popcolor://challenge';
+            if (params.toString()) {
+                appUrl += '?' + params.toString();
+            }
+            var openButton = document.getElementById('openApp');
+            function openApp() {
+                window.location.href = appUrl;
+            }
+            openButton.addEventListener('click', openApp);
+            window.setTimeout(openApp, 250);
+        }());
+    </script>
+</body>
+</html>
