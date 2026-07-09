@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PopColor Support | Manu.Vision</title>
+    <meta name="description" content="Support, troubleshooting, PopColor+ restore help, and contact details for PopColor by Manu.Vision.">
+    <link rel="icon" type="image/svg+xml" href="../../images/mv.svg">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #070914;
+            --panel: #151a2a;
+            --panel-2: #1b2133;
+            --border: #31384f;
+            --text: #f8fafc;
+            --muted: #b9becd;
+            --dim: #7f879a;
+            --yellow: #ffd21e;
+            --purple: #d986ff;
+            --green: #67e673;
+            --blue: #26b6df;
+            --pink: #ff4f7e;
+            --black: #03050c;
+        }
+        body {
+            min-height: 100vh;
+            background:
+                linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                var(--bg);
+            background-size: 18px 18px;
+            color: var(--text);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            line-height: 1.6;
+            padding: 28px 16px 40px;
+            text-transform: none;
+        }
+        main {
+            width: min(980px, 100%);
+            margin: 0 auto;
+        }
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 30px;
+            color: var(--text);
+            font-weight: 900;
+            letter-spacing: 0.02em;
+            text-decoration: none;
+            text-transform: uppercase;
+        }
+        .brand img {
+            width: 30px;
+            height: 30px;
+            image-rendering: pixelated;
+        }
+        .brand span { color: var(--purple); }
+        .hero {
+            border: 2px solid var(--border);
+            background: var(--black);
+            padding: clamp(24px, 5vw, 52px);
+            box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.35);
+        }
+        .eyebrow {
+            display: inline-flex;
+            gap: 8px;
+            color: var(--green);
+            font-size: 0.82rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            margin-bottom: 14px;
+            text-transform: uppercase;
+        }
+        .eyebrow::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            margin-top: 6px;
+            background: var(--green);
+            box-shadow: 14px 0 0 var(--yellow), 28px 0 0 var(--purple);
+        }
+        h1, h2, h3 {
+            line-height: 1.1;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        h1 {
+            max-width: 760px;
+            font-size: clamp(2.6rem, 9vw, 5.8rem);
+            letter-spacing: 0;
+            margin-bottom: 18px;
+        }
+        h1 span { color: var(--yellow); }
+        .lede {
+            max-width: 720px;
+            color: var(--muted);
+            font-size: clamp(1rem, 2vw, 1.15rem);
+            font-weight: 700;
+        }
+        .quick-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 28px;
+        }
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 0 18px;
+            border: 2px solid var(--text);
+            background: var(--text);
+            color: var(--black);
+            font-weight: 900;
+            text-decoration: none;
+            text-transform: uppercase;
+            box-shadow: 4px 4px 0 rgba(255, 210, 30, 0.45);
+        }
+        .button.secondary {
+            background: var(--panel);
+            color: var(--text);
+            border-color: var(--border);
+            box-shadow: none;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            margin-top: 18px;
+        }
+        .section {
+            margin-top: 20px;
+            border: 2px solid var(--border);
+            background: var(--panel);
+            padding: clamp(20px, 3vw, 30px);
+        }
+        .section.full { grid-column: 1 / -1; }
+        h2 {
+            color: var(--yellow);
+            font-size: clamp(1.45rem, 3vw, 2rem);
+            margin-bottom: 12px;
+        }
+        h3 {
+            color: var(--text);
+            font-size: 1rem;
+            margin: 22px 0 8px;
+        }
+        p, li {
+            color: var(--muted);
+            font-size: 0.98rem;
+            font-weight: 650;
+        }
+        strong { color: var(--text); }
+        ul, ol {
+            padding-left: 1.4rem;
+            margin-top: 8px;
+        }
+        li + li { margin-top: 7px; }
+        a { color: var(--yellow); }
+        .stat-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 22px;
+        }
+        .stat {
+            border: 2px solid var(--border);
+            background: var(--panel-2);
+            padding: 16px;
+            min-height: 116px;
+        }
+        .stat b {
+            display: block;
+            color: var(--text);
+            font-size: 1.1rem;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        .stat:nth-child(1) b { color: var(--green); }
+        .stat:nth-child(2) b { color: var(--blue); }
+        .stat:nth-child(3) b { color: var(--purple); }
+        .note {
+            border-left: 8px solid var(--pink);
+            background: rgba(255, 79, 126, 0.08);
+            padding: 14px 16px;
+            margin-top: 16px;
+        }
+        .footer {
+            margin-top: 28px;
+            color: var(--dim);
+            font-size: 0.9rem;
+            font-weight: 800;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        @media (max-width: 760px) {
+            body { padding-top: 20px; }
+            .grid, .stat-row { grid-template-columns: 1fr; }
+            .button { width: 100%; }
+            .hero, .section { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <a class="brand" href="https://manu.vision">
+            <img src="../../images/mv.svg" alt="">
+            <span>Manu.Vision</span>
+        </a>
+
+        <header class="hero">
+            <div class="eyebrow">PopColor Player Support</div>
+            <h1>Need Help With <span>PopColor?</span></h1>
+            <p class="lede">
+                This is the official support page for PopColor on iPhone and iPad. Use it for gameplay questions, PopColor+ restore help, Game Center challenges, daily board issues, and bug reports.
+            </p>
+            <div class="quick-links" aria-label="Support quick links">
+                <a class="button" href="mailto:manuel.sainsily@gmail.com?subject=PopColor%20Support">Email Support</a>
+                <a class="button secondary" href="#troubleshooting">Troubleshooting</a>
+                <a class="button secondary" href="https://manu.vision/popcolor/privacypolicy/">Privacy Policy</a>
+            </div>
+        </header>
+
+        <div class="stat-row" aria-label="PopColor basics">
+            <div class="stat">
+                <b>Daily Board</b>
+                <p>A fresh score chase every day, built around a short 60-second run.</p>
+            </div>
+            <div class="stat">
+                <b>Pop 3+</b>
+                <p>Tap matching gems that touch horizontally, vertically, or diagonally.</p>
+            </div>
+            <div class="stat">
+                <b>Challenge</b>
+                <p>Share today's score with friends and challenge them before reset.</p>
+            </div>
+        </div>
+
+        <div class="grid">
+            <section class="section">
+                <h2>Gameplay</h2>
+                <p>
+                    PopColor is a compact arcade puzzle game. The goal is to score as high as possible before the timer ends.
+                </p>
+                <ul>
+                    <li>Pop groups of 3 or more matching gems.</li>
+                    <li>Connected gems can touch in any direction, including diagonally.</li>
+                    <li>Wrong taps can break a clean run, so scan before you pop.</li>
+                    <li>Training is available when you want to practice without pressure.</li>
+                </ul>
+            </section>
+
+            <section class="section">
+                <h2>Daily Challenges</h2>
+                <p>
+                    PopColor's social loop is asynchronous. Challenge links and Game Center challenges are about beating today's score before the board resets.
+                </p>
+                <ul>
+                    <li>If a challenge link has expired, PopColor opens today's board so you can play and challenge back.</li>
+                    <li>If Game Center is unavailable, check that you are signed in from iOS Settings.</li>
+                    <li>Leaderboards may need an internet connection to refresh.</li>
+                </ul>
+            </section>
+
+            <section class="section">
+                <h2>PopColor+</h2>
+                <p>
+                    PopColor+ is a one-time, non-consumable in-app purchase that supports the game and unlocks more features.
+                </p>
+                <ul>
+                    <li>Unlocks include unlimited runs, endless training, past scores, and trophies.</li>
+                    <li>If you already purchased PopColor+, open the PopColor+ page and tap <strong>Restore Purchase</strong>.</li>
+                    <li>Purchases, refunds, and billing are handled by Apple through your Apple Account.</li>
+                </ul>
+            </section>
+
+            <section class="section" id="troubleshooting">
+                <h2>Troubleshooting</h2>
+                <ol>
+                    <li>Update PopColor from the App Store.</li>
+                    <li>Restart PopColor, then restart your device if the issue keeps happening.</li>
+                    <li>For PopColor+, confirm you are using the Apple Account that purchased it and tap <strong>Restore Purchase</strong>.</li>
+                    <li>For Game Center, confirm you are signed in and have a working connection.</li>
+                    <li>If a shared challenge opens oddly, try opening it again after the app is fully closed.</li>
+                </ol>
+            </section>
+
+            <section class="section full">
+                <h2>Contact</h2>
+                <p>
+                    For support, bug reports, or App Store review questions, email <a href="mailto:manuel.sainsily@gmail.com?subject=PopColor%20Support">manuel.sainsily@gmail.com</a> with the subject <strong>PopColor Support</strong>.
+                </p>
+                <div class="note">
+                    <p>
+                        Please include your device model, iOS version, PopColor version, what you were doing, and a screenshot or screen recording if it helps explain the issue.
+                    </p>
+                </div>
+
+                <h3>Privacy</h3>
+                <p>
+                    PopColor does not require an account and does not use third-party advertising or tracking. Read the full <a href="https://manu.vision/popcolor/privacypolicy/">PopColor Privacy Policy</a>.
+                </p>
+            </section>
+        </div>
+
+        <p class="footer">A game by Manu.Vision, with help from his wife Cat.</p>
+    </main>
+</body>
+</html>
