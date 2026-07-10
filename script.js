@@ -20,7 +20,7 @@
         if (heroAtmosphere) {
             const maxParallax = Math.min(window.innerHeight * 0.14, 120);
             const parallaxY = Math.min(Math.max(scrollTop, 0) * 0.28, maxParallax);
-            heroAtmosphere.style.setProperty("--shark-parallax-y", `${parallaxY.toFixed(2)}px`);
+            heroAtmosphere.style.setProperty("--hero-bg-parallax-y", `${parallaxY.toFixed(2)}px`);
         }
     };
 
@@ -121,7 +121,7 @@
         const target = Number(match[1]);
         const suffix = match[2];
         const decimals = match[1].includes(".") ? match[1].split(".")[1].length : 0;
-        const duration = 3000;
+        const duration = 2000;
 
         window.setTimeout(() => {
             const start = performance.now();
@@ -154,7 +154,7 @@
             const gridEntry = entries.find((entry) => entry.isIntersecting);
             if (!gridEntry) return;
 
-            metrics.forEach((metric, index) => animateMetric(metric, index * 300));
+            metrics.forEach((metric, index) => animateMetric(metric, index * 100));
             observer.disconnect();
         }, { threshold: 0.18 });
 
@@ -402,6 +402,7 @@
     heroVisual.addEventListener("pointerleave", () => resumeAutonomousLens());
 
     heroVisual.addEventListener("pointerdown", (event) => {
+        if (event.target.closest(".current-role")) return;
         if (event.button !== 0 || event.isPrimary === false) return;
         window.clearTimeout(lensResumeTimer);
         pointerControlsLens = true;
@@ -494,100 +495,6 @@
             universityDialog.showModal();
             body.classList.add("is-locked");
         });
-    });
-
-    const exhibitionData = {
-        artechouse: {
-            meta: "New York City · ARTECHOUSE",
-            date: "October 9, 2025",
-            datetime: "2025-10-09",
-            title: "Protopica at ARTECHOUSE",
-            description: "A 270° immersive ocean world combining an 18K generative canvas with spatial audio to surround visitors with a Caribbean future.",
-            image: "images/2026/protopica-artechouse.webp",
-            alt: "Visitors moving through Protopica's immersive ocean world at ARTECHOUSE in New York",
-            facts: [["270°", "Projection"], ["18K", "Canvas"], ["Spatial", "Audio"]]
-        },
-        sonar: {
-            meta: "Barcelona · Sónar+D",
-            date: "June 12–14, 2025",
-            datetime: "2025-06-12",
-            title: "Protopica at Sónar+D",
-            description: "An EEG-responsive film and installation where attention, calm and engagement shaped the visual system in real time, turning biometric input into a shared story.",
-            image: "images/2026/protopica-sonar-audience.jpeg",
-            alt: "A visitor watching Protopica inside the floral Sónar+D installation in Barcelona",
-            facts: [["EEG", "Live input"], ["3", "Signals tracked"], ["Real-time", "Film system"]]
-        },
-        viff: {
-            meta: "Vancouver · VIFF Signals",
-            date: "September 27–October 6, 2024",
-            datetime: "2024-09-27",
-            title: "Protopica at VIFF Signals",
-            description: "Protopica expanded from generative cinema into an immersive cultural platform, bringing AI world-building and a living archive rooted in Guadeloupe into physical space.",
-            image: "images/2026/protopica-sonar.jpg",
-            alt: "Visitors experiencing the Protopica installation at VIFF Signals in Vancouver",
-            facts: [["Generative", "Cinema"], ["Immersive", "Installation"], ["Living", "Archive"]]
-        }
-    };
-
-    const exhibitionTabs = [...document.querySelectorAll("[data-exhibition]")];
-    const exhibitionPanel = document.getElementById("exhibitionPanel");
-    const exhibitionImage = document.getElementById("exhibitionImage");
-    const exhibitionMeta = document.getElementById("exhibitionMeta");
-    const exhibitionDate = document.getElementById("exhibitionDate");
-    const exhibitionTitle = document.getElementById("exhibitionTitle");
-    const exhibitionDescription = document.getElementById("exhibitionDescription");
-    const exhibitionFactElements = [
-        [document.getElementById("exhibitionFactOne"), document.getElementById("exhibitionLabelOne")],
-        [document.getElementById("exhibitionFactTwo"), document.getElementById("exhibitionLabelTwo")],
-        [document.getElementById("exhibitionFactThree"), document.getElementById("exhibitionLabelThree")]
-    ];
-
-    const showExhibition = (key, { focus = false } = {}) => {
-        const data = exhibitionData[key];
-        const activeTab = exhibitionTabs.find((tab) => tab.dataset.exhibition === key);
-        if (!data || !activeTab || !exhibitionPanel) return;
-
-        exhibitionTabs.forEach((tab) => {
-            const isActive = tab === activeTab;
-            tab.classList.toggle("is-active", isActive);
-            tab.setAttribute("aria-selected", String(isActive));
-            tab.tabIndex = isActive ? 0 : -1;
-        });
-
-        exhibitionImage.src = data.image;
-        exhibitionImage.alt = data.alt;
-        exhibitionMeta.textContent = data.meta;
-        exhibitionDate.textContent = data.date;
-        exhibitionDate.dateTime = data.datetime;
-        exhibitionTitle.textContent = data.title;
-        exhibitionDescription.textContent = data.description;
-        data.facts.forEach(([value, label], index) => {
-            exhibitionFactElements[index][0].textContent = value;
-            exhibitionFactElements[index][1].textContent = label;
-        });
-        exhibitionPanel.setAttribute("aria-labelledby", activeTab.id);
-        exhibitionPanel.classList.remove("is-updating");
-        window.requestAnimationFrame(() => exhibitionPanel.classList.add("is-updating"));
-        if (focus) activeTab.focus();
-    };
-
-    exhibitionTabs.forEach((tab, index) => {
-        tab.addEventListener("click", () => showExhibition(tab.dataset.exhibition));
-        tab.addEventListener("keydown", (event) => {
-            let nextIndex;
-            if (event.key === "ArrowRight") nextIndex = (index + 1) % exhibitionTabs.length;
-            if (event.key === "ArrowLeft") nextIndex = (index - 1 + exhibitionTabs.length) % exhibitionTabs.length;
-            if (event.key === "Home") nextIndex = 0;
-            if (event.key === "End") nextIndex = exhibitionTabs.length - 1;
-            if (nextIndex === undefined) return;
-            event.preventDefault();
-            showExhibition(exhibitionTabs[nextIndex].dataset.exhibition, { focus: true });
-        });
-    });
-
-    Object.values(exhibitionData).forEach(({ image }) => {
-        const preload = new Image();
-        preload.src = image;
     });
 
     const dialogTriggers = document.querySelectorAll("[data-dialog]");

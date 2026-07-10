@@ -32,7 +32,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260710-68">
+    <link rel="stylesheet" href="styles.css?v=20260710-104">
     <script>document.documentElement.classList.add("js");</script>
 
     <script type="application/ld+json">
@@ -80,7 +80,8 @@
 
         <nav class="nav-links" id="navLinks" aria-label="Primary navigation">
             <a href="#proof">Impact</a>
-            <a href="#practice">Practice</a>
+            <a href="#practice">Focus</a>
+            <a href="#exhibitions">Exhibitions</a>
             <a href="#lab">Lab</a>
             <a href="#academia">Teaching</a>
             <a href="#partners">Partners</a>
@@ -88,23 +89,22 @@
             <a href="#testimonials">Testimonials</a>
         </nav>
 
-        <a class="nav-contact" href="#contact">Let’s talk <span aria-hidden="true">↗</span></a>
+            <a class="nav-contact" href="#contact">Let’s talk</a>
     </header>
 
     <main id="main" tabindex="-1">
         <section class="hero" id="top" aria-labelledby="hero-title">
             <div class="hero-aurora" aria-hidden="true"></div>
             <div class="hero-atmosphere" id="heroAtmosphere" aria-hidden="true">
-                <img id="heroAtmosphereSource" src="images/2026/hero-sharks.webp" alt="">
+                <img id="heroAtmosphereSource" src="images/2026/hero-speaking-bg.png" alt="">
             </div>
 
             <div class="hero-copy">
                 <p class="hero-role">Manuel Sainsily <span aria-hidden="true">/</span> Creative Director &amp; Speaker</p>
                 <h1 id="hero-title">I design, teach<br>&amp; speak about<br><em>art + tech + culture.</em></h1>
-                <p class="hero-lede">Human-centred ideas and experiences across AI, XR, 3D, BCI and haptics.</p>
+                <p class="hero-lede">Human-centred ideas and experiences <span class="hero-lede__mobile-line">across AI, XR, 3D, BCI and haptics.</span></p>
                 <div class="hero-actions">
                     <a class="button button--sun" href="#contact">Get in touch <span aria-hidden="true">↓</span></a>
-                    <a class="button button--ghost" href="https://www.youtube.com/watch?v=zORi0X9iO7I" target="_blank" rel="noopener noreferrer">Watch TEDx <span aria-hidden="true">↗</span></a>
                 </div>
             </div>
 
@@ -117,21 +117,19 @@
                 <div class="clarity-image" id="clarityImage" aria-hidden="true"></div>
                 <canvas id="glitchCanvas" aria-hidden="true"></canvas>
                 <div class="clarity-lens" id="clarityLens" aria-hidden="true">
-                    <span>Face / Detected</span>
+                    <span>Detecting / Face</span>
                     <span id="spyCoordinates">X 48.0 / Y 31.0</span>
                     <i></i>
                 </div>
-                <figcaption>
-                    <span>TEDx Pointe-à-Pitre</span>
-                    <span>Follow the signal</span>
-                </figcaption>
+                <button class="current-role" type="button" data-dialog="bioDialog" aria-haspopup="dialog">
+                    <div class="current-role__meta">
+                        <span class="current-role__label">Current Role</span>
+                        <strong>Sr. Creative Technologist</strong>
+                        <span>Adobe · Pro Design</span>
+                    </div>
+                    <span class="current-role__bio">Read bio</span>
+                </button>
             </figure>
-
-            <a class="current-role" href="https://lnkd.in/p/gNZVvHFy" target="_blank" rel="noopener noreferrer">
-                <span class="current-role__label">Current Role</span>
-                <strong>Sr. Creative Technologist</strong>
-                <span>Adobe · Pro Design</span>
-            </a>
 
             <div class="hero-index" aria-hidden="true">MV / 2026</div>
         </section>
@@ -141,7 +139,7 @@
                 <header class="proof-header">
                     <div>
                         <p class="eyebrow">Impact / Data</p>
-                        <h2 id="proof-title">The work matters.<br><em>The numbers measure it.</em></h2>
+                        <h2 id="proof-title">Human-centered<br><em>global impact.</em></h2>
                     </div>
                 </header>
 
@@ -161,7 +159,7 @@
         <section class="practice" id="practice" aria-labelledby="practice-title">
             <div class="section-shell">
                 <header class="split-heading">
-                    <p class="eyebrow">Practice / Focus</p>
+                    <p class="eyebrow">Focus / Practice</p>
                     <h2 id="practice-title"><span class="title-lockup">Three things I do.</span><br><em>One point of view.</em></h2>
                 </header>
 
@@ -171,15 +169,14 @@
                             <source srcset="images/2026/masterclass.avif" type="image/avif">
                             <img src="images/2026/masterclass.jpg" alt="Manuel teaching the first Generative AI MasterClass course" width="1600" height="848" loading="lazy" decoding="async">
                         </picture>
-                        <span class="practice-card__copy"><small>Education</small><span class="practice-card__number">MasterClass, San Francisco (2024)</span><strong>I make complexity<br>feel clear.</strong></span>
+                        <span class="practice-card__copy"><small>01 / Education</small><strong>I make complexity<br>feel clear.</strong></span>
                     </button>
 
                     <button class="practice-card practice-card--speaking" type="button" data-dialog="speakingDialog" aria-haspopup="dialog" aria-label="Speaking — view highlights">
                         <picture>
-                            <source srcset="images/2026/speaking-audience.avif" type="image/avif">
-                            <img src="images/2026/speaking-audience.jpg" alt="Manuel speaking to an audience with a microphone" width="1344" height="768" loading="lazy" decoding="async">
+                            <img src="images/2026/focus-speaking-unite.jpg" alt="Manuel speaking to a large audience at Unite Tokyo" width="3890" height="2918" loading="lazy" decoding="async">
                         </picture>
-                        <span class="practice-card__copy"><small>Speaking</small><span class="practice-card__number">Unite, Tokyo (2025)</span><strong>I inspire large<br>audiences.</strong></span>
+                        <span class="practice-card__copy"><small>02 / Speaking</small><strong>I inspire large<br>audiences.</strong></span>
                     </button>
 
                     <button class="practice-card practice-card--immersive" type="button" data-dialog="immersiveDialog" aria-haspopup="dialog" aria-label="Creative direction — view immersive highlights">
@@ -187,8 +184,87 @@
                             <source srcset="images/2026/eeg-immersive.avif" type="image/avif">
                             <img src="images/2026/eeg-immersive.jpg" alt="Manuel wearing an EEG headset inside a purple immersive installation" width="1080" height="1446" loading="lazy" decoding="async">
                         </picture>
-                        <span class="practice-card__copy"><small>Creative Direction</small><span class="practice-card__number">VIFF, Vancouver (2024)</span><strong>I create immersive<br>experiences.</strong></span>
+                        <span class="practice-card__copy"><small>03 / Creative Direction</small><strong>I create immersive<br>experiences.</strong></span>
                     </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="exhibitions" id="exhibitions" aria-labelledby="exhibitions-title">
+            <div class="section-shell">
+                <header class="exhibitions-heading">
+                    <div>
+                        <p class="eyebrow">Exhibitions / Installations</p>
+                        <h2 id="exhibitions-title">Immersive worlds<br><em>people step into.</em></h2>
+                    </div>
+                </header>
+
+                <div class="exhibition-card-grid" aria-label="Selected exhibitions and screenings">
+                    <article class="exhibition-card exhibition-card--wide">
+                        <picture><img src="images/2026/protopica-artechouse.webp" alt="Visitors moving through Protopica's immersive ocean world at ARTECHOUSE in New York" width="611" height="385" loading="lazy" decoding="async"></picture>
+                        <div class="exhibition-card__copy">
+                            <p class="eyebrow">New York City · ARTECHOUSE</p>
+                            <time datetime="2025-10-09">Oct 9, 2025 - Present (Active)</time>
+                            <h3>ARTECHOUSE</h3>
+                            <p>A 270° immersive 3D ocean world with spatial audio surrounding visitors with a Caribbean future.</p>
+                            <dl><div><dt>40K+</dt><dd>Audience</dd></div><div><dt>3D/18K/270°</dt><dd>Technology</dd></div><div><dt>OTOY</dt><dd>Sponsor</dd></div></dl>
+                        </div>
+                    </article>
+
+                    <article class="exhibition-card exhibition-card--medium exhibition-card--viff">
+                        <picture><img src="images/2026/sonar-installation-view.jpeg" alt="A visitor watching Protopica inside the Sónar+D installation in Barcelona" width="2000" height="1333" loading="lazy" decoding="async"></picture>
+                        <div class="exhibition-card__copy">
+                            <p class="eyebrow">Barcelona · Sónar+D</p>
+                            <time datetime="2025-06-12">June 12–14, 2025</time>
+                            <h3>Sónar+D</h3>
+                            <p>An EEG-responsive film and installation where attention, calm and engagement shaped the visual system in real time.</p>
+                            <dl><div><dt>52K+</dt><dd>Audience</dd></div><div><dt>BCI/EEG</dt><dd>Technology</dd></div><div><dt>Sónar+D</dt><dd>Sponsor</dd></div></dl>
+                        </div>
+                    </article>
+
+                    <article class="exhibition-card exhibition-card--caribeano">
+                        <picture><img src="images/2026/sora-selects-heic.jpg" alt="Manuel and will.i.am at Sora Selects in New York" width="1320" height="1589" loading="lazy" decoding="async"></picture>
+                        <div class="exhibition-card__copy">
+                            <p class="eyebrow">New York City · Sora Selects</p>
+                            <time datetime="2024-07/2025-02">July 2024–February 2025</time>
+                            <h3>Sora Selects</h3>
+                            <p>First-wave artists to co-release an AI short film with OpenAI, screened at the Metrograph Theatre in NYC.</p>
+                            <dl><div><dt>1M+</dt><dd>Audience</dd></div><div><dt>AI Film</dt><dd>Technology</dd></div><div><dt>OpenAI</dt><dd>Sponsor</dd></div></dl>
+                        </div>
+                    </article>
+
+                    <article class="exhibition-card exhibition-card--medium exhibition-card--sonar">
+                        <picture><img src="images/2026/protopica-sonar.jpg" alt="Visitors experiencing the Protopica installation at VIFF Signals in Vancouver" width="1536" height="864" loading="lazy" decoding="async"></picture>
+                        <div class="exhibition-card__copy">
+                            <p class="eyebrow">Vancouver · VIFF Signals</p>
+                            <time datetime="2024-09-27">September 27–October 6, 2024</time>
+                            <h3>VIFF Signals</h3>
+                            <p>Protopica expanded from generative cinema into an immersive cultural platform rooted in AI world-building.</p>
+                            <dl><div><dt>1.5K+</dt><dd>Audience</dd></div><div><dt>BCI/EEG</dt><dd>Technology</dd></div><div><dt>Signals</dt><dd>Sponsor</dd></div></dl>
+                        </div>
+                    </article>
+
+                    <article class="exhibition-card exhibition-card--meta">
+                        <picture><img src="images/2026/sparkar-exhibition.jpg" alt="Manuel at the Oculus Gallery in the World Trade Center in New York" width="969" height="624" loading="lazy" decoding="async"></picture>
+                        <div class="exhibition-card__copy">
+                            <p class="eyebrow">New York City · Oculus Gallery</p>
+                            <time datetime="2022-10">October 2022</time>
+                            <h3>SparkAR Exhibition</h3>
+                            <p>The first haptics AR filter made with SparkAR, exhibited at the Oculus Gallery at the World Trade Center with Meta.</p>
+                            <dl><div><dt>Private</dt><dd>Audience</dd></div><div><dt>SparkAR</dt><dd>Technology</dd></div><div><dt>Meta</dt><dd>Sponsor</dd></div></dl>
+                        </div>
+                    </article>
+
+                    <article class="exhibition-card">
+                        <picture><img src="images/2026/caribeano-futurisme-stage.jpeg" alt="Caribéano-futurisme opening moment at Afromusée with Manuel on stage" width="2048" height="1365" loading="lazy" decoding="async"></picture>
+                        <div class="exhibition-card__copy">
+                            <p class="eyebrow">Montréal · Afromusée</p>
+                            <time datetime="2022-12-01">December 1–11, 2022</time>
+                            <h3>Caribéano-futurisme</h3>
+                            <p>An exhibition blending mixed reality, artificial intelligence and live performance through Caribbean futurism.</p>
+                            <dl><div><dt>1K+</dt><dd>Audience</dd></div><div><dt>AI/Art</dt><dd>Technology</dd></div><div><dt>OpenAI</dt><dd>Sponsor</dd></div></dl>
+                        </div>
+                    </article>
                 </div>
             </div>
         </section>
@@ -202,17 +278,25 @@
                 <div class="lab-grid">
                     <button class="lab-card lab-card--apps" type="button" data-dialog="appsDialog" aria-haspopup="dialog" aria-label="Open Manuel's Haptic Apps">
                         <span class="app-icons" aria-hidden="true"><img src="images/projects/popcolor-icon.png" alt=""><img src="images/projects/echoorb-icon.png" alt=""></span>
-                        <span><small>Games &amp; Apps</small><strong>Haptic Apps</strong></span><b aria-hidden="true">↗</b>
+                        <span><small>Mobile Games &amp; Apps</small><strong>Haptic Apps</strong></span><b aria-hidden="true">↗</b>
                     </button>
                     <a class="lab-card" href="dreamart/">
                         <video autoplay muted loop playsinline preload="metadata" poster="images/2026/dream-art.png" aria-label="Dream Art sleep data sculptures in motion">
                             <source src="dreamart/trailer.mp4" type="video/mp4">
                         </video>
-                        <span><small>Biometric Data Driven</small><strong>Dream Art</strong></span><b aria-hidden="true">↗</b>
+                        <span><small>Biometric Data Driven</small><strong>Daily Dream Art</strong></span><b aria-hidden="true">↗</b>
+                    </a>
+                    <a class="lab-card lab-card--cuff" href="https://punchcut.com/immersion/" target="_blank" rel="noopener noreferrer">
+                        <picture><img src="images/2026/5g-haptic-cuff.png" alt="A glowing haptic cuff prototype worn on a wrist" width="1816" height="1378" loading="lazy" decoding="async"></picture>
+                        <span><small>Product Prototype</small><strong>5G Haptic Cuff</strong></span><b aria-hidden="true">↗</b>
                     </a>
                     <a class="lab-card lab-card--folklore" href="https://manu.vision/folklore/" target="_blank" rel="noopener noreferrer">
                         <picture><img src="images/2026/folklore.jpg" alt="A creature from the Caribbean Folklore digital bestiary" width="893" height="1600" loading="lazy" decoding="async"></picture>
                         <span><small>Ancestral Tales</small><strong>Caribbean Folklore</strong></span><b aria-hidden="true">↗</b>
+                    </a>
+                    <a class="lab-card lab-card--protopica" href="https://protopica.com/" target="_blank" rel="noopener noreferrer">
+                        <picture><img src="images/2026/protopica-logo.png" alt="Protopica butterfly logo on a dithered blue and red background" width="1080" height="1080" loading="lazy" decoding="async"></picture>
+                        <span><small>Heritage Preservation</small><strong>Protopica</strong></span><b aria-hidden="true">↗</b>
                     </a>
                     <a class="lab-card lab-card--haptics" href="https://thehapticsclub.com/" target="_blank" rel="noopener noreferrer">
                         <div class="lab-art lab-art--haptics" aria-hidden="true">
@@ -255,7 +339,7 @@
                 <header class="section-line academia-heading">
                     <div>
                         <p class="eyebrow">Teaching / Academia</p>
-                        <h2 id="academia-title">University Lectures<br><em>&amp; Workshops.</em></h2>
+                        <h2 id="academia-title">University lectures<br><em>&amp; workshops.</em></h2>
                     </div>
                 </header>
 
@@ -359,7 +443,7 @@
                     </li>
                     <li>
                         <time>2021—2026</time><i aria-hidden="true"></i>
-                        <article><small>Unity</small><strong>XR Design · Advocacy</strong><p>Led teams, shaped real-time 3D products and took the work on stage.</p></article>
+                        <article><small>Unity</small><strong>XR Design Lead · Sr. Advocate</strong><p>Led teams, shaped real-time 3D products and took the work on stage.</p></article>
                     </li>
                     <li class="career-track__current">
                         <time>2026—Now</time><i aria-hidden="true"></i>
@@ -379,7 +463,7 @@
                 <div class="testimonials-grid" aria-label="Testimonials from 5 collaborators">
                     <figure class="testimonial-card">
                         <blockquote>“Manu's lecture at my Stanford d.school class on AI prototyping and XR was truly inspiring. He brought a rare blend of visionary thinking and practical know-how, and it was incredible to see students immediately applying his methods with both creativity and confidence.”</blockquote>
-                        <figcaption><strong>Payam Tabrizian, PhD</strong><span>Head of Design, Autonomous Mobility @ Uber · Teaching XR Design @ Stanford</span></figcaption>
+                        <figcaption><strong>Payam Tabrizian, PhD</strong><span>Head of Design, Uber · XR Design, Stanford</span></figcaption>
                     </figure>
                     <figure class="testimonial-card">
                         <blockquote>“Manuel's presentations are simply the best! He gave a series of guest lectures on AI and XR for cultural heritage preservation, and every single time completely wowed the audience. Amazing content and fantastic delivery!”</blockquote>
@@ -387,11 +471,11 @@
                     </figure>
                     <figure class="testimonial-card">
                         <blockquote>“It was amazing to see how artists Manuel Sainsily and Will Selviz used Sora as part of their creative process for their short film Protopica — a powerful demonstration of the transformative role AI is playing in our society.”</blockquote>
-                        <figcaption><strong>Kevin Weil</strong><span>VP of Product, OpenAI · Board Member, Cisco</span></figcaption>
+                        <figcaption><strong>Kevin Weil</strong><span>VP of Product, OpenAI</span></figcaption>
                     </figure>
                     <figure class="testimonial-card">
                         <blockquote>“Manuel and Will's collaboration with OpenAI demonstrates how AI can be a powerful tool for cultural preservation. Their work pushes the boundaries of what's possible while respecting and preserving the richness of our global cultural heritage.”</blockquote>
-                        <figcaption><strong>Robert F. Smith</strong><span>Founder &amp; CEO, Vista Equity Partners</span></figcaption>
+                        <figcaption><strong>Robert F. Smith</strong><span>Founder &amp; CEO, Vista Equity</span></figcaption>
                     </figure>
                     <figure class="testimonial-card">
                         <blockquote>“Manu has an unusual mix of talents — a skilled designer who can code, but what sets him apart is his leadership qualities. He cares deeply about team unity and consistently communicates with empathy, balance, and encouragement.”</blockquote>
@@ -404,8 +488,8 @@
         <section class="contact" id="contact" aria-labelledby="contact-title">
             <div class="section-shell contact-shell">
                 <p class="eyebrow">Get in touch / Contact</p>
-                <h2 id="contact-title">Let’s build the<br><em>future together.</em></h2>
-                <a class="contact-link" href="mailto:manuel.sainsily@gmail.com">manuel.sainsily@gmail.com <span aria-hidden="true">↗</span></a>
+                <h2 id="contact-title">Let’s build<br><em>the future together.</em></h2>
+                <a class="contact-link" href="mailto:hello@manu.vision">Send Email</a>
                 <div class="socials">
                     <a href="https://www.linkedin.com/in/manuvision" target="_blank" rel="noopener noreferrer">LinkedIn</a>
                     <a href="https://www.instagram.com/manu.vision" target="_blank" rel="noopener noreferrer">Instagram</a>
@@ -426,9 +510,19 @@
             <div><p class="eyebrow">01 / Education</p><h2 id="educationDialogTitle">I make complexity<br><em>feel clear.</em></h2></div>
             <div class="dialog-body">
                 <p class="dialog-lede">Courses, workshops and learning experiences that turn emerging technology into creative confidence.</p>
-                <ul><li>Co-created MasterClass’s first Generative AI course, ranked among its most watched releases.</li><li>Designed learning for creators, product teams and executives across AI, XR and real-time 3D.</li><li>Connects technical systems to memorable stories, examples and hands-on practice.</li></ul>
-                <a class="dialog-link" href="mailto:manuel.sainsily@gmail.com?subject=Education%20and%20workshop%20inquiry">Build a learning experience <span aria-hidden="true">↗</span></a>
+                <ul><li>Co-created <a href="https://www.masterclass.com/series/achieve-more-with-gen-ai/episodes/ethics-ai-and-the-future" target="_blank" rel="noopener noreferrer">MasterClass’s</a> first Generative AI course, ranked among its most watched releases.</li><li>Designed learning for creators, product teams and executives across AI, XR and real-time 3D.</li><li>Connects technical systems to memorable stories, examples and hands-on practice.</li></ul>
+                <a class="dialog-link" href="https://www.youtube.com/watch?v=UjLkWIT12_Q&amp;t=34s" target="_blank" rel="noopener noreferrer">Watch Skillshare x Mozilla interview <span aria-hidden="true">↗</span></a>
             </div>
+        </div>
+    </dialog>
+
+    <dialog class="detail-dialog detail-dialog--bio" id="bioDialog" aria-labelledby="bioDialogTitle">
+        <form method="dialog"><button class="dialog-close" aria-label="Close bio"><span aria-hidden="true">×</span></button></form>
+        <div class="bio-copy">
+            <p class="eyebrow" id="bioDialogTitle">Bio / Manuel Sainsily</p>
+            <p><strong>Manuel Sainsily</strong> is a Creative Director who designs, teaches, and speaks about the intersection of art, technology, and culture, with a focus on world-building and storytelling. Born in Guadeloupe and based in Montreal, he has spent more than 15 years building products and emerging technologies at IBM, Immersion, Unity, and Adobe, where his work spans artificial intelligence, XR, haptics, and design systems.</p>
+            <p>A TED speaker and guest lecturer at Harvard, MIT, Oxford, Stanford, Columbia, McGill, and other leading universities, Manuel co-created MasterClass's first Generative AI course in 2024, now among the platform's five most-watched courses. His work exploring cultural heritage preservation, real-time 3D, and brain-computer interfaces has reached more than 20 million people through immersive exhibitions, films, and interactive experiences.</p>
+            <p>Recognized with the Mozilla Rise25 Award, Manuel advises organizations and audiences worldwide on designing a more human-centered future.</p>
         </div>
     </dialog>
 
@@ -439,7 +533,10 @@
             <div class="dialog-body">
                 <p class="dialog-lede">Keynotes, panels and live demonstrations that bring large audiences into the idea.</p>
                 <ul><li>TEDx speaker with appearances from Tokyo and Abu Dhabi to GDC and Unite.</li><li>Talks connect human-centred design to AI, XR, BCI, haptics and cultural preservation.</li><li>Equally comfortable with a live prototype, an executive room or a global broadcast.</li></ul>
-                <a class="dialog-link" href="mailto:manuel.sainsily@gmail.com">Invite Manuel to speak <span aria-hidden="true">↗</span></a>
+                <div class="dialog-actions">
+                    <a class="dialog-link" href="https://youtu.be/8ZIdejTiXAE?t=2682" target="_blank" rel="noopener noreferrer">Watch Unite keynote <span aria-hidden="true">↗</span></a>
+                    <a class="dialog-link" href="https://www.youtube.com/watch?v=zORi0X9iO7I" target="_blank" rel="noopener noreferrer">Watch TED talk <span aria-hidden="true">↗</span></a>
+                </div>
             </div>
         </div>
     </dialog>
@@ -450,25 +547,13 @@
             <div><p class="eyebrow">03 / Creative Direction</p><h2 id="immersiveDialogTitle">I create immersive<br><em>experiences.</em></h2></div>
             <div class="dialog-body">
                 <p class="dialog-lede">Narrative, visual systems and multisensory direction for cultural and emerging-technology experiences.</p>
-                <div class="exhibition-tabs" role="tablist" aria-label="Select an exhibition">
-                    <button id="exhibitionTabArtechouse" class="is-active" type="button" role="tab" aria-selected="true" aria-controls="exhibitionPanel" data-exhibition="artechouse"><span>NYC</span><strong>ARTECHOUSE</strong></button>
-                    <button id="exhibitionTabSonar" type="button" role="tab" aria-selected="false" aria-controls="exhibitionPanel" tabindex="-1" data-exhibition="sonar"><span>Barcelona</span><strong>Sónar+D</strong></button>
-                    <button id="exhibitionTabViff" type="button" role="tab" aria-selected="false" aria-controls="exhibitionPanel" tabindex="-1" data-exhibition="viff"><span>Vancouver</span><strong>VIFF Signals</strong></button>
-                </div>
-                <article class="exhibition-panel" id="exhibitionPanel" role="tabpanel" aria-labelledby="exhibitionTabArtechouse" aria-live="polite">
-                    <div class="exhibition-media"><img id="exhibitionImage" src="images/2026/protopica-artechouse.webp" alt="Visitors moving through Protopica's immersive ocean world at ARTECHOUSE in New York" width="426" height="240"></div>
-                    <div class="exhibition-panel__copy">
-                        <p class="eyebrow" id="exhibitionMeta">New York City · ARTECHOUSE</p>
-                        <time class="exhibition-date" id="exhibitionDate" datetime="2025-10-09">October 9, 2025</time>
-                        <h3 id="exhibitionTitle">Protopica at ARTECHOUSE</h3>
-                        <p id="exhibitionDescription">A 270° immersive ocean world combining an 18K generative canvas with spatial audio to surround visitors with a Caribbean future.</p>
-                        <dl class="exhibition-facts">
-                            <div><dt id="exhibitionFactOne">270°</dt><dd id="exhibitionLabelOne">Projection</dd></div>
-                            <div><dt id="exhibitionFactTwo">18K</dt><dd id="exhibitionLabelTwo">Canvas</dd></div>
-                            <div><dt id="exhibitionFactThree">Spatial</dt><dd id="exhibitionLabelThree">Audio</dd></div>
-                        </dl>
-                    </div>
-                </article>
+                <ul>
+                    <li>Directed exhibitions and screenings across New York, Barcelona, Vancouver and Montréal.</li>
+                    <li>Built immersive systems using 3D, XR, BCI, EEG, SparkAR, spatial audio, generative film and AI world-building.</li>
+                    <li>Expanded Protopica from a short film into physical installations, museum programming and cultural platforms.</li>
+                    <li>Selected moments include ARTECHOUSE, Sónar+D, Sora Selects, VIFF Signals, Meta/Oculus Gallery and Caribéano-futurisme.</li>
+                </ul>
+                <a class="dialog-link" href="#exhibitions">See exhibitions <span aria-hidden="true">↓</span></a>
             </div>
         </div>
     </dialog>
@@ -497,6 +582,6 @@
         </div>
     </dialog>
 
-    <script src="script.js?v=20260710-34" defer></script>
+    <script src="script.js?v=20260710-37" defer></script>
 </body>
 </html>
