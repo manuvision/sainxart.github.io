@@ -33,7 +33,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260710-148">
+    <link rel="stylesheet" href="styles.css?v=20260711-150">
     <script>document.documentElement.classList.add("js");</script>
 
     <script type="application/ld+json">
@@ -476,14 +476,20 @@
 
         <section class="contact" id="contact" aria-labelledby="contact-title">
             <div class="section-shell contact-shell">
-                <p class="eyebrow">Get in touch / Contact</p>
-                <h2 id="contact-title">Let’s build<br><em>the future together.</em></h2>
-                <a class="contact-link" href="mailto:hello@manu.vision">Contact</a>
-                <div class="socials">
-                    <a href="https://www.linkedin.com/in/manuvision" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-                    <a href="https://www.instagram.com/manu.vision" target="_blank" rel="noopener noreferrer">Instagram</a>
-                    <a href="https://beacons.ai/manuvision" target="_blank" rel="noopener noreferrer">All links</a>
+                <div class="contact-copy">
+                    <p class="eyebrow">Get in touch / Contact</p>
+                    <h2 id="contact-title">Let’s build<br><em>the future together.</em></h2>
+                    <a class="contact-link" href="mailto:hello@manu.vision">Contact</a>
+                    <div class="socials">
+                        <a href="https://www.linkedin.com/in/manuvision" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                        <a href="https://www.instagram.com/manu.vision" target="_blank" rel="noopener noreferrer">Instagram</a>
+                        <a href="https://beacons.ai/manuvision" target="_blank" rel="noopener noreferrer">All links</a>
+                    </div>
                 </div>
+                <figure class="contact-pointcloud">
+                    <canvas id="contactPointcloudCanvas" aria-label="Interactive 3D point-cloud portrait of Manuel Sainsily"></canvas>
+                    <button id="contactPointcloudReset" type="button" hidden aria-hidden="true" tabindex="-1"></button>
+                </figure>
             </div>
         </section>
     </main>
@@ -573,6 +579,6 @@
         </div>
     </dialog>
 
-    <script src="script.js?v=20260710-47" defer></script>
+    <script src="script.js?v=20260711-48" defer></script>
 </body>
 </html>

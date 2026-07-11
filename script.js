@@ -762,4 +762,42 @@
         });
         dialog.addEventListener("close", () => body.classList.remove("is-locked"));
     });
+
+    // Load the large point-cloud dataset only when the final section is near.
+    const pointcloudCanvas = document.getElementById("contactPointcloudCanvas");
+    const pointcloudFigure = pointcloudCanvas?.closest(".contact-pointcloud");
+    let pointcloudStarted = false;
+
+    const startPointcloud = async () => {
+        if (pointcloudStarted || !pointcloudCanvas) return;
+        pointcloudStarted = true;
+
+        try {
+            const response = await fetch("pointcloud.html");
+            if (!response.ok) throw new Error(`Point-cloud data returned ${response.status}`);
+            const sourceDocument = await response.text();
+            const source = sourceDocument.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+            if (!source) throw new Error("Point-cloud data script was not found");
+
+            const integratedSource = source
+                .replaceAll("document.getElementById('c')", "document.getElementById('contactPointcloudCanvas')")
+                .replaceAll("document.getElementById('reset')", "document.getElementById('contactPointcloudReset')");
+            new Function(integratedSource)();
+            pointcloudFigure?.classList.add("is-ready");
+        } catch (error) {
+            console.error("Point-cloud experiment could not start.", error);
+            pointcloudFigure?.classList.add("is-unavailable");
+        }
+    };
+
+    if (pointcloudFigure && "IntersectionObserver" in window) {
+        const pointcloudObserver = new IntersectionObserver((entries, observer) => {
+            if (!entries.some((entry) => entry.isIntersecting)) return;
+            observer.disconnect();
+            startPointcloud();
+        }, { rootMargin: "500px 0px", threshold: 0.01 });
+        pointcloudObserver.observe(pointcloudFigure);
+    } else {
+        startPointcloud();
+    }
 })();
