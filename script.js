@@ -6,21 +6,37 @@
     const header = document.getElementById("siteHeader");
     const progress = document.getElementById("scrollProgress");
     const menuToggle = document.getElementById("menuToggle");
-    const menuToggleLabel = menuToggle.querySelector(".menu-toggle__label");
     const navLinks = document.getElementById("navLinks");
     const navContact = header.querySelector(".nav-contact");
     const heroAtmosphere = document.getElementById("heroAtmosphere");
+    const contactSection = document.querySelector(".contact");
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let lastScrollTop = window.scrollY;
 
     const updateScrollUI = () => {
         const scrollTop = window.scrollY;
         const scrollable = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
         progress.style.transform = `scaleX(${Math.min(scrollTop / scrollable, 1)})`;
         header.classList.toggle("is-scrolled", scrollTop > 40);
+        const scrollingDown = scrollTop > lastScrollTop + 2;
+        const scrollingUp = scrollTop < lastScrollTop - 2;
+        if (!body.classList.contains("nav-open")) {
+            if (scrollingDown && scrollTop > 140) header.classList.add("is-compact");
+            if (scrollingUp || scrollTop <= 70) header.classList.remove("is-compact");
+        }
+        lastScrollTop = Math.max(scrollTop, 0);
         if (heroAtmosphere) {
             const maxParallax = Math.min(window.innerHeight * 0.14, 120);
             const parallaxY = Math.min(Math.max(scrollTop, 0) * 0.28, maxParallax);
             heroAtmosphere.style.setProperty("--hero-bg-parallax-y", `${parallaxY.toFixed(2)}px`);
+        }
+        if (contactSection) {
+            const contactRect = contactSection.getBoundingClientRect();
+            const travelRange = Math.max(window.innerHeight + contactRect.height, 1);
+            const progressThroughViewport = (window.innerHeight - contactRect.top) / travelRange;
+            const centeredProgress = Math.max(-0.5, Math.min(0.5, progressThroughViewport - 0.5));
+            const contactParallaxY = centeredProgress * Math.min(window.innerHeight * 0.72, 400);
+            contactSection.style.setProperty("--contact-parallax-y", `${contactParallaxY.toFixed(2)}px`);
         }
     };
 
@@ -31,7 +47,6 @@
     const closeMenu = ({ restoreFocus = false } = {}) => {
         navLinks.classList.remove("is-open");
         menuToggle.setAttribute("aria-expanded", "false");
-        menuToggleLabel.textContent = "Menu";
         body.classList.remove("nav-open");
         if (restoreFocus) menuToggle.focus();
     };
@@ -41,8 +56,8 @@
         const willOpen = menuToggle.getAttribute("aria-expanded") !== "true";
         menuToggle.setAttribute("aria-expanded", String(willOpen));
         navLinks.classList.toggle("is-open", willOpen);
-        menuToggleLabel.textContent = willOpen ? "Close" : "Menu";
         body.classList.toggle("nav-open", willOpen);
+        header.classList.toggle("is-compact", false);
         if (willOpen && event.detail === 0) navLinks.querySelector("a")?.focus();
     });
 
@@ -83,6 +98,14 @@
             toggle.textContent = expanded ? "Show less" : "Show more";
             toggle.setAttribute("aria-expanded", String(expanded));
         });
+    });
+
+    const pressToggle = document.getElementById("pressToggle");
+    const pressGrid = document.getElementById("pressGrid");
+    pressToggle?.addEventListener("click", () => {
+        const expanded = pressGrid.classList.toggle("is-expanded");
+        pressToggle.textContent = expanded ? "Show less" : "Show more";
+        pressToggle.setAttribute("aria-expanded", String(expanded));
     });
 
     const sectionLinks = [...navLinks.querySelectorAll('a[href^="#"]')];
@@ -168,6 +191,43 @@
     const glitchCanvas = document.getElementById("glitchCanvas");
     const clarityLens = document.getElementById("clarityLens");
     const spyCoordinates = document.getElementById("spyCoordinates");
+    const heroGetInTouch = document.querySelector(".hero-actions .button--sun");
+    const currentRole = document.querySelector(".current-role");
+    const readBioButton = document.querySelector(".current-role__bio");
+
+    const alignHeroButtons = () => {
+        if (!heroGetInTouch || !currentRole || !readBioButton) return;
+        if (window.innerWidth <= 820) {
+            currentRole.style.removeProperty("--role-align-y");
+            return;
+        }
+
+        currentRole.style.setProperty("--role-align-y", "0px");
+        const ctaRect = heroGetInTouch.getBoundingClientRect();
+        const bioRect = readBioButton.getBoundingClientRect();
+        const ctaCenter = ctaRect.top + (ctaRect.height / 2);
+        const bioCenter = bioRect.top + (bioRect.height / 2);
+        const offset = Math.max(-160, Math.min(0, ctaCenter - bioCenter));
+        currentRole.style.setProperty("--role-align-y", `${offset.toFixed(1)}px`);
+    };
+
+    let heroButtonAlignFrame = 0;
+    const scheduleHeroButtonAlign = () => {
+        window.cancelAnimationFrame(heroButtonAlignFrame);
+        heroButtonAlignFrame = window.requestAnimationFrame(alignHeroButtons);
+    };
+
+    scheduleHeroButtonAlign();
+    window.addEventListener("resize", scheduleHeroButtonAlign, { passive: true });
+    window.addEventListener("load", scheduleHeroButtonAlign, { once: true });
+    document.fonts?.ready?.then(scheduleHeroButtonAlign);
+
+    if ("ResizeObserver" in window && heroGetInTouch && currentRole) {
+        const heroButtonAlignObserver = new ResizeObserver(scheduleHeroButtonAlign);
+        heroButtonAlignObserver.observe(heroGetInTouch);
+        heroButtonAlignObserver.observe(currentRole);
+        heroButtonAlignObserver.observe(heroVisual);
+    }
 
     const bayer8 = [
         0, 32, 8, 40, 2, 34, 10, 42,
