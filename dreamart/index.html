@@ -97,6 +97,12 @@
       align-items: center;
       gap: 0.5rem;
     }
+    @media (max-width: 560px) {
+      .nav-info-row {
+        flex-direction: column;
+        gap: 0.65rem;
+      }
+    }
     header nav a {
       font-size: 0.68rem;
       text-transform: uppercase;
@@ -109,6 +115,9 @@
       text-transform: none;
       letter-spacing: 0.06em;
       color: var(--muted);
+    }
+    header nav a.nav-credit .nav-credit-brand {
+      color: var(--pink);
     }
     header nav a:hover { color: var(--link-hover); }
 
@@ -2208,7 +2217,7 @@
     <p>Turning my biometrics into daily art.</p>
     <nav>
       <div class="nav-info-row">
-        <a class="nav-credit" href="https://manu.vision">by manu.vision</a>
+        <a class="nav-credit" href="https://manu.vision">by <span class="nav-credit-brand">manu.vision</span></a>
         <button id="info-btn" aria-label="How It Works">
           How It Works
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
