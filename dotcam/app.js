@@ -35,20 +35,17 @@
   const saveCapture = $("#save-capture");
   const densityInput = $("#density");
   const dotSizeInput = $("#dot-size");
-  const trailInput = $("#trail");
   const densityValue = $("#density-value");
   const dotSizeValue = $("#dot-size-value");
-  const trailValue = $("#trail-value");
   const paletteControl = $("#palette-control");
   const resetSettingsButton = $("#reset-settings");
   const stopCameraButton = $("#stop-camera");
 
-  const SETTINGS_KEY = "dotcam.settings.v1";
+  const SETTINGS_KEY = "dotcam.settings.v2";
   const DEFAULT_SETTINGS = Object.freeze({
-    density: 72,
-    dotSize: 1.8,
-    trail: 64,
-    palette: "prism",
+    density: 84,
+    dotSize: 2.4,
+    palette: "source",
   });
 
   let settings = loadSettings();
@@ -85,6 +82,19 @@
       lastStatsUpdate = now;
       const count = typeof stats === "number" ? stats : stats?.pointCount ?? stats?.points ?? 0;
       pointCount.textContent = `${Math.round(count)} POINTS`;
+      if (stats && typeof stats === "object") {
+        outputCanvas.dataset.fps = String(stats.fps ?? 0);
+        outputCanvas.dataset.workMs = String(stats.workTimeEma ?? stats.workTime ?? 0);
+        outputCanvas.dataset.retention = Number(stats.retainedRatio ?? 1).toFixed(3);
+        outputCanvas.dataset.rawRetention = Number(stats.rawRetainedRatio ?? stats.retainedRatio ?? 1).toFixed(3);
+        outputCanvas.dataset.directRetention = Number(stats.directRatio ?? 1).toFixed(3);
+        outputCanvas.dataset.dropped = String(stats.dropped ?? 0);
+        outputCanvas.dataset.rawDropped = String(stats.rawDropped ?? stats.dropped ?? 0);
+        outputCanvas.dataset.predicted = String(stats.predicted ?? 0);
+        outputCanvas.dataset.performanceScale = Number(stats.performanceScale ?? 1).toFixed(3);
+        outputCanvas.dataset.stableRatio = Number(stats.stableRatio ?? 1).toFixed(3);
+        outputCanvas.dataset.averageAge = Number(stats.averageAge ?? 0).toFixed(1);
+      }
     },
   });
 
@@ -107,12 +117,12 @@
         return (seed - 1) / 2147483646;
       };
 
-      for (let index = 0; index < 180; index += 1) {
+      for (let index = 0; index < 2200; index += 1) {
         this.specks.push({
           x: random() * this.canvas.width,
           y: random() * this.canvas.height,
-          radius: 0.4 + random() * 1.6,
-          alpha: 0.035 + random() * 0.14,
+          radius: 2 + random() * 2.6,
+          alpha: 0.12 + random() * 0.32,
           hue: 165 + random() * 95,
         });
       }
@@ -140,6 +150,13 @@
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, width, height);
 
+      const cameraPanX = Math.sin(seconds * 0.9) * 78 + Math.sin(seconds * 2.1) * 10;
+      const cameraPanY = Math.sin(seconds * 0.75 + 0.6) * 34;
+      this.panX = cameraPanX;
+      this.panY = cameraPanY;
+      ctx.save();
+      ctx.translate(cameraPanX, cameraPanY);
+
       ctx.save();
       ctx.strokeStyle = "rgba(211, 234, 224, .14)";
       ctx.lineWidth = 2;
@@ -154,17 +171,6 @@
         ctx.moveTo(45, y);
         ctx.lineTo(width - 45, y + 7 * Math.sin(seconds * 0.3 + y));
         ctx.stroke();
-      }
-      ctx.restore();
-
-      ctx.save();
-      ctx.globalCompositeOperation = "screen";
-      for (const speck of this.specks) {
-        const pulse = 0.7 + 0.3 * Math.sin(seconds * 0.85 + speck.x * 0.019);
-        ctx.fillStyle = `hsla(${speck.hue}, 52%, 74%, ${speck.alpha * pulse})`;
-        ctx.beginPath();
-        ctx.arc(speck.x, speck.y, speck.radius, 0, Math.PI * 2);
-        ctx.fill();
       }
       ctx.restore();
 
@@ -265,8 +271,19 @@
       ctx.fillRect(0, 22, 58 + Math.sin(seconds) * 15, 3);
       ctx.restore();
 
-      ctx.fillStyle = `rgba(255,255,255,${0.018 + Math.sin(seconds * 2.3) * 0.006})`;
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      for (const speck of this.specks) {
+        ctx.fillStyle = `hsla(${speck.hue}, 52%, 74%, ${speck.alpha})`;
+        ctx.beginPath();
+        ctx.arc(speck.x, speck.y, speck.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      ctx.fillStyle = "rgba(255,255,255,.02)";
       for (let y = 0; y < height; y += 8) ctx.fillRect(0, y, width, 1);
+      ctx.restore();
     }
   }
 
@@ -347,7 +364,11 @@
       currentMode = "demo";
       engine.start(demoScene.canvas, {
         mirror: false,
-        beforeFrame: (time) => demoScene?.update(time),
+        beforeFrame: (time) => {
+          demoScene?.update(time);
+          outputCanvas.dataset.demoPanX = Number(demoScene?.panX || 0).toFixed(3);
+          outputCanvas.dataset.demoPanY = Number(demoScene?.panY || 0).toFixed(3);
+        },
       });
       activateCameraUi("DEMO");
       requestWakeLock();
@@ -599,13 +620,10 @@
     settings = { ...DEFAULT_SETTINGS, ...nextSettings };
     densityInput.value = String(settings.density);
     dotSizeInput.value = String(Math.round(settings.dotSize * 10));
-    trailInput.value = String(settings.trail);
     densityValue.textContent = `${settings.density}%`;
     dotSizeValue.textContent = settings.dotSize.toFixed(1);
-    trailValue.textContent = `${settings.trail}%`;
     setRangeFill(densityInput);
     setRangeFill(dotSizeInput);
-    setRangeFill(trailInput);
     modeLabel.textContent = settings.palette.toUpperCase();
 
     for (const button of paletteControl.querySelectorAll("button")) {
@@ -632,8 +650,7 @@
       if (!stored || typeof stored !== "object") return { ...DEFAULT_SETTINGS };
       return {
         density: clamp(Number(stored.density) || DEFAULT_SETTINGS.density, 25, 100),
-        dotSize: clamp(Number(stored.dotSize) || DEFAULT_SETTINGS.dotSize, 0.8, 3.6),
-        trail: clamp(Number.isFinite(Number(stored.trail)) ? Number(stored.trail) : DEFAULT_SETTINGS.trail, 0, 92),
+        dotSize: clamp(Number(stored.dotSize) || DEFAULT_SETTINGS.dotSize, 1.4, 3.8),
         palette: ["source", "prism", "mono"].includes(stored.palette) ? stored.palette : DEFAULT_SETTINGS.palette,
       };
     } catch {
@@ -755,6 +772,9 @@
   startDemoButton.addEventListener("click", startDemo);
   uploadVideoButton.addEventListener("click", () => videoUploadInput.click());
   videoUploadInput.addEventListener("change", () => startUploadedVideo(videoUploadInput.files?.[0]));
+  video.addEventListener("seeking", () => {
+    if (currentMode === "upload") engine.resetTracking();
+  });
   exitDemoButton.addEventListener("click", () => startCamera());
   flipButton.addEventListener("click", flipCamera);
   captureButton.addEventListener("click", captureImage);
@@ -771,7 +791,6 @@
 
   densityInput.addEventListener("input", () => updateSetting("density", Number(densityInput.value)));
   dotSizeInput.addEventListener("input", () => updateSetting("dotSize", Number(dotSizeInput.value) / 10));
-  trailInput.addEventListener("input", () => updateSetting("trail", Number(trailInput.value)));
   paletteControl.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-palette]");
     if (button) updateSetting("palette", button.dataset.palette);
@@ -830,8 +849,4 @@
     if (event.key.toLowerCase() === "u") videoUploadInput.click();
   });
 
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    settings = { ...settings, trail: Math.min(settings.trail, 42) };
-    applySettings(settings, false);
-  }
 })();

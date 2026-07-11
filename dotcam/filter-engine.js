@@ -1,7 +1,9 @@
 (() => {
   "use strict";
 
-  const TWO_PI = Math.PI * 2;
+  const TAU = Math.PI * 2;
+  const PYRAMID_LEVELS = 3;
+  const MAX_TEMPLATE_SAMPLES = 81;
 
   class DotFilterEngine {
     constructor({ sourceCanvas, outputCanvas, onStats } = {}) {
@@ -22,10 +24,9 @@
       this.onStats = typeof onStats === "function" ? onStats : () => {};
 
       this.settings = {
-        density: 72,
-        dotSize: 1.8,
-        trail: 64,
-        palette: "prism",
+        density: 84,
+        dotSize: 2.4,
+        palette: "source",
       };
 
       this.source = null;
@@ -37,25 +38,58 @@
       this.analysisHeight = 0;
       this.outputDpr = 1;
       this.tracks = [];
+      this.nextTracks = [];
+      this.provisionalTracks = [];
+      this.failedTracks = [];
+      this.flowValuesX = [];
+      this.flowValuesY = [];
       this.nextTrackId = 1;
       this.hasPreviousFrame = false;
       this.frameNumber = 0;
+      this.lastDetectionFrame = -1000;
       this.lastFrameTime = 0;
+      this.lastMediaTime = null;
       this.lastStatsTime = 0;
       this.statsFrameCount = 0;
       this.fps = 0;
+      this.workTimeEma = 0;
+      this.performanceScale = 1;
+      this.overBudgetFrames = 0;
+      this.underBudgetFrames = 0;
       this.currentPixels = null;
-      this.currentGray = new Uint8Array(0);
-      this.previousGray = new Uint8Array(0);
+      this.currentPyramid = [];
+      this.previousPyramid = [];
       this.gradientX = new Float32Array(0);
       this.gradientY = new Float32Array(0);
+      this.templateValues = new Float32Array(MAX_TEMPLATE_SAMPLES);
+      this.templateGradientX = new Float32Array(MAX_TEMPLATE_SAMPLES);
+      this.templateGradientY = new Float32Array(MAX_TEMPLATE_SAMPLES);
+      this.templateOffsetX = new Int8Array(MAX_TEMPLATE_SAMPLES);
+      this.templateOffsetY = new Int8Array(MAX_TEMPLATE_SAMPLES);
+      this.residuals = new Float32Array(MAX_TEMPLATE_SAMPLES);
+      this.flowScratch = createFlowResult();
+      this.backwardScratch = createFlowResult();
+      this.templateScratch = createTemplateResult();
+      this.displacementScratch = { x: 0, y: 0 };
+      this.colorScratch = new Uint8Array(3);
+      this.globalModel = identitySimilarity();
+      this.previousGlobalModel = identitySimilarity();
+      this.lastTrackingStats = {
+        retainedRatio: 1,
+        directRatio: 1,
+        dropped: 0,
+        retried: 0,
+        predicted: 0,
+        visibleRatio: 1,
+        visibleDropped: 0,
+      };
       this.videoFrameHandle = 0;
       this.animationFrameHandle = 0;
       this.needsDetection = true;
       this.resizeQueued = false;
 
       this.boundAnimationLoop = (time) => this.animationLoop(time);
-      this.boundVideoLoop = (time) => this.videoLoop(time);
+      this.boundVideoLoop = (time, metadata) => this.videoLoop(time, metadata);
       this.resize();
     }
 
@@ -69,6 +103,7 @@
       this.isRunning = true;
       this.isPaused = false;
       this.lastFrameTime = 0;
+      this.lastMediaTime = null;
       this.reset();
       this.resize();
       this.scheduleNextFrame();
@@ -80,6 +115,7 @@
       this.isPaused = false;
       this.source = null;
       this.beforeFrame = null;
+      this.lastMediaTime = null;
     }
 
     pause() {
@@ -90,36 +126,45 @@
     resume() {
       if (!this.isRunning) return;
       this.isPaused = false;
-      this.hasPreviousFrame = false;
-      this.needsDetection = true;
       this.lastFrameTime = 0;
+      this.lastMediaTime = null;
+      this.resetTracking();
     }
 
     reset() {
-      this.tracks.length = 0;
-      this.hasPreviousFrame = false;
-      this.frameNumber = 0;
+      this.performanceScale = 1;
+      this.workTimeEma = 0;
+      this.overBudgetFrames = 0;
+      this.underBudgetFrames = 0;
       this.nextTrackId = 1;
-      this.needsDetection = true;
+      this.frameNumber = 0;
+      this.lastDetectionFrame = -1000;
+      this.resetTracking();
       this.clearOutput();
     }
 
+    resetTracking() {
+      this.tracks.length = 0;
+      this.nextTracks.length = 0;
+      this.provisionalTracks.length = 0;
+      this.failedTracks.length = 0;
+      this.hasPreviousFrame = false;
+      this.needsDetection = true;
+      this.globalModel = identitySimilarity(this.globalModel);
+      this.previousGlobalModel = identitySimilarity(this.previousGlobalModel);
+    }
+
     updateSettings(nextSettings = {}) {
-      const oldDensity = this.settings.density;
-      this.settings.density = clamp(Number(nextSettings.density) || 72, 25, 100);
-      this.settings.dotSize = clamp(Number(nextSettings.dotSize) || 1.8, 0.8, 3.6);
-      this.settings.trail = clamp(Number.isFinite(Number(nextSettings.trail)) ? Number(nextSettings.trail) : 64, 0, 92);
+      const previousDensity = this.settings.density;
+      this.settings.density = clamp(Number(nextSettings.density) || 84, 25, 100);
+      this.settings.dotSize = clamp(Number(nextSettings.dotSize) || 2.4, 1.2, 3.8);
       this.settings.palette = ["source", "prism", "mono"].includes(nextSettings.palette)
         ? nextSettings.palette
         : this.settings.palette;
 
-      if (oldDensity !== this.settings.density) {
+      if (previousDensity !== this.settings.density) {
         this.needsDetection = true;
-        const target = this.targetPointCount();
-        if (this.tracks.length > target) {
-          this.tracks.sort((a, b) => b.quality * b.life - a.quality * a.life);
-          this.tracks.length = target;
-        }
+        this.trimToTarget();
       }
     }
 
@@ -127,66 +172,59 @@
       if (this.resizeQueued) return;
       this.resizeQueued = true;
 
-      const applyResize = () => {
-        this.resizeQueued = false;
-        const rect = this.outputCanvas.getBoundingClientRect();
-        const cssWidth = Math.max(1, Math.round(rect.width || window.innerWidth || 1));
-        const cssHeight = Math.max(1, Math.round(rect.height || window.innerHeight || 1));
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-        const outputWidth = Math.max(1, Math.round(cssWidth * dpr));
-        const outputHeight = Math.max(1, Math.round(cssHeight * dpr));
+      const rect = this.outputCanvas.getBoundingClientRect();
+      const cssWidth = Math.max(1, Math.round(rect.width || window.innerWidth || 1));
+      const cssHeight = Math.max(1, Math.round(rect.height || window.innerHeight || 1));
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      const outputWidth = Math.max(1, Math.round(cssWidth * dpr));
+      const outputHeight = Math.max(1, Math.round(cssHeight * dpr));
+      const aspect = cssWidth / cssHeight;
+      const shortSide = 256;
+      const longSideLimit = 448;
+      let analysisWidth;
+      let analysisHeight;
 
-        let shortSide = 210;
-        let analysisWidth;
-        let analysisHeight;
-        const aspect = cssWidth / cssHeight;
-
-        if (aspect >= 1) {
-          analysisHeight = shortSide;
-          analysisWidth = Math.round(shortSide * aspect);
-          if (analysisWidth > 384) {
-            analysisHeight = Math.round(analysisHeight * (384 / analysisWidth));
-            analysisWidth = 384;
-          }
-        } else {
-          analysisWidth = shortSide;
-          analysisHeight = Math.round(shortSide / aspect);
-          if (analysisHeight > 384) {
-            analysisWidth = Math.round(analysisWidth * (384 / analysisHeight));
-            analysisHeight = 384;
-          }
+      if (aspect >= 1) {
+        analysisHeight = shortSide;
+        analysisWidth = Math.round(shortSide * aspect);
+        if (analysisWidth > longSideLimit) {
+          analysisHeight = Math.round(analysisHeight * (longSideLimit / analysisWidth));
+          analysisWidth = longSideLimit;
         }
-
-        analysisWidth = Math.max(128, analysisWidth);
-        analysisHeight = Math.max(128, analysisHeight);
-        const outputChanged = this.outputCanvas.width !== outputWidth || this.outputCanvas.height !== outputHeight;
-        const analysisChanged = this.analysisWidth !== analysisWidth || this.analysisHeight !== analysisHeight;
-
-        this.outputDpr = dpr;
-        if (outputChanged) {
-          this.outputCanvas.width = outputWidth;
-          this.outputCanvas.height = outputHeight;
-          this.clearOutput();
+      } else {
+        analysisWidth = shortSide;
+        analysisHeight = Math.round(shortSide / aspect);
+        if (analysisHeight > longSideLimit) {
+          analysisWidth = Math.round(analysisWidth * (longSideLimit / analysisHeight));
+          analysisHeight = longSideLimit;
         }
+      }
 
-        if (analysisChanged) {
-          this.analysisWidth = analysisWidth;
-          this.analysisHeight = analysisHeight;
-          this.sourceCanvas.width = analysisWidth;
-          this.sourceCanvas.height = analysisHeight;
-          const size = analysisWidth * analysisHeight;
-          this.currentGray = new Uint8Array(size);
-          this.previousGray = new Uint8Array(size);
-          this.gradientX = new Float32Array(size);
-          this.gradientY = new Float32Array(size);
-          this.tracks.length = 0;
-          this.hasPreviousFrame = false;
-          this.needsDetection = true;
-        }
-      };
+      analysisWidth = Math.max(144, analysisWidth);
+      analysisHeight = Math.max(144, analysisHeight);
+      const outputChanged = this.outputCanvas.width !== outputWidth || this.outputCanvas.height !== outputHeight;
+      const analysisChanged = this.analysisWidth !== analysisWidth || this.analysisHeight !== analysisHeight;
 
-      // ResizeObserver-style bursts are collapsed without delaying the first setup.
-      applyResize();
+      this.outputDpr = dpr;
+      if (outputChanged) {
+        this.outputCanvas.width = outputWidth;
+        this.outputCanvas.height = outputHeight;
+        this.clearOutput();
+      }
+
+      if (analysisChanged) {
+        this.analysisWidth = analysisWidth;
+        this.analysisHeight = analysisHeight;
+        this.sourceCanvas.width = analysisWidth;
+        this.sourceCanvas.height = analysisHeight;
+        this.currentPyramid = allocatePyramid(analysisWidth, analysisHeight, PYRAMID_LEVELS);
+        this.previousPyramid = allocatePyramid(analysisWidth, analysisHeight, PYRAMID_LEVELS);
+        this.gradientX = new Float32Array(analysisWidth * analysisHeight);
+        this.gradientY = new Float32Array(analysisWidth * analysisHeight);
+        this.resetTracking();
+      }
+
+      this.resizeQueued = false;
     }
 
     async captureBlob() {
@@ -220,39 +258,12 @@
       exportCanvas.width = width;
       exportCanvas.height = height;
       const context = exportCanvas.getContext("2d", { alpha: false });
-      context.fillStyle = "#050608";
+      context.fillStyle = "#000";
       context.fillRect(0, 0, width, height);
       context.imageSmoothingEnabled = true;
       context.imageSmoothingQuality = "high";
       context.drawImage(this.outputCanvas, 0, 0, width, height);
-
-      const edge = Math.round(Math.min(width, height) * 0.045);
-      const labelSize = Math.max(14, Math.round(Math.min(width, height) * 0.017));
-      const dotRadius = Math.max(2, Math.round(labelSize * 0.17));
-      const label = "DOTCAM  ·  MANU.VISION";
-      context.save();
-      context.font = `700 ${labelSize}px ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif`;
-      context.letterSpacing = `${Math.round(labelSize * 0.14)}px`;
-      const textWidth = context.measureText(label).width;
-      const pillHeight = labelSize * 2.45;
-      const pillWidth = textWidth + labelSize * 3.8;
-      const x = width - edge - pillWidth;
-      const y = height - edge - pillHeight;
-      roundedRect(context, x, y, pillWidth, pillHeight, pillHeight / 2);
-      context.fillStyle = "rgba(5, 6, 8, .58)";
-      context.fill();
-      context.strokeStyle = "rgba(255,255,255,.2)";
-      context.lineWidth = Math.max(1, width / 1100);
-      context.stroke();
-      context.fillStyle = "#d9ff69";
-      context.beginPath();
-      context.arc(x + labelSize * 1.25, y + pillHeight / 2, dotRadius, 0, TWO_PI);
-      context.fill();
-      context.fillStyle = "rgba(255,255,255,.78)";
-      context.textBaseline = "middle";
-      context.fillText(label, x + labelSize * 2.1, y + pillHeight / 2 + 1);
-      context.restore();
-
+      drawWatermark(context, width, height);
       return canvasToBlob(exportCanvas, "image/png");
     }
 
@@ -276,17 +287,30 @@
       this.videoFrameHandle = 0;
     }
 
-    videoLoop(time) {
+    videoLoop(time, metadata) {
       this.videoFrameHandle = 0;
       if (!this.isRunning) return;
-      if (!this.isPaused) this.processFrame(time);
+
+      const mediaTime = Number(metadata?.mediaTime);
+      if (Number.isFinite(mediaTime)) {
+        if (this.lastMediaTime !== null) {
+          const mediaDelta = mediaTime - this.lastMediaTime;
+          if (mediaDelta < -0.001 || mediaDelta > 2) this.resetTracking();
+        }
+        this.lastMediaTime = mediaTime;
+      }
+
+      if (!this.isPaused && (this.lastFrameTime === 0 || time - this.lastFrameTime >= 30)) {
+        this.processFrame(time);
+      }
       this.scheduleNextFrame();
     }
 
     animationLoop(time) {
       this.animationFrameHandle = 0;
       if (!this.isRunning) return;
-      if (!this.isPaused && (this.lastFrameTime === 0 || time - this.lastFrameTime >= 32)) {
+      if (!this.isPaused && (this.lastFrameTime === 0 || time - this.lastFrameTime >= 30)) {
+        if (this.lastFrameTime && time - this.lastFrameTime > 220) this.resetTracking();
         this.processFrame(time);
       }
       this.scheduleNextFrame();
@@ -296,34 +320,51 @@
       const frameStart = performance.now();
       this.lastFrameTime = time;
       this.beforeFrame?.(time);
-
       if (!this.drawSourceFrame()) return;
 
       const imageData = this.sourceContext.getImageData(0, 0, this.analysisWidth, this.analysisHeight);
       this.currentPixels = imageData.data;
-      this.convertToLuminance(this.currentPixels, this.currentGray);
+      this.convertToLuminance(this.currentPixels, this.currentPyramid[0].data);
+      buildPyramid(this.currentPyramid);
 
       if (this.hasPreviousFrame && this.tracks.length) {
         this.trackFeatures();
+        if (!this.tracks.length) {
+          this.globalModel = identitySimilarity(this.globalModel);
+          this.previousGlobalModel = identitySimilarity(this.previousGlobalModel);
+        }
+      } else {
+        this.lastTrackingStats.retainedRatio = 1;
+        this.lastTrackingStats.directRatio = 1;
+        this.lastTrackingStats.dropped = 0;
+        this.lastTrackingStats.retried = 0;
+        this.lastTrackingStats.predicted = 0;
+        this.lastTrackingStats.visibleRatio = 1;
+        this.lastTrackingStats.visibleDropped = 0;
       }
 
       const target = this.targetPointCount();
-      const detectionInterval = this.settings.density > 82 ? 5 : 7;
+      const needsRefill = this.tracks.length < target * 0.94;
+      const severeCollapse = this.hasPreviousFrame && this.lastTrackingStats.retainedRatio < 0.65;
       if (
         !this.hasPreviousFrame ||
+        this.tracks.length === 0 ||
+        severeCollapse ||
         this.needsDetection ||
-        this.frameNumber % detectionInterval === 0 ||
-        this.tracks.length < target * 0.7
+        (needsRefill && this.frameNumber - this.lastDetectionFrame >= 8)
       ) {
         this.seedFeatures(target);
         this.needsDetection = false;
+        this.lastDetectionFrame = this.frameNumber;
       }
 
-      this.render(time);
-      this.swapGrayBuffers();
+      this.render();
+      this.swapPyramids();
       this.hasPreviousFrame = true;
       this.frameNumber += 1;
-      this.updateStats(time, performance.now() - frameStart);
+      const workTime = performance.now() - frameStart;
+      this.recordPerformance(workTime);
+      this.updateStats(time, workTime);
     }
 
     drawSourceFrame() {
@@ -340,7 +381,7 @@
       const context = this.sourceContext;
 
       context.setTransform(1, 0, 0, 1, 0, 0);
-      context.fillStyle = "#050608";
+      context.fillStyle = "#000";
       context.fillRect(0, 0, this.analysisWidth, this.analysisHeight);
 
       try {
@@ -389,147 +430,453 @@
     }
 
     trackFeatures() {
-      const width = this.analysisWidth;
-      const height = this.analysisHeight;
-      const previous = this.previousGray;
-      const current = this.currentGray;
-      const radius = 3;
-      const border = radius + 3;
+      const sourceTracks = this.tracks;
+      const sourceCount = sourceTracks.length;
+      let sourceVisibleCount = 0;
+      for (const point of sourceTracks) {
+        if (point.age >= 1) sourceVisibleCount += 1;
+      }
+      this.provisionalTracks.length = 0;
+      this.failedTracks.length = 0;
+      this.flowValuesX.length = 0;
+      this.flowValuesY.length = 0;
 
-      for (const point of this.tracks) {
-        if (point.life <= 0) continue;
-        if (point.x < border || point.y < border || point.x >= width - border || point.y >= height - border) {
-          point.life = 0;
-          continue;
-        }
+      for (const point of sourceTracks) {
+        const globalPrediction = similarityDisplacement(this.globalModel, point.x, point.y, this.displacementScratch);
+        const predictionX = point.age > 0
+          ? point.predictDx * 0.78 + globalPrediction.x * 0.22
+          : globalPrediction.x;
+        const predictionY = point.age > 0
+          ? point.predictDy * 0.78 + globalPrediction.y * 0.22
+          : globalPrediction.y;
 
-        let flowX = clamp(point.vx * 0.35, -2, 2);
-        let flowY = clamp(point.vy * 0.35, -2, 2);
-        let determinant = 0;
-        let error = 0;
-        let valid = true;
+        this.trackPyramidal(
+          this.previousPyramid,
+          this.currentPyramid,
+          point.x,
+          point.y,
+          predictionX,
+          predictionY,
+          this.flowScratch,
+        );
 
-        for (let iteration = 0; iteration < 2; iteration += 1) {
-          let sumXX = 0;
-          let sumXY = 0;
-          let sumYY = 0;
-          let sumXT = 0;
-          let sumYT = 0;
-          let errorSum = 0;
-          let samples = 0;
-
-          for (let offsetY = -radius; offsetY <= radius; offsetY += 1) {
-            for (let offsetX = -radius; offsetX <= radius; offsetX += 1) {
-              const previousX = point.x + offsetX;
-              const previousY = point.y + offsetY;
-              const currentX = previousX + flowX;
-              const currentY = previousY + flowY;
-
-              if (currentX < 1 || currentY < 1 || currentX >= width - 2 || currentY >= height - 2) {
-                valid = false;
-                break;
-              }
-
-              const previousValue = bilinear(previous, width, height, previousX, previousY);
-              const currentValue = bilinear(current, width, height, currentX, currentY);
-              const gradientX = (
-                bilinear(previous, width, height, previousX + 1, previousY) -
-                bilinear(previous, width, height, previousX - 1, previousY) +
-                bilinear(current, width, height, currentX + 1, currentY) -
-                bilinear(current, width, height, currentX - 1, currentY)
-              ) * 0.25;
-              const gradientY = (
-                bilinear(previous, width, height, previousX, previousY + 1) -
-                bilinear(previous, width, height, previousX, previousY - 1) +
-                bilinear(current, width, height, currentX, currentY + 1) -
-                bilinear(current, width, height, currentX, currentY - 1)
-              ) * 0.25;
-              const temporal = currentValue - previousValue;
-
-              sumXX += gradientX * gradientX;
-              sumXY += gradientX * gradientY;
-              sumYY += gradientY * gradientY;
-              sumXT += gradientX * temporal;
-              sumYT += gradientY * temporal;
-              errorSum += Math.abs(temporal);
-              samples += 1;
-            }
-            if (!valid) break;
-          }
-
-          if (!valid || !samples) break;
-          determinant = sumXX * sumYY - sumXY * sumXY;
-          error = errorSum / samples;
-          const trace = sumXX + sumYY;
-
-          if (determinant < Math.max(1800, trace * trace * 0.002)) {
-            valid = false;
-            break;
-          }
-
-          const moveX = (-sumYY * sumXT + sumXY * sumYT) / determinant;
-          const moveY = (sumXY * sumXT - sumXX * sumYT) / determinant;
-          flowX += clamp(moveX, -2.4, 2.4);
-          flowY += clamp(moveY, -2.4, 2.4);
-
-          if (moveX * moveX + moveY * moveY < 0.012) break;
-          if (flowX * flowX + flowY * flowY > 100) {
-            valid = false;
-            break;
-          }
-        }
-
-        if (!valid || error > 58 || !Number.isFinite(flowX + flowY)) {
-          point.life -= 0.38;
-          point.alpha *= 0.84;
-          continue;
-        }
-
-        point.vx = point.vx * 0.48 + flowX * 0.52;
-        point.vy = point.vy * 0.48 + flowY * 0.52;
-        point.x += point.vx;
-        point.y += point.vy;
-        point.displayX += (point.x - point.displayX) * 0.62;
-        point.displayY += (point.y - point.displayY) * 0.62;
-        point.life = Math.min(1, point.life + 0.06);
-        point.alpha = Math.min(1, point.alpha + 0.13);
-        point.age += 1;
-        point.quality = point.quality * 0.97 + Math.min(1, determinant / 18000000) * 0.03;
-        this.samplePointColor(point);
-
-        if (
-          point.x < border ||
-          point.y < border ||
-          point.x >= width - border ||
-          point.y >= height - border ||
-          point.age > 540
-        ) {
-          point.life -= point.age > 540 ? 0.1 : 1;
+        if (this.flowScratch.ok && this.basicFlowValidation(point, this.flowScratch)) {
+          copyCandidate(point, this.flowScratch);
+          this.provisionalTracks.push(point);
+          this.flowValuesX.push(this.flowScratch.dx);
+          this.flowValuesY.push(this.flowScratch.dy);
+        } else {
+          this.failedTracks.push(point);
         }
       }
 
-      this.tracks = this.tracks.filter((point) => point.life > 0.04 && Number.isFinite(point.x + point.y));
+      const provisionalCount = this.provisionalTracks.length;
+      const estimatedModel = this.estimateDominantSimilarity(this.provisionalTracks);
+      copySimilarity(this.previousGlobalModel, this.globalModel);
+      copySimilarity(this.globalModel, estimatedModel);
+
+      this.nextTracks.length = 0;
+      const forwardBackwardStride = this.workTimeEma > 25 ? 10 : 6;
+
+      for (const point of this.provisionalTracks) {
+        const predicted = similarityDisplacement(this.globalModel, point.x, point.y, this.displacementScratch);
+        const deviation = Math.hypot(point.candidateDx - predicted.x, point.candidateDy - predicted.y);
+        const scheduledCheck = point.id % forwardBackwardStride === this.frameNumber % forwardBackwardStride;
+        const questionable = scheduledCheck || deviation > 3.5 || point.candidateError > 24;
+
+        if (questionable && !this.forwardBackwardValid(point, point.candidateDx, point.candidateDy)) {
+          this.failedTracks.push(point);
+          continue;
+        }
+
+        this.commitCandidate(point);
+        this.nextTracks.push(point);
+      }
+
+      let retried = 0;
+      let predicted = 0;
+      const predictionIsReliable = provisionalCount >= sourceCount * 0.65;
+      for (const point of this.failedTracks) {
+        const prediction = similarityDisplacement(this.globalModel, point.x, point.y, this.displacementScratch);
+        this.trackPyramidal(
+          this.previousPyramid,
+          this.currentPyramid,
+          point.x,
+          point.y,
+          prediction.x,
+          prediction.y,
+          this.flowScratch,
+        );
+
+        if (
+          this.flowScratch.ok &&
+          this.basicFlowValidation(point, this.flowScratch) &&
+          this.forwardBackwardValid(point, this.flowScratch.dx, this.flowScratch.dy)
+        ) {
+          copyCandidate(point, this.flowScratch);
+          this.commitCandidate(point);
+          this.nextTracks.push(point);
+          retried += 1;
+        } else if (predictionIsReliable && this.bridgeMissedFrame(point)) {
+          this.nextTracks.push(point);
+          predicted += 1;
+        }
+      }
+
+      this.tracks = this.nextTracks;
+      this.nextTracks = sourceTracks;
+      this.nextTracks.length = 0;
+      this.lastTrackingStats.retainedRatio = sourceCount ? this.tracks.length / sourceCount : 1;
+      this.lastTrackingStats.directRatio = sourceCount ? provisionalCount / sourceCount : 1;
+      this.lastTrackingStats.dropped = Math.max(0, sourceCount - this.tracks.length);
+      this.lastTrackingStats.retried = retried;
+      this.lastTrackingStats.predicted = predicted;
+      let retainedVisibleCount = 0;
+      for (const point of this.tracks) {
+        if (point.age >= 2) retainedVisibleCount += 1;
+      }
+      this.lastTrackingStats.visibleRatio = sourceVisibleCount ? retainedVisibleCount / sourceVisibleCount : 1;
+      this.lastTrackingStats.visibleDropped = Math.max(0, sourceVisibleCount - retainedVisibleCount);
+    }
+
+    trackPyramidal(sourcePyramid, targetPyramid, baseX, baseY, initialDx, initialDy, output) {
+      output.ok = false;
+      output.outside = false;
+      output.dx = 0;
+      output.dy = 0;
+      output.error = Infinity;
+      output.eigen = 0;
+
+      const topLevel = Math.min(sourcePyramid.length, targetPyramid.length) - 1;
+      const topScale = 2 ** topLevel;
+      let flowX = initialDx / topScale;
+      let flowY = initialDy / topScale;
+      let finestWasValid = false;
+      let finestEigen = 0;
+
+      for (let level = topLevel; level >= 0; level -= 1) {
+        if (level !== topLevel) {
+          flowX *= 2;
+          flowY *= 2;
+        }
+
+        const sourceLevel = sourcePyramid[level];
+        const targetLevel = targetPyramid[level];
+        const scale = 2 ** level;
+        const sourceX = toLevelCoordinate(baseX, scale);
+        const sourceY = toLevelCoordinate(baseY, scale);
+        const radius = level === 0 ? 4 : 3;
+        const iterations = 3;
+        const template = this.prepareTemplate(sourceLevel, sourceX, sourceY, radius);
+
+        if (template.outside) {
+          output.outside = true;
+          return output;
+        }
+
+        const eigenFloor = level === 0 ? 2.5 : 0.75;
+        if (template.eigen < eigenFloor || template.eigenRatio < 0.006) {
+          if (level === 0) return output;
+          continue;
+        }
+
+        if (level === 0) {
+          finestWasValid = true;
+          finestEigen = template.eigen;
+        }
+
+        for (let iteration = 0; iteration < iterations; iteration += 1) {
+          const targetX = sourceX + flowX;
+          const targetY = sourceY + flowY;
+          if (!patchInside(targetLevel, targetX, targetY, radius + 1)) {
+            output.outside = true;
+            return output;
+          }
+
+          let residualMean = 0;
+          for (let sample = 0; sample < template.count; sample += 1) {
+            const value = bilinear(
+              targetLevel.data,
+              targetLevel.width,
+              targetLevel.height,
+              targetX + this.templateOffsetX[sample],
+              targetY + this.templateOffsetY[sample],
+            ) - this.templateValues[sample];
+            this.residuals[sample] = value;
+            residualMean += value;
+          }
+          residualMean /= template.count;
+
+          let sumGradientTemporalX = 0;
+          let sumGradientTemporalY = 0;
+          for (let sample = 0; sample < template.count; sample += 1) {
+            const residual = this.residuals[sample] - residualMean;
+            sumGradientTemporalX += this.templateGradientX[sample] * residual;
+            sumGradientTemporalY += this.templateGradientY[sample] * residual;
+          }
+
+          const determinant = template.sumXX * template.sumYY - template.sumXY * template.sumXY;
+          if (determinant <= 1e-6) return output;
+          const stepX = (-template.sumYY * sumGradientTemporalX + template.sumXY * sumGradientTemporalY) / determinant;
+          const stepY = (template.sumXY * sumGradientTemporalX - template.sumXX * sumGradientTemporalY) / determinant;
+
+          if (!Number.isFinite(stepX + stepY) || stepX * stepX + stepY * stepY > 12.25) return output;
+          flowX += stepX;
+          flowY += stepY;
+          if (stepX * stepX + stepY * stepY < 0.0025) break;
+        }
+      }
+
+      if (!finestWasValid) return output;
+      const finalError = this.patchResidualRms(
+        sourcePyramid[0],
+        targetPyramid[0],
+        baseX,
+        baseY,
+        flowX,
+        flowY,
+        4,
+      );
+
+      if (!Number.isFinite(finalError) || finalError > 32) return output;
+      if (flowX * flowX + flowY * flowY > 3600) return output;
+
+      output.ok = true;
+      output.dx = flowX;
+      output.dy = flowY;
+      output.error = finalError;
+      output.eigen = finestEigen;
+      return output;
+    }
+
+    prepareTemplate(level, centerX, centerY, radius) {
+      const result = this.templateScratch;
+      if (!patchInside(level, centerX, centerY, radius + 1)) {
+        result.outside = true;
+        result.count = 0;
+        result.eigen = 0;
+        result.eigenRatio = 0;
+        result.sumXX = 0;
+        result.sumXY = 0;
+        result.sumYY = 0;
+        return result;
+      }
+
+      let count = 0;
+      let sumXX = 0;
+      let sumXY = 0;
+      let sumYY = 0;
+
+      for (let offsetY = -radius; offsetY <= radius; offsetY += 1) {
+        for (let offsetX = -radius; offsetX <= radius; offsetX += 1) {
+          const sampleX = centerX + offsetX;
+          const sampleY = centerY + offsetY;
+          const value = bilinear(level.data, level.width, level.height, sampleX, sampleY);
+          const gradientX = (
+            bilinear(level.data, level.width, level.height, sampleX + 1, sampleY) -
+            bilinear(level.data, level.width, level.height, sampleX - 1, sampleY)
+          ) * 0.5;
+          const gradientY = (
+            bilinear(level.data, level.width, level.height, sampleX, sampleY + 1) -
+            bilinear(level.data, level.width, level.height, sampleX, sampleY - 1)
+          ) * 0.5;
+
+          this.templateValues[count] = value;
+          this.templateGradientX[count] = gradientX;
+          this.templateGradientY[count] = gradientY;
+          this.templateOffsetX[count] = offsetX;
+          this.templateOffsetY[count] = offsetY;
+          sumXX += gradientX * gradientX;
+          sumXY += gradientX * gradientY;
+          sumYY += gradientY * gradientY;
+          count += 1;
+        }
+      }
+
+      const trace = sumXX + sumYY;
+      const discriminant = Math.sqrt(Math.max(0, (sumXX - sumYY) ** 2 + 4 * sumXY * sumXY));
+      const eigenMin = (trace - discriminant) * 0.5 / count;
+      const eigenMax = (trace + discriminant) * 0.5 / count;
+      result.outside = false;
+      result.count = count;
+      result.eigen = eigenMin;
+      result.eigenRatio = eigenMin / Math.max(1e-6, eigenMax);
+      result.sumXX = sumXX;
+      result.sumXY = sumXY;
+      result.sumYY = sumYY;
+      return result;
+    }
+
+    patchResidualRms(sourceLevel, targetLevel, x, y, dx, dy, radius) {
+      if (
+        !patchInside(sourceLevel, x, y, radius + 1) ||
+        !patchInside(targetLevel, x + dx, y + dy, radius + 1)
+      ) return Infinity;
+
+      let count = 0;
+      let residualMean = 0;
+      for (let offsetY = -radius; offsetY <= radius; offsetY += 1) {
+        for (let offsetX = -radius; offsetX <= radius; offsetX += 1) {
+          const sourceValue = bilinear(sourceLevel.data, sourceLevel.width, sourceLevel.height, x + offsetX, y + offsetY);
+          const targetValue = bilinear(
+            targetLevel.data,
+            targetLevel.width,
+            targetLevel.height,
+            x + dx + offsetX,
+            y + dy + offsetY,
+          );
+          const residual = targetValue - sourceValue;
+          this.residuals[count] = residual;
+          residualMean += residual;
+          count += 1;
+        }
+      }
+      residualMean /= count;
+
+      let squaredError = 0;
+      for (let index = 0; index < count; index += 1) {
+        const centered = this.residuals[index] - residualMean;
+        squaredError += centered * centered;
+      }
+      return Math.sqrt(squaredError / count);
+    }
+
+    basicFlowValidation(point, result) {
+      const nextX = point.x + result.dx;
+      const nextY = point.y + result.dy;
+      const border = 6;
+      return (
+        result.ok &&
+        result.error <= 32 &&
+        nextX >= border &&
+        nextY >= border &&
+        nextX < this.analysisWidth - border &&
+        nextY < this.analysisHeight - border
+      );
+    }
+
+    forwardBackwardValid(point, dx, dy) {
+      const nextX = point.x + dx;
+      const nextY = point.y + dy;
+      this.trackPyramidal(
+        this.currentPyramid,
+        this.previousPyramid,
+        nextX,
+        nextY,
+        -dx,
+        -dy,
+        this.backwardScratch,
+      );
+      if (!this.backwardScratch.ok) return false;
+      const closureX = nextX + this.backwardScratch.dx - point.x;
+      const closureY = nextY + this.backwardScratch.dy - point.y;
+      return closureX * closureX + closureY * closureY <= 2.25;
+    }
+
+    estimateDominantSimilarity(points) {
+      if (points.length < 8) return this.estimateMedianTranslation(points);
+
+      let bestModel = null;
+      let bestInliers = 0;
+      const hypotheses = Math.min(32, points.length);
+
+      for (let hypothesis = 0; hypothesis < hypotheses; hypothesis += 1) {
+        const firstIndex = (hypothesis * 37) % points.length;
+        let secondIndex = (firstIndex + Math.floor(points.length / 2) + hypothesis * 17 + 1) % points.length;
+        if (secondIndex === firstIndex) secondIndex = (secondIndex + 1) % points.length;
+        const first = points[firstIndex];
+        const second = points[secondIndex];
+        const model = similarityFromPair(first, second);
+        if (!model) continue;
+
+        const scale = Math.hypot(model.a, model.b);
+        if (scale < 0.96 || scale > 1.04 || Math.hypot(model.tx, model.ty) > 70) continue;
+        const inliers = countSimilarityInliers(model, points, 2.1);
+        if (inliers > bestInliers) {
+          bestInliers = inliers;
+          bestModel = model;
+        }
+      }
+
+      if (!bestModel || bestInliers < Math.max(8, points.length * 0.22)) {
+        return this.estimateMedianTranslation(points);
+      }
+      return refineSimilarity(bestModel, points, 2.1) || bestModel;
+    }
+
+    estimateMedianTranslation(points) {
+      if (!points.length) return identitySimilarity();
+      this.flowValuesX.length = 0;
+      this.flowValuesY.length = 0;
+      for (const point of points) {
+        this.flowValuesX.push(point.candidateDx);
+        this.flowValuesY.push(point.candidateDy);
+      }
+      return {
+        a: 1,
+        b: 0,
+        tx: median(this.flowValuesX),
+        ty: median(this.flowValuesY),
+      };
+    }
+
+    commitCandidate(point) {
+      point.x += point.candidateDx;
+      point.y += point.candidateDy;
+      point.vx = point.candidateDx;
+      point.vy = point.candidateDy;
+      point.predictDx = point.predictDx * 0.28 + point.candidateDx * 0.72;
+      point.predictDy = point.predictDy * 0.28 + point.candidateDy * 0.72;
+      point.age += 1;
+      point.misses = 0;
+      point.quality = point.quality * 0.94 + clamp(point.candidateEigen / 48, 0, 1) * 0.06;
+      this.samplePointColor(point);
+    }
+
+    bridgeMissedFrame(point) {
+      if (point.age < 8 || (point.misses || 0) >= 1) return false;
+      const globalPrediction = similarityDisplacement(this.globalModel, point.x, point.y, this.displacementScratch);
+      const dx = point.predictDx * 0.78 + globalPrediction.x * 0.22;
+      const dy = point.predictDy * 0.78 + globalPrediction.y * 0.22;
+      if (!Number.isFinite(dx + dy) || dx * dx + dy * dy > 144) return false;
+
+      const nextX = point.x + dx;
+      const nextY = point.y + dy;
+      const border = 6;
+      if (nextX < border || nextY < border || nextX >= this.analysisWidth - border || nextY >= this.analysisHeight - border) {
+        return false;
+      }
+
+      point.x = nextX;
+      point.y = nextY;
+      point.vx = dx;
+      point.vy = dy;
+      point.predictDx = point.predictDx * 0.35 + dx * 0.65;
+      point.predictDy = point.predictDy * 0.35 + dy * 0.65;
+      point.age += 1;
+      point.misses = 1;
+      return true;
     }
 
     seedFeatures(targetCount) {
       const width = this.analysisWidth;
       const height = this.analysisHeight;
       const size = width * height;
-      const current = this.currentGray;
-      const gx = this.gradientX;
-      const gy = this.gradientY;
-      gx.fill(0);
-      gy.fill(0);
+      const current = this.currentPyramid[0].data;
+      const gradientX = this.gradientX;
+      const gradientY = this.gradientY;
+      gradientX.fill(0);
+      gradientY.fill(0);
 
       for (let y = 1; y < height - 1; y += 1) {
         let index = y * width + 1;
         for (let x = 1; x < width - 1; x += 1, index += 1) {
-          gx[index] = (current[index + 1] - current[index - 1]) * 0.5;
-          gy[index] = (current[index + width] - current[index - width]) * 0.5;
+          gradientX[index] = (current[index + 1] - current[index - 1]) * 0.5;
+          gradientY[index] = (current[index + width] - current[index - width]) * 0.5;
         }
       }
 
-      const cellSize = clamp(Math.round(Math.sqrt(size / Math.max(1, targetCount)) * 0.92), 6, 13);
+      const cellSize = clamp(Math.round(Math.sqrt(size / Math.max(1, targetCount)) * 0.78), 4, 10);
       const cellsX = Math.ceil(width / cellSize);
       const cellsY = Math.ceil(height / cellSize);
       const cellCount = cellsX * cellsY;
@@ -537,7 +884,7 @@
       const bestX = new Int16Array(cellCount);
       const bestY = new Int16Array(cellCount);
       let frameMaximum = 0;
-      const windowRadius = 2;
+      const tensorRadius = 2;
 
       for (let y = 4; y < height - 4; y += 2) {
         for (let x = 4; x < width - 4; x += 2) {
@@ -545,22 +892,20 @@
           let sumXY = 0;
           let sumYY = 0;
 
-          for (let windowY = -windowRadius; windowY <= windowRadius; windowY += 1) {
-            let index = (y + windowY) * width + x - windowRadius;
-            for (let windowX = -windowRadius; windowX <= windowRadius; windowX += 1, index += 1) {
-              const gradientX = gx[index];
-              const gradientY = gy[index];
-              sumXX += gradientX * gradientX;
-              sumXY += gradientX * gradientY;
-              sumYY += gradientY * gradientY;
+          for (let windowY = -tensorRadius; windowY <= tensorRadius; windowY += 1) {
+            let index = (y + windowY) * width + x - tensorRadius;
+            for (let windowX = -tensorRadius; windowX <= tensorRadius; windowX += 1, index += 1) {
+              const gx = gradientX[index];
+              const gy = gradientY[index];
+              sumXX += gx * gx;
+              sumXY += gx * gy;
+              sumYY += gy * gy;
             }
           }
 
           const trace = sumXX + sumYY;
           const difference = sumXX - sumYY;
-          const lambdaMin = Math.max(0, (trace - Math.sqrt(difference * difference + 4 * sumXY * sumXY)) * 0.5);
-          // A small trace contribution preserves the dense edge constellation of the reference.
-          const score = lambdaMin + trace * 0.026;
+          const score = Math.max(0, (trace - Math.sqrt(difference * difference + 4 * sumXY * sumXY)) * 0.5);
           const cellIndex = Math.floor(y / cellSize) * cellsX + Math.floor(x / cellSize);
           if (score > bestScore[cellIndex]) {
             bestScore[cellIndex] = score;
@@ -572,60 +917,60 @@
       }
 
       if (!frameMaximum) return;
-      const threshold = frameMaximum * 0.018;
+      const threshold = Math.max(20, frameMaximum * 0.002);
       const candidates = [];
       for (let index = 0; index < cellCount; index += 1) {
         if (bestScore[index] >= threshold) {
-          candidates.push({
-            x: bestX[index],
-            y: bestY[index],
-            score: bestScore[index],
-          });
+          candidates.push({ x: bestX[index], y: bestY[index], score: bestScore[index] });
         }
       }
-      candidates.sort((a, b) => b.score - a.score);
+      candidates.sort((first, second) => second.score - first.score);
 
-      const occupancy = new Uint8Array(cellCount);
-      for (const point of this.tracks) {
-        if (point.life <= 0.1) continue;
-        markOccupied(occupancy, cellsX, cellsY, cellSize, point.x, point.y);
+      const minimumDistance = 4;
+      const bucketSize = minimumDistance;
+      const bucketColumns = Math.ceil(width / bucketSize);
+      const bucketRows = Math.ceil(height / bucketSize);
+      const buckets = new Int32Array(bucketColumns * bucketRows);
+      const bucketLinks = new Int32Array(Math.max(1, targetCount, this.tracks.length));
+      buckets.fill(-1);
+      bucketLinks.fill(-1);
+      for (let index = 0; index < this.tracks.length; index += 1) {
+        placeInBucket(buckets, bucketLinks, bucketColumns, bucketRows, bucketSize, this.tracks[index], index);
       }
 
       for (const candidate of candidates) {
         if (this.tracks.length >= targetCount) break;
-        const cellX = Math.floor(candidate.x / cellSize);
-        const cellY = Math.floor(candidate.y / cellSize);
-        const cellIndex = cellY * cellsX + cellX;
-        if (occupancy[cellIndex]) continue;
+        if (hasNearbyTrack(candidate, this.tracks, buckets, bucketLinks, bucketColumns, bucketRows, bucketSize, minimumDistance)) continue;
+        const trackingTemplate = this.prepareTemplate(this.currentPyramid[0], candidate.x, candidate.y, 4);
+        if (trackingTemplate.outside || trackingTemplate.eigen < 2.5 || trackingTemplate.eigenRatio < 0.006) continue;
 
-        const normalizedQuality = Math.sqrt(candidate.score / frameMaximum);
+        const prediction = similarityDisplacement(this.globalModel, candidate.x, candidate.y, this.displacementScratch);
         const point = {
           id: this.nextTrackId,
           x: candidate.x,
           y: candidate.y,
-          displayX: candidate.x,
-          displayY: candidate.y,
           vx: 0,
           vy: 0,
-          r: 190,
-          g: 210,
-          b: 205,
-          alpha: 0.08,
-          life: 1,
+          predictDx: prediction.x,
+          predictDy: prediction.y,
+          r: 150,
+          g: 170,
+          b: 170,
           age: 0,
-          quality: normalizedQuality,
-          twinkle: ((this.nextTrackId * 47) % 100) / 100,
+          misses: 0,
+          quality: Math.sqrt(candidate.score / frameMaximum),
+          candidateDx: 0,
+          candidateDy: 0,
+          candidateError: 0,
+          candidateEigen: 0,
         };
         this.nextTrackId += 1;
         this.samplePointColor(point, true);
         this.tracks.push(point);
-        markOccupied(occupancy, cellsX, cellsY, cellSize, candidate.x, candidate.y);
+        placeInBucket(buckets, bucketLinks, bucketColumns, bucketRows, bucketSize, point, this.tracks.length - 1);
       }
 
-      if (this.tracks.length > targetCount) {
-        this.tracks.sort((a, b) => b.life * b.quality - a.life * a.quality);
-        this.tracks.length = targetCount;
-      }
+      this.trimToTarget();
     }
 
     samplePointColor(point, immediate = false) {
@@ -636,115 +981,137 @@
       let red = 0;
       let green = 0;
       let blue = 0;
-      let samples = 0;
 
-      for (let y = -1; y <= 1; y += 1) {
-        for (let x = -1; x <= 1; x += 1) {
-          const index = ((centerY + y) * width + centerX + x) * 4;
+      for (let offsetY = -1; offsetY <= 1; offsetY += 1) {
+        for (let offsetX = -1; offsetX <= 1; offsetX += 1) {
+          const index = ((centerY + offsetY) * width + centerX + offsetX) * 4;
           red += this.currentPixels[index];
           green += this.currentPixels[index + 1];
           blue += this.currentPixels[index + 2];
-          samples += 1;
         }
       }
 
-      red /= samples;
-      green /= samples;
-      blue /= samples;
-      const luminance = 0.299 * red + 0.587 * green + 0.114 * blue;
-      const colorBoost = luminance < 92 ? 92 / Math.max(24, luminance) : 1;
-      red = clamp(red * colorBoost * 1.06, 0, 255);
-      green = clamp(green * colorBoost * 1.06, 0, 255);
-      blue = clamp(blue * colorBoost * 1.06, 0, 255);
+      red /= 9;
+      green /= 9;
+      blue /= 9;
+      let luminance = 0.299 * red + 0.587 * green + 0.114 * blue;
+      red = luminance + (red - luminance) * 1.1;
+      green = luminance + (green - luminance) * 1.1;
+      blue = luminance + (blue - luminance) * 1.1;
+      if (luminance < 58) {
+        const boost = 58 / Math.max(18, luminance);
+        red *= boost;
+        green *= boost;
+        blue *= boost;
+        luminance *= boost;
+      }
 
-      const amount = immediate ? 1 : 0.2;
-      point.r += (red - point.r) * amount;
-      point.g += (green - point.g) * amount;
-      point.b += (blue - point.b) * amount;
+      const amount = immediate ? 1 : 0.48;
+      point.r += (clamp(red, 0, 255) - point.r) * amount;
+      point.g += (clamp(green, 0, 255) - point.g) * amount;
+      point.b += (clamp(blue, 0, 255) - point.b) * amount;
     }
 
-    render(time) {
+    render() {
       const context = this.outputContext;
       const outputWidth = this.outputCanvas.width;
       const outputHeight = this.outputCanvas.height;
       if (!outputWidth || !outputHeight) return;
 
-      const fadeAlpha = 0.035 + (1 - this.settings.trail / 100) * 0.72;
       context.globalCompositeOperation = "source-over";
-      context.fillStyle = `rgba(4, 5, 7, ${clamp(fadeAlpha, 0.04, 1)})`;
+      context.fillStyle = "#000";
       context.fillRect(0, 0, outputWidth, outputHeight);
 
       const scaleX = outputWidth / this.analysisWidth;
       const scaleY = outputHeight / this.analysisHeight;
       const baseRadius = this.settings.dotSize * this.outputDpr;
-      const seconds = time * 0.001;
-      context.globalCompositeOperation = "lighter";
 
       for (const point of this.tracks) {
-        const shimmer = 0.83 + Math.sin(seconds * 2.2 + point.twinkle * TWO_PI + point.age * 0.022) * 0.17;
-        const alpha = clamp(point.alpha * point.life * shimmer, 0, 1);
-        if (alpha < 0.02) continue;
-
-        const x = point.displayX * scaleX;
-        const y = point.displayY * scaleY;
-        const radius = baseRadius * (0.72 + point.quality * 0.58 + point.twinkle * 0.14);
-        const color = this.pointColor(point, seconds);
-
-        context.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha * 0.11})`;
+        if (point.age < 1) continue;
+        const color = this.pointColor(point, this.colorScratch);
+        const radius = baseRadius * (0.94 + point.quality * 0.1);
+        context.fillStyle = `rgb(${color[0]} ${color[1]} ${color[2]})`;
         context.beginPath();
-        context.arc(x, y, radius * 2.55, 0, TWO_PI);
-        context.fill();
-
-        context.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha * 0.9})`;
-        context.beginPath();
-        context.arc(x, y, radius, 0, TWO_PI);
+        context.arc(point.x * scaleX, point.y * scaleY, radius, 0, TAU);
         context.fill();
       }
-
-      context.globalCompositeOperation = "source-over";
     }
 
-    pointColor(point, seconds) {
+    pointColor(point, target) {
       let red = point.r;
       let green = point.g;
       let blue = point.b;
 
       if (this.settings.palette === "mono") {
-        const light = clamp(0.3 * red + 0.58 * green + 0.12 * blue, 120, 248);
-        red = light * 0.91;
+        const light = clamp(0.3 * red + 0.58 * green + 0.12 * blue, 66, 246);
+        red = light * 0.93;
         green = light * 0.98;
-        blue = Math.min(255, light * 1.02 + 7);
+        blue = Math.min(255, light * 1.04 + 4);
       } else if (this.settings.palette === "prism") {
-        const phase = point.x * 0.024 + point.y * 0.011 + seconds * 0.22 + point.twinkle * 2.5;
-        const prismRed = 150 + 105 * Math.sin(phase);
-        const prismGreen = 150 + 105 * Math.sin(phase + 2.09);
-        const prismBlue = 150 + 105 * Math.sin(phase + 4.18);
-        red = red * 0.62 + prismRed * 0.38;
-        green = green * 0.62 + prismGreen * 0.38;
-        blue = blue * 0.62 + prismBlue * 0.38;
+        const phase = point.id * 2.399963;
+        const prismRed = 145 + 90 * Math.sin(phase);
+        const prismGreen = 145 + 90 * Math.sin(phase + 2.094);
+        const prismBlue = 145 + 90 * Math.sin(phase + 4.189);
+        red = red * 0.72 + prismRed * 0.28;
+        green = green * 0.72 + prismGreen * 0.28;
+        blue = blue * 0.72 + prismBlue * 0.28;
       }
 
       const maximum = Math.max(red, green, blue);
-      if (maximum < 150) {
-        const boost = 150 / Math.max(1, maximum);
+      if (maximum < 66) {
+        const boost = 66 / Math.max(1, maximum);
         red *= boost;
         green *= boost;
         blue *= boost;
       }
-
-      return [Math.round(clamp(red, 0, 255)), Math.round(clamp(green, 0, 255)), Math.round(clamp(blue, 0, 255))];
+      target[0] = Math.round(clamp(red, 0, 255));
+      target[1] = Math.round(clamp(green, 0, 255));
+      target[2] = Math.round(clamp(blue, 0, 255));
+      return target;
     }
 
     targetPointCount() {
       const density = this.settings.density / 100;
-      const areaScale = Math.sqrt((this.analysisWidth * this.analysisHeight) / (210 * 360));
-      return Math.round(clamp((230 + density * 900) * areaScale, 260, 1150));
+      const referenceArea = 208 * 448;
+      const areaScale = Math.sqrt((this.analysisWidth * this.analysisHeight) / referenceArea);
+      return Math.round(clamp((450 + density * 1600) * areaScale * this.performanceScale, 500, 2200));
     }
 
-    swapGrayBuffers() {
-      const previous = this.previousGray;
-      this.previousGray = this.currentGray;
-      this.currentGray = previous;
+    trimToTarget() {
+      const target = this.targetPointCount();
+      if (this.tracks.length <= target) return;
+      this.tracks.sort((first, second) => second.quality - first.quality);
+      this.tracks.length = target;
+    }
+
+    swapPyramids() {
+      const previous = this.previousPyramid;
+      this.previousPyramid = this.currentPyramid;
+      this.currentPyramid = previous;
+    }
+
+    recordPerformance(workTime) {
+      this.workTimeEma = this.workTimeEma ? this.workTimeEma * 0.9 + workTime * 0.1 : workTime;
+      if (this.workTimeEma > 30) {
+        this.overBudgetFrames += 1;
+        this.underBudgetFrames = 0;
+      } else if (this.workTimeEma < 23) {
+        this.underBudgetFrames += 1;
+        this.overBudgetFrames = 0;
+      } else {
+        this.overBudgetFrames = 0;
+        this.underBudgetFrames = 0;
+      }
+
+      if (this.overBudgetFrames >= 12 && this.performanceScale > 0.58) {
+        this.performanceScale = Math.max(0.58, this.performanceScale * 0.88);
+        this.overBudgetFrames = 0;
+        this.trimToTarget();
+      } else if (this.underBudgetFrames >= 120 && this.performanceScale < 1) {
+        this.performanceScale = Math.min(1, this.performanceScale + 0.06);
+        this.underBudgetFrames = 0;
+        this.needsDetection = true;
+      }
     }
 
     updateStats(time, workTime) {
@@ -756,10 +1123,36 @@
       this.fps = (this.statsFrameCount * 1000) / Math.max(1, elapsed);
       this.statsFrameCount = 0;
       this.lastStatsTime = time;
+      let stableTracks = 0;
+      let totalAge = 0;
+      let visibleTracks = 0;
+      for (const point of this.tracks) {
+        if (point.age < 1) continue;
+        visibleTracks += 1;
+        if (point.age >= 60) stableTracks += 1;
+        totalAge += point.age;
+      }
       this.onStats({
-        pointCount: this.tracks.length,
+        pointCount: visibleTracks,
         fps: Math.round(this.fps),
         workTime: Math.round(workTime * 10) / 10,
+        workTimeEma: Math.round(this.workTimeEma * 10) / 10,
+        retainedRatio: this.lastTrackingStats.visibleRatio,
+        rawRetainedRatio: this.lastTrackingStats.retainedRatio,
+        directRatio: this.lastTrackingStats.directRatio,
+        dropped: this.lastTrackingStats.visibleDropped,
+        rawDropped: this.lastTrackingStats.dropped,
+        retried: this.lastTrackingStats.retried,
+        predicted: this.lastTrackingStats.predicted,
+        performanceScale: this.performanceScale,
+        stableRatio: visibleTracks ? stableTracks / visibleTracks : 1,
+        averageAge: visibleTracks ? totalAge / visibleTracks : 0,
+        globalMotion: {
+          a: this.globalModel.a,
+          b: this.globalModel.b,
+          tx: this.globalModel.tx,
+          ty: this.globalModel.ty,
+        },
       });
     }
 
@@ -767,9 +1160,69 @@
       if (!this.outputContext || !this.outputCanvas.width || !this.outputCanvas.height) return;
       this.outputContext.setTransform(1, 0, 0, 1, 0, 0);
       this.outputContext.globalCompositeOperation = "source-over";
-      this.outputContext.fillStyle = "#050608";
+      this.outputContext.fillStyle = "#000";
       this.outputContext.fillRect(0, 0, this.outputCanvas.width, this.outputCanvas.height);
     }
+  }
+
+  function allocatePyramid(width, height, levels) {
+    const pyramid = [];
+    let levelWidth = width;
+    let levelHeight = height;
+    for (let level = 0; level < levels; level += 1) {
+      pyramid.push({
+        width: levelWidth,
+        height: levelHeight,
+        data: new Uint8Array(levelWidth * levelHeight),
+      });
+      levelWidth = Math.max(1, Math.floor(levelWidth / 2));
+      levelHeight = Math.max(1, Math.floor(levelHeight / 2));
+    }
+    return pyramid;
+  }
+
+  function buildPyramid(pyramid) {
+    for (let level = 1; level < pyramid.length; level += 1) {
+      const source = pyramid[level - 1];
+      const target = pyramid[level];
+      for (let y = 0; y < target.height; y += 1) {
+        const sourceY = y * 2;
+        for (let x = 0; x < target.width; x += 1) {
+          const sourceX = x * 2;
+          const topLeft = sourceY * source.width + sourceX;
+          target.data[y * target.width + x] = (
+            source.data[topLeft] +
+            source.data[topLeft + 1] +
+            source.data[topLeft + source.width] +
+            source.data[topLeft + source.width + 1] +
+            2
+          ) >> 2;
+        }
+      }
+    }
+  }
+
+  function createFlowResult() {
+    return { ok: false, outside: false, dx: 0, dy: 0, error: Infinity, eigen: 0 };
+  }
+
+  function createTemplateResult() {
+    return { outside: true, count: 0, eigen: 0, eigenRatio: 0, sumXX: 0, sumXY: 0, sumYY: 0 };
+  }
+
+  function copyCandidate(point, result) {
+    point.candidateDx = result.dx;
+    point.candidateDy = result.dy;
+    point.candidateError = result.error;
+    point.candidateEigen = result.eigen;
+  }
+
+  function toLevelCoordinate(value, scale) {
+    return (value + 0.5) / scale - 0.5;
+  }
+
+  function patchInside(level, x, y, radius) {
+    return x >= radius && y >= radius && x < level.width - radius - 1 && y < level.height - radius - 1;
   }
 
   function bilinear(buffer, width, height, x, y) {
@@ -786,12 +1239,199 @@
     return top * (1 - fractionY) + bottom * fractionY;
   }
 
-  function markOccupied(occupancy, cellsX, cellsY, cellSize, x, y) {
-    const centerX = Math.floor(x / cellSize);
-    const centerY = Math.floor(y / cellSize);
-    if (centerX >= 0 && centerX < cellsX && centerY >= 0 && centerY < cellsY) {
-      occupancy[centerY * cellsX + centerX] = 1;
+  function identitySimilarity(target = {}) {
+    target.a = 1;
+    target.b = 0;
+    target.tx = 0;
+    target.ty = 0;
+    return target;
+  }
+
+  function copySimilarity(target, source) {
+    target.a = source.a;
+    target.b = source.b;
+    target.tx = source.tx;
+    target.ty = source.ty;
+    return target;
+  }
+
+  function similarityDisplacement(model, x, y, target) {
+    target.x = model.a * x - model.b * y + model.tx - x;
+    target.y = model.b * x + model.a * y + model.ty - y;
+    return target;
+  }
+
+  function similarityFromPair(first, second) {
+    const firstOldX = first.x;
+    const firstOldY = first.y;
+    const secondOldX = second.x;
+    const secondOldY = second.y;
+    const firstNewX = first.x + first.candidateDx;
+    const firstNewY = first.y + first.candidateDy;
+    const secondNewX = second.x + second.candidateDx;
+    const secondNewY = second.y + second.candidateDy;
+    const oldDeltaX = secondOldX - firstOldX;
+    const oldDeltaY = secondOldY - firstOldY;
+    const newDeltaX = secondNewX - firstNewX;
+    const newDeltaY = secondNewY - firstNewY;
+    const denominator = oldDeltaX * oldDeltaX + oldDeltaY * oldDeltaY;
+    if (denominator < 400) return null;
+
+    const a = (newDeltaX * oldDeltaX + newDeltaY * oldDeltaY) / denominator;
+    const b = (newDeltaY * oldDeltaX - newDeltaX * oldDeltaY) / denominator;
+    return {
+      a,
+      b,
+      tx: firstNewX - a * firstOldX + b * firstOldY,
+      ty: firstNewY - b * firstOldX - a * firstOldY,
+    };
+  }
+
+  function countSimilarityInliers(model, points, threshold) {
+    const thresholdSquared = threshold * threshold;
+    let inliers = 0;
+    for (const point of points) {
+      const predictedX = model.a * point.x - model.b * point.y + model.tx;
+      const predictedY = model.b * point.x + model.a * point.y + model.ty;
+      const actualX = point.x + point.candidateDx;
+      const actualY = point.y + point.candidateDy;
+      const errorX = predictedX - actualX;
+      const errorY = predictedY - actualY;
+      if (errorX * errorX + errorY * errorY <= thresholdSquared) inliers += 1;
     }
+    return inliers;
+  }
+
+  function refineSimilarity(model, points, threshold) {
+    const thresholdSquared = threshold * threshold;
+    let count = 0;
+    let oldCenterX = 0;
+    let oldCenterY = 0;
+    let newCenterX = 0;
+    let newCenterY = 0;
+
+    for (const point of points) {
+      const predictedX = model.a * point.x - model.b * point.y + model.tx;
+      const predictedY = model.b * point.x + model.a * point.y + model.ty;
+      const actualX = point.x + point.candidateDx;
+      const actualY = point.y + point.candidateDy;
+      const errorX = predictedX - actualX;
+      const errorY = predictedY - actualY;
+      if (errorX * errorX + errorY * errorY > thresholdSquared) continue;
+      oldCenterX += point.x;
+      oldCenterY += point.y;
+      newCenterX += actualX;
+      newCenterY += actualY;
+      count += 1;
+    }
+
+    if (count < 4) return null;
+    oldCenterX /= count;
+    oldCenterY /= count;
+    newCenterX /= count;
+    newCenterY /= count;
+    let denominator = 0;
+    let numeratorA = 0;
+    let numeratorB = 0;
+
+    for (const point of points) {
+      const predictedX = model.a * point.x - model.b * point.y + model.tx;
+      const predictedY = model.b * point.x + model.a * point.y + model.ty;
+      const actualX = point.x + point.candidateDx;
+      const actualY = point.y + point.candidateDy;
+      const errorX = predictedX - actualX;
+      const errorY = predictedY - actualY;
+      if (errorX * errorX + errorY * errorY > thresholdSquared) continue;
+      const oldX = point.x - oldCenterX;
+      const oldY = point.y - oldCenterY;
+      const newX = actualX - newCenterX;
+      const newY = actualY - newCenterY;
+      denominator += oldX * oldX + oldY * oldY;
+      numeratorA += oldX * newX + oldY * newY;
+      numeratorB += oldX * newY - oldY * newX;
+    }
+
+    if (denominator < 1e-6) return null;
+    const a = numeratorA / denominator;
+    const b = numeratorB / denominator;
+    const scale = Math.hypot(a, b);
+    if (scale < 0.96 || scale > 1.04) return null;
+    return {
+      a,
+      b,
+      tx: newCenterX - a * oldCenterX + b * oldCenterY,
+      ty: newCenterY - b * oldCenterX - a * oldCenterY,
+    };
+  }
+
+  function median(values) {
+    if (!values.length) return 0;
+    values.sort((first, second) => first - second);
+    const middle = Math.floor(values.length / 2);
+    return values.length % 2 ? values[middle] : (values[middle - 1] + values[middle]) * 0.5;
+  }
+
+  function placeInBucket(buckets, links, columns, rows, bucketSize, point, pointIndex) {
+    const column = Math.floor(point.x / bucketSize);
+    const row = Math.floor(point.y / bucketSize);
+    if (column >= 0 && column < columns && row >= 0 && row < rows) {
+      const bucketIndex = row * columns + column;
+      links[pointIndex] = buckets[bucketIndex];
+      buckets[bucketIndex] = pointIndex;
+    }
+  }
+
+  function hasNearbyTrack(candidate, tracks, buckets, links, columns, rows, bucketSize, minimumDistance) {
+    const centerColumn = Math.floor(candidate.x / bucketSize);
+    const centerRow = Math.floor(candidate.y / bucketSize);
+    const minimumDistanceSquared = minimumDistance * minimumDistance;
+
+    for (let rowOffset = -1; rowOffset <= 1; rowOffset += 1) {
+      const row = centerRow + rowOffset;
+      if (row < 0 || row >= rows) continue;
+      for (let columnOffset = -1; columnOffset <= 1; columnOffset += 1) {
+        const column = centerColumn + columnOffset;
+        if (column < 0 || column >= columns) continue;
+        let pointIndex = buckets[row * columns + column];
+        while (pointIndex >= 0) {
+          const point = tracks[pointIndex];
+          const differenceX = point.x - candidate.x;
+          const differenceY = point.y - candidate.y;
+          if (differenceX * differenceX + differenceY * differenceY < minimumDistanceSquared) return true;
+          pointIndex = links[pointIndex];
+        }
+      }
+    }
+    return false;
+  }
+
+  function drawWatermark(context, width, height) {
+    const edge = Math.round(Math.min(width, height) * 0.045);
+    const labelSize = Math.max(14, Math.round(Math.min(width, height) * 0.017));
+    const dotRadius = Math.max(2, Math.round(labelSize * 0.17));
+    const label = "DOTCAM  ·  MANU.VISION";
+    context.save();
+    context.font = `700 ${labelSize}px ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif`;
+    context.letterSpacing = `${Math.round(labelSize * 0.14)}px`;
+    const textWidth = context.measureText(label).width;
+    const pillHeight = labelSize * 2.45;
+    const pillWidth = textWidth + labelSize * 3.8;
+    const x = width - edge - pillWidth;
+    const y = height - edge - pillHeight;
+    roundedRect(context, x, y, pillWidth, pillHeight, pillHeight / 2);
+    context.fillStyle = "rgba(0, 0, 0, .62)";
+    context.fill();
+    context.strokeStyle = "rgba(255,255,255,.2)";
+    context.lineWidth = Math.max(1, width / 1100);
+    context.stroke();
+    context.fillStyle = "#d9ff69";
+    context.beginPath();
+    context.arc(x + labelSize * 1.25, y + pillHeight / 2, dotRadius, 0, TAU);
+    context.fill();
+    context.fillStyle = "rgba(255,255,255,.78)";
+    context.textBaseline = "middle";
+    context.fillText(label, x + labelSize * 2.1, y + pillHeight / 2 + 1);
+    context.restore();
   }
 
   function roundedRect(context, x, y, width, height, radius) {
@@ -800,7 +1440,6 @@
       context.roundRect(x, y, width, height, radius);
       return;
     }
-
     const r = Math.min(radius, width / 2, height / 2);
     context.beginPath();
     context.moveTo(x + r, y);
@@ -821,7 +1460,6 @@
         canvas.toBlob(resolve, type, 1);
         return;
       }
-
       const dataUrl = canvas.toDataURL(type, 1);
       const parts = dataUrl.split(",");
       const bytes = atob(parts[1]);

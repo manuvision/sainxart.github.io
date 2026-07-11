@@ -73,7 +73,7 @@
           <p class="eyebrow"><span></span> A LIVE MEDIA EXPERIMENT</p>
           <h1 id="welcome-title">Become points<br />of light.</h1>
           <p class="lede">
-            DotCam finds the details in every frame and lets them drift, shimmer, and follow your movement.
+            DotCam finds details in every frame and keeps them locked to surfaces as you or the camera move.
           </p>
           <div class="welcome-actions">
             <button class="primary-button" id="start-camera" type="button">
@@ -161,7 +161,7 @@
         <header class="sheet-header">
           <div>
             <p class="eyebrow">SHAPE THE SIGNAL</p>
-            <h2 id="settings-title">Tune your light</h2>
+            <h2 id="settings-title">Tune your points</h2>
           </div>
           <button class="icon-button" value="close" aria-label="Close settings">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
@@ -171,8 +171,8 @@
         <fieldset class="setting-group palette-picker">
           <legend>COLOR SIGNAL</legend>
           <div class="segmented" id="palette-control">
-            <button type="button" data-palette="source"><i class="swatch source"></i>True</button>
-            <button type="button" data-palette="prism" class="active"><i class="swatch prism"></i>Prism</button>
+            <button type="button" data-palette="source" class="active"><i class="swatch source"></i>True</button>
+            <button type="button" data-palette="prism"><i class="swatch prism"></i>Prism</button>
             <button type="button" data-palette="mono"><i class="swatch mono"></i>Silver</button>
           </div>
         </fieldset>
@@ -180,25 +180,17 @@
         <div class="setting-group">
           <div class="setting-label">
             <label for="density">POINT DENSITY</label>
-            <output id="density-value" for="density">72%</output>
+            <output id="density-value" for="density">84%</output>
           </div>
-          <input id="density" type="range" min="25" max="100" value="72" />
+          <input id="density" type="range" min="25" max="100" value="84" />
         </div>
 
         <div class="setting-group">
           <div class="setting-label">
             <label for="dot-size">POINT SIZE</label>
-            <output id="dot-size-value" for="dot-size">1.8</output>
+            <output id="dot-size-value" for="dot-size">2.4</output>
           </div>
-          <input id="dot-size" type="range" min="8" max="36" value="18" />
-        </div>
-
-        <div class="setting-group">
-          <div class="setting-label">
-            <label for="trail">AFTERGLOW</label>
-            <output id="trail-value" for="trail">64%</output>
-          </div>
-          <input id="trail" type="range" min="0" max="92" value="64" />
+          <input id="dot-size" type="range" min="14" max="38" value="24" />
         </div>
 
         <button class="reset-button" id="reset-settings" type="button">Reset to the original signal</button>
