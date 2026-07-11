@@ -215,43 +215,7 @@
     const glitchCanvas = document.getElementById("glitchCanvas");
     const clarityLens = document.getElementById("clarityLens");
     const spyCoordinates = document.getElementById("spyCoordinates");
-    const heroGetInTouch = document.querySelector(".hero-actions .button--sun");
     const currentRole = document.querySelector(".current-role");
-    const readBioButton = document.querySelector(".current-role__bio");
-
-    const alignHeroButtons = () => {
-        if (!heroGetInTouch || !currentRole || !readBioButton) return;
-        if (window.innerWidth <= 820) {
-            currentRole.style.removeProperty("--role-align-y");
-            return;
-        }
-
-        currentRole.style.setProperty("--role-align-y", "0px");
-        const ctaRect = heroGetInTouch.getBoundingClientRect();
-        const bioRect = readBioButton.getBoundingClientRect();
-        const ctaCenter = ctaRect.top + (ctaRect.height / 2);
-        const bioCenter = bioRect.top + (bioRect.height / 2);
-        const offset = Math.max(-160, Math.min(0, ctaCenter - bioCenter));
-        currentRole.style.setProperty("--role-align-y", `${offset.toFixed(1)}px`);
-    };
-
-    let heroButtonAlignFrame = 0;
-    const scheduleHeroButtonAlign = () => {
-        window.cancelAnimationFrame(heroButtonAlignFrame);
-        heroButtonAlignFrame = window.requestAnimationFrame(alignHeroButtons);
-    };
-
-    scheduleHeroButtonAlign();
-    window.addEventListener("resize", scheduleHeroButtonAlign, { passive: true });
-    window.addEventListener("load", scheduleHeroButtonAlign, { once: true });
-    document.fonts?.ready?.then(scheduleHeroButtonAlign);
-
-    if ("ResizeObserver" in window && heroGetInTouch && currentRole) {
-        const heroButtonAlignObserver = new ResizeObserver(scheduleHeroButtonAlign);
-        heroButtonAlignObserver.observe(heroGetInTouch);
-        heroButtonAlignObserver.observe(currentRole);
-        heroButtonAlignObserver.observe(heroVisual);
-    }
 
     const bayer8 = [
         0, 32, 8, 40, 2, 34, 10, 42,
