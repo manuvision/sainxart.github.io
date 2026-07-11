@@ -501,7 +501,8 @@ main section h2 em {
 
 .hero-visual picture,
 .hero-visual picture img,
-#ditherCanvas {
+#ditherCanvas,
+#portraitCycleCanvas {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -529,6 +530,25 @@ main section h2 em {
     opacity: 1;
 }
 
+.hero-alternate-source {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#portraitCycleCanvas {
+    z-index: 4;
+    image-rendering: pixelated;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.portrait-cycle-ready #portraitCycleCanvas {
+    opacity: 1;
+}
+
 .clarity-image {
     position: absolute;
     z-index: 3;
@@ -546,6 +566,11 @@ main section h2 em {
     opacity: 0.82;
     pointer-events: none;
     transition: opacity 80ms linear, filter 80ms linear;
+}
+
+.hero-visual.is-alternate-current .clarity-image {
+    background-image: url("images/2026/hero-adobe-alt.jpg");
+    background-position: center 28%;
 }
 
 #glitchCanvas {
@@ -2161,6 +2186,10 @@ main section h2 em {
     color: var(--ink);
 }
 
+.bio-prose p + p {
+    margin-top: 18px;
+}
+
 .detail-dialog--press {
     width: min(1260px, calc(100vw - 40px));
 }
@@ -2609,6 +2638,37 @@ main section h2 em {
     .press-dialog-grid {
         grid-template-columns: repeat(3, 1fr);
     }
+}
+
+/* Clickable portfolio cards */
+.exhibition-card,
+.career-card-link {
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.exhibition-card {
+    transition: transform 220ms ease;
+}
+
+.exhibition-card:hover,
+.exhibition-card:focus-visible {
+    transform: translateY(-4px);
+}
+
+.career-card-link {
+    display: block;
+    width: 100%;
+}
+
+.career-card-link article {
+    transition: transform 220ms ease;
+}
+
+.career-card-link:hover article,
+.career-card-link:focus-visible article {
+    transform: translateY(-4px);
 }
 
 @media (min-width: 1377px) {

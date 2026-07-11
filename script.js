@@ -187,7 +187,9 @@
     // A stable low-resolution portrait field is revealed by the face detector.
     const heroVisual = document.getElementById("heroVisual");
     const heroSource = document.getElementById("heroSource");
+    const heroAlternateSource = document.getElementById("heroAlternateSource");
     const ditherCanvas = document.getElementById("ditherCanvas");
+    const portraitCycleCanvas = document.getElementById("portraitCycleCanvas");
     const glitchCanvas = document.getElementById("glitchCanvas");
     const clarityLens = document.getElementById("clarityLens");
     const spyCoordinates = document.getElementById("spyCoordinates");
@@ -253,9 +255,99 @@
     const portraitSampleCanvas = document.createElement("canvas");
     const portraitSampleContext = portraitSampleCanvas.getContext("2d", { willReadFrequently: true });
     const portraitDitherContext = ditherCanvas.getContext("2d");
+    const portraitCycleContext = portraitCycleCanvas.getContext("2d");
     const glitchContext = glitchCanvas.getContext("2d");
     let glitchSourceImage = null;
     let glitchOutputImage = null;
+    let cyclePrimarySourceImage = null;
+    let cyclePrimaryDitherImage = null;
+    let cycleAlternateSourceImage = null;
+    let cycleAlternateDitherImage = null;
+    let cycleOutputImage = null;
+    let lastCycleFrame = 0;
+    let cycleStartedAt = null;
+    let cycleIndex = -1;
+    let cycleCurrentAlternate = false;
+    let cycleTargetAlternate = true;
+    let lensX = 48;
+    let lensY = 31;
+
+    const smoothstep = (value) => {
+        const clamped = Math.max(0, Math.min(1, value));
+        return clamped * clamped * (3 - (2 * clamped));
+    };
+
+    const renderPortraitCycle = (time = performance.now()) => {
+        if (
+            !cyclePrimarySourceImage ||
+            !cyclePrimaryDitherImage ||
+            !cycleAlternateSourceImage ||
+            !cycleAlternateDitherImage ||
+            !cycleOutputImage ||
+            !portraitCycleContext
+        ) return;
+
+        const duration = 8000;
+        if (cycleStartedAt === null) cycleStartedAt = time;
+        const elapsed = Math.max(0, time - cycleStartedAt);
+        const nextCycleIndex = Math.floor(elapsed / duration);
+
+        if (nextCycleIndex !== cycleIndex) {
+            if (cycleIndex >= 0) {
+                cycleCurrentAlternate = cycleTargetAlternate;
+                portraitDitherContext.putImageData(
+                    cycleCurrentAlternate ? cycleAlternateDitherImage : cyclePrimaryDitherImage,
+                    0,
+                    0
+                );
+                glitchSourceImage = cycleCurrentAlternate ? cycleAlternateSourceImage : cyclePrimarySourceImage;
+                glitchOutputImage = glitchContext.createImageData(glitchSourceImage.width, glitchSourceImage.height);
+                renderGlitchFrame();
+                heroVisual.classList.toggle("is-alternate-current", cycleCurrentAlternate);
+            }
+            cycleIndex = nextCycleIndex;
+            cycleTargetAlternate = !cycleCurrentAlternate;
+            portraitCycleContext.clearRect(0, 0, portraitCycleCanvas.width, portraitCycleCanvas.height);
+        }
+
+        const reveal = smoothstep((elapsed % duration) / duration);
+        const cleanSource = cycleTargetAlternate ? cycleAlternateSourceImage.data : cyclePrimarySourceImage.data;
+        const ditherSource = cycleTargetAlternate ? cycleAlternateDitherImage.data : cyclePrimaryDitherImage.data;
+        const output = cycleOutputImage.data;
+        const width = cyclePrimarySourceImage.width;
+        const height = cyclePrimarySourceImage.height;
+        const centerX = width * 0.52;
+        const centerY = height * 0.4;
+        const lensCenterX = width * (lensX / 100);
+        const lensCenterY = height * (lensY / 100);
+        const lensHalfWidth = width * ((clarityLens.offsetWidth / Math.max(heroVisual.clientWidth, 1)) / 2);
+        const lensHalfHeight = height * ((clarityLens.offsetHeight / Math.max(heroVisual.clientHeight, 1)) / 2);
+        const maxDistance = Math.max(
+            Math.hypot(centerX, centerY),
+            Math.hypot(width - centerX, centerY),
+            Math.hypot(centerX, height - centerY),
+            Math.hypot(width - centerX, height - centerY)
+        );
+
+        for (let y = 0; y < height; y += 1) {
+            for (let x = 0; x < width; x += 1) {
+                const index = (y * width + x) * 4;
+                const distance = Math.hypot(x - centerX, y - centerY) / maxDistance;
+                const ditherX = Math.floor(x / 2) % 8;
+                const ditherY = Math.floor(y / 2) % 8;
+                const dither = ((bayer8[ditherY * 8 + ditherX] / 63) - 0.5) * 0.13;
+                const visible = reveal >= 0.998 || distance <= reveal + dither;
+                const insideLens = Math.abs(x - lensCenterX) <= lensHalfWidth && Math.abs(y - lensCenterY) <= lensHalfHeight;
+                const source = insideLens ? cleanSource : ditherSource;
+                output[index] = source[index];
+                output[index + 1] = source[index + 1];
+                output[index + 2] = source[index + 2];
+                output[index + 3] = visible ? 255 : 0;
+            }
+        }
+
+        portraitCycleContext.putImageData(cycleOutputImage, 0, 0);
+    };
 
     const renderGlitchFrame = (time = performance.now()) => {
         if (!glitchSourceImage || !glitchOutputImage || !glitchContext) return;
@@ -295,10 +387,10 @@
         const rect = heroVisual.getBoundingClientRect();
         if (!rect.width || !rect.height) return;
         const targetRatio = rect.width / rect.height;
-        let targetWidth = Math.min(250, Math.max(128, Math.round(rect.width / 3.1)));
+        let targetWidth = Math.min(420, Math.max(200, Math.round(rect.width / 1.35)));
         let targetHeight = Math.round(targetWidth / targetRatio);
-        if (targetHeight > 360) {
-            targetHeight = 360;
+        if (targetHeight > 560) {
+            targetHeight = 560;
             targetWidth = Math.round(targetHeight * targetRatio);
         }
 
@@ -306,6 +398,8 @@
         portraitSampleCanvas.height = targetHeight;
         ditherCanvas.width = targetWidth;
         ditherCanvas.height = targetHeight;
+        portraitCycleCanvas.width = targetWidth;
+        portraitCycleCanvas.height = targetHeight;
         glitchCanvas.width = targetWidth;
         glitchCanvas.height = targetHeight;
 
@@ -337,7 +431,9 @@
                 const green = portraitSource.data[index + 1];
                 const blue = portraitSource.data[index + 2];
                 const luminance = (red * 0.299) + (green * 0.587) + (blue * 0.114);
-                const threshold = (bayer8[(y % 8) * 8 + (x % 8)] / 64) - 0.5;
+                const ditherX = Math.floor(x / 2) % 8;
+                const ditherY = Math.floor(y / 2) % 8;
+                const threshold = (bayer8[ditherY * 8 + ditherX] / 64) - 0.5;
                 const warmth = (red - blue) / 255;
                 const normalized = Math.max(0, Math.min(1, (luminance / 255) + threshold * 0.19 + warmth * 0.05));
                 const level = Math.min(palette.length - 1, Math.floor(normalized * palette.length));
@@ -350,6 +446,73 @@
         }
 
         portraitDitherContext.putImageData(portraitOutput, 0, 0);
+        cyclePrimarySourceImage = portraitSource;
+        cyclePrimaryDitherImage = portraitOutput;
+
+        if (heroAlternateSource.complete && heroAlternateSource.naturalWidth) {
+            const alternateWidth = heroAlternateSource.naturalWidth;
+            const alternateHeight = heroAlternateSource.naturalHeight;
+            const alternateRatio = alternateWidth / alternateHeight;
+            let alternateX = 0;
+            let alternateY = 0;
+            let alternateCropWidth = alternateWidth;
+            let alternateCropHeight = alternateHeight;
+
+            if (alternateRatio > targetRatio) {
+                alternateCropWidth = alternateHeight * targetRatio;
+                alternateX = (alternateWidth - alternateCropWidth) * 0.56;
+            } else {
+                alternateCropHeight = alternateWidth / targetRatio;
+                alternateY = (alternateHeight - alternateCropHeight) * 0.28;
+            }
+
+            portraitSampleContext.clearRect(0, 0, targetWidth, targetHeight);
+            portraitSampleContext.drawImage(
+                heroAlternateSource,
+                alternateX,
+                alternateY,
+                alternateCropWidth,
+                alternateCropHeight,
+                0,
+                0,
+                targetWidth,
+                targetHeight
+            );
+            cycleAlternateSourceImage = portraitSampleContext.getImageData(0, 0, targetWidth, targetHeight);
+            cycleAlternateDitherImage = portraitCycleContext.createImageData(targetWidth, targetHeight);
+
+            for (let y = 0; y < targetHeight; y += 1) {
+                for (let x = 0; x < targetWidth; x += 1) {
+                    const index = (y * targetWidth + x) * 4;
+                    const red = cycleAlternateSourceImage.data[index];
+                    const green = cycleAlternateSourceImage.data[index + 1];
+                    const blue = cycleAlternateSourceImage.data[index + 2];
+                    const luminance = (red * 0.299) + (green * 0.587) + (blue * 0.114);
+                    const ditherX = Math.floor(x / 2) % 8;
+                    const ditherY = Math.floor(y / 2) % 8;
+                    const threshold = (bayer8[ditherY * 8 + ditherX] / 64) - 0.5;
+                    const warmth = (red - blue) / 255;
+                    const normalized = Math.max(0, Math.min(1, (luminance / 255) + threshold * 0.19 + warmth * 0.05));
+                    const level = Math.min(palette.length - 1, Math.floor(normalized * palette.length));
+                    const [outRed, outGreen, outBlue] = palette[level];
+                    cycleAlternateDitherImage.data[index] = outRed;
+                    cycleAlternateDitherImage.data[index + 1] = outGreen;
+                    cycleAlternateDitherImage.data[index + 2] = outBlue;
+                    cycleAlternateDitherImage.data[index + 3] = 255;
+                }
+            }
+
+            cycleOutputImage = portraitCycleContext.createImageData(targetWidth, targetHeight);
+            cycleStartedAt = null;
+            cycleIndex = -1;
+            cycleCurrentAlternate = false;
+            cycleTargetAlternate = true;
+            heroVisual.classList.remove("is-alternate-current");
+            portraitDitherContext.putImageData(cyclePrimaryDitherImage, 0, 0);
+            renderPortraitCycle();
+            root.classList.add("portrait-cycle-ready");
+        }
+
         glitchSourceImage = portraitSource;
         glitchOutputImage = glitchContext.createImageData(targetWidth, targetHeight);
         renderGlitchFrame();
@@ -360,6 +523,10 @@
         drawPortraitDither();
     } else {
         heroSource.addEventListener("load", drawPortraitDither, { once: true });
+    }
+
+    if (!heroAlternateSource.complete) {
+        heroAlternateSource.addEventListener("load", drawPortraitDither, { once: true });
     }
 
     if ("ResizeObserver" in window) {
@@ -373,8 +540,6 @@
         window.addEventListener("resize", drawPortraitDither, { passive: true });
     }
 
-    let lensX = 48;
-    let lensY = 31;
     let targetLensX = lensX;
     let targetLensY = lensY;
     let pointerControlsLens = false;
@@ -481,6 +646,11 @@
     });
 
     const animateLens = (time) => {
+        if (time - lastCycleFrame >= 50) {
+            renderPortraitCycle(time);
+            lastCycleFrame = time;
+        }
+
         if (glitchActive && time - lastGlitchFrame >= 68) {
             renderGlitchFrame(time);
             lastGlitchFrame = time;
