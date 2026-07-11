@@ -10,8 +10,12 @@
   const cameraUi = $("#camera-ui");
   const startCameraButton = $("#start-camera");
   const startDemoButton = $("#start-demo");
+  const uploadVideoButton = $("#upload-video");
+  const videoUploadInput = $("#video-upload");
   const exitDemoButton = $("#exit-demo");
   const flipButton = $("#flip-camera");
+  const flipLabel = $("#flip-label");
+  const sessionBadge = $("#session-badge");
   const captureButton = $("#capture-button");
   const settingsButton = $("#settings-button");
   const infoButton = $("#info-button");
@@ -49,6 +53,7 @@
 
   let settings = loadSettings();
   let stream = null;
+  let uploadedVideoUrl = null;
   let facingMode = "environment";
   let currentMode = "idle";
   let demoScene = null;
@@ -67,6 +72,7 @@
     showToast("The visual engine could not start. Refresh the page and try again.", 7000);
     startCameraButton.disabled = true;
     startDemoButton.disabled = true;
+    uploadVideoButton.disabled = true;
     return;
   }
 
@@ -283,7 +289,9 @@
 
     try {
       stopStream();
+      clearUploadedVideo();
       engine.stop();
+      video.loop = false;
 
       const preferredConstraints = {
         audio: false,
@@ -319,7 +327,7 @@
       currentMode = "idle";
       deactivateCameraUi();
       showToast(cameraErrorMessage(error), 7600);
-      startCameraButton.querySelector("span").textContent = "Try camera again";
+      setCameraButtonLabel("Try camera again", "Retry");
     } finally {
       isStartingCamera = false;
       startCameraButton.disabled = false;
@@ -331,6 +339,7 @@
     setLoading(true, "Building a field of light…");
     try {
       stopStream();
+      clearUploadedVideo();
       engine.stop();
 
       if (!demoScene) demoScene = new DemoScene();
@@ -351,13 +360,68 @@
     }
   }
 
+  async function startUploadedVideo(file) {
+    if (!file) return;
+    if (file.type && !file.type.startsWith("video/")) {
+      videoUploadInput.value = "";
+      showToast("Choose a video file to use this source.");
+      return;
+    }
+
+    setLoading(true, "Preparing your video…");
+    try {
+      stopStream();
+      engine.stop();
+      clearUploadedVideo();
+
+      uploadedVideoUrl = URL.createObjectURL(file);
+      video.srcObject = null;
+      video.src = uploadedVideoUrl;
+      video.loop = true;
+      video.muted = true;
+      video.playsInline = true;
+      video.load();
+      await waitForVideo(video);
+      await video.play();
+
+      demoScene = null;
+      currentMode = "upload";
+      engine.start(video, { mirror: false });
+      activateCameraUi("VIDEO");
+      requestWakeLock();
+      showToast(`${shortFileName(file.name)} is playing locally. Nothing was uploaded.`, 5200);
+    } catch {
+      clearUploadedVideo();
+      currentMode = "idle";
+      deactivateCameraUi();
+      showToast("That video could not be played here. Try an MP4, MOV, or WebM file your browser supports.", 7000);
+    } finally {
+      videoUploadInput.value = "";
+      setLoading(false);
+    }
+  }
+
   function activateCameraUi(label) {
     app.scrollTop = 0;
     app.classList.add("is-live");
     cameraUi.hidden = false;
     liveLabel.textContent = label;
-    exitDemoButton.hidden = currentMode !== "demo";
-    flipButton.style.visibility = currentMode === "demo" ? "hidden" : "visible";
+    exitDemoButton.hidden = currentMode === "camera";
+    sessionBadge.textContent = currentMode === "upload" ? "VIDEO" : "DEMO";
+
+    if (currentMode === "upload") {
+      flipButton.style.visibility = "visible";
+      flipButton.disabled = false;
+      flipButton.style.opacity = "1";
+      flipButton.setAttribute("aria-label", "Choose another video");
+      flipLabel.textContent = "CHANGE";
+    } else if (currentMode === "demo") {
+      flipButton.style.visibility = "hidden";
+    } else {
+      flipButton.style.visibility = "visible";
+      flipButton.setAttribute("aria-label", "Flip camera");
+      flipLabel.textContent = "FLIP";
+    }
     modeLabel.textContent = settings.palette.toUpperCase();
     stopCameraButton.hidden = false;
   }
@@ -374,6 +438,7 @@
 
   function stopEverything() {
     stopStream();
+    clearUploadedVideo();
     engine.stop();
     demoScene = null;
     currentMode = "idle";
@@ -397,6 +462,15 @@
     video.srcObject = null;
   }
 
+  function clearUploadedVideo() {
+    if (!uploadedVideoUrl) return;
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+    URL.revokeObjectURL(uploadedVideoUrl);
+    uploadedVideoUrl = null;
+  }
+
   function attachTrackLifecycle() {
     if (!stream) return;
     trackEndedHandler = () => {
@@ -404,7 +478,7 @@
       stopStream();
       currentMode = "idle";
       deactivateCameraUi();
-      startCameraButton.querySelector("span").textContent = "Restart camera";
+      setCameraButtonLabel("Restart camera", "Restart");
       showToast("The camera session ended. Tap Restart camera to reconnect.", 7000);
     };
     trackMuteHandler = (event) => {
@@ -444,6 +518,10 @@
   }
 
   async function flipCamera() {
+    if (currentMode === "upload") {
+      videoUploadInput.click();
+      return;
+    }
     if (currentMode !== "camera" || isStartingCamera) return;
     facingMode = facingMode === "environment" ? "user" : "environment";
     await startCamera({ switching: true });
@@ -630,7 +708,7 @@
     switch (error?.name) {
       case "NotAllowedError":
       case "SecurityError":
-        return "Camera access was blocked. Allow it in your browser settings, or preview the effect without a camera.";
+        return "Camera access was blocked. Allow it in browser settings, choose a video, or preview the effect.";
       case "NotFoundError":
       case "DevicesNotFoundError":
         return "No camera was found on this device. The interactive preview still works.";
@@ -663,8 +741,20 @@
     return Math.max(min, Math.min(max, value));
   }
 
+  function setCameraButtonLabel(longLabel, shortLabel) {
+    startCameraButton.querySelector(".long-label").textContent = longLabel;
+    startCameraButton.querySelector(".short-label").textContent = shortLabel;
+  }
+
+  function shortFileName(name) {
+    if (!name) return "Your video";
+    return name.length > 34 ? `${name.slice(0, 31)}…` : name;
+  }
+
   startCameraButton.addEventListener("click", () => startCamera());
   startDemoButton.addEventListener("click", startDemo);
+  uploadVideoButton.addEventListener("click", () => videoUploadInput.click());
+  videoUploadInput.addEventListener("change", () => startUploadedVideo(videoUploadInput.files?.[0]));
   exitDemoButton.addEventListener("click", () => startCamera());
   flipButton.addEventListener("click", flipCamera);
   captureButton.addEventListener("click", captureImage);
@@ -707,13 +797,20 @@
         stream?.active && stream.getVideoTracks().some((track) => track.readyState === "live"),
       );
       if (hasLiveCamera) {
-        engine.resume?.();
+        if (currentMode === "upload") {
+          video.play().then(() => engine.resume?.()).catch(() => {
+            liveLabel.textContent = "PAUSED";
+            showToast("Tap Change to choose the video again if playback does not resume.", 6000);
+          });
+        } else {
+          engine.resume?.();
+        }
         requestWakeLock();
       } else {
         stopStream();
         currentMode = "idle";
         deactivateCameraUi();
-        startCameraButton.querySelector("span").textContent = "Restart camera";
+        setCameraButtonLabel("Restart camera", "Restart");
         showToast("The camera was interrupted. Tap Restart camera to reconnect.", 7000);
       }
     }
@@ -730,6 +827,7 @@
     }
     if (event.key.toLowerCase() === "s" && currentMode !== "idle") openDialog(settingsDialog);
     if (event.key.toLowerCase() === "d" && currentMode === "idle") startDemo();
+    if (event.key.toLowerCase() === "u") videoUploadInput.click();
   });
 
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) {

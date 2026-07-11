@@ -1,6 +1,6 @@
 # DotCam
 
-DotCam is a dependency-free, real-time camera filter for `manu.vision/dotcam`. It reduces a live camera feed to color-sampled points that track movement across frames.
+DotCam is a dependency-free, real-time camera and video filter for `manu.vision/dotcam`. It reduces a live camera feed or user-selected video to color-sampled points that track movement across frames.
 
 ## How it works
 
@@ -9,7 +9,7 @@ DotCam is a dependency-free, real-time camera filter for `manu.vision/dotcam`. I
 3. A lightweight Lucas–Kanade optical-flow pass follows those points between frames.
 4. The source color at every tracked point is drawn to the full-screen output canvas with a fading afterglow.
 
-All processing happens locally in the browser. No frames are uploaded or stored. The bundled procedural demo exercises the same filter path without requesting camera access.
+All processing happens locally in the browser. No frames or selected files are uploaded or stored. The bundled procedural demo exercises the same filter path without requesting camera access or choosing a file.
 
 ## Run locally
 
@@ -24,6 +24,6 @@ Then open `http://localhost:4173`.
 ## Files
 
 - `filter-engine.js` — frame analysis, point detection, optical flow, rendering, and export
-- `app.js` — camera lifecycle, demo scene, controls, settings, share/save, and browser states
+- `app.js` — camera and local-video lifecycle, demo scene, controls, settings, share/save, and browser states
 - `styles.css` — responsive full-screen interface
 - `index.html` — semantic app shell and dialogs

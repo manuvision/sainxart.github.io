@@ -1,7 +1,7 @@
 {
   "name": "DotCam — Become points of light",
   "short_name": "DotCam",
-  "description": "A private, real-time feature-tracking camera experiment.",
+  "description": "A private, real-time feature-tracking camera and video experiment.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
