@@ -216,6 +216,48 @@
     const clarityLens = document.getElementById("clarityLens");
     const spyCoordinates = document.getElementById("spyCoordinates");
     const currentRole = document.querySelector(".current-role");
+    const heroGetInTouch = document.querySelector(".hero-actions .button--sun");
+    const readBioButton = document.querySelector(".current-role__bio");
+    const heroCopy = document.querySelector(".hero-copy");
+    const heroSection = document.querySelector(".hero");
+
+    const alignHeroActions = () => {
+        if (!heroGetInTouch || !readBioButton || !heroCopy || !heroSection) return;
+        if (window.innerWidth <= 820) {
+            heroCopy.style.removeProperty("--hero-copy-align-y");
+            const heroRect = heroSection.getBoundingClientRect();
+            const visualRect = heroVisual.getBoundingClientRect();
+            const atmosphereTop = Math.max(0, visualRect.bottom - heroRect.top);
+            heroSection.style.setProperty("--hero-bg-mobile-top", `${atmosphereTop.toFixed(1)}px`);
+            return;
+        }
+
+        heroSection.style.removeProperty("--hero-bg-mobile-top");
+        heroCopy.style.setProperty("--hero-copy-align-y", "0px");
+        const contactRect = heroGetInTouch.getBoundingClientRect();
+        const bioRect = readBioButton.getBoundingClientRect();
+        const contactCenter = contactRect.top + (contactRect.height / 2);
+        const bioCenter = bioRect.top + (bioRect.height / 2);
+        const offset = Math.max(-140, Math.min(140, bioCenter - contactCenter));
+        heroCopy.style.setProperty("--hero-copy-align-y", `${offset.toFixed(1)}px`);
+    };
+
+    let heroActionAlignFrame = 0;
+    const scheduleHeroActionAlignment = () => {
+        window.cancelAnimationFrame(heroActionAlignFrame);
+        heroActionAlignFrame = window.requestAnimationFrame(alignHeroActions);
+    };
+
+    scheduleHeroActionAlignment();
+    window.addEventListener("resize", scheduleHeroActionAlignment, { passive: true });
+    window.addEventListener("load", scheduleHeroActionAlignment, { once: true });
+    document.fonts?.ready?.then(scheduleHeroActionAlignment);
+
+    if ("ResizeObserver" in window && currentRole) {
+        const heroActionAlignObserver = new ResizeObserver(scheduleHeroActionAlignment);
+        heroActionAlignObserver.observe(currentRole);
+        heroActionAlignObserver.observe(heroVisual);
+    }
 
     const bayer8 = [
         0, 32, 8, 40, 2, 34, 10, 42,

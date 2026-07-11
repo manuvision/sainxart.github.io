@@ -5351,6 +5351,10 @@ main {
 }
 
 /* Hero composition: identity first, portrait before the statement. */
+.hero-aurora {
+    display: none;
+}
+
 .hero {
     grid-template-columns: minmax(340px, 5fr) minmax(0, 7fr);
     grid-template-areas:
@@ -5383,6 +5387,10 @@ main {
     .current-role {
         translate: none !important;
     }
+
+    .hero-copy {
+        translate: 0 var(--hero-copy-align-y, 0px);
+    }
 }
 
 @media (max-width: 820px) {
@@ -5407,5 +5415,32 @@ main {
 
     .hero-copy {
         padding-bottom: 0;
+        translate: none;
+    }
+}
+
+/* Mirror the atmospheric portrait; lower it on small screens so it remains
+   visible behind the reordered foreground portrait. */
+.hero-atmosphere img {
+    transform: translateY(var(--hero-bg-parallax-y)) scaleX(-1) scale(1.12);
+}
+
+@media (max-width: 820px) {
+    .hero-atmosphere {
+        inset: var(--hero-bg-mobile-top, 55%) 0 0;
+        opacity: 0.24;
+    }
+
+    .hero-atmosphere::after {
+        position: absolute;
+        z-index: 1;
+        inset: 0;
+        background: linear-gradient(180deg, #130522 0%, rgba(19, 5, 34, 0.78) 14%, rgba(19, 5, 34, 0) 52%);
+        content: "";
+        pointer-events: none;
+    }
+
+    .hero-atmosphere img {
+        transform: translateY(var(--hero-bg-parallax-y)) scaleX(-1) scale(1.06);
     }
 }
