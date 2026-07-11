@@ -283,9 +283,6 @@
         if (nextCycleIndex !== cycleIndex) {
             if (cycleIndex >= 0) {
                 cycleCurrentAlternate = cycleTargetAlternate;
-                glitchSourceImage = cycleCurrentAlternate ? cycleAlternateSourceImage : cyclePrimarySourceImage;
-                glitchOutputImage = glitchContext.createImageData(glitchSourceImage.width, glitchSourceImage.height);
-                renderGlitchFrame();
             }
             cycleIndex = nextCycleIndex;
             cycleTargetAlternate = !cycleCurrentAlternate;
@@ -328,6 +325,17 @@
         }
 
         portraitCycleContext.putImageData(cycleOutputImage, 0, 0);
+        // The glitch must sample the exact composite currently on screen. This
+        // keeps it synchronized with both photos while the scan crosses the lens.
+        glitchSourceImage = cycleOutputImage;
+        if (
+            glitchContext &&
+            (!glitchOutputImage ||
+                glitchOutputImage.width !== cycleOutputImage.width ||
+                glitchOutputImage.height !== cycleOutputImage.height)
+        ) {
+            glitchOutputImage = glitchContext.createImageData(cycleOutputImage.width, cycleOutputImage.height);
+        }
     };
 
     const renderGlitchFrame = (time = performance.now()) => {
@@ -493,7 +501,7 @@
             root.classList.add("portrait-cycle-ready");
         }
 
-        glitchSourceImage = portraitSource;
+        glitchSourceImage = cycleOutputImage || portraitSource;
         glitchOutputImage = glitchContext.createImageData(targetWidth, targetHeight);
         renderGlitchFrame();
         root.classList.add("portrait-dither-ready");
