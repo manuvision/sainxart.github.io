@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#050608" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="description"
+      content="DotCam turns your live camera into a moving field of light. Real-time, private, and processed entirely on your device."
+    />
+    <meta property="og:title" content="DotCam — become points of light" />
+    <meta
+      property="og:description"
+      content="A real-time feature-tracking camera experiment by Manu."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://manu.vision/dotcam/" />
+    <title>DotCam — Become points of light</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app" id="app">
+      <video id="camera" class="source-video" playsinline muted aria-hidden="true"></video>
+      <canvas id="source-canvas" class="source-canvas" aria-hidden="true"></canvas>
+      <canvas
+        id="output"
+        class="output-canvas"
+        aria-label="Live camera rendered as a field of tracked light points"
+      ></canvas>
+
+      <div class="ambient ambient-one" aria-hidden="true"></div>
+      <div class="ambient ambient-two" aria-hidden="true"></div>
+      <div class="grain" aria-hidden="true"></div>
+
+      <header class="topbar">
+        <a class="brand" href="https://manu.vision" aria-label="DotCam by Manu — back to manu.vision">
+          <span class="brand-mark" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </span>
+          <span>DOTCAM</span>
+        </a>
+
+        <div class="topbar-actions">
+          <div class="live-pill" id="live-pill" aria-live="polite">
+            <span class="live-dot"></span>
+            <span id="live-label">READY</span>
+          </div>
+          <button class="icon-button quiet" id="info-button" type="button" aria-label="About DotCam">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 10.8v5.7"></path>
+              <path d="M12 7.5h.01"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="welcome" id="welcome" aria-labelledby="welcome-title">
+        <div class="welcome-visual" aria-hidden="true">
+          <div class="orb orb-a"></div>
+          <div class="orb orb-b"></div>
+          <div class="orb orb-c"></div>
+          <div class="scan-line"></div>
+        </div>
+
+        <div class="welcome-copy">
+          <p class="eyebrow"><span></span> A LIVE CAMERA EXPERIMENT</p>
+          <h1 id="welcome-title">Become points<br />of light.</h1>
+          <p class="lede">
+            DotCam finds the details in every frame and lets them drift, shimmer, and follow your movement.
+          </p>
+          <div class="welcome-actions">
+            <button class="primary-button" id="start-camera" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h2l1.2-1.5h4.6L15.5 6h2A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"></path>
+                <circle cx="12" cy="12.5" r="3.25"></circle>
+              </svg>
+              <span>Open camera</span>
+            </button>
+            <button class="text-button" id="start-demo" type="button">
+              Preview the effect
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+            </button>
+          </div>
+          <p class="privacy-note">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="5" y="10" width="14" height="10" rx="3"></rect>
+              <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+            </svg>
+            Private by design. Nothing is recorded or uploaded.
+          </p>
+        </div>
+      </section>
+
+      <section class="camera-ui" id="camera-ui" aria-label="Camera controls" hidden>
+        <div class="frame-guide" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+
+        <div class="scene-readout">
+          <span id="point-count">0 POINTS</span>
+          <span class="readout-divider"></span>
+          <span id="mode-label">PRISM</span>
+        </div>
+
+        <div class="bottom-controls">
+          <button class="control-button" id="flip-camera" type="button" aria-label="Flip camera">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 7h-3l-1.5-2h-7L7 7H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"></path>
+              <path d="M15.2 10.2A4.5 4.5 0 0 0 8 11"></path>
+              <path d="m8 8.5-.3 2.8 2.8.3"></path>
+              <path d="M8.8 15.8A4.5 4.5 0 0 0 16 15"></path>
+              <path d="m16 17.5.3-2.8-2.8-.3"></path>
+            </svg>
+            <span>FLIP</span>
+          </button>
+
+          <button class="shutter" id="capture-button" type="button" aria-label="Capture image">
+            <span class="shutter-ring"><span class="shutter-core"></span></span>
+          </button>
+
+          <button class="control-button" id="settings-button" type="button" aria-label="Open filter settings">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h10"></path><path d="M18 7h2"></path><circle cx="16" cy="7" r="2"></circle>
+              <path d="M4 17h2"></path><path d="M10 17h10"></path><circle cx="8" cy="17" r="2"></circle>
+            </svg>
+            <span>TUNE</span>
+          </button>
+        </div>
+
+        <button class="demo-exit" id="exit-demo" type="button" hidden>
+          <span>DEMO</span> Use my camera
+        </button>
+      </section>
+
+      <div class="loading-state" id="loading-state" aria-live="polite" hidden>
+        <span class="loader" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <p id="loading-copy">Opening camera…</p>
+      </div>
+
+      <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    </main>
+
+    <dialog class="sheet" id="settings-dialog" aria-labelledby="settings-title">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <form method="dialog" class="sheet-inner">
+        <header class="sheet-header">
+          <div>
+            <p class="eyebrow">SHAPE THE SIGNAL</p>
+            <h2 id="settings-title">Tune your light</h2>
+          </div>
+          <button class="icon-button" value="close" aria-label="Close settings">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+          </button>
+        </header>
+
+        <fieldset class="setting-group palette-picker">
+          <legend>COLOR SIGNAL</legend>
+          <div class="segmented" id="palette-control">
+            <button type="button" data-palette="source"><i class="swatch source"></i>True</button>
+            <button type="button" data-palette="prism" class="active"><i class="swatch prism"></i>Prism</button>
+            <button type="button" data-palette="mono"><i class="swatch mono"></i>Silver</button>
+          </div>
+        </fieldset>
+
+        <div class="setting-group">
+          <div class="setting-label">
+            <label for="density">POINT DENSITY</label>
+            <output id="density-value" for="density">72%</output>
+          </div>
+          <input id="density" type="range" min="25" max="100" value="72" />
+        </div>
+
+        <div class="setting-group">
+          <div class="setting-label">
+            <label for="dot-size">POINT SIZE</label>
+            <output id="dot-size-value" for="dot-size">1.8</output>
+          </div>
+          <input id="dot-size" type="range" min="8" max="36" value="18" />
+        </div>
+
+        <div class="setting-group">
+          <div class="setting-label">
+            <label for="trail">AFTERGLOW</label>
+            <output id="trail-value" for="trail">64%</output>
+          </div>
+          <input id="trail" type="range" min="0" max="92" value="64" />
+        </div>
+
+        <button class="reset-button" id="reset-settings" type="button">Reset to the original signal</button>
+      </form>
+    </dialog>
+
+    <dialog class="about-dialog" id="about-dialog" aria-labelledby="about-title">
+      <div class="about-inner">
+        <button class="icon-button about-close" id="about-close" type="button" aria-label="Close about dialog">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+        </button>
+        <div class="about-mark" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <p class="eyebrow">A MANU.VISION EXPERIMENT</p>
+        <h2 id="about-title">Movement,<br />reduced to light.</h2>
+        <p>
+          DotCam looks for distinct details in each frame, follows them as they move, and samples their color to build a living point-cloud portrait.
+        </p>
+        <p>
+          The camera feed is processed live in your browser. No frames leave your device, and nothing is saved unless you tap the shutter.
+        </p>
+        <div class="about-meta">
+          <span>FEATURE DETECTION</span><span>OPTICAL FLOW</span><span>CANVAS</span>
+        </div>
+        <a href="https://manu.vision" class="text-link">More experiments at manu.vision <span>↗</span></a>
+        <button class="reset-button stop-camera" id="stop-camera" type="button" hidden>Close camera and return</button>
+      </div>
+    </dialog>
+
+    <dialog class="capture-dialog" id="capture-dialog" aria-labelledby="capture-title">
+      <div class="capture-inner">
+        <header class="capture-header">
+          <div>
+            <p class="eyebrow">LIGHT, HELD STILL</p>
+            <h2 id="capture-title">Your DotCam</h2>
+          </div>
+          <button class="icon-button" id="capture-close" type="button" aria-label="Close captured image">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+          </button>
+        </header>
+        <div class="capture-frame">
+          <img id="capture-preview" alt="Your captured DotCam image" />
+          <span class="capture-watermark">DOTCAM · MANU.VISION</span>
+        </div>
+        <div class="capture-actions">
+          <button class="primary-button" id="share-capture" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3m0 0L7.5 7.5M12 3l4.5 4.5"></path><path d="M5 12v7h14v-7"></path></svg>
+            Share
+          </button>
+          <button class="secondary-button" id="save-capture" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v13m0 0 4.5-4.5M12 16l-4.5-4.5"></path><path d="M5 20h14"></path></svg>
+            Save image
+          </button>
+        </div>
+        <p class="save-hint">On iPhone or iPad, you can also press and hold the image to save it.</p>
+      </div>
+    </dialog>
+
+    <script src="./filter-engine.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

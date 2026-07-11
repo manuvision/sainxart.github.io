@@ -1,0 +1,19 @@
+{
+  "name": "DotCam — Become points of light",
+  "short_name": "DotCam",
+  "description": "A private, real-time feature-tracking camera experiment.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#050608",
+  "theme_color": "#050608",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
