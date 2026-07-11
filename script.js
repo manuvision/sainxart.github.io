@@ -13,6 +13,28 @@
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let lastScrollTop = window.scrollY;
 
+    const loadDeferredImages = () => {
+        const load = () => {
+            document.querySelectorAll("img[data-deferred-src]").forEach((image) => {
+                if (!image.currentSrc && !image.getAttribute("src")) {
+                    image.src = image.dataset.deferredSrc;
+                }
+            });
+        };
+
+        if ("requestIdleCallback" in window) {
+            window.requestIdleCallback(load, { timeout: 1400 });
+        } else {
+            window.setTimeout(load, 250);
+        }
+    };
+
+    if (document.readyState === "complete") {
+        loadDeferredImages();
+    } else {
+        window.addEventListener("load", loadDeferredImages, { once: true });
+    }
+
     const updateScrollUI = () => {
         const scrollTop = window.scrollY;
         const scrollable = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
@@ -287,62 +309,57 @@
             !portraitCycleContext
         ) return;
 
-        const duration = 8000;
+        const waveDuration = 6667;
+        const pauseDuration = 2500;
+        const cycleDuration = waveDuration + pauseDuration;
         if (cycleStartedAt === null) cycleStartedAt = time;
         const elapsed = Math.max(0, time - cycleStartedAt);
-        const nextCycleIndex = Math.floor(elapsed / duration);
+        const nextCycleIndex = Math.floor(elapsed / cycleDuration);
 
         if (nextCycleIndex !== cycleIndex) {
             if (cycleIndex >= 0) {
                 cycleCurrentAlternate = cycleTargetAlternate;
-                portraitDitherContext.putImageData(
-                    cycleCurrentAlternate ? cycleAlternateDitherImage : cyclePrimaryDitherImage,
-                    0,
-                    0
-                );
                 glitchSourceImage = cycleCurrentAlternate ? cycleAlternateSourceImage : cyclePrimarySourceImage;
                 glitchOutputImage = glitchContext.createImageData(glitchSourceImage.width, glitchSourceImage.height);
                 renderGlitchFrame();
-                heroVisual.classList.toggle("is-alternate-current", cycleCurrentAlternate);
             }
             cycleIndex = nextCycleIndex;
             cycleTargetAlternate = !cycleCurrentAlternate;
-            portraitCycleContext.clearRect(0, 0, portraitCycleCanvas.width, portraitCycleCanvas.height);
         }
 
-        const reveal = smoothstep((elapsed % duration) / duration);
-        const cleanSource = cycleTargetAlternate ? cycleAlternateSourceImage.data : cyclePrimarySourceImage.data;
-        const ditherSource = cycleTargetAlternate ? cycleAlternateDitherImage.data : cyclePrimaryDitherImage.data;
+        const cycleElapsed = elapsed % cycleDuration;
+        const reveal = smoothstep(Math.min(cycleElapsed / waveDuration, 1));
+        // Travel beyond both edges so the scan creeps in from above and fully
+        // clears the bottom before the resting interval begins.
+        const scanPosition = -0.1 + (reveal * 1.2);
+        const currentCleanSource = cycleCurrentAlternate ? cycleAlternateSourceImage.data : cyclePrimarySourceImage.data;
+        const currentDitherSource = cycleCurrentAlternate ? cycleAlternateDitherImage.data : cyclePrimaryDitherImage.data;
+        const targetCleanSource = cycleTargetAlternate ? cycleAlternateSourceImage.data : cyclePrimarySourceImage.data;
+        const targetDitherSource = cycleTargetAlternate ? cycleAlternateDitherImage.data : cyclePrimaryDitherImage.data;
         const output = cycleOutputImage.data;
         const width = cyclePrimarySourceImage.width;
         const height = cyclePrimarySourceImage.height;
-        const centerX = width * 0.52;
-        const centerY = height * 0.4;
         const lensCenterX = width * (lensX / 100);
         const lensCenterY = height * (lensY / 100);
         const lensHalfWidth = width * ((clarityLens.offsetWidth / Math.max(heroVisual.clientWidth, 1)) / 2);
         const lensHalfHeight = height * ((clarityLens.offsetHeight / Math.max(heroVisual.clientHeight, 1)) / 2);
-        const maxDistance = Math.max(
-            Math.hypot(centerX, centerY),
-            Math.hypot(width - centerX, centerY),
-            Math.hypot(centerX, height - centerY),
-            Math.hypot(width - centerX, height - centerY)
-        );
 
         for (let y = 0; y < height; y += 1) {
             for (let x = 0; x < width; x += 1) {
                 const index = (y * width + x) * 4;
-                const distance = Math.hypot(x - centerX, y - centerY) / maxDistance;
+                const verticalPosition = y / Math.max(height - 1, 1);
                 const ditherX = Math.floor(x / 2) % 8;
                 const ditherY = Math.floor(y / 2) % 8;
                 const dither = ((bayer8[ditherY * 8 + ditherX] / 63) - 0.5) * 0.13;
-                const visible = reveal >= 0.998 || distance <= reveal + dither;
+                const visible = verticalPosition <= scanPosition + dither;
                 const insideLens = Math.abs(x - lensCenterX) <= lensHalfWidth && Math.abs(y - lensCenterY) <= lensHalfHeight;
-                const source = insideLens ? cleanSource : ditherSource;
+                const source = visible
+                    ? (insideLens ? targetCleanSource : targetDitherSource)
+                    : (insideLens ? currentCleanSource : currentDitherSource);
                 output[index] = source[index];
                 output[index + 1] = source[index + 1];
                 output[index + 2] = source[index + 2];
-                output[index + 3] = visible ? 255 : 0;
+                output[index + 3] = 255;
             }
         }
 
@@ -387,10 +404,10 @@
         const rect = heroVisual.getBoundingClientRect();
         if (!rect.width || !rect.height) return;
         const targetRatio = rect.width / rect.height;
-        let targetWidth = Math.min(420, Math.max(200, Math.round(rect.width / 1.35)));
+        let targetWidth = Math.min(560, Math.max(280, Math.round(rect.width)));
         let targetHeight = Math.round(targetWidth / targetRatio);
-        if (targetHeight > 560) {
-            targetHeight = 560;
+        if (targetHeight > 720) {
+            targetHeight = 720;
             targetWidth = Math.round(targetHeight * targetRatio);
         }
 
@@ -507,7 +524,6 @@
             cycleIndex = -1;
             cycleCurrentAlternate = false;
             cycleTargetAlternate = true;
-            heroVisual.classList.remove("is-alternate-current");
             portraitDitherContext.putImageData(cyclePrimaryDitherImage, 0, 0);
             renderPortraitCycle();
             root.classList.add("portrait-cycle-ready");
@@ -525,7 +541,7 @@
         heroSource.addEventListener("load", drawPortraitDither, { once: true });
     }
 
-    if (!heroAlternateSource.complete) {
+    if (!heroAlternateSource.naturalWidth) {
         heroAlternateSource.addEventListener("load", drawPortraitDither, { once: true });
     }
 

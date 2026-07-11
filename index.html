@@ -7,8 +7,9 @@
     <meta name="description" content="Manuel Sainsily is a creative director, designer, and speaker shaping human-centred experiences across AI, XR, 3D, BCI, and haptics.">
     <meta name="theme-color" content="#10051f">
     <meta name="color-scheme" content="dark">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
     <link rel="canonical" href="https://manu.vision/">
+    <link rel="alternate" type="text/markdown" href="https://manu.vision/index.html.md" title="Manu.Vision — Markdown overview">
 
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://manu.vision/">
@@ -32,7 +33,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Manrope:wght@400;500;600;700;800&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260710-146">
+    <link rel="stylesheet" href="styles.css?v=20260710-148">
     <script>document.documentElement.classList.add("js");</script>
 
     <script type="application/ld+json">
@@ -95,7 +96,7 @@
         <section class="hero" id="top" aria-labelledby="hero-title">
             <div class="hero-aurora" aria-hidden="true"></div>
             <div class="hero-atmosphere" id="heroAtmosphere" aria-hidden="true">
-                <img id="heroAtmosphereSource" src="images/2026/hero-speaking-bg.png" alt="">
+                <img id="heroAtmosphereSource" data-deferred-src="images/2026/hero-speaking-bg.png" alt="" width="1376" height="768" decoding="async" fetchpriority="low">
             </div>
 
             <div class="hero-copy">
@@ -109,10 +110,10 @@
 
             <figure class="hero-visual" id="heroVisual">
                 <picture>
-                    <img id="heroSource" src="images/2026/hero-ted.png" alt="Manuel Sainsily holding his TED speaker award on stage" width="1558" height="2048" fetchpriority="high">
+                    <img id="heroSource" src="images/2026/hero-ted.jpg" alt="Manuel Sainsily holding his TED speaker award on stage" width="1350" height="1800" fetchpriority="high">
                 </picture>
                 <canvas id="ditherCanvas" aria-hidden="true"></canvas>
-                <img class="hero-alternate-source" id="heroAlternateSource" src="images/2026/hero-adobe-alt.jpg" alt="" aria-hidden="true" decoding="async">
+                <img class="hero-alternate-source" id="heroAlternateSource" data-deferred-src="images/2026/hero-adobe-alt.jpg" alt="" aria-hidden="true" width="968" height="1448" decoding="async" fetchpriority="low">
                 <canvas id="portraitCycleCanvas" aria-hidden="true"></canvas>
                 <div class="clarity-image" id="clarityImage" aria-hidden="true"></div>
                 <canvas id="glitchCanvas" aria-hidden="true"></canvas>
@@ -167,11 +168,11 @@
                         <span class="practice-card__copy"><small>01 / Education</small><strong>Making complexity<br>feel clear.</strong></span>
                     </button>
 
-                    <button class="practice-card practice-card--speaking" type="button" data-dialog="speakingDialog" aria-haspopup="dialog" aria-label="Speaking — view highlights">
+                    <button class="practice-card practice-card--speaking" type="button" data-dialog="speakingDialog" aria-haspopup="dialog" aria-label="Inspiration — view highlights">
                         <picture>
                             <img src="images/2026/focus-unity.png" alt="Manuel speaking to a large audience at Unity" width="2048" height="1536" loading="lazy" decoding="async">
                         </picture>
-                        <span class="practice-card__copy"><small>02 / Speaking</small><strong>Inspiring large<br>audiences.</strong></span>
+                        <span class="practice-card__copy"><small>02 / Inspiration</small><strong>Speaking in front of<br>large audiences.</strong></span>
                     </button>
 
                     <button class="practice-card practice-card--immersive" type="button" data-dialog="immersiveDialog" aria-haspopup="dialog" aria-label="Creative direction — view immersive highlights">
@@ -200,7 +201,7 @@
                             <p class="eyebrow">NYC · 2025-10-09 - Present</p>
                             <h3>ARTECHOUSE</h3>
                             <p>A 270° immersive 3D ocean world with spatial audio surrounding visitors with a Caribbean future.</p>
-                            <dl><div><dt>Audience</dt><dd>40K+</dd></div><div><dt>Technology</dt><dd>3D/18K/270°</dd></div><div><dt>Sponsor</dt><dd>OTOY</dd></div></dl>
+                            <dl><div><dt>Audience</dt><dd>40K+</dd></div><div><dt>Technology</dt><dd>3D/18K</dd></div><div><dt>Sponsor</dt><dd>OTOY</dd></div></dl>
                         </div>
                     </a>
 
@@ -234,16 +235,6 @@
                         </div>
                     </a>
 
-                    <a class="exhibition-card exhibition-card--meta" href="https://www.instagram.com/reel/Ck8mHGngk1_/" target="_blank" rel="noopener noreferrer">
-                        <picture><img src="images/2026/sparkar-exhibition.jpg" alt="Manuel at the Oculus Gallery in the World Trade Center in New York" width="969" height="624" loading="lazy" decoding="async"></picture>
-                        <div class="exhibition-card__copy">
-                            <p class="eyebrow">NYC · 2022-10</p>
-                            <h3>Meta SparkAR</h3>
-                            <p>1st haptics SparkAR filter exhibited at the Oculus Gallery in the NYC WTC.</p>
-                            <dl><div><dt>Audience</dt><dd>Private</dd></div><div><dt>Technology</dt><dd>SparkAR</dd></div><div><dt>Sponsor</dt><dd>SparkAR</dd></div></dl>
-                        </div>
-                    </a>
-
                     <a class="exhibition-card exhibition-card--cafu" href="https://www.instagram.com/p/Cm7LZU5ARc1/" target="_blank" rel="noopener noreferrer">
                         <picture><img src="images/2026/caribeano-futurisme-stage.jpeg" alt="Caribéano-futurisme opening moment at Afromusée with Manuel on stage" width="2048" height="1365" loading="lazy" decoding="async"></picture>
                         <div class="exhibition-card__copy">
@@ -251,6 +242,16 @@
                             <h3>OpenAI x CaFu</h3>
                             <p>A Caribbean Futurist exhibition blending XR, AI and traditional live art performances.</p>
                             <dl><div><dt>Audience</dt><dd>1K+</dd></div><div><dt>Technology</dt><dd>AI/Art</dd></div><div><dt>Sponsor</dt><dd>Dall-E</dd></div></dl>
+                        </div>
+                    </a>
+
+                    <a class="exhibition-card exhibition-card--meta" href="https://www.instagram.com/reel/Ck8mHGngk1_/" target="_blank" rel="noopener noreferrer">
+                        <picture><img src="images/2026/sparkar-exhibition.jpg" alt="Manuel at the Oculus Gallery in the World Trade Center in New York" width="969" height="624" loading="lazy" decoding="async"></picture>
+                        <div class="exhibition-card__copy">
+                            <p class="eyebrow">NYC · 2022-10</p>
+                            <h3>Meta SparkAR</h3>
+                            <p>1st haptics SparkAR filter exhibited at the Oculus Gallery in the NYC WTC.</p>
+                            <dl><div><dt>Audience</dt><dd>Private</dd></div><div><dt>Technology</dt><dd>SparkAR</dd></div><div><dt>Sponsor</dt><dd>SparkAR</dd></div></dl>
                         </div>
                     </a>
                 </div>
@@ -269,7 +270,7 @@
                         <span><small>Mobile Games &amp; Apps</small><strong>Haptic Apps</strong></span><b aria-hidden="true">↗</b>
                     </button>
                     <a class="lab-card" href="dreamart/">
-                        <video autoplay muted loop playsinline preload="metadata" poster="images/2026/dream-art.png" aria-label="Dream Art sleep data sculptures in motion">
+                        <video autoplay muted loop playsinline preload="none" poster="images/2026/dream-art.png" aria-label="Dream Art sleep data sculptures in motion">
                             <source src="dreamart/trailer.mp4" type="video/mp4">
                         </video>
                         <span><small>Biometric Data Driven</small><strong>Daily Dream Art</strong></span><b aria-hidden="true">↗</b>
@@ -519,7 +520,7 @@
     <dialog class="detail-dialog" id="speakingDialog" aria-labelledby="speakingDialogTitle">
         <form method="dialog"><button class="dialog-close" aria-label="Close speaking details"><span aria-hidden="true">×</span></button></form>
         <div class="dialog-layout">
-            <div><p class="eyebrow">02 / Speaking</p><h2 id="speakingDialogTitle">Inspiring large<br><em>audiences.</em></h2></div>
+            <div><p class="eyebrow">02 / Inspiration</p><h2 id="speakingDialogTitle">Speaking in front of<br><em>large audiences.</em></h2></div>
             <div class="dialog-body">
                 <p class="dialog-lede">Keynotes, panels and live demonstrations that bring large audiences into the idea.</p>
                 <ul><li>TEDx speaker with appearances from Tokyo and Abu Dhabi to GDC and Unite.</li><li>Talks connect human-centred design to AI, XR, BCI, haptics and cultural preservation.</li><li>Equally comfortable with a live prototype, an executive room or a global broadcast.</li></ul>
@@ -572,6 +573,6 @@
         </div>
     </dialog>
 
-    <script src="script.js?v=20260710-43" defer></script>
+    <script src="script.js?v=20260710-47" defer></script>
 </body>
 </html>
