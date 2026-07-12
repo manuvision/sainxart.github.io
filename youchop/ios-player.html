@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <title>YouChop Player</title>
+    <style>
+      html, body, #player { width: 100%; height: 100%; margin: 0; background: #090b12; overflow: hidden; }
+      iframe { display: block; width: 100%; height: 100%; border: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="player"></div>
+    <script>
+      (() => {
+        const params = new URLSearchParams(location.search);
+        const initialVideoId = params.get("v") || "";
+        const validId = value => /^[A-Za-z0-9_-]{11}$/.test(value || "");
+        let player = null;
+        let timer = null;
+
+        function send(type, payload = {}) {
+          const message = { type, ...payload };
+          try {
+            window.webkit?.messageHandlers?.youchop?.postMessage(message);
+          } catch (_) {}
+        }
+
+        function snapshot(type = "time") {
+          if (!player || typeof player.getCurrentTime !== "function") return;
+          const data = typeof player.getVideoData === "function" ? player.getVideoData() : {};
+          send(type, {
+            time: Number(player.getCurrentTime() || 0),
+            duration: Number(player.getDuration() || 0),
+            state: Number(player.getPlayerState?.() ?? -1),
+            title: data?.title || "YouTube video",
+            videoId: data?.video_id || ""
+          });
+        }
+
+        function beginClock() {
+          clearInterval(timer);
+          timer = setInterval(() => snapshot("time"), 100);
+        }
+
+        window.onYouTubeIframeAPIReady = () => {
+          if (!validId(initialVideoId)) {
+            send("error", { code: "invalid_video_id", message: "That YouTube URL is not valid." });
+            return;
+          }
+
+          player = new YT.Player("player", {
+            width: "100%",
+            height: "100%",
+            videoId: initialVideoId,
+            playerVars: {
+              autoplay: 0,
+              controls: 1,
+              enablejsapi: 1,
+              playsinline: 1,
+              rel: 0,
+              origin: "https://manu.vision"
+            },
+            events: {
+              onReady: () => {
+                snapshot("ready");
+                beginClock();
+              },
+              onStateChange: event => {
+                snapshot("state");
+                send("playing", { playing: event.data === YT.PlayerState.PLAYING });
+              },
+              onError: event => send("error", {
+                code: String(event.data),
+                message: "YouTube could not play this video. It may be private or embedding may be disabled."
+              })
+            }
+          });
+        };
+
+        window.YouChopNative = {
+          load(videoId) {
+            if (!validId(videoId)) return false;
+            player?.cueVideoById(videoId);
+            return true;
+          },
+          seek(seconds, autoplay = true) {
+            if (!player) return false;
+            const value = Math.max(0, Number(seconds) || 0);
+            player.seekTo(value, true);
+            if (autoplay) player.playVideo();
+            return true;
+          },
+          play() { player?.playVideo(); return Boolean(player); },
+          pause() { player?.pauseVideo(); return Boolean(player); },
+          requestState() { snapshot("state"); return Boolean(player); }
+        };
+
+        const api = document.createElement("script");
+        api.src = "https://www.youtube.com/iframe_api";
+        document.head.appendChild(api);
+        send("bridgeReady");
+      })();
+    </script>
+  </body>
+</html>
