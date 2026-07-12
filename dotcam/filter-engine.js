@@ -4,6 +4,7 @@
   const TAU = Math.PI * 2;
   const PYRAMID_LEVELS = 3;
   const MAX_TEMPLATE_SAMPLES = 81;
+  const MIN_VISIBLE_AGE = 3;
 
   class DotFilterEngine {
     constructor({ sourceCanvas, outputCanvas, onStats } = {}) {
@@ -13,14 +14,13 @@
 
       this.sourceCanvas = sourceCanvas;
       this.outputCanvas = outputCanvas;
+      this.frameCanvas = document.createElement("canvas");
       this.sourceContext = sourceCanvas.getContext("2d", {
         alpha: false,
         willReadFrequently: true,
       });
-      this.outputContext = outputCanvas.getContext("2d", {
-        alpha: false,
-        desynchronized: true,
-      });
+      this.frameContext = this.frameCanvas.getContext("2d", { alpha: false });
+      this.outputContext = outputCanvas.getContext("2d", { alpha: false });
       this.onStats = typeof onStats === "function" ? onStats : () => {};
 
       this.settings = {
@@ -37,6 +37,8 @@
       this.analysisWidth = 0;
       this.analysisHeight = 0;
       this.outputDpr = 1;
+      this.lastCssWidth = 0;
+      this.lastCssHeight = 0;
       this.tracks = [];
       this.nextTracks = [];
       this.provisionalTracks = [];
@@ -87,10 +89,15 @@
       this.animationFrameHandle = 0;
       this.needsDetection = true;
       this.resizeQueued = false;
+      this.resizeTimer = 0;
+      this.hasPresentedFrame = false;
+      this.presentationHoldFrames = 0;
+      this.lastPresentedPointCount = 0;
+      this.outputCanvas.dataset.presentation = "buffered";
 
       this.boundAnimationLoop = (time) => this.animationLoop(time);
       this.boundVideoLoop = (time, metadata) => this.videoLoop(time, metadata);
-      this.resize();
+      this.resize(true);
     }
 
     start(sourceElement, { mirror = false, beforeFrame = null } = {}) {
@@ -105,7 +112,7 @@
       this.lastFrameTime = 0;
       this.lastMediaTime = null;
       this.reset();
-      this.resize();
+      this.resize(true);
       this.scheduleNextFrame();
     }
 
@@ -168,13 +175,46 @@
       }
     }
 
-    resize() {
-      if (this.resizeQueued) return;
+    resize(force = false) {
+      if (force || !this.analysisWidth || !this.analysisHeight) {
+        window.clearTimeout(this.resizeTimer);
+        this.resizeTimer = 0;
+        this.resizeQueued = false;
+        this.applyResize(force);
+        return;
+      }
+
+      window.clearTimeout(this.resizeTimer);
       this.resizeQueued = true;
+      this.resizeTimer = window.setTimeout(() => {
+        this.resizeTimer = 0;
+        this.resizeQueued = false;
+        this.applyResize(false);
+      }, 160);
+    }
+
+    applyResize(force = false) {
 
       const rect = this.outputCanvas.getBoundingClientRect();
       const cssWidth = Math.max(1, Math.round(rect.width || window.innerWidth || 1));
       const cssHeight = Math.max(1, Math.round(rect.height || window.innerHeight || 1));
+      const previousCssWidth = this.lastCssWidth;
+      const previousCssHeight = this.lastCssHeight;
+      if (
+        !force &&
+        previousCssWidth &&
+        Math.abs(cssWidth - previousCssWidth) <= 2 &&
+        Math.abs(cssHeight - previousCssHeight) <= 2
+      ) return;
+      const preserveAnalysis = Boolean(
+        this.analysisWidth &&
+        previousCssWidth &&
+        Math.abs(cssWidth - previousCssWidth) <= 2 &&
+        Math.abs(cssHeight - previousCssHeight) / Math.max(1, previousCssHeight) < 0.2
+      );
+      this.lastCssWidth = cssWidth;
+      this.lastCssHeight = cssHeight;
+
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const outputWidth = Math.max(1, Math.round(cssWidth * dpr));
       const outputHeight = Math.max(1, Math.round(cssHeight * dpr));
@@ -202,14 +242,40 @@
 
       analysisWidth = Math.max(144, analysisWidth);
       analysisHeight = Math.max(144, analysisHeight);
+      if (preserveAnalysis) {
+        analysisWidth = this.analysisWidth;
+        analysisHeight = this.analysisHeight;
+      }
       const outputChanged = this.outputCanvas.width !== outputWidth || this.outputCanvas.height !== outputHeight;
+      const frameChanged = this.frameCanvas.width !== outputWidth || this.frameCanvas.height !== outputHeight;
       const analysisChanged = this.analysisWidth !== analysisWidth || this.analysisHeight !== analysisHeight;
+      let previousFrame = null;
+
+      if ((outputChanged || frameChanged) && this.hasPresentedFrame && this.outputCanvas.width && this.outputCanvas.height) {
+        previousFrame = document.createElement("canvas");
+        previousFrame.width = this.outputCanvas.width;
+        previousFrame.height = this.outputCanvas.height;
+        previousFrame.getContext("2d", { alpha: false }).drawImage(this.outputCanvas, 0, 0);
+      }
 
       this.outputDpr = dpr;
       if (outputChanged) {
         this.outputCanvas.width = outputWidth;
         this.outputCanvas.height = outputHeight;
-        this.clearOutput();
+      }
+      if (frameChanged) {
+        this.frameCanvas.width = outputWidth;
+        this.frameCanvas.height = outputHeight;
+      }
+      if (outputChanged || frameChanged) {
+        if (previousFrame) {
+          this.frameContext.drawImage(previousFrame, 0, 0, outputWidth, outputHeight);
+          this.outputContext.globalCompositeOperation = "copy";
+          this.outputContext.drawImage(this.frameCanvas, 0, 0);
+          this.outputContext.globalCompositeOperation = "source-over";
+        } else {
+          this.clearOutput();
+        }
       }
 
       if (analysisChanged) {
@@ -224,7 +290,6 @@
         this.resetTracking();
       }
 
-      this.resizeQueued = false;
     }
 
     async captureBlob() {
@@ -358,6 +423,14 @@
         this.lastDetectionFrame = this.frameNumber;
       }
 
+      if (
+        this.performanceScale < 1 &&
+        this.tracks.length > this.targetPointCount() &&
+        this.frameNumber % 2 === 0
+      ) {
+        this.trimToTarget(0.01);
+      }
+
       this.render();
       this.swapPyramids();
       this.hasPreviousFrame = true;
@@ -434,7 +507,7 @@
       const sourceCount = sourceTracks.length;
       let sourceVisibleCount = 0;
       for (const point of sourceTracks) {
-        if (point.age >= 1) sourceVisibleCount += 1;
+        if (point.age >= MIN_VISIBLE_AGE) sourceVisibleCount += 1;
       }
       this.provisionalTracks.length = 0;
       this.failedTracks.length = 0;
@@ -533,7 +606,7 @@
       this.lastTrackingStats.predicted = predicted;
       let retainedVisibleCount = 0;
       for (const point of this.tracks) {
-        if (point.age >= 2) retainedVisibleCount += 1;
+        if (point.age >= MIN_VISIBLE_AGE + 1) retainedVisibleCount += 1;
       }
       this.lastTrackingStats.visibleRatio = sourceVisibleCount ? retainedVisibleCount / sourceVisibleCount : 1;
       this.lastTrackingStats.visibleDropped = Math.max(0, sourceVisibleCount - retainedVisibleCount);
@@ -1006,14 +1079,14 @@
         luminance *= boost;
       }
 
-      const amount = immediate ? 1 : 0.48;
+      const amount = immediate ? 1 : 0.08;
       point.r += (clamp(red, 0, 255) - point.r) * amount;
       point.g += (clamp(green, 0, 255) - point.g) * amount;
       point.b += (clamp(blue, 0, 255) - point.b) * amount;
     }
 
     render() {
-      const context = this.outputContext;
+      const context = this.frameContext;
       const outputWidth = this.outputCanvas.width;
       const outputHeight = this.outputCanvas.height;
       if (!outputWidth || !outputHeight) return;
@@ -1025,9 +1098,11 @@
       const scaleX = outputWidth / this.analysisWidth;
       const scaleY = outputHeight / this.analysisHeight;
       const baseRadius = this.settings.dotSize * this.outputDpr;
+      let visiblePointCount = 0;
 
       for (const point of this.tracks) {
-        if (point.age < 1) continue;
+        if (point.age < MIN_VISIBLE_AGE) continue;
+        visiblePointCount += 1;
         const color = this.pointColor(point, this.colorScratch);
         const radius = baseRadius * (0.94 + point.quality * 0.1);
         context.fillStyle = `rgb(${color[0]} ${color[1]} ${color[2]})`;
@@ -1035,6 +1110,21 @@
         context.arc(point.x * scaleX, point.y * scaleY, radius, 0, TAU);
         context.fill();
       }
+
+      const continuityFloor = Math.max(24, Math.round(this.lastPresentedPointCount * 0.8));
+      if (this.hasPresentedFrame && visiblePointCount < continuityFloor && this.presentationHoldFrames < 3) {
+        this.presentationHoldFrames += 1;
+        return;
+      }
+
+      const output = this.outputContext;
+      output.setTransform(1, 0, 0, 1, 0, 0);
+      output.globalCompositeOperation = "copy";
+      output.drawImage(this.frameCanvas, 0, 0);
+      output.globalCompositeOperation = "source-over";
+      this.hasPresentedFrame = true;
+      this.presentationHoldFrames = 0;
+      this.lastPresentedPointCount = visiblePointCount;
     }
 
     pointColor(point, target) {
@@ -1077,11 +1167,15 @@
       return Math.round(clamp((450 + density * 1600) * areaScale * this.performanceScale, 500, 2200));
     }
 
-    trimToTarget() {
+    trimToTarget(maxRemovalFraction = 1) {
       const target = this.targetPointCount();
       if (this.tracks.length <= target) return;
-      this.tracks.sort((first, second) => second.quality - first.quality);
-      this.tracks.length = target;
+      this.tracks.sort((first, second) => {
+        const visibilityDifference = Number(second.age >= MIN_VISIBLE_AGE) - Number(first.age >= MIN_VISIBLE_AGE);
+        return visibilityDifference || second.quality - first.quality;
+      });
+      const maximumRemoval = Math.max(1, Math.ceil(this.tracks.length * clamp(maxRemovalFraction, 0, 1)));
+      this.tracks.length = Math.max(target, this.tracks.length - maximumRemoval);
     }
 
     swapPyramids() {
@@ -1106,7 +1200,6 @@
       if (this.overBudgetFrames >= 12 && this.performanceScale > 0.58) {
         this.performanceScale = Math.max(0.58, this.performanceScale * 0.88);
         this.overBudgetFrames = 0;
-        this.trimToTarget();
       } else if (this.underBudgetFrames >= 120 && this.performanceScale < 1) {
         this.performanceScale = Math.min(1, this.performanceScale + 0.06);
         this.underBudgetFrames = 0;
@@ -1127,7 +1220,7 @@
       let totalAge = 0;
       let visibleTracks = 0;
       for (const point of this.tracks) {
-        if (point.age < 1) continue;
+        if (point.age < MIN_VISIBLE_AGE) continue;
         visibleTracks += 1;
         if (point.age >= 60) stableTracks += 1;
         totalAge += point.age;
@@ -1158,10 +1251,15 @@
 
     clearOutput() {
       if (!this.outputContext || !this.outputCanvas.width || !this.outputCanvas.height) return;
-      this.outputContext.setTransform(1, 0, 0, 1, 0, 0);
-      this.outputContext.globalCompositeOperation = "source-over";
-      this.outputContext.fillStyle = "#000";
-      this.outputContext.fillRect(0, 0, this.outputCanvas.width, this.outputCanvas.height);
+      for (const context of [this.frameContext, this.outputContext]) {
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.globalCompositeOperation = "source-over";
+        context.fillStyle = "#000";
+        context.fillRect(0, 0, this.outputCanvas.width, this.outputCanvas.height);
+      }
+      this.hasPresentedFrame = false;
+      this.presentationHoldFrames = 0;
+      this.lastPresentedPointCount = 0;
     }
   }
 

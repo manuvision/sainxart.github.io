@@ -7,7 +7,9 @@ DotCam is a dependency-free, real-time camera and video filter for `manu.vision/
 1. The current camera frame is cover-cropped into a small analysis canvas.
 2. A Shi–Tomasi-style corner score finds visually distinct points.
 3. Pyramidal Lucas–Kanade optical flow follows those points while a scene-motion model bridges brief blur.
-4. A candidate is shown only after it survives a tracking frame, then its source color is drawn as one crisp circle on a freshly cleared black frame.
+4. A candidate is shown only after it survives several tracking frames, then its gently stabilized source color is drawn as one crisp circle.
+5. Each complete black-and-dot frame is composed offscreen and presented to the visible canvas in a single draw, preventing partial refresh flicker.
+6. Mobile viewport changes are coalesced while the last complete frame stays visible, avoiding address-bar resize flashes.
 
 All processing happens locally in the browser. No frames or selected files are uploaded or stored. The bundled procedural demo exercises the same filter path without requesting camera access or choosing a file.
 
