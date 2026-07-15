@@ -139,22 +139,41 @@
         .map((id) => document.getElementById(id))
         .filter(Boolean);
 
-    if ("IntersectionObserver" in window) {
-        const updateCurrentSection = () => {
-            const marker = window.innerHeight * 0.36;
-            const currentSection = observedSections.find((section) => {
-                const rect = section.getBoundingClientRect();
-                return rect.top <= marker && rect.bottom > marker;
-            });
-            if (!currentSection) return;
-            currentLinks.forEach((link) => link.removeAttribute("aria-current"));
-            sectionMap.get(currentSection.id)?.setAttribute("aria-current", "location");
-        };
-        const sectionObserver = new IntersectionObserver(updateCurrentSection, { rootMargin: "-28% 0px -58%", threshold: [0.05, 0.25, 0.5] });
+    const setCurrentSection = (sectionId) => {
+        currentLinks.forEach((link) => link.removeAttribute("aria-current"));
+        sectionMap.get(sectionId)?.setAttribute("aria-current", "location");
+    };
 
-        observedSections.forEach((section) => sectionObserver.observe(section));
-        updateCurrentSection();
-    }
+    const updateCurrentSection = () => {
+        const headerBottom = header.getBoundingClientRect().bottom;
+        const marker = Math.max(headerBottom + 8, window.innerHeight * 0.36);
+        const currentSection = observedSections.find((section) => {
+            const rect = section.getBoundingClientRect();
+            return rect.top <= marker && rect.bottom > marker;
+        });
+        if (currentSection) setCurrentSection(currentSection.id);
+    };
+
+    let sectionSpyFrame = 0;
+    const scheduleCurrentSectionUpdate = () => {
+        if (sectionSpyFrame) return;
+        sectionSpyFrame = window.requestAnimationFrame(() => {
+            sectionSpyFrame = 0;
+            updateCurrentSection();
+        });
+    };
+
+    currentLinks.forEach((link) => {
+        link.addEventListener("click", () => {
+            const sectionId = link.getAttribute("href")?.slice(1);
+            if (sectionId) setCurrentSection(sectionId);
+        });
+    });
+
+    window.addEventListener("scroll", scheduleCurrentSectionUpdate, { passive: true });
+    window.addEventListener("resize", scheduleCurrentSectionUpdate, { passive: true });
+    window.addEventListener("hashchange", scheduleCurrentSectionUpdate);
+    updateCurrentSection();
 
     const metrics = [...document.querySelectorAll(".metric dt")];
 
