@@ -3244,6 +3244,14 @@
 
     const proceduralCache = new Map();
     const PROCEDURAL_TAU = Math.PI * 2;
+    const PROCEDURAL_PHI = (1 + Math.sqrt(5)) / 2;
+    const PROCEDURAL_GOLDEN = PROCEDURAL_TAU * (1 - 1 / PROCEDURAL_PHI);
+    const LIVE_DEFAULT_ZOOM = 0.45;
+    const LIVE_MIN_ZOOM = 0.24;
+    const LIVE_MAX_ZOOM = 1.45;
+    const LIVE_DEFAULT_DENSITY = 7200;
+    const LIVE_DEFAULT_MOTION = 40;
+    const LIVE_DEFAULT_SPREAD = 34;
 
     function seededRandom(seed) {
       let h = 2166136261 >>> 0;
@@ -3416,20 +3424,280 @@
       return url;
     }
 
+    function liveHalton(idx, base) {
+      let f = 1;
+      let r = 0;
+      while (idx > 0) {
+        f /= base;
+        r += f * (idx % base);
+        idx = Math.floor(idx / base);
+      }
+      return r;
+    }
+
+    function liveRangeForScore(score) {
+      const safe = Math.max(0, Math.min(100, Number(score) || 0));
+      if (safe >= 86) return { shape: 'sphere', label: 'Aurora', colors: ['#e8c8ff','#a060e8','#6020c0','#3008a8','#180470','#080128','#020014'] };
+      if (safe >= 71) return { shape: 'torus', label: 'Slate', colors: ['#b0d8f8','#60a8e0','#2868c0','#084898','#043070','#011840','#000820'] };
+      if (safe >= 56) return { shape: 'cylinder', label: 'Moss', colors: ['#c0f0a0','#80c860','#409040','#206830','#0c5020','#063010','#021808'] };
+      if (safe >= 41) return { shape: 'cube', label: 'Ochre', colors: ['#f8e898','#e8c050','#c89010','#906000','#583800','#2c1c00','#140a00'] };
+      return { shape: 'pyramid', label: 'Ember', colors: ['#f8d060','#f0a030','#e06018','#c03008','#881800','#4c0a00','#200400'] };
+    }
+
+    function liveSeeded(seed) {
+      let h = 2166136261 >>> 0;
+      const text = String(seed || 'composition');
+      for (let i = 0; i < text.length; i += 1) {
+        h ^= text.charCodeAt(i);
+        h = Math.imul(h, 16777619) >>> 0;
+      }
+      return () => {
+        h ^= h << 13; h >>>= 0;
+        h ^= h >>> 17;
+        h ^= h << 5; h >>>= 0;
+        return (h % 100000) / 100000;
+      };
+    }
+
+    function liveDirectives(reading) {
+      const text = String(reading || '').toLowerCase();
+      let tilt = 0.34;
+      let lift = 0;
+      if (text.includes('mostly upright') || text.includes('upright')) tilt = 0.08;
+      else if (text.includes('softly tilted') || text.includes('subtle') || text.includes('gently tilted')) tilt = 0.24;
+      else if (text.includes('tilted') || text.includes('rotated')) tilt = 0.44;
+      if (text.includes('hovering low') || text.includes('float low') || text.includes('held low')) lift = 78;
+      else if (text.includes('calm suspension') || text.includes('held in calm') || text.includes('suspension')) lift = 2;
+      else if (text.includes('rises') || text.includes('floating high') || text.includes('hovering high')) lift = -72;
+      return { tilt, lift };
+    }
+
+    function liveCompositionFor(count) {
+      const presets = {
+        1: [{ offset: [0, 0, 0], scale: 1.16, rot: [0.05, -0.16, 0.04] }],
+        2: [
+          { offset: [-92, -34, 54], scale: 1.08, rot: [0.08, -0.24, 0.08] },
+          { offset: [118, 46, -72], scale: 0.76, rot: [-0.22, 0.34, -0.1] },
+        ],
+        3: [
+          { offset: [-84, 18, 82], scale: 1.04, rot: [0.06, -0.28, 0.08] },
+          { offset: [112, -66, -62], scale: 0.8, rot: [-0.22, 0.26, -0.08] },
+          { offset: [18, 96, -120], scale: 0.58, rot: [0.32, 0.5, 0.14] },
+        ],
+        4: [
+          { offset: [-122, 42, 76], scale: 0.94, rot: [0.06, -0.3, 0.1] },
+          { offset: [104, -70, -74], scale: 0.78, rot: [-0.18, 0.28, -0.06] },
+          { offset: [42, 116, -126], scale: 0.56, rot: [0.34, 0.46, 0.14] },
+          { offset: [-22, -116, 14], scale: 0.68, rot: [-0.42, -0.12, 0.2] },
+        ],
+        5: [
+          { offset: [-132, 36, 90], scale: 0.94, rot: [0.08, -0.3, 0.1] },
+          { offset: [104, -82, -76], scale: 0.76, rot: [-0.18, 0.26, -0.08] },
+          { offset: [66, 126, -142], scale: 0.54, rot: [0.34, 0.46, 0.16] },
+          { offset: [-34, -126, 28], scale: 0.64, rot: [-0.4, -0.14, 0.2] },
+          { offset: [176, 52, 44], scale: 0.46, rot: [0.18, 0.74, -0.2] },
+        ],
+      };
+      return presets[Math.max(1, Math.min(5, count))] || presets[3];
+    }
+
+    function liveRotateLocal(point, rot) {
+      let { x, y, z } = point;
+      const [rx, ry, rz] = rot;
+      let c = Math.cos(rx), s = Math.sin(rx);
+      [y, z] = [y * c - z * s, y * s + z * c];
+      c = Math.cos(ry); s = Math.sin(ry);
+      [x, z] = [x * c + z * s, -x * s + z * c];
+      c = Math.cos(rz); s = Math.sin(rz);
+      [x, y] = [x * c - y * s, x * s + y * c];
+      return { x, y, z };
+    }
+
+    function liveKeepSeparated(items) {
+      if (items.length < 2) return items;
+      const separated = items.map((item) => ({ ...item, offset: [...item.offset], rot: [...item.rot] }));
+      for (let pass = 0; pass < 18; pass += 1) {
+        for (let i = 0; i < separated.length; i += 1) {
+          for (let j = i + 1; j < separated.length; j += 1) {
+            const a = separated[i];
+            const b = separated[j];
+            const dx = b.offset[0] - a.offset[0];
+            const dy = b.offset[1] - a.offset[1];
+            const dist = Math.hypot(dx, dy) || 1;
+            const minDist = 166 * (a.scale + b.scale) * 0.5;
+            if (dist >= minDist) continue;
+            const push = (minDist - dist) * 0.56;
+            const ux = dx / dist;
+            const uy = dy / dist;
+            a.offset[0] -= ux * push;
+            a.offset[1] -= uy * push * 0.55;
+            b.offset[0] += ux * push;
+            b.offset[1] += uy * push * 0.55;
+            a.offset[2] += (i % 2 === 0 ? 1 : -1) * push * 0.42;
+            b.offset[2] -= (j % 2 === 0 ? 1 : -1) * push * 0.42;
+          }
+        }
+      }
+      return separated.map((item) => ({
+        ...item,
+        offset: [
+          Math.max(-230, Math.min(230, item.offset[0])),
+          Math.max(-180, Math.min(180, item.offset[1])),
+          Math.max(-220, Math.min(220, item.offset[2])),
+        ],
+      }));
+    }
+
+    function liveModulateComposition(baseComposition, seedText, reading) {
+      const rand = liveSeeded(seedText || 'composition');
+      const directives = liveDirectives(reading);
+      const modulated = baseComposition.map((object, index) => {
+        const amount = 0.62 + rand() * 0.76;
+        const angle = rand() * PROCEDURAL_TAU;
+        const lift = directives.lift + (rand() - 0.5) * 28;
+        const depth = (rand() - 0.5) * 82;
+        const lateral = 20 + rand() * 42;
+        const scaleShift = 0.86 + rand() * 0.28;
+        const tilt = directives.tilt;
+        const sign = index % 2 === 0 ? 1 : -1;
+        const rotShift = [
+          sign * tilt + (rand() - 0.5) * tilt * 0.5,
+          (rand() - 0.5) * 0.7,
+          -sign * tilt * 0.58 + (rand() - 0.5) * tilt * 0.45,
+        ];
+        return {
+          offset: [
+            object.offset[0] + Math.cos(angle) * lateral * amount,
+            object.offset[1] + lift,
+            object.offset[2] + Math.sin(angle) * lateral * amount + depth,
+          ],
+          scale: object.scale * scaleShift,
+          rot: [object.rot[0] + rotShift[0], object.rot[1] + rotShift[1], object.rot[2] + rotShift[2]],
+        };
+      });
+      return liveKeepSeparated(modulated);
+    }
+
+    function liveGenerateParticles(shape, count, seedText) {
+      const pts = [];
+      const rand = liveSeeded(seedText || String(shape));
+      const jitter = 0.92 + rand() * 0.18;
+      const params = {
+        sphere: { R: 185 * jitter },
+        torus: { R: 132 * jitter, r: 54 * jitter },
+        cube: { a: 118 * jitter },
+        cylinder: { R: 90 * jitter, H: 240 * jitter },
+        pyramid: { a: 270 * jitter },
+      };
+      const pp = params[shape] || params.torus;
+      if (shape === 'sphere') {
+        for (let i = 0; i < count; i += 1) {
+          const phi = Math.acos(2 * liveHalton(i, 2) - 1);
+          const theta = PROCEDURAL_TAU * liveHalton(i, 3);
+          pts.push({ x: pp.R * Math.sin(phi) * Math.cos(theta), y: pp.R * Math.cos(phi), z: pp.R * Math.sin(phi) * Math.sin(theta), f: i / count, phase: liveHalton(i, 7) * PROCEDURAL_TAU });
+        }
+      } else if (shape === 'torus') {
+        for (let i = 0; i < count; i += 1) {
+          const u = liveHalton(i, 2) * PROCEDURAL_TAU;
+          const v = liveHalton(i, 3) * PROCEDURAL_TAU;
+          pts.push({ x: (pp.R + pp.r * Math.cos(v)) * Math.cos(u), y: pp.r * Math.sin(v), z: (pp.R + pp.r * Math.cos(v)) * Math.sin(u), f: i / count, phase: liveHalton(i, 5) * PROCEDURAL_TAU });
+        }
+      } else if (shape === 'cube') {
+        const perFace = Math.floor(count / 6);
+        const a = pp.a;
+        const faces = [
+          (u,v) => ({ x: u, y: v, z: a }), (u,v) => ({ x: u, y: v, z: -a }),
+          (u,v) => ({ x: a, y: u, z: v }), (u,v) => ({ x: -a, y: u, z: v }),
+          (u,v) => ({ x: u, y: a, z: v }), (u,v) => ({ x: u, y: -a, z: v }),
+        ];
+        faces.forEach((face, fi) => {
+          for (let i = 0; i < perFace; i += 1) {
+            const gi = fi * perFace + i;
+            const u = (liveHalton(i, 2) * 2 - 1) * a;
+            const v = (liveHalton(i, 3) * 2 - 1) * a;
+            pts.push({ ...face(u, v), f: gi / count, phase: liveHalton(gi, 5) * PROCEDURAL_TAU });
+          }
+        });
+      } else if (shape === 'cylinder') {
+        const sideCount = Math.floor(count * 0.7);
+        const capCount = Math.floor(count * 0.15);
+        for (let i = 0; i < sideCount; i += 1) {
+          const theta = i * PROCEDURAL_GOLDEN;
+          pts.push({ x: pp.R * Math.cos(theta), y: (liveHalton(i, 3) * 2 - 1) * (pp.H / 2), z: pp.R * Math.sin(theta), f: i / count, phase: liveHalton(i, 5) * PROCEDURAL_TAU });
+        }
+        for (let cap = 0; cap < 2; cap += 1) {
+          for (let i = 0; i < capCount; i += 1) {
+            const gi = sideCount + cap * capCount + i;
+            const r = Math.sqrt(liveHalton(i, 2)) * pp.R;
+            const theta = (i + cap * 137) * PROCEDURAL_GOLDEN;
+            pts.push({ x: r * Math.cos(theta), y: cap === 0 ? pp.H / 2 : -pp.H / 2, z: r * Math.sin(theta), f: gi / count, phase: liveHalton(gi, 5) * PROCEDURAL_TAU });
+          }
+        }
+      } else {
+        const a = pp.a;
+        const rBase = a / Math.sqrt(3);
+        const h = a * Math.sqrt(2 / 3);
+        const apex = [0, -h, 0];
+        const base = [[rBase, 0, 0], [rBase * Math.cos(2 * Math.PI / 3), 0, rBase * Math.sin(2 * Math.PI / 3)], [rBase * Math.cos(4 * Math.PI / 3), 0, rBase * Math.sin(4 * Math.PI / 3)]];
+        const faces = [[apex, base[0], base[1]], [apex, base[1], base[2]], [apex, base[2], base[0]], [base[0], base[2], base[1]]];
+        const perFace = Math.floor(count / 4);
+        faces.forEach((face, fi) => {
+          const [v0, v1, v2] = face;
+          for (let i = 0; i < perFace; i += 1) {
+            const gi = fi * perFace + i;
+            const sq = Math.sqrt(liveHalton(i, 2));
+            const u = 1 - sq;
+            const v = sq * liveHalton(i, 3);
+            const w = sq * (1 - liveHalton(i, 3));
+            pts.push({ x: u * v0[0] + v * v1[0] + w * v2[0], y: u * v0[1] + v * v1[1] + w * v2[1], z: u * v0[2] + v * v1[2] + w * v2[2], f: gi / count, phase: liveHalton(gi, 5) * PROCEDURAL_TAU });
+          }
+        });
+      }
+      if (pts.length) {
+        const n = pts.length;
+        const cx = pts.reduce((sum, p) => sum + p.x, 0) / n;
+        const cy = pts.reduce((sum, p) => sum + p.y, 0) / n;
+        const cz = pts.reduce((sum, p) => sum + p.z, 0) / n;
+        pts.forEach((p) => { p.x -= cx; p.y -= cy; p.z -= cz; });
+      }
+      return pts;
+    }
+
+    function liveGenerateSceneParticles(shape, objectCount, totalCount, seedText, reading) {
+      const composition = liveModulateComposition(liveCompositionFor(objectCount), seedText, reading);
+      const all = [];
+      const perObject = Math.max(650, Math.floor(totalCount / composition.length));
+      composition.forEach((object, objectIndex) => {
+        const base = liveGenerateParticles(shape, perObject, `${seedText}-${objectIndex}`);
+        const phaseShift = objectIndex / Math.max(1, composition.length);
+        for (const p of base) {
+          const local = liveRotateLocal({ x: p.x * object.scale, y: p.y * object.scale, z: p.z * object.scale }, object.rot);
+          all.push({ x: local.x + object.offset[0], y: local.y + object.offset[1], z: local.z + object.offset[2], f: (p.f + phaseShift) % 1, phase: p.phase + objectIndex * 1.7 });
+        }
+      });
+      return all;
+    }
+
     const liveLightbox = {
       item: null,
       points: [],
-      colors: [],
+      range: liveRangeForScore(72),
       raf: 0,
-      rotX: 0.28,
-      rotY: -0.18,
-      zoom: 0.72,
-      pointerId: null,
+      rotX: Math.PI / 6,
+      rotY: 0,
+      velX: 0,
+      velY: 0.003,
+      zoom: LIVE_DEFAULT_ZOOM,
+      motion: LIVE_DEFAULT_MOTION,
+      spread: LIVE_DEFAULT_SPREAD,
+      activePointers: new Map(),
+      dragging: false,
       lastX: 0,
       lastY: 0,
       pinchDistance: 0,
-      pinchZoom: 0.72,
+      pinchZoom: LIVE_DEFAULT_ZOOM,
       lastTap: 0,
+      waveStart: 0,
     };
 
     function buildLivePoints(item) {
@@ -3460,9 +3728,147 @@
     }
 
     function resetLiveLightbox() {
-      liveLightbox.rotX = 0.28;
-      liveLightbox.rotY = -0.18;
-      liveLightbox.zoom = 0.72;
+      liveLightbox.rotX = Math.PI / 6;
+      liveLightbox.rotY = 0;
+      liveLightbox.velX = 0;
+      liveLightbox.velY = 0.003;
+      liveLightbox.zoom = LIVE_DEFAULT_ZOOM;
+    }
+
+    function clampLiveZoom(value) {
+      return Math.max(LIVE_MIN_ZOOM, Math.min(LIVE_MAX_ZOOM, value));
+    }
+
+    function liveMixColor(hex, amount) {
+      const n = parseInt(String(hex || '#ffffff').slice(1), 16);
+      const r = (n >> 16) & 255;
+      const g = (n >> 8) & 255;
+      const b = n & 255;
+      const to = amount > 0 ? 255 : 0;
+      const a = Math.abs(amount);
+      return `rgb(${Math.round(r + (to - r) * a)},${Math.round(g + (to - g) * a)},${Math.round(b + (to - b) * a)})`;
+    }
+
+    function drawLiveGlyph(ctx, x, y, size, color, glyphIndex, alpha) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = Math.max(1, size * 0.13);
+      const s = size;
+      const h = s / 2;
+      const glyph = glyphIndex % 7;
+      if (glyph === 0) {
+        ctx.fillRect(-h, -h, s, s);
+      } else if (glyph === 1) {
+        ctx.beginPath();
+        ctx.moveTo(-h, -h); ctx.lineTo(h, h);
+        ctx.moveTo(h, -h); ctx.lineTo(-h, h);
+        ctx.stroke();
+      } else if (glyph === 2) {
+        ctx.strokeRect(-h, -h, s, s);
+      } else if (glyph === 3) {
+        ctx.beginPath();
+        ctx.arc(0, 0, h * 0.92, 0, PROCEDURAL_TAU);
+        ctx.stroke();
+      } else if (glyph === 4) {
+        ctx.beginPath();
+        for (let i = 0; i < 8; i += 1) {
+          const a = (i / 8) * PROCEDURAL_TAU;
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(a) * h, Math.sin(a) * h);
+        }
+        ctx.stroke();
+      } else if (glyph === 5) {
+        const r = Math.max(1.1, s * 0.11);
+        [[-0.24, -0.24], [0.24, -0.24], [-0.24, 0.24], [0.24, 0.24]].forEach(([dx, dy]) => {
+          ctx.beginPath();
+          ctx.arc(dx * s, dy * s, r, 0, PROCEDURAL_TAU);
+          ctx.fill();
+        });
+      } else {
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(1.2, h * 0.38), 0, PROCEDURAL_TAU);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function liveWaveState(t, w) {
+      const cycle = 6.2;
+      const elapsed = Math.max(0, t - liveLightbox.waveStart);
+      const pass = Math.floor(elapsed / cycle);
+      const phase = (elapsed % cycle) / cycle;
+      const bandWidth = Math.max(110, w * 0.18);
+      const center = phase * (w + bandWidth * 2) - bandWidth;
+      const baseGlyph = pass % 2 === 1;
+      return { center, bandWidth, baseGlyph, targetGlyph: !baseGlyph };
+    }
+
+    function liveGlyphModeForX(x, wave) {
+      return x <= wave.center ? wave.targetGlyph : wave.baseGlyph;
+    }
+
+    function liveTransitionAmountForX(x, wave) {
+      const half = wave.bandWidth * 0.58;
+      return Math.max(0, 1 - Math.abs(x - wave.center) / half);
+    }
+
+    function drawLiveWaveBand(ctx, wave, w, h) {
+      const safe = 6;
+      const left = Math.max(safe, wave.center - wave.bandWidth * 0.6);
+      const right = Math.min(w - safe, wave.center + wave.bandWidth * 0.6);
+      if (right <= safe || left >= w - safe) return;
+      const fade = ctx.createLinearGradient(left, 0, right, 0);
+      fade.addColorStop(0, 'rgba(7,7,15,0)');
+      fade.addColorStop(0.5, 'rgba(7,7,15,0.78)');
+      fade.addColorStop(1, 'rgba(7,7,15,0)');
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = fade;
+      ctx.fillRect(left, safe, right - left, h - safe * 2);
+    }
+
+    function drawLiveGlyphLayer(ctx, renderPoints, wave, w, h) {
+      if (!renderPoints.length) return;
+      const safe = 6;
+      const cell = 16;
+      const gutter = 2.5;
+      const cols = Math.max(1, Math.ceil(w / cell));
+      const rows = Math.max(1, Math.ceil(h / cell));
+      const cells = new Map();
+      for (const p of renderPoints) {
+        if (p.x < safe || p.x > w - safe || p.y < safe || p.y > h - safe) continue;
+        const modeIsGlyph = liveGlyphModeForX(p.x, wave);
+        const local = liveTransitionAmountForX(p.x, wave);
+        if (!modeIsGlyph && local <= 0.1) continue;
+        const strength = modeIsGlyph ? 1 : local;
+        const gx = Math.max(0, Math.min(cols - 1, Math.floor(p.x / cell)));
+        const gy = Math.max(0, Math.min(rows - 1, Math.floor(p.y / cell)));
+        const key = gy * cols + gx;
+        const current = cells.get(key) || { x: gx * cell + cell / 2, y: gy * cell + cell / 2, alpha: 0, count: 0, color: p.color, f: p.f };
+        const weight = p.alpha * strength;
+        current.alpha += weight;
+        current.count += 1;
+        if (weight >= current.bestWeight || current.bestWeight === undefined) {
+          current.bestWeight = weight;
+          current.color = p.color;
+          current.f = p.f;
+        }
+        cells.set(key, current);
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      let drawn = 0;
+      for (const p of cells.values()) {
+        const brightness = Math.max(0.02, Math.min(1, p.alpha / Math.max(1.2, p.count * 0.68)));
+        const glyphIndex = 6 - Math.max(0, Math.min(6, Math.floor(brightness * 7)));
+        const size = Math.max(3.5, (cell - gutter) * (0.34 + brightness * 0.64));
+        drawLiveGlyph(ctx, p.x, p.y, size, p.color, glyphIndex, Math.min(0.98, 0.18 + brightness * 0.86));
+        drawn += 1;
+        if (drawn > 3600) break;
+      }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
     }
 
     function resizeLiveCanvas() {
@@ -3488,46 +3894,111 @@
       const { width, height, dpr } = metrics;
       const ctx = lbLive.getContext('2d');
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const bg = ctx.createLinearGradient(0, 0, 0, height);
-      bg.addColorStop(0, '#111121');
-      bg.addColorStop(0.55, '#090914');
-      bg.addColorStop(1, '#05050b');
+      const cx = width / 2;
+      const cy = height / 2;
+      const t = performance.now() * 0.001;
+      const motion = liveLightbox.motion / 100;
+      const spread = liveLightbox.spread / 100;
+      const colors = liveLightbox.range.colors;
+      const renderPoints = [];
+      if (!liveLightbox.dragging) {
+        liveLightbox.rotY += liveLightbox.velY + 0.0015 + motion * 0.004;
+        liveLightbox.rotX += liveLightbox.velX;
+        liveLightbox.velX *= 0.96;
+        liveLightbox.velY *= 0.96;
+      }
+      ctx.clearRect(0, 0, width, height);
+      const bg = ctx.createRadialGradient(cx, cy * 0.75, 10, cx, cy, Math.max(width, height) * 0.75);
+      bg.addColorStop(0, 'rgba(22,22,42,1)');
+      bg.addColorStop(0.55, 'rgba(8,8,18,1)');
+      bg.addColorStop(1, 'rgba(5,5,12,1)');
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, width, height);
 
-      liveLightbox.rotY += liveLightbox.pointerId == null ? 0.0018 : 0;
-      const focus = Math.min(width, height) * 0.34 * liveLightbox.zoom;
-      const projected = liveLightbox.points.map((point) => {
-        const rotated = rotatePoint(point, liveLightbox.rotX, liveLightbox.rotY, 0);
-        const perspective = 1 / (1 + (rotated.z + 2.8) / 5.8);
-        return {
-          x: width * 0.5 + rotated.x * focus * perspective,
-          y: height * 0.48 + rotated.y * focus * perspective,
-          z: rotated.z,
-          size: point.size * Math.max(0.7, perspective) * (width < 440 ? 0.72 : 0.9),
-          color: point.color,
-          alpha: point.alpha,
-        };
-      }).sort((a, b) => a.z - b.z);
-
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(2, 2, Math.max(0, width - 4), Math.max(0, height - 4));
+      ctx.clip();
+      if (!liveLightbox.points.length) {
+        ctx.restore();
+        liveLightbox.raf = requestAnimationFrame(drawLiveLightbox);
+        return;
+      }
+      const scale = Math.min(width, height) * 0.0044 * liveLightbox.zoom;
+      const perspStr = 0.00165;
+      const pulse = (Math.sin(t * 0.42) * 0.5 + 0.5) * liveLightbox.points.length;
+      const cosX = Math.cos(liveLightbox.rotX);
+      const sinX = Math.sin(liveLightbox.rotX);
+      const cosY = Math.cos(liveLightbox.rotY);
+      const sinY = Math.sin(liveLightbox.rotY);
+      for (let i = 0; i < liveLightbox.points.length; i += 1) {
+        const p = liveLightbox.points[i];
+        const breathe = 1
+          + Math.sin(p.f * 22 - t * (1.5 + motion * 2.2) + p.phase) * (0.035 + motion * 0.04)
+          + Math.sin(p.f * 11 + t * 0.7) * 0.02;
+        let px = p.x * breathe;
+        let py = p.y * breathe;
+        let pz = p.z * breathe;
+        const radial = Math.sin(p.phase + t * 0.35) * spread * 18;
+        px += Math.cos(p.phase) * radial;
+        py += Math.sin(p.phase * 1.3) * radial * 0.55;
+        pz += Math.sin(p.phase) * radial;
+        const x3 = px * cosY + pz * sinY;
+        const z3 = -px * sinY + pz * cosY;
+        const y3 = py * cosX - z3 * sinX;
+        const z4 = py * sinX + z3 * cosX;
+        const persp = 1 / (1 + z4 * perspStr);
+        const sx = cx + x3 * scale * persp;
+        const sy = cy + y3 * scale * persp;
+        const depth = Math.max(0, Math.min(1, 0.5 - z4 / 440));
+        const dp = Math.abs(i - pulse);
+        const glow = Math.exp(-(dp * dp) / (liveLightbox.points.length * 4.5));
+        const paletteIndex = Math.max(0, Math.min(colors.length - 1, Math.floor((1 - depth) * colors.length)));
+        if (sx < -24 || sx > width + 24 || sy < -24 || sy > height + 24) continue;
+        renderPoints.push({
+          x: sx,
+          y: sy,
+          z: z4,
+          size: Math.max(0.35, 0.55 + depth * 2.3 + glow * 3.2),
+          alpha: Math.min(1, 0.11 + depth * 0.75 + glow * 0.55),
+          color: liveMixColor(colors[paletteIndex], glow * 0.18),
+          f: p.f,
+        });
+      }
+      renderPoints.sort((a, b) => a.z - b.z);
+      const wave = liveWaveState(t, width);
       ctx.globalCompositeOperation = 'lighter';
-      projected.forEach((point) => {
-        if (point.x < -12 || point.x > width + 12 || point.y < -12 || point.y > height + 12) return;
-        ctx.globalAlpha = point.alpha;
-        ctx.fillStyle = point.color;
+      for (const p of renderPoints) {
+        if (liveGlyphModeForX(p.x, wave)) continue;
+        const transition = liveTransitionAmountForX(p.x, wave);
+        ctx.globalAlpha = p.alpha * (1 - transition * 0.7);
+        ctx.fillStyle = p.color;
         ctx.beginPath();
-        ctx.arc(point.x, point.y, point.size, 0, PROCEDURAL_TAU);
+        ctx.arc(p.x, p.y, p.size, 0, PROCEDURAL_TAU);
         ctx.fill();
-      });
+      }
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
+      drawLiveWaveBand(ctx, wave, width, height);
+      drawLiveGlyphLayer(ctx, renderPoints, wave, width, height);
+      ctx.restore();
       liveLightbox.raf = requestAnimationFrame(drawLiveLightbox);
     }
 
     function startLiveLightbox(item) {
       if (!lbLive) return;
       liveLightbox.item = item;
-      liveLightbox.points = buildLivePoints(item);
+      liveLightbox.range = liveRangeForScore(item.sleepScore);
+      liveLightbox.motion = LIVE_DEFAULT_MOTION;
+      liveLightbox.spread = LIVE_DEFAULT_SPREAD;
+      liveLightbox.points = liveGenerateSceneParticles(
+        liveLightbox.range.shape,
+        proceduralCount(item),
+        LIVE_DEFAULT_DENSITY,
+        `${item.date}-${item.sleepScore}`,
+        item.reading
+      );
+      liveLightbox.waveStart = performance.now() * 0.001;
       resetLiveLightbox();
       lbLive.classList.add('loaded');
       if (!liveLightbox.raf) {
@@ -3540,7 +4011,8 @@
       liveLightbox.raf = 0;
       liveLightbox.item = null;
       liveLightbox.points = [];
-      liveLightbox.pointerId = null;
+      liveLightbox.activePointers.clear();
+      liveLightbox.dragging = false;
       if (lbLive) lbLive.classList.remove('loaded');
     }
 
@@ -4935,29 +5407,47 @@
     });
     if (lbLive) {
       lbLive.addEventListener('pointerdown', (event) => {
-        lbLive.setPointerCapture(event.pointerId);
-        liveLightbox.pointerId = event.pointerId;
+        liveLightbox.activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        liveLightbox.dragging = true;
         liveLightbox.lastX = event.clientX;
         liveLightbox.lastY = event.clientY;
+        if (liveLightbox.activePointers.size === 2) {
+          const points = [...liveLightbox.activePointers.values()];
+          liveLightbox.pinchDistance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+          liveLightbox.pinchZoom = liveLightbox.zoom;
+        }
+        lbLive.setPointerCapture(event.pointerId);
       });
       lbLive.addEventListener('pointermove', (event) => {
-        if (liveLightbox.pointerId !== event.pointerId) return;
+        if (!liveLightbox.activePointers.has(event.pointerId)) return;
+        liveLightbox.activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (liveLightbox.activePointers.size === 2) {
+          const points = [...liveLightbox.activePointers.values()];
+          const dist = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+          if (liveLightbox.pinchDistance > 0) {
+            liveLightbox.zoom = clampLiveZoom(liveLightbox.pinchZoom * (dist / liveLightbox.pinchDistance));
+          }
+          return;
+        }
         const dx = event.clientX - liveLightbox.lastX;
         const dy = event.clientY - liveLightbox.lastY;
         liveLightbox.lastX = event.clientX;
         liveLightbox.lastY = event.clientY;
-        liveLightbox.rotY += dx * 0.008;
-        liveLightbox.rotX = Math.max(-1.15, Math.min(1.15, liveLightbox.rotX + dy * 0.006));
+        liveLightbox.rotY += dx * 0.0085;
+        liveLightbox.rotX += dy * 0.0065;
+        liveLightbox.velY = dx * 0.00045;
+        liveLightbox.velX = dy * 0.00032;
       });
       const endLivePointer = (event) => {
-        if (liveLightbox.pointerId === event.pointerId) liveLightbox.pointerId = null;
+        liveLightbox.activePointers.delete(event.pointerId);
+        if (liveLightbox.activePointers.size === 0) liveLightbox.dragging = false;
       };
       lbLive.addEventListener('pointerup', endLivePointer);
       lbLive.addEventListener('pointercancel', endLivePointer);
       lbLive.addEventListener('wheel', (event) => {
         event.preventDefault();
-        const direction = event.deltaY > 0 ? -1 : 1;
-        liveLightbox.zoom = Math.max(0.42, Math.min(1.45, liveLightbox.zoom + direction * 0.07));
+        liveLightbox.zoom *= event.deltaY < 0 ? 1.08 : 1 / 1.08;
+        liveLightbox.zoom = clampLiveZoom(liveLightbox.zoom);
       }, { passive: false });
       lbLive.addEventListener('dblclick', resetLiveLightbox);
       lbLive.addEventListener('touchend', () => {
