@@ -104,18 +104,6 @@
       height: 100%;
       image-rendering: auto;
     }
-    .canvas-overlay {
-      position: absolute;
-      left: 1rem;
-      right: 1rem;
-      bottom: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 1rem;
-      pointer-events: none;
-    }
-    .pill-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
     .pill {
       border: 1px solid rgba(255,255,255,0.14);
       background: rgba(7,7,15,0.72);
@@ -126,15 +114,6 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
       backdrop-filter: blur(12px);
-    }
-    .hint {
-      max-width: 16rem;
-      text-align: right;
-      color: rgba(180,175,212,0.72);
-      font-size: 0.62rem;
-      line-height: 1.5;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
     }
     .empty-state {
       position: absolute;
@@ -268,18 +247,18 @@
     @media (max-width: 860px) {
       .stage { grid-template-columns: 1fr; }
       .canvas-card { height: min(66svh, 680px); min-height: 430px; }
-      .hint { display: none; }
       .info-card { padding: 0.95rem; }
-      .date-row { grid-template-columns: 1fr; }
     }
     @media (max-width: 520px) {
       main { width: min(100vw - 1rem, 1180px); }
       header { padding-bottom: 0.65rem; }
       .canvas-card { height: 58svh; min-height: 360px; border-radius: 14px; }
-      .canvas-overlay { left: 0.7rem; right: 0.7rem; bottom: 0.7rem; }
       .pill { font-size: 0.56rem; }
       .info-card { border-radius: 14px; }
       .empty-message { font-size: 0.72rem; }
+    }
+    @media (max-width: 360px) {
+      .date-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -294,14 +273,6 @@
     <section class="stage">
       <div class="canvas-card" id="stage" aria-label="Interactive procedural dream glyph">
         <canvas id="glyph"></canvas>
-        <div class="canvas-overlay">
-          <div class="pill-row">
-            <span class="pill" id="datePill">Loading</span>
-            <span class="pill" id="scorePill">Score --</span>
-            <span class="pill" id="shapePill">Glyph</span>
-          </div>
-          <div class="hint">Drag to rotate · scroll or pinch to zoom · double tap to reset</div>
-        </div>
         <div class="empty-state" id="emptyState" aria-live="polite">
           <div class="empty-message" id="emptyMessage"></div>
         </div>
@@ -339,6 +310,7 @@
 
   <script>
     const API = 'https://dreamart.manu.vision/api/gallery/public';
+    const PROCEDURAL_API = 'https://dreamart.manu.vision/api/procedural-dream';
     const TAU = Math.PI * 2;
     const PHI = (1 + Math.sqrt(5)) / 2;
     const GOLDEN = TAU * (1 - 1 / PHI);
@@ -386,6 +358,7 @@
       score: 72,
       date: '',
       entries: [],
+      proceduralEntries: [],
       range: ranges[3],
       hueIndex: 1,
       particles: [],
@@ -477,6 +450,22 @@
       state.zoom = DEFAULT_ZOOM;
     }
 
+    function visualDirectives(reading) {
+      const text = String(reading || '').toLowerCase();
+      let tilt = 0.34;
+      let lift = 0;
+
+      if (text.includes('mostly upright') || text.includes('upright')) tilt = 0.08;
+      else if (text.includes('softly tilted') || text.includes('subtle') || text.includes('gently tilted')) tilt = 0.24;
+      else if (text.includes('tilted') || text.includes('rotated')) tilt = 0.44;
+
+      if (text.includes('hovering low') || text.includes('float low') || text.includes('held low')) lift = 78;
+      else if (text.includes('calm suspension') || text.includes('held in calm') || text.includes('suspension')) lift = 2;
+      else if (text.includes('rises') || text.includes('floating high') || text.includes('hovering high')) lift = -72;
+
+      return { tilt, lift };
+    }
+
     function compositionFor(count) {
       const presets = {
         1: [
@@ -520,19 +509,63 @@
       return { x, y, z };
     }
 
-    function modulateComposition(baseComposition, seedText) {
+    function keepCompositionSeparated(items) {
+      if (items.length < 2) return items;
+      const separated = items.map((item) => ({
+        ...item,
+        offset: [...item.offset],
+        rot: [...item.rot],
+      }));
+
+      for (let pass = 0; pass < 18; pass++) {
+        for (let i = 0; i < separated.length; i++) {
+          for (let j = i + 1; j < separated.length; j++) {
+            const a = separated[i];
+            const b = separated[j];
+            const dx = b.offset[0] - a.offset[0];
+            const dy = b.offset[1] - a.offset[1];
+            const dist = Math.hypot(dx, dy) || 1;
+            const minDist = 166 * (a.scale + b.scale) * 0.5;
+            if (dist >= minDist) continue;
+            const push = (minDist - dist) * 0.56;
+            const ux = dx / dist;
+            const uy = dy / dist;
+            a.offset[0] -= ux * push;
+            a.offset[1] -= uy * push * 0.55;
+            b.offset[0] += ux * push;
+            b.offset[1] += uy * push * 0.55;
+            a.offset[2] += (i % 2 === 0 ? 1 : -1) * push * 0.42;
+            b.offset[2] -= (j % 2 === 0 ? 1 : -1) * push * 0.42;
+          }
+        }
+      }
+
+      return separated.map((item) => ({
+        ...item,
+        offset: [
+          Math.max(-230, Math.min(230, item.offset[0])),
+          Math.max(-180, Math.min(180, item.offset[1])),
+          Math.max(-220, Math.min(220, item.offset[2])),
+        ],
+      }));
+    }
+
+    function modulateComposition(baseComposition, seedText, reading) {
       const rand = seeded(seedText || 'composition');
-      return baseComposition.map((object, index) => {
+      const directives = visualDirectives(reading);
+      const modulated = baseComposition.map((object, index) => {
         const amount = 0.62 + rand() * 0.76;
         const angle = rand() * TAU;
-        const lift = (rand() - 0.5) * 54;
+        const lift = directives.lift + (rand() - 0.5) * 28;
         const depth = (rand() - 0.5) * 82;
         const lateral = 20 + rand() * 42;
         const scaleShift = 0.86 + rand() * 0.28;
+        const tilt = directives.tilt;
+        const sign = index % 2 === 0 ? 1 : -1;
         const rotShift = [
-          (rand() - 0.5) * 0.5,
+          sign * tilt + (rand() - 0.5) * tilt * 0.5,
           (rand() - 0.5) * 0.7,
-          (rand() - 0.5) * 0.42,
+          -sign * tilt * 0.58 + (rand() - 0.5) * tilt * 0.45,
         ];
         return {
           offset: [
@@ -549,6 +582,7 @@
           focus: index === 0 ? 1 : 0,
         };
       });
+      return keepCompositionSeparated(modulated);
     }
 
     function seeded(seed) {
@@ -694,8 +728,8 @@
       return pts;
     }
 
-    function generateSceneParticles(shape, objectCount, totalCount, seedText) {
-      const composition = modulateComposition(compositionFor(objectCount), seedText);
+    function generateSceneParticles(shape, objectCount, totalCount, seedText, reading) {
+      const composition = modulateComposition(compositionFor(objectCount), seedText, reading);
       const all = [];
       const perObject = Math.max(650, Math.floor(totalCount / composition.length));
       composition.forEach((object, objectIndex) => {
@@ -896,9 +930,6 @@
       state.particles = [];
       state.date = date || '';
       if (date) entryDateInput.value = date;
-      document.getElementById('datePill').textContent = date ? formatDate(date) : 'No Entry';
-      document.getElementById('scorePill').textContent = 'Quiet gap';
-      document.getElementById('shapePill').textContent = 'No visual trace';
       document.getElementById('entryTitle').textContent = date ? formatDate(date) : 'Archive Pause';
       document.getElementById('scoreValue').textContent = '--';
       document.getElementById('scoreValue').style.color = 'var(--dim)';
@@ -907,7 +938,7 @@
       document.getElementById('swatches').innerHTML = '';
       emptyMessage.innerHTML = `<strong>A quiet gap in the archive</strong>${message}`;
       emptyState.classList.add('is-visible');
-      statusEl.textContent = 'The archive is quiet on this date.';
+      statusEl.textContent = 'Drag to rotate. Scroll or pinch to zoom. Double tap to reset.';
     }
 
     function clearEmptyState() {
@@ -1033,14 +1064,11 @@
       state.density = DEFAULT_DENSITY;
       state.motion = DEFAULT_MOTION;
       state.spread = DEFAULT_SPREAD;
-      state.particles = generateSceneParticles(range.shape, objectCount, state.density, `${state.date}-${score}`);
+      state.particles = generateSceneParticles(range.shape, objectCount, state.density, `${state.date}-${score}`, entry && entry.reading);
       state.waveStart = performance.now() * 0.001;
 
       const hue = range.hue[hueIndex];
       const displayDate = formatDate(state.date);
-      document.getElementById('datePill').textContent = displayDate;
-      document.getElementById('scorePill').textContent = `Score ${score}`;
-      document.getElementById('shapePill').textContent = `${objectCount} ${hue} ${pluralShape(range.shape, objectCount)}`;
       document.getElementById('entryTitle').textContent = displayDate;
       document.getElementById('scoreValue').textContent = score;
       document.getElementById('scoreValue').style.color = range.swatches[hueIndex][1];
@@ -1053,24 +1081,73 @@
         `<div class="swatch" style="background:${color}"></div>`
       ).join('');
       if (state.date) entryDateInput.value = state.date;
-      statusEl.textContent = entry && entry.date
-        ? `Loaded latest public entry from ${entry.date}.`
-        : 'Using fallback demo score.';
+      statusEl.textContent = 'Drag to rotate. Scroll or pinch to zoom. Double tap to reset.';
     }
 
     function configureDateInput(entries) {
       const dates = entries.map((item) => item.date).filter(Boolean).sort();
-      if (!dates.length) return;
-      entryDateInput.min = dates[0];
-      entryDateInput.max = dates[dates.length - 1];
+      entryDateInput.min = dates[0] || '2025-05-23';
+      entryDateInput.max = todayDate();
     }
 
-    function selectEntryByDate(date) {
+    function todayDate() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function offsetDate(date, days) {
+      const next = new Date(`${date}T12:00:00`);
+      next.setDate(next.getDate() + days);
+      const y = next.getFullYear();
+      const m = String(next.getMonth() + 1).padStart(2, '0');
+      const d = String(next.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function mergeEntries(galleryEntries, proceduralEntries) {
+      const byDate = new Map();
+      for (const item of proceduralEntries) {
+        if (item && item.date && Number.isFinite(Number(item.sleepScore))) byDate.set(item.date, item);
+      }
+      for (const item of galleryEntries) {
+        if (item && item.date && Number.isFinite(Number(item.sleepScore))) {
+          byDate.set(item.date, { ...byDate.get(item.date), ...item });
+        }
+      }
+      return [...byDate.values()].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    }
+
+    async function fetchProceduralEntries(start, end) {
+      try {
+        const url = `${PROCEDURAL_API}?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&t=${Date.now()}`;
+        const res = await fetch(url, { cache: 'no-store', credentials: 'include' });
+        if (!res.ok) return [];
+        const items = await res.json();
+        return Array.isArray(items)
+          ? items.filter((item) => Number.isFinite(Number(item.sleepScore)) && item.date)
+          : [];
+      } catch {
+        return [];
+      }
+    }
+
+    async function selectEntryByDate(date) {
       const exact = state.entries.find((item) => item.date === date);
       if (exact) {
         applyEntry(exact);
         resetCamera();
-        statusEl.textContent = `Loaded public entry from ${exact.date}.`;
+        return;
+      }
+      const procedural = await fetchProceduralEntries(date, date);
+      if (procedural[0]) {
+        state.proceduralEntries = mergeEntries(state.proceduralEntries, procedural);
+        state.entries = mergeEntries(state.entries, procedural);
+        configureDateInput(state.entries);
+        applyEntry(procedural[0]);
+        resetCamera();
         return;
       }
       setEmptyState('Some nights stay dark in the calendar. They mark the quiet spaces between daily translations, where no public dreamscape has entered the archive yet.', date);
@@ -1080,20 +1157,27 @@
     async function loadLatest() {
       statusEl.textContent = 'Loading public gallery data…';
       try {
-        const res = await fetch(`${API}?t=${Date.now()}`, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`Gallery API ${res.status}`);
-        const items = await res.json();
-        state.entries = Array.isArray(items)
+        const end = todayDate();
+        const start = offsetDate(end, -21);
+        const [galleryRes, proceduralItems] = await Promise.all([
+          fetch(`${API}?t=${Date.now()}`, { cache: 'no-store' }),
+          fetchProceduralEntries(start, end),
+        ]);
+        if (!galleryRes.ok) throw new Error(`Gallery API ${galleryRes.status}`);
+        const items = await galleryRes.json();
+        const galleryEntries = Array.isArray(items)
           ? items
               .filter((item) => Number.isFinite(Number(item.sleepScore)) && item.date)
               .sort((a, b) => String(b.date).localeCompare(String(a.date)))
           : [];
+        state.proceduralEntries = proceduralItems;
+        state.entries = mergeEntries(galleryEntries, proceduralItems);
         configureDateInput(state.entries);
         const latest = state.entries[0] || null;
         applyEntry(latest || null);
       } catch (error) {
         applyEntry({ date: '', sleepScore: 72 });
-        statusEl.textContent = 'Public API unavailable. Showing fallback glyph.';
+        statusEl.textContent = 'Public API unavailable. Showing fallback glyph. Drag to rotate. Scroll or pinch to zoom.';
       }
     }
 
