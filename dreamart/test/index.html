@@ -76,7 +76,7 @@
     }
     .stage {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 320px;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
       gap: 1rem;
       align-items: stretch;
     }
@@ -187,59 +187,47 @@
       border-radius: 8px;
       border: 1px solid rgba(255,255,255,0.1);
     }
-    .controls {
-      margin-top: auto;
+    .date-control {
       display: grid;
-      gap: 0.75rem;
+      gap: 0.55rem;
     }
-    label {
-      display: grid;
-      gap: 0.4rem;
+    .date-control label {
       color: var(--dim);
       font-size: 0.62rem;
       letter-spacing: 0.16em;
       text-transform: uppercase;
     }
-    input[type="range"] {
-      width: 100%;
-      appearance: none;
-      height: 4px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.18);
-      outline: none;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      appearance: none;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: var(--text);
-      border: 2px solid var(--panel);
-      box-shadow: 0 0 18px rgba(196,181,253,0.4);
-    }
-    .button-row {
-      display: flex;
+    .date-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 0.5rem;
-      flex-wrap: wrap;
+    }
+    input[type="date"] {
+      width: 100%;
+      min-height: 2.55rem;
+      border: 1px solid rgba(196,181,253,0.32);
+      background: rgba(7,7,15,0.52);
+      color: var(--text);
+      border-radius: 9px;
+      padding: 0 0.72rem;
+      font: 700 0.72rem/1 var(--font-ui);
+      letter-spacing: 0.08em;
+      color-scheme: dark;
     }
     button {
+      min-height: 2.55rem;
       border: 1px solid rgba(246,184,90,0.58);
       background: rgba(246,184,90,0.1);
       color: var(--link);
       border-radius: 9px;
-      padding: 0.55rem 0.7rem;
+      padding: 0 0.78rem;
       font: 700 0.66rem/1 var(--font-ui);
       letter-spacing: 0.12em;
       text-transform: uppercase;
       cursor: pointer;
     }
-    .secondary {
-      border-color: rgba(240,171,252,0.42);
-      background: rgba(240,171,252,0.1);
-      color: var(--pink);
-    }
     .status {
-      min-height: 1.1rem;
+      margin-top: auto;
       color: var(--dim);
       font-size: 0.62rem;
       line-height: 1.6;
@@ -248,13 +236,15 @@
     }
     @media (max-width: 860px) {
       .stage { grid-template-columns: 1fr; }
-      .canvas-card { height: min(68vh, 680px); min-height: 430px; }
-      .info-card { order: -1; }
+      .canvas-card { height: min(66svh, 680px); min-height: 430px; }
       .hint { display: none; }
+      .info-card { padding: 0.95rem; }
+      .date-row { grid-template-columns: 1fr; }
     }
     @media (max-width: 520px) {
       main { width: min(100vw - 1rem, 1180px); }
-      .canvas-card { min-height: 390px; border-radius: 14px; }
+      header { padding-bottom: 0.65rem; }
+      .canvas-card { height: 58svh; min-height: 360px; border-radius: 14px; }
       .canvas-overlay { left: 0.7rem; right: 0.7rem; bottom: 0.7rem; }
       .pill { font-size: 0.56rem; }
       .info-card { border-radius: 14px; }
@@ -299,25 +289,15 @@
 
         <div class="swatches" id="swatches" aria-label="Active palette"></div>
 
-        <div class="controls">
-          <label>
-            Density
-            <input id="density" type="range" min="1600" max="9000" value="5200" step="100" />
-          </label>
-          <label>
-            Motion
-            <input id="motion" type="range" min="0" max="100" value="42" step="1" />
-          </label>
-          <label>
-            Spread
-            <input id="spread" type="range" min="0" max="100" value="36" step="1" />
-          </label>
-          <div class="button-row">
-            <button id="resetBtn" type="button">Reset View</button>
-            <button id="latestBtn" class="secondary" type="button">Reload Latest</button>
+        <div class="date-control">
+          <label for="entryDate">Choose a date</label>
+          <div class="date-row">
+            <input id="entryDate" type="date" />
+            <button id="latestBtn" type="button">Latest</button>
           </div>
-          <div class="status" id="status">Loading public gallery data…</div>
         </div>
+
+        <div class="status" id="status">Loading public gallery data…</div>
       </aside>
     </section>
   </main>
@@ -328,6 +308,11 @@
     const PHI = (1 + Math.sqrt(5)) / 2;
     const GOLDEN = TAU * (1 - 1 / PHI);
     const DEFAULT_ZOOM = 0.45;
+    const MIN_ZOOM = 0.24;
+    const MAX_ZOOM = 1.45;
+    const DEFAULT_DENSITY = 7200;
+    const DEFAULT_MOTION = 40;
+    const DEFAULT_SPREAD = 34;
 
     const ranges = [
       {
@@ -365,6 +350,7 @@
     const state = {
       score: 72,
       date: '',
+      entries: [],
       range: ranges[3],
       hueIndex: 1,
       particles: [],
@@ -373,21 +359,21 @@
       velX: 0,
       velY: 0.003,
       zoom: DEFAULT_ZOOM,
-      density: 5200,
-      motion: 42,
-      spread: 36,
+      density: DEFAULT_DENSITY,
+      motion: DEFAULT_MOTION,
+      spread: DEFAULT_SPREAD,
       dragging: false,
       lastX: 0,
       lastY: 0,
-      touchDist: 0,
+      activePointers: new Map(),
+      pinchDist: 0,
+      pinchZoom: DEFAULT_ZOOM,
     };
 
     const canvas = document.getElementById('glyph');
     const ctx = canvas.getContext('2d');
     const stage = document.getElementById('stage');
-    const densityInput = document.getElementById('density');
-    const motionInput = document.getElementById('motion');
-    const spreadInput = document.getElementById('spread');
+    const entryDateInput = document.getElementById('entryDate');
     const statusEl = document.getElementById('status');
 
     function halton(idx, base) {
@@ -423,6 +409,77 @@
       return new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
         month: 'long', day: 'numeric', year: 'numeric'
       });
+    }
+
+    function pluralShape(shape, count) {
+      if (count === 1) return shape;
+      if (shape === 'torus') return 'toruses';
+      return `${shape}s`;
+    }
+
+    function countFromReading(reading) {
+      const text = String(reading || '').toLowerCase();
+      const words = { one: 1, two: 2, three: 3, four: 4, five: 5 };
+      const wordMatch = text.match(/\b(one|two|three|four|five)\b/);
+      if (wordMatch) return words[wordMatch[1]];
+      const numberMatch = text.match(/\b([1-5])\b/);
+      if (numberMatch) return Number(numberMatch[1]);
+      return 3;
+    }
+
+    function clampZoom(value) {
+      return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, value));
+    }
+
+    function resetCamera() {
+      state.rotX = Math.PI / 6;
+      state.rotY = 0;
+      state.velX = 0;
+      state.velY = 0.003;
+      state.zoom = DEFAULT_ZOOM;
+    }
+
+    function compositionFor(count) {
+      const presets = {
+        1: [
+          { offset: [0, 0, 0], scale: 1.16, rot: [0.05, -0.16, 0.04] },
+        ],
+        2: [
+          { offset: [-92, -34, 54], scale: 1.08, rot: [0.08, -0.24, 0.08] },
+          { offset: [118, 46, -72], scale: 0.76, rot: [-0.22, 0.34, -0.1] },
+        ],
+        3: [
+          { offset: [-84, 18, 82], scale: 1.04, rot: [0.06, -0.28, 0.08] },
+          { offset: [112, -66, -62], scale: 0.8, rot: [-0.22, 0.26, -0.08] },
+          { offset: [18, 96, -120], scale: 0.58, rot: [0.32, 0.5, 0.14] },
+        ],
+        4: [
+          { offset: [-122, 42, 76], scale: 0.94, rot: [0.06, -0.3, 0.1] },
+          { offset: [104, -70, -74], scale: 0.78, rot: [-0.18, 0.28, -0.06] },
+          { offset: [42, 116, -126], scale: 0.56, rot: [0.34, 0.46, 0.14] },
+          { offset: [-22, -116, 14], scale: 0.68, rot: [-0.42, -0.12, 0.2] },
+        ],
+        5: [
+          { offset: [-132, 36, 90], scale: 0.94, rot: [0.08, -0.3, 0.1] },
+          { offset: [104, -82, -76], scale: 0.76, rot: [-0.18, 0.26, -0.08] },
+          { offset: [66, 126, -142], scale: 0.54, rot: [0.34, 0.46, 0.16] },
+          { offset: [-34, -126, 28], scale: 0.64, rot: [-0.4, -0.14, 0.2] },
+          { offset: [176, 52, 44], scale: 0.46, rot: [0.18, 0.74, -0.2] },
+        ],
+      };
+      return presets[Math.max(1, Math.min(5, count))] || presets[3];
+    }
+
+    function rotateLocal(point, rot) {
+      let { x, y, z } = point;
+      const [rx, ry, rz] = rot;
+      let c = Math.cos(rx), s = Math.sin(rx);
+      [y, z] = [y * c - z * s, y * s + z * c];
+      c = Math.cos(ry); s = Math.sin(ry);
+      [x, z] = [x * c + z * s, -x * s + z * c];
+      c = Math.cos(rz); s = Math.sin(rz);
+      [x, y] = [x * c - y * s, x * s + y * c];
+      return { x, y, z };
     }
 
     function seeded(seed) {
@@ -568,6 +625,31 @@
       return pts;
     }
 
+    function generateSceneParticles(shape, objectCount, totalCount, seedText) {
+      const composition = compositionFor(objectCount);
+      const all = [];
+      const perObject = Math.max(650, Math.floor(totalCount / composition.length));
+      composition.forEach((object, objectIndex) => {
+        const base = generateParticles(shape, perObject, `${seedText}-${objectIndex}`);
+        const phaseShift = objectIndex / Math.max(1, composition.length);
+        for (const p of base) {
+          const local = rotateLocal({
+            x: p.x * object.scale,
+            y: p.y * object.scale,
+            z: p.z * object.scale,
+          }, object.rot);
+          all.push({
+            x: local.x + object.offset[0],
+            y: local.y + object.offset[1],
+            z: local.z + object.offset[2],
+            f: (p.f + phaseShift) % 1,
+            phase: p.phase + objectIndex * 1.7,
+          });
+        }
+      });
+      return all;
+    }
+
     function resize() {
       const rect = stage.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -677,32 +759,54 @@
       const score = Number.isFinite(Number(entry && entry.sleepScore)) ? Number(entry.sleepScore) : 72;
       const range = rangeForScore(score);
       const hueIndex = hueIndexFor(score, range);
+      const objectCount = countFromReading(entry && entry.reading);
       state.score = score;
       state.date = entry && entry.date ? entry.date : '';
       state.range = range;
       state.hueIndex = hueIndex;
-      state.density = Number(densityInput.value);
-      state.motion = Number(motionInput.value);
-      state.spread = Number(spreadInput.value);
-      state.particles = generateParticles(range.shape, state.density, `${state.date}-${score}`);
+      state.density = DEFAULT_DENSITY;
+      state.motion = DEFAULT_MOTION;
+      state.spread = DEFAULT_SPREAD;
+      state.particles = generateSceneParticles(range.shape, objectCount, state.density, `${state.date}-${score}`);
 
       const hue = range.hue[hueIndex];
       const displayDate = formatDate(state.date);
       document.getElementById('datePill').textContent = displayDate;
       document.getElementById('scorePill').textContent = `Score ${score}`;
-      document.getElementById('shapePill').textContent = `${hue} · ${range.shape}`;
+      document.getElementById('shapePill').textContent = `${objectCount} ${hue} ${pluralShape(range.shape, objectCount)}`;
       document.getElementById('entryTitle').textContent = displayDate;
       document.getElementById('scoreValue').textContent = score;
       document.getElementById('scoreValue').style.color = range.swatches[hueIndex][1];
-      document.getElementById('scoreLabel').textContent = `${range.label} · ${range.shape}`;
+      document.getElementById('scoreLabel').textContent = `${range.label} · ${pluralShape(range.shape, objectCount)}`;
       document.getElementById('description').textContent =
-        `The sleep score selects ${hue} ${range.label.toLowerCase()} and ${range.shape} geometry. The artwork is rendered as live code: point density, motion, and spread can shift without storing a generated image.`;
+        entry && entry.reading
+          ? entry.reading
+          : `The sleep score selects ${hue} ${range.label.toLowerCase()} and ${range.shape} geometry. The dreamscape is rendered live as interactive code.`;
       document.getElementById('swatches').innerHTML = range.colors.map((color) =>
         `<div class="swatch" style="background:${color}"></div>`
       ).join('');
+      if (state.date) entryDateInput.value = state.date;
       statusEl.textContent = entry && entry.date
         ? `Loaded latest public entry from ${entry.date}.`
         : 'Using fallback demo score.';
+    }
+
+    function configureDateInput(entries) {
+      const dates = entries.map((item) => item.date).filter(Boolean).sort();
+      if (!dates.length) return;
+      entryDateInput.min = dates[0];
+      entryDateInput.max = dates[dates.length - 1];
+    }
+
+    function selectEntryByDate(date) {
+      const exact = state.entries.find((item) => item.date === date);
+      if (exact) {
+        applyEntry(exact);
+        resetCamera();
+        statusEl.textContent = `Loaded public entry from ${exact.date}.`;
+        return;
+      }
+      statusEl.textContent = 'No public dreamscape is available for that date.';
     }
 
     async function loadLatest() {
@@ -711,11 +815,13 @@
         const res = await fetch(`${API}?t=${Date.now()}`, { cache: 'no-store' });
         if (!res.ok) throw new Error(`Gallery API ${res.status}`);
         const items = await res.json();
-        const latest = Array.isArray(items)
+        state.entries = Array.isArray(items)
           ? items
-              .filter((item) => Number.isFinite(Number(item.sleepScore)))
-              .sort((a, b) => String(b.date).localeCompare(String(a.date)))[0]
-          : null;
+              .filter((item) => Number.isFinite(Number(item.sleepScore)) && item.date)
+              .sort((a, b) => String(b.date).localeCompare(String(a.date)))
+          : [];
+        configureDateInput(state.entries);
+        const latest = state.entries[0] || null;
         applyEntry(latest || null);
       } catch (error) {
         applyEntry({ date: '', sleepScore: 72 });
@@ -723,32 +829,33 @@
       }
     }
 
-    function regenerate() {
-      state.density = Number(densityInput.value);
-      state.motion = Number(motionInput.value);
-      state.spread = Number(spreadInput.value);
-      state.particles = generateParticles(state.range.shape, state.density, `${state.date}-${state.score}`);
-    }
-
-    densityInput.addEventListener('input', regenerate);
-    motionInput.addEventListener('input', () => { state.motion = Number(motionInput.value); });
-    spreadInput.addEventListener('input', () => { state.spread = Number(spreadInput.value); });
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      state.rotX = Math.PI / 6;
-      state.rotY = 0;
-      state.velX = 0;
-      state.velY = 0.003;
-      state.zoom = DEFAULT_ZOOM;
-    });
+    entryDateInput.addEventListener('change', () => selectEntryByDate(entryDateInput.value));
     document.getElementById('latestBtn').addEventListener('click', loadLatest);
 
     stage.addEventListener('pointerdown', (event) => {
+      state.activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       state.dragging = true;
       state.lastX = event.clientX;
       state.lastY = event.clientY;
+      if (state.activePointers.size === 2) {
+        const points = [...state.activePointers.values()];
+        state.pinchDist = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+        state.pinchZoom = state.zoom;
+      }
       stage.setPointerCapture(event.pointerId);
     });
     stage.addEventListener('pointermove', (event) => {
+      if (state.activePointers.has(event.pointerId)) {
+        state.activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      }
+      if (state.activePointers.size >= 2) {
+        const points = [...state.activePointers.values()];
+        const dist = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+        if (state.pinchDist > 0) {
+          state.zoom = clampZoom(state.pinchZoom * (dist / state.pinchDist));
+        }
+        return;
+      }
       if (!state.dragging) return;
       const dx = event.clientX - state.lastX;
       const dy = event.clientY - state.lastY;
@@ -759,17 +866,23 @@
       state.velY = dx * 0.00045;
       state.velX = dy * 0.00045;
     });
-    stage.addEventListener('pointerup', () => { state.dragging = false; });
-    stage.addEventListener('pointercancel', () => { state.dragging = false; });
+    stage.addEventListener('pointerup', (event) => {
+      state.activePointers.delete(event.pointerId);
+      state.dragging = state.activePointers.size > 0;
+      state.pinchDist = 0;
+    });
+    stage.addEventListener('pointercancel', (event) => {
+      state.activePointers.delete(event.pointerId);
+      state.dragging = state.activePointers.size > 0;
+      state.pinchDist = 0;
+    });
     stage.addEventListener('wheel', (event) => {
       event.preventDefault();
       state.zoom *= event.deltaY < 0 ? 1.08 : 1 / 1.08;
-      state.zoom = Math.max(0.45, Math.min(2.8, state.zoom));
+      state.zoom = clampZoom(state.zoom);
     }, { passive: false });
     stage.addEventListener('dblclick', () => {
-      state.rotX = Math.PI / 6;
-      state.rotY = 0;
-      state.zoom = DEFAULT_ZOOM;
+      resetCamera();
     });
 
     window.addEventListener('resize', resize);
