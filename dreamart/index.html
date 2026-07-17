@@ -24,6 +24,7 @@
   <meta name="twitter:title" content="Dream Art — One Dreamscape A Night" />
   <meta name="twitter:description" content="Every night since May 23, 2025. Sleep data turned into generative sculptures." />
   <meta name="twitter:image" content="https://manu.vision/dreamart/og-card.png" />
+  <script src="dreamart-pointcloud.js"></script>
   <script>
     // Redirect /dreamart and /dreamart/ to /dreamart/index.html, while allowing test pages.
     if (!location.pathname.endsWith('.html')) {
@@ -3225,12 +3226,23 @@
     }
 
     function drawImageCover(ctx, image, x, y, width, height) {
-      const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
-      const drawWidth = image.naturalWidth * scale;
-      const drawHeight = image.naturalHeight * scale;
+      const sourceWidth = image.naturalWidth || image.videoWidth || image.width;
+      const sourceHeight = image.naturalHeight || image.videoHeight || image.height;
+      const scale = Math.max(width / sourceWidth, height / sourceHeight);
+      const drawWidth = sourceWidth * scale;
+      const drawHeight = sourceHeight * scale;
       const dx = x + (width - drawWidth) / 2;
       const dy = y + (height - drawHeight) / 2;
       ctx.drawImage(image, dx, dy, drawWidth, drawHeight);
+    }
+
+    function snapshotCanvas(source) {
+      if (!source || !source.width || !source.height) return null;
+      const snapshot = document.createElement('canvas');
+      snapshot.width = source.width;
+      snapshot.height = source.height;
+      snapshot.getContext('2d').drawImage(source, 0, 0);
+      return snapshot;
     }
 
     function canvasToBlob(canvas) {
@@ -3370,55 +3382,10 @@
     }
 
     function proceduralVisualUrl(item, width = 768, height = 1152) {
-      const key = `${item.date || 'entry'}:${item.sleepScore}:${width}x${height}`;
+      const key = `live-opening-v1:${item.date || 'entry'}:${item.sleepScore}:${width}x${height}`;
       if (proceduralCache.has(key)) return proceduralCache.get(key);
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      const meta = scoreMeta(item.sleepScore) || scoreMeta(72);
-      const colors = meta.hueSwatches || ['#365A41', '#4D7C5A', '#6A9A73'];
-      const rand = seededRandom(`${item.date}-${item.sleepScore}-${item.reading || ''}`);
-      const count = proceduralCount(item);
-      const layout = proceduralLayout(count, rand, item.reading);
-      const bg = ctx.createLinearGradient(0, 0, 0, height);
-      bg.addColorStop(0, '#111121');
-      bg.addColorStop(0.55, '#090914');
-      bg.addColorStop(1, '#05050b');
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, width, height);
-      ctx.globalCompositeOperation = 'lighter';
-      const points = [];
-      const perObject = Math.max(460, Math.floor((width < 500 ? 2200 : 6800) / count));
-      layout.forEach((object, objectIndex) => {
-        const localRand = seededRandom(`${item.date}-${objectIndex}-${meta.primitive}`);
-        for (let i = 0; i < perObject; i += 1) {
-          const base = proceduralShapePoint(meta.primitive.toLowerCase(), localRand, i, perObject);
-          const rotated = rotatePoint(base, object.rx, object.ry, object.rz);
-          const scale = Math.min(width, height) * 0.18 * object.scale;
-          const z = rotated.z * scale + object.z * Math.min(width, height);
-          const perspective = 1 / (1 + z / 1800);
-          const x = width * 0.5 + (object.x * width * 0.32 + rotated.x * scale) * perspective;
-          const y = height * 0.46 + (object.y * height * 0.24 + rotated.y * scale) * perspective;
-          if (x < -20 || x > width + 20 || y < -20 || y > height + 20) continue;
-          points.push({ x, y, z, color: colors[Math.min(colors.length - 1, Math.floor(localRand() * colors.length))], a: 0.28 + localRand() * 0.55, s: 1.1 + localRand() * (width < 500 ? 1.4 : 2.4) });
-        }
-      });
-      points.sort((a, b) => a.z - b.z);
-      points.forEach((p) => {
-        ctx.globalAlpha = p.a;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.s, 0, PROCEDURAL_TAU);
-        ctx.fill();
-      });
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = 'source-over';
-      const veil = ctx.createLinearGradient(0, height * 0.58, 0, height);
-      veil.addColorStop(0, 'rgba(7,7,15,0)');
-      veil.addColorStop(1, 'rgba(7,7,15,0.28)');
-      ctx.fillStyle = veil;
-      ctx.fillRect(0, 0, width, height);
+      const scene = buildLiveScene(item);
+      const canvas = renderOpeningLiveFrame(scene, width, height);
       const url = canvas.toDataURL('image/png');
       proceduralCache.set(key, url);
       return url;
@@ -3678,6 +3645,21 @@
       return all;
     }
 
+    function buildLiveScene(item) {
+      const range = liveRangeForScore(item.sleepScore);
+      return {
+        item,
+        range,
+        points: liveGenerateSceneParticles(
+          range.shape,
+          proceduralCount(item),
+          LIVE_DEFAULT_DENSITY,
+          `${item.date}-${item.sleepScore}`,
+          item.reading
+        ),
+      };
+    }
+
     const liveLightbox = {
       item: null,
       points: [],
@@ -3697,6 +3679,7 @@
       pinchDistance: 0,
       pinchZoom: LIVE_DEFAULT_ZOOM,
       lastTap: 0,
+      startedAt: 0,
       waveStart: 0,
     };
 
@@ -3795,11 +3778,11 @@
       ctx.restore();
     }
 
-    function liveWaveState(t, w) {
+    function liveWaveStateAtElapsed(elapsed, w) {
       const cycle = 6.2;
-      const elapsed = Math.max(0, t - liveLightbox.waveStart);
-      const pass = Math.floor(elapsed / cycle);
-      const phase = (elapsed % cycle) / cycle;
+      const safeElapsed = Math.max(0, elapsed);
+      const pass = Math.floor(safeElapsed / cycle);
+      const phase = (safeElapsed % cycle) / cycle;
       const bandWidth = Math.max(110, w * 0.18);
       const center = phase * (w + bandWidth * 2) - bandWidth;
       const baseGlyph = pass % 2 === 1;
@@ -3884,29 +3867,14 @@
       return { width: rect.width, height: rect.height, dpr };
     }
 
-    function drawLiveLightbox() {
-      if (!lbLive || !lightbox.classList.contains('open') || !liveLightbox.item) {
-        liveLightbox.raf = 0;
-        return;
-      }
-      const metrics = resizeLiveCanvas();
-      if (!metrics) return;
-      const { width, height, dpr } = metrics;
-      const ctx = lbLive.getContext('2d');
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    function paintLiveSceneFrame(ctx, width, height, frame) {
       const cx = width / 2;
       const cy = height / 2;
-      const t = performance.now() * 0.001;
-      const motion = liveLightbox.motion / 100;
-      const spread = liveLightbox.spread / 100;
-      const colors = liveLightbox.range.colors;
+      const t = frame.sceneTime || 0;
+      const motion = frame.motion / 100;
+      const spread = frame.spread / 100;
+      const colors = frame.range.colors;
       const renderPoints = [];
-      if (!liveLightbox.dragging) {
-        liveLightbox.rotY += liveLightbox.velY + 0.0015 + motion * 0.004;
-        liveLightbox.rotX += liveLightbox.velX;
-        liveLightbox.velX *= 0.96;
-        liveLightbox.velY *= 0.96;
-      }
       ctx.clearRect(0, 0, width, height);
       const bg = ctx.createRadialGradient(cx, cy * 0.75, 10, cx, cy, Math.max(width, height) * 0.75);
       bg.addColorStop(0, 'rgba(22,22,42,1)');
@@ -3919,20 +3887,19 @@
       ctx.beginPath();
       ctx.rect(2, 2, Math.max(0, width - 4), Math.max(0, height - 4));
       ctx.clip();
-      if (!liveLightbox.points.length) {
+      if (!frame.points.length) {
         ctx.restore();
-        liveLightbox.raf = requestAnimationFrame(drawLiveLightbox);
         return;
       }
-      const scale = Math.min(width, height) * 0.0044 * liveLightbox.zoom;
+      const scale = Math.min(width, height) * 0.0044 * frame.zoom;
       const perspStr = 0.00165;
-      const pulse = (Math.sin(t * 0.42) * 0.5 + 0.5) * liveLightbox.points.length;
-      const cosX = Math.cos(liveLightbox.rotX);
-      const sinX = Math.sin(liveLightbox.rotX);
-      const cosY = Math.cos(liveLightbox.rotY);
-      const sinY = Math.sin(liveLightbox.rotY);
-      for (let i = 0; i < liveLightbox.points.length; i += 1) {
-        const p = liveLightbox.points[i];
+      const pulse = (Math.sin(t * 0.42) * 0.5 + 0.5) * frame.points.length;
+      const cosX = Math.cos(frame.rotX);
+      const sinX = Math.sin(frame.rotX);
+      const cosY = Math.cos(frame.rotY);
+      const sinY = Math.sin(frame.rotY);
+      for (let i = 0; i < frame.points.length; i += 1) {
+        const p = frame.points[i];
         const breathe = 1
           + Math.sin(p.f * 22 - t * (1.5 + motion * 2.2) + p.phase) * (0.035 + motion * 0.04)
           + Math.sin(p.f * 11 + t * 0.7) * 0.02;
@@ -3952,7 +3919,7 @@
         const sy = cy + y3 * scale * persp;
         const depth = Math.max(0, Math.min(1, 0.5 - z4 / 440));
         const dp = Math.abs(i - pulse);
-        const glow = Math.exp(-(dp * dp) / (liveLightbox.points.length * 4.5));
+        const glow = Math.exp(-(dp * dp) / (frame.points.length * 4.5));
         const paletteIndex = Math.max(0, Math.min(colors.length - 1, Math.floor((1 - depth) * colors.length)));
         if (sx < -24 || sx > width + 24 || sy < -24 || sy > height + 24) continue;
         renderPoints.push({
@@ -3966,7 +3933,7 @@
         });
       }
       renderPoints.sort((a, b) => a.z - b.z);
-      const wave = liveWaveState(t, width);
+      const wave = liveWaveStateAtElapsed(frame.waveElapsed || 0, width);
       ctx.globalCompositeOperation = 'lighter';
       for (const p of renderPoints) {
         if (liveGlyphModeForX(p.x, wave)) continue;
@@ -3982,23 +3949,72 @@
       drawLiveWaveBand(ctx, wave, width, height);
       drawLiveGlyphLayer(ctx, renderPoints, wave, width, height);
       ctx.restore();
+    }
+
+    function renderOpeningLiveFrame(scene, width, height) {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      paintLiveSceneFrame(canvas.getContext('2d'), width, height, {
+        points: scene.points,
+        range: scene.range,
+        rotX: Math.PI / 6,
+        rotY: 0,
+        zoom: LIVE_DEFAULT_ZOOM,
+        motion: LIVE_DEFAULT_MOTION,
+        spread: LIVE_DEFAULT_SPREAD,
+        sceneTime: 0,
+        waveElapsed: 0,
+      });
+      return canvas;
+    }
+
+    function drawLiveLightbox() {
+      if (!lbLive || !lightbox.classList.contains('open') || !liveLightbox.item) {
+        liveLightbox.raf = 0;
+        return;
+      }
+      const metrics = resizeLiveCanvas();
+      if (!metrics) return;
+      const { width, height, dpr } = metrics;
+      const ctx = lbLive.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const now = performance.now() * 0.001;
+      if (!liveLightbox.startedAt) {
+        liveLightbox.startedAt = now;
+        liveLightbox.waveStart = now;
+      }
+      paintLiveSceneFrame(ctx, width, height, {
+        points: liveLightbox.points,
+        range: liveLightbox.range,
+        rotX: liveLightbox.rotX,
+        rotY: liveLightbox.rotY,
+        zoom: liveLightbox.zoom,
+        motion: liveLightbox.motion,
+        spread: liveLightbox.spread,
+        sceneTime: now - liveLightbox.startedAt,
+        waveElapsed: now - liveLightbox.waveStart,
+      });
+      if (!liveLightbox.dragging) {
+        const motion = liveLightbox.motion / 100;
+        liveLightbox.rotY += liveLightbox.velY + 0.0015 + motion * 0.004;
+        liveLightbox.rotX += liveLightbox.velX;
+        liveLightbox.velX *= 0.96;
+        liveLightbox.velY *= 0.96;
+      }
       liveLightbox.raf = requestAnimationFrame(drawLiveLightbox);
     }
 
     function startLiveLightbox(item) {
       if (!lbLive) return;
-      liveLightbox.item = item;
-      liveLightbox.range = liveRangeForScore(item.sleepScore);
+      const scene = buildLiveScene(item);
+      liveLightbox.item = scene.item;
+      liveLightbox.range = scene.range;
       liveLightbox.motion = LIVE_DEFAULT_MOTION;
       liveLightbox.spread = LIVE_DEFAULT_SPREAD;
-      liveLightbox.points = liveGenerateSceneParticles(
-        liveLightbox.range.shape,
-        proceduralCount(item),
-        LIVE_DEFAULT_DENSITY,
-        `${item.date}-${item.sleepScore}`,
-        item.reading
-      );
-      liveLightbox.waveStart = performance.now() * 0.001;
+      liveLightbox.points = scene.points;
+      liveLightbox.startedAt = 0;
+      liveLightbox.waveStart = 0;
       resetLiveLightbox();
       lbLive.classList.add('loaded');
       if (!liveLightbox.raf) {
@@ -4011,14 +4027,78 @@
       liveLightbox.raf = 0;
       liveLightbox.item = null;
       liveLightbox.points = [];
+      liveLightbox.startedAt = 0;
+      liveLightbox.waveStart = 0;
       liveLightbox.activePointers.clear();
       liveLightbox.dragging = false;
       if (lbLive) lbLive.classList.remove('loaded');
     }
 
-    async function createPublicShareCard(item) {
+    // The renderer is sourced from the original interactive point-cloud
+    // prototype. Gallery thumbnails and the lightbox share its deterministic
+    // opening state, then the lightbox continues as the live sculpture.
+    function proceduralVisualUrl(item, width = 768, height = 1152) {
+      const key = `reference-opening-v1:${item.date || 'entry'}:${item.sleepScore}:${item.reading || ''}:${width}x${height}`;
+      if (proceduralCache.has(key)) return proceduralCache.get(key);
+      const canvas = window.DreamPointcloudEngine.renderOpeningFrame(item, width, height, 8000);
+      const url = canvas.toDataURL('image/png');
+      proceduralCache.set(key, url);
+      return url;
+    }
+
+    function resizeLiveCanvas() {
+      if (!lbLive || !liveLightbox.renderer) return null;
+      const rect = lbLive.getBoundingClientRect();
+      liveLightbox.renderer.resize(rect.width, rect.height, 2);
+      return rect;
+    }
+
+    function resetLiveLightbox() {
+      if (liveLightbox.renderer) liveLightbox.renderer.resetView();
+    }
+
+    function drawLiveLightbox(now) {
+      if (!lbLive || !lightbox.classList.contains('open') || !liveLightbox.item || !liveLightbox.renderer) {
+        liveLightbox.raf = 0;
+        return;
+      }
+      resizeLiveCanvas();
+      liveLightbox.renderer.render(now);
+      liveLightbox.raf = requestAnimationFrame(drawLiveLightbox);
+    }
+
+    function startLiveLightbox(item) {
+      if (!lbLive || !window.DreamPointcloudEngine) return;
+      if (!liveLightbox.renderer) {
+        liveLightbox.renderer = new window.DreamPointcloudEngine.DreamRenderer(lbLive, { budget: 8000 });
+        window.DreamPointcloudEngine.attachInteraction(liveLightbox.renderer, lbLive);
+        window.addEventListener('resize', resizeLiveCanvas);
+      }
+      liveLightbox.item = item;
+      liveLightbox.renderer.setItem(item);
+      resizeLiveCanvas();
+      // Paint the exact frame used by its thumbnail before animation begins.
+      liveLightbox.renderer.waveOverrideE = 0;
+      liveLightbox.renderer.render(0);
+      liveLightbox.renderer.waveOverrideE = null;
+      liveLightbox.renderer._t0 = null;
+      lbLive.classList.add('loaded');
+      if (liveLightbox.raf) cancelAnimationFrame(liveLightbox.raf);
+      liveLightbox.raf = requestAnimationFrame(drawLiveLightbox);
+    }
+
+    function stopLiveLightbox() {
+      if (liveLightbox.raf) cancelAnimationFrame(liveLightbox.raf);
+      liveLightbox.raf = 0;
+      liveLightbox.item = null;
+      if (liveLightbox.renderer) liveLightbox.renderer.dragging = false;
+      if (lbLive) lbLive.classList.remove('loaded');
+    }
+
+    async function createPublicShareCard(item, liveCanvas) {
+      const capturedFrame = snapshotCanvas(liveCanvas);
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
-      const image = await loadCardImage(proceduralVisualUrl(item, 1024, 1536));
+      const image = capturedFrame || await loadCardImage(proceduralVisualUrl(item, 1024, 1536));
       const canvas = document.createElement('canvas');
       canvas.width = 1080;
       canvas.height = 1350;
@@ -4038,12 +4118,6 @@
       roundRectPath(ctx, cardX, cardY, cardW, cardH, radius);
       ctx.clip();
       drawImageCover(ctx, image, cardX, cardY, cardW, cardH);
-      const gradient = ctx.createLinearGradient(0, 720, 0, cardY + cardH);
-      gradient.addColorStop(0, 'rgba(7,7,15,0)');
-      gradient.addColorStop(0.5, 'rgba(7,7,15,0.38)');
-      gradient.addColorStop(1, 'rgba(7,7,15,0.82)');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(cardX, 720, cardW, cardH - 680);
       ctx.restore();
       drawRoundedRect(ctx, cardX, cardY, cardW, cardH, radius, 'rgba(0,0,0,0)', 'rgba(167,139,250,0.72)', 3);
 
@@ -4057,9 +4131,9 @@
       ctx.letterSpacing = '3px';
       const siteText = 'MANU.VISION/DREAMART';
       const siteWidth = Math.ceil(ctx.measureText(siteText).width + 38);
-      drawRoundedRect(ctx, contentX, pillY - 62, siteWidth, 44, 8, 'rgba(14,14,28,0.68)', 'rgba(167,139,250,0.34)', 1.5);
+      drawRoundedRect(ctx, contentX, pillY, siteWidth, 46, 8, 'rgba(14,14,28,0.82)', 'rgba(167,139,250,0.48)', 1.5);
       ctx.fillStyle = '#c4b5fd';
-      ctx.fillText(siteText, contentX + 19, pillY - 34);
+      ctx.fillText(siteText, contentX + 19, pillY + 30);
       ctx.letterSpacing = '0px';
 
       const label = item.label || item.date || 'Dreamscape';
@@ -4068,15 +4142,17 @@
       ctx.letterSpacing = '2px';
       const dateLabel = dateText.toUpperCase();
       const dateWidth = Math.ceil(ctx.measureText(dateLabel).width + 38);
-      drawRoundedRect(ctx, contentX, pillY, dateWidth, 46, 8, 'rgba(14,14,28,0.68)', 'rgba(139,92,246,0.34)', 1.5);
+      const dateX = contentX + siteWidth + 14;
+      drawRoundedRect(ctx, dateX, pillY, dateWidth, 46, 8, 'rgba(14,14,28,0.82)', 'rgba(139,92,246,0.42)', 1.5);
       ctx.fillStyle = '#f1efff';
-      ctx.fillText(dateLabel, contentX + 19, pillY + 30);
+      ctx.fillText(dateLabel, dateX + 19, pillY + 30);
 
       const scoreText = `SCORE ${score}`;
       const scoreWidth = Math.ceil(ctx.measureText(scoreText).width + 38);
-      drawRoundedRect(ctx, contentX + dateWidth + 14, pillY, scoreWidth, 46, 8, 'rgba(14,14,28,0.68)', 'rgba(139,92,246,0.34)', 1.5);
+      const scoreX = dateX + dateWidth + 14;
+      drawRoundedRect(ctx, scoreX, pillY, scoreWidth, 46, 8, 'rgba(14,14,28,0.82)', 'rgba(139,92,246,0.42)', 1.5);
       ctx.fillStyle = scoreColorValue;
-      ctx.fillText(scoreText, contentX + dateWidth + 33, pillY + 30);
+      ctx.fillText(scoreText, scoreX + 19, pillY + 30);
       ctx.letterSpacing = '0px';
 
       return canvasToBlob(canvas);
@@ -5395,7 +5471,8 @@
       if (!item) return;
       lbCard.textContent = 'Preparing';
       try {
-        const blob = await createPublicShareCard(item);
+        const isCurrentLiveFrame = liveLightbox.item && liveLightbox.item.date === item.date;
+        const blob = await createPublicShareCard(item, isCurrentLiveFrame ? lbLive : null);
         const filename = `dream-art-${item.date || 'card'}.png`;
         downloadBlob(blob, filename);
         lbCard.textContent = 'Saved';
@@ -5405,7 +5482,7 @@
       }
       setTimeout(() => { lbCard.textContent = 'Save card'; }, 1400);
     });
-    if (lbLive) {
+    if (lbLive && !window.DreamPointcloudEngine) {
       lbLive.addEventListener('pointerdown', (event) => {
         liveLightbox.activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
         liveLightbox.dragging = true;
