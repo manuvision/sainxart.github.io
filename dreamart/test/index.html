@@ -327,6 +327,7 @@
     const TAU = Math.PI * 2;
     const PHI = (1 + Math.sqrt(5)) / 2;
     const GOLDEN = TAU * (1 - 1 / PHI);
+    const DEFAULT_ZOOM = 0.45;
 
     const ranges = [
       {
@@ -371,7 +372,7 @@
       rotY: 0,
       velX: 0,
       velY: 0.003,
-      zoom: 1,
+      zoom: DEFAULT_ZOOM,
       density: 5200,
       motion: 42,
       spread: 36,
@@ -737,7 +738,7 @@
       state.rotY = 0;
       state.velX = 0;
       state.velY = 0.003;
-      state.zoom = 1;
+      state.zoom = DEFAULT_ZOOM;
     });
     document.getElementById('latestBtn').addEventListener('click', loadLatest);
 
@@ -768,7 +769,7 @@
     stage.addEventListener('dblclick', () => {
       state.rotX = Math.PI / 6;
       state.rotY = 0;
-      state.zoom = 1;
+      state.zoom = DEFAULT_ZOOM;
     });
 
     window.addEventListener('resize', resize);
