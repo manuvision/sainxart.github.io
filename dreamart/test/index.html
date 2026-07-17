@@ -136,6 +136,37 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
+    .empty-state {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      pointer-events: none;
+    }
+    .empty-state.is-visible { display: flex; }
+    .empty-message {
+      max-width: 28rem;
+      border: 1px solid rgba(196,181,253,0.24);
+      background: rgba(7,7,15,0.74);
+      border-radius: 14px;
+      padding: 1rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.75;
+      letter-spacing: 0.04em;
+      text-align: center;
+      backdrop-filter: blur(14px);
+    }
+    .empty-message strong {
+      display: block;
+      margin-bottom: 0.3rem;
+      color: var(--text);
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
     .info-card {
       padding: 1.05rem;
       display: flex;
@@ -248,6 +279,7 @@
       .canvas-overlay { left: 0.7rem; right: 0.7rem; bottom: 0.7rem; }
       .pill { font-size: 0.56rem; }
       .info-card { border-radius: 14px; }
+      .empty-message { font-size: 0.72rem; }
     }
   </style>
 </head>
@@ -269,6 +301,9 @@
             <span class="pill" id="shapePill">Glyph</span>
           </div>
           <div class="hint">Drag to rotate · scroll or pinch to zoom · double tap to reset</div>
+        </div>
+        <div class="empty-state" id="emptyState" aria-live="polite">
+          <div class="empty-message" id="emptyMessage"></div>
         </div>
       </div>
 
@@ -368,6 +403,7 @@
       activePointers: new Map(),
       pinchDist: 0,
       pinchZoom: DEFAULT_ZOOM,
+      waveStart: 0,
     };
 
     const canvas = document.getElementById('glyph');
@@ -375,6 +411,8 @@
     const stage = document.getElementById('stage');
     const entryDateInput = document.getElementById('entryDate');
     const statusEl = document.getElementById('status');
+    const emptyState = document.getElementById('emptyState');
+    const emptyMessage = document.getElementById('emptyMessage');
 
     function halton(idx, base) {
       let f = 1;
@@ -480,6 +518,37 @@
       c = Math.cos(rz); s = Math.sin(rz);
       [x, y] = [x * c - y * s, x * s + y * c];
       return { x, y, z };
+    }
+
+    function modulateComposition(baseComposition, seedText) {
+      const rand = seeded(seedText || 'composition');
+      return baseComposition.map((object, index) => {
+        const amount = 0.62 + rand() * 0.76;
+        const angle = rand() * TAU;
+        const lift = (rand() - 0.5) * 54;
+        const depth = (rand() - 0.5) * 82;
+        const lateral = 20 + rand() * 42;
+        const scaleShift = 0.86 + rand() * 0.28;
+        const rotShift = [
+          (rand() - 0.5) * 0.5,
+          (rand() - 0.5) * 0.7,
+          (rand() - 0.5) * 0.42,
+        ];
+        return {
+          offset: [
+            object.offset[0] + Math.cos(angle) * lateral * amount,
+            object.offset[1] + lift,
+            object.offset[2] + Math.sin(angle) * lateral * amount + depth,
+          ],
+          scale: object.scale * scaleShift,
+          rot: [
+            object.rot[0] + rotShift[0],
+            object.rot[1] + rotShift[1],
+            object.rot[2] + rotShift[2],
+          ],
+          focus: index === 0 ? 1 : 0,
+        };
+      });
     }
 
     function seeded(seed) {
@@ -626,7 +695,7 @@
     }
 
     function generateSceneParticles(shape, objectCount, totalCount, seedText) {
-      const composition = compositionFor(objectCount);
+      const composition = modulateComposition(compositionFor(objectCount), seedText);
       const all = [];
       const perObject = Math.max(650, Math.floor(totalCount / composition.length));
       composition.forEach((object, objectIndex) => {
@@ -673,6 +742,179 @@
       return `rgb(${rr},${gg},${bb})`;
     }
 
+    function drawGlyph(x, y, size, color, glyphIndex, alpha, rotation) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = Math.max(1, size * 0.13);
+      const s = size;
+      const h = s / 2;
+      const glyph = glyphIndex % 7;
+
+      if (glyph === 0) {
+        ctx.fillRect(-h, -h, s, s);
+      } else if (glyph === 1) {
+        ctx.beginPath();
+        ctx.moveTo(-h, -h);
+        ctx.lineTo(h, h);
+        ctx.moveTo(h, -h);
+        ctx.lineTo(-h, h);
+        ctx.stroke();
+      } else if (glyph === 2) {
+        ctx.strokeRect(-h, -h, s, s);
+      } else if (glyph === 3) {
+        ctx.beginPath();
+        ctx.arc(0, 0, h * 0.92, 0, TAU);
+        ctx.stroke();
+      } else if (glyph === 4) {
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * TAU;
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(a) * h, Math.sin(a) * h);
+        }
+        ctx.stroke();
+      } else if (glyph === 5) {
+        const r = Math.max(1.1, s * 0.11);
+        [[-0.24, -0.24], [0.24, -0.24], [-0.24, 0.24], [0.24, 0.24]].forEach(([dx, dy]) => {
+          ctx.beginPath();
+          ctx.arc(dx * s, dy * s, r, 0, TAU);
+          ctx.fill();
+        });
+      } else {
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(1.2, h * 0.38), 0, TAU);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function waveState(t, w) {
+      const cycle = 6.2;
+      const elapsed = Math.max(0, t - state.waveStart);
+      const pass = Math.floor(elapsed / cycle);
+      const phase = (elapsed % cycle) / cycle;
+      const bandWidth = Math.max(110, w * 0.18);
+      const center = phase * (w + bandWidth * 2) - bandWidth;
+      const baseGlyph = pass % 2 === 1;
+      return {
+        center,
+        bandWidth,
+        baseGlyph,
+        targetGlyph: !baseGlyph,
+      };
+    }
+
+    function glyphModeForX(x, wave) {
+      return x <= wave.center ? wave.targetGlyph : wave.baseGlyph;
+    }
+
+    function transitionAmountForX(x, wave) {
+      const half = wave.bandWidth * 0.58;
+      return Math.max(0, 1 - Math.abs(x - wave.center) / half);
+    }
+
+    function drawModeWaveBand(wave, w, h) {
+      const safe = 6;
+      const left = Math.max(safe, wave.center - wave.bandWidth * 0.6);
+      const right = Math.min(w - safe, wave.center + wave.bandWidth * 0.6);
+      if (right <= safe || left >= w - safe) return;
+
+      const fade = ctx.createLinearGradient(left, 0, right, 0);
+      fade.addColorStop(0, 'rgba(7,7,15,0)');
+      fade.addColorStop(0.5, 'rgba(7,7,15,0.78)');
+      fade.addColorStop(1, 'rgba(7,7,15,0)');
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = fade;
+      ctx.fillRect(left, safe, right - left, h - safe * 2);
+    }
+
+    function drawGlyphLayer(renderPoints, wave, t, w, h) {
+      if (!renderPoints.length) return;
+      const safe = 6;
+      const cell = 16;
+      const gutter = 2.5;
+      const cols = Math.max(1, Math.ceil(w / cell));
+      const rows = Math.max(1, Math.ceil(h / cell));
+      const cells = new Map();
+
+      for (const p of renderPoints) {
+        if (p.x < safe || p.x > w - safe || p.y < safe || p.y > h - safe) continue;
+        const modeIsGlyph = glyphModeForX(p.x, wave);
+        const local = transitionAmountForX(p.x, wave);
+        if (!modeIsGlyph && local <= 0.1) continue;
+
+        const strength = modeIsGlyph ? 1 : local;
+        const gx = Math.max(0, Math.min(cols - 1, Math.floor(p.x / cell)));
+        const gy = Math.max(0, Math.min(rows - 1, Math.floor(p.y / cell)));
+        const key = gy * cols + gx;
+        const current = cells.get(key) || {
+          x: gx * cell + cell / 2,
+          y: gy * cell + cell / 2,
+          alpha: 0,
+          count: 0,
+          color: p.color,
+          f: p.f,
+        };
+        const weight = p.alpha * strength;
+        current.alpha += weight;
+        current.count += 1;
+        if (weight >= current.bestWeight || current.bestWeight === undefined) {
+          current.bestWeight = weight;
+          current.color = p.color;
+          current.f = p.f;
+        }
+        cells.set(key, current);
+      }
+
+      ctx.globalCompositeOperation = 'source-over';
+      let drawn = 0;
+      for (const p of cells.values()) {
+        const brightness = Math.max(0.02, Math.min(1, p.alpha / Math.max(1.2, p.count * 0.68)));
+        const glyphIndex = 6 - Math.max(0, Math.min(6, Math.floor(brightness * 7)));
+        const size = Math.max(3.5, (cell - gutter) * (0.34 + brightness * 0.64));
+        drawGlyph(
+          p.x,
+          p.y,
+          size,
+          p.color,
+          glyphIndex,
+          Math.min(0.98, 0.18 + brightness * 0.86),
+          0
+        );
+        drawn++;
+        if (drawn > 3600) break;
+      }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function setEmptyState(message, date) {
+      state.particles = [];
+      state.date = date || '';
+      if (date) entryDateInput.value = date;
+      document.getElementById('datePill').textContent = date ? formatDate(date) : 'No Entry';
+      document.getElementById('scorePill').textContent = 'No data';
+      document.getElementById('shapePill').textContent = 'No dreamscape';
+      document.getElementById('entryTitle').textContent = date ? formatDate(date) : 'No Dreamscape';
+      document.getElementById('scoreValue').textContent = '--';
+      document.getElementById('scoreValue').style.color = 'var(--dim)';
+      document.getElementById('scoreLabel').textContent = 'No public data';
+      document.getElementById('description').textContent = message;
+      document.getElementById('swatches').innerHTML = '';
+      emptyMessage.innerHTML = `<strong>No dreamscape for this date</strong>${message}`;
+      emptyState.classList.add('is-visible');
+      statusEl.textContent = 'No public dreamscape is available for that date.';
+    }
+
+    function clearEmptyState() {
+      emptyState.classList.remove('is-visible');
+      emptyMessage.textContent = '';
+    }
+
     function render(now) {
       const w = stage.clientWidth;
       const h = stage.clientHeight;
@@ -698,6 +940,17 @@
       bg.addColorStop(1, 'rgba(5,5,12,1)');
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, w, h);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(2, 2, Math.max(0, w - 4), Math.max(0, h - 4));
+      ctx.clip();
+
+      if (!state.particles.length) {
+        ctx.restore();
+        requestAnimationFrame(render);
+        return;
+      }
 
       const scale = Math.min(w, h) * 0.0044 * state.zoom;
       const perspStr = 0.00165;
@@ -731,6 +984,7 @@
         const dp = Math.abs(i - pulse);
         const glow = Math.exp(-(dp * dp) / (state.particles.length * 4.5));
         const paletteIndex = Math.max(0, Math.min(colors.length - 1, Math.floor((1 - depth) * colors.length)));
+        if (sx < -24 || sx > w + 24 || sy < -24 || sy > h + 24) continue;
         renderPoints.push({
           x: sx,
           y: sy,
@@ -738,13 +992,17 @@
           size: Math.max(0.35, 0.55 + depth * 2.3 + glow * 3.2),
           alpha: Math.min(1, 0.11 + depth * 0.75 + glow * 0.55),
           color: mixColor(colors[paletteIndex], glow * 0.18),
+          f: p.f,
         });
       }
 
       renderPoints.sort((a, b) => a.z - b.z);
+      const wave = waveState(t, w);
       ctx.globalCompositeOperation = 'lighter';
       for (const p of renderPoints) {
-        ctx.globalAlpha = p.alpha;
+        if (glyphModeForX(p.x, wave)) continue;
+        const transition = transitionAmountForX(p.x, wave);
+        ctx.globalAlpha = p.alpha * (1 - transition * 0.7);
         ctx.fillStyle = p.color;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, TAU);
@@ -752,10 +1010,18 @@
       }
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
+      drawModeWaveBand(wave, w, h);
+      drawGlyphLayer(renderPoints, wave, t, w, h);
+      ctx.restore();
       requestAnimationFrame(render);
     }
 
     function applyEntry(entry) {
+      if (!entry || !entry.date || !Number.isFinite(Number(entry.sleepScore))) {
+        setEmptyState('This date does not have a public sleep score/artwork yet, so there is no procedural dreamscape to render.', entry && entry.date);
+        return;
+      }
+      clearEmptyState();
       const score = Number.isFinite(Number(entry && entry.sleepScore)) ? Number(entry.sleepScore) : 72;
       const range = rangeForScore(score);
       const hueIndex = hueIndexFor(score, range);
@@ -768,6 +1034,7 @@
       state.motion = DEFAULT_MOTION;
       state.spread = DEFAULT_SPREAD;
       state.particles = generateSceneParticles(range.shape, objectCount, state.density, `${state.date}-${score}`);
+      state.waveStart = performance.now() * 0.001;
 
       const hue = range.hue[hueIndex];
       const displayDate = formatDate(state.date);
@@ -806,7 +1073,8 @@
         statusEl.textContent = `Loaded public entry from ${exact.date}.`;
         return;
       }
-      statusEl.textContent = 'No public dreamscape is available for that date.';
+      setEmptyState('This date is inside the project timeline, but there is no public sleep score or generated dreamscape available for it yet.', date);
+      resetCamera();
     }
 
     async function loadLatest() {
