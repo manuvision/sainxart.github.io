@@ -5288,6 +5288,24 @@ main {
     box-shadow: none !important;
 }
 
+/* The contact link is part of the full-screen mobile navigation only. */
+.nav-contact-mobile {
+    display: none;
+}
+
+@media (max-width: 820px) {
+    .floating-nav .nav-links .nav-contact-mobile {
+        display: block !important;
+        color: var(--sun) !important;
+    }
+
+    .floating-nav .nav-links .nav-contact-mobile:hover,
+    .floating-nav .nav-links .nav-contact-mobile:focus-visible,
+    .floating-nav .nav-links .nav-contact-mobile[aria-current="location"] {
+        color: var(--sun) !important;
+    }
+}
+
 /* Interactive point-cloud contact field. */
 .contact-shell {
     display: grid;

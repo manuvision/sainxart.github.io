@@ -131,17 +131,23 @@
     });
 
     const sectionLinks = [...navLinks.querySelectorAll('a[href^="#"]')];
-    const sectionMap = new Map(sectionLinks.map((link) => [link.getAttribute("href").slice(1), link]));
-    sectionMap.set("contact", navContact);
-    sectionMap.set("top", null);
     const currentLinks = [...sectionLinks, navContact].filter(Boolean);
+    const sectionMap = new Map();
+    currentLinks.forEach((link) => {
+        const sectionId = link.getAttribute("href")?.slice(1);
+        if (!sectionId) return;
+        const links = sectionMap.get(sectionId) || [];
+        links.push(link);
+        sectionMap.set(sectionId, links);
+    });
+    sectionMap.set("top", []);
     const observedSections = [...sectionMap.keys()]
         .map((id) => document.getElementById(id))
         .filter(Boolean);
 
     const setCurrentSection = (sectionId) => {
         currentLinks.forEach((link) => link.removeAttribute("aria-current"));
-        sectionMap.get(sectionId)?.setAttribute("aria-current", "location");
+        sectionMap.get(sectionId)?.forEach((link) => link.setAttribute("aria-current", "location"));
     };
 
     const updateCurrentSection = () => {
