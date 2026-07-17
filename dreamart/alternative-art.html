@@ -149,11 +149,11 @@
       cursor: pointer;
       font-size: 0.65rem;
       font-family: var(--font-ui);
-      text-decoration: none;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       transition: border-color 0.2s, background 0.2s, color 0.2s;
       white-space: nowrap;
+      text-decoration: none;
     }
     #cal-btn:hover,
     #cal-btn.active,
@@ -646,6 +646,7 @@
       #cal-btn,
       #sort-btn,
       #wrap-btn,
+      #alt-art-btn,
       #how-btn {
         font-size: 0.61rem;
         letter-spacing: 0.09em;
@@ -1136,25 +1137,9 @@
       opacity: 0;
       transition: opacity 0.3s ease;
     }
-    #lb-live {
-      width: min(100%, calc(min(54vh, 620px) * 0.6667));
-      aspect-ratio: 2 / 3;
-      border-radius: 10px;
-      background: #07070f;
-      box-shadow: 0 32px 100px rgba(0,0,0,0.8);
-      display: block;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      touch-action: none;
-      cursor: grab;
-    }
-    #lb-live.loaded { opacity: 1; }
-    #lb-live:active { cursor: grabbing; }
-    #lb-img[hidden] { display: none; }
     #lb-img.loaded { opacity: 1; }
     @media (max-height: 760px) {
       #lb-img { max-height: 46vh; }
-      #lb-live { width: min(100%, calc(46vh * 0.6667)); }
       #lb-img-wrap { gap: 0.52rem; }
     }
     #lb-date {
@@ -2416,8 +2401,8 @@
         <path d="M5 5H10M5 7.5H10M5 10H7.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
       </svg>
     </button>
-    <a id="alt-art-btn" href="alternative-art.html" aria-label="Open alternative generative image gallery">
-      Alternative Art
+    <a id="alt-art-btn" href="index.html" aria-label="Open procedural art gallery">
+      Procedural Art
     </a>
     <div id="filter-pill">
       <span id="filter-label"></span>
@@ -2553,7 +2538,6 @@
       </svg>
     </button>
     <div id="lb-img-wrap">
-      <canvas id="lb-live" aria-label="Interactive procedural dreamscape"></canvas>
       <img id="lb-img" src="" alt="Dream art" />
       <div id="lb-date"></div>
       <div class="lb-meta" id="lb-meta"></div>
@@ -2579,8 +2563,6 @@
 
   <script>
     const API = 'https://dreamart.manu.vision/api/gallery/public';
-    const PROCEDURAL_PUBLIC_API = 'https://dreamart.manu.vision/api/procedural-public';
-    const PROCEDURAL_PRIVATE_API = 'https://dreamart.manu.vision/api/procedural-dream';
     const LOVE_API = 'https://dreamart.manu.vision/api/love';
     const IMAGE_OPTIMIZER = 'https://dreamart.manu.vision/_next/image';
     const THUMB_WIDTH = 384;
@@ -2755,7 +2737,7 @@
 
     function buildHowPool(items) {
       return sortItems(items)
-        .filter(item => Number.isFinite(Number(item.sleepScore)))
+        .filter(item => item.imageData && Number.isFinite(Number(item.sleepScore)))
         .map(item => ({ item, fingerprint: howFingerprint(item) }));
     }
 
@@ -2812,7 +2794,7 @@
         img.onerror = () => {
           howPreloadedCount += 1;
         };
-        img.src = proceduralVisualUrl(item, PREVIEW_WIDTH, Math.round(PREVIEW_WIDTH * 1.5));
+        img.src = thumbnailUrl(item.imageData, PREVIEW_WIDTH);
       });
     }
 
@@ -2829,7 +2811,7 @@
       const nextImg = howShowingA ? howImgB : howImgA;
       const prevImg = howShowingA ? howImgA : howImgB;
       nextImg.alt = item.label || 'Dreamscape archive match';
-      nextImg.src = proceduralVisualUrl(item, PREVIEW_WIDTH, Math.round(PREVIEW_WIDTH * 1.5));
+      nextImg.src = thumbnailUrl(item.imageData, PREVIEW_WIDTH);
       nextImg.classList.add('active');
       prevImg.classList.remove('active');
       howShowingA = !howShowingA;
@@ -2927,26 +2909,6 @@
 
     function todayDreamscape() {
       return sortItems(allItems)[0] || null;
-    }
-
-    async function fetchJsonArray(url, options = {}) {
-      try {
-        const res = await fetch(url, options);
-        if (!res.ok) return [];
-        const data = await res.json();
-        return Array.isArray(data) ? data : [];
-      } catch {
-        return [];
-      }
-    }
-
-    function mergePublicEntries(...groups) {
-      const byDate = new Map();
-      groups.flat().forEach((item) => {
-        if (!item || !item.date || !Number.isFinite(Number(item.sleepScore))) return;
-        byDate.set(item.date, { ...byDate.get(item.date), ...item });
-      });
-      return [...byDate.values()].sort((a, b) => b.date.localeCompare(a.date));
     }
 
     function mysteryDateLabel(item) {
@@ -3242,311 +3204,9 @@
       });
     }
 
-    const proceduralCache = new Map();
-    const PROCEDURAL_TAU = Math.PI * 2;
-
-    function seededRandom(seed) {
-      let h = 2166136261 >>> 0;
-      const text = String(seed || 'dream-art');
-      for (let i = 0; i < text.length; i += 1) {
-        h ^= text.charCodeAt(i);
-        h = Math.imul(h, 16777619) >>> 0;
-      }
-      return () => {
-        h ^= h << 13; h >>>= 0;
-        h ^= h >>> 17;
-        h ^= h << 5; h >>>= 0;
-        return (h % 100000) / 100000;
-      };
-    }
-
-    function proceduralCount(item) {
-      const reading = String(item && item.reading || '').toLowerCase();
-      if (reading.includes('five ')) return 5;
-      if (reading.includes('four ')) return 4;
-      if (reading.includes('three ')) return 3;
-      if (reading.includes('two ')) return 2;
-      if (reading.includes('one ')) return 1;
-      const score = Number(item && item.sleepScore);
-      const meta = scoreMeta(score);
-      if (!meta) return 3;
-      const band = meta.palette === 'Aurora' ? [86, 100]
-        : meta.palette === 'Slate' ? [71, 85]
-        : meta.palette === 'Moss' ? [56, 70]
-        : meta.palette === 'Ochre' ? [41, 55]
-        : [0, 40];
-      const t = clamp01((score - band[0]) / Math.max(1, band[1] - band[0]));
-      return Math.max(1, Math.min(5, Math.ceil(t * 5)));
-    }
-
-    function proceduralTiltLift(reading) {
-      const text = String(reading || '').toLowerCase();
-      let tilt = 0.32;
-      let lift = 0;
-      if (text.includes('mostly upright') || text.includes('upright')) tilt = 0.08;
-      else if (text.includes('softly tilted') || text.includes('gently tilted')) tilt = 0.22;
-      else if (text.includes('rotated') || text.includes('dreamier drift')) tilt = 0.52;
-      if (text.includes('hovering low')) lift = 120;
-      else if (text.includes('floating higher')) lift = -120;
-      return { tilt, lift };
-    }
-
-    function proceduralShapePoint(shape, rand, i, total) {
-      const u = (i + rand()) / total;
-      const v = rand();
-      if (shape === 'sphere') {
-        const theta = PROCEDURAL_TAU * u;
-        const phi = Math.acos(2 * v - 1);
-        return { x: Math.sin(phi) * Math.cos(theta), y: Math.sin(phi) * Math.sin(theta), z: Math.cos(phi) };
-      }
-      if (shape === 'torus') {
-        const a = PROCEDURAL_TAU * u;
-        const b = PROCEDURAL_TAU * v;
-        const r = 0.38;
-        return { x: (1 + r * Math.cos(b)) * Math.cos(a), y: (1 + r * Math.cos(b)) * Math.sin(a), z: r * Math.sin(b) };
-      }
-      if (shape === 'cylinder') {
-        const a = PROCEDURAL_TAU * u;
-        const radius = rand() < 0.55 ? 1 : Math.sqrt(rand());
-        return { x: Math.cos(a) * radius, y: (v - 0.5) * 2.2, z: Math.sin(a) * radius };
-      }
-      if (shape === 'cube') {
-        const face = Math.floor(rand() * 6);
-        const a = rand() * 2 - 1;
-        const b = rand() * 2 - 1;
-        if (face === 0) return { x: 1, y: a, z: b };
-        if (face === 1) return { x: -1, y: a, z: b };
-        if (face === 2) return { x: a, y: 1, z: b };
-        if (face === 3) return { x: a, y: -1, z: b };
-        if (face === 4) return { x: a, y: b, z: 1 };
-        return { x: a, y: b, z: -1 };
-      }
-      const h = v;
-      const angle = PROCEDURAL_TAU * u;
-      const radius = 1 - h;
-      return { x: Math.cos(angle) * radius, y: h * 1.75 - 0.72, z: Math.sin(angle) * radius };
-    }
-
-    function rotatePoint(point, rx, ry, rz) {
-      let { x, y, z } = point;
-      let c = Math.cos(rx), s = Math.sin(rx);
-      [y, z] = [y * c - z * s, y * s + z * c];
-      c = Math.cos(ry); s = Math.sin(ry);
-      [x, z] = [x * c + z * s, -x * s + z * c];
-      c = Math.cos(rz); s = Math.sin(rz);
-      [x, y] = [x * c - y * s, x * s + y * c];
-      return { x, y, z };
-    }
-
-    function proceduralLayout(count, rand, reading) {
-      const directives = proceduralTiltLift(reading);
-      const presets = {
-        1: [[0, 0, 0, 1.08]],
-        2: [[-0.55, -0.22, 0.12, 1.02], [0.68, 0.3, -0.1, 0.76]],
-        3: [[-0.52, 0.04, 0.14, 1], [0.62, -0.36, -0.12, 0.76], [0.04, 0.58, -0.22, 0.56]],
-        4: [[-0.62, 0.06, 0.14, 0.88], [0.56, -0.38, -0.14, 0.72], [0.16, 0.56, -0.22, 0.54], [-0.08, -0.62, 0.02, 0.62]],
-        5: [[-0.64, 0.04, 0.16, 0.86], [0.54, -0.42, -0.12, 0.68], [0.22, 0.58, -0.22, 0.5], [-0.16, -0.62, 0.02, 0.58], [0.78, 0.2, 0.06, 0.44]],
-      };
-      return (presets[count] || presets[3]).map((item, index) => {
-        const sign = index % 2 === 0 ? 1 : -1;
-        return {
-          x: item[0] + (rand() - 0.5) * 0.18,
-          y: item[1] + directives.lift / 420 + (rand() - 0.5) * 0.12,
-          z: item[2] + (rand() - 0.5) * 0.18,
-          scale: item[3] * (0.92 + rand() * 0.2),
-          rx: sign * directives.tilt + (rand() - 0.5) * directives.tilt,
-          ry: (rand() - 0.5) * 0.7,
-          rz: -sign * directives.tilt * 0.56 + (rand() - 0.5) * directives.tilt,
-        };
-      });
-    }
-
-    function proceduralVisualUrl(item, width = 768, height = 1152) {
-      const key = `${item.date || 'entry'}:${item.sleepScore}:${width}x${height}`;
-      if (proceduralCache.has(key)) return proceduralCache.get(key);
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      const meta = scoreMeta(item.sleepScore) || scoreMeta(72);
-      const colors = meta.hueSwatches || ['#365A41', '#4D7C5A', '#6A9A73'];
-      const rand = seededRandom(`${item.date}-${item.sleepScore}-${item.reading || ''}`);
-      const count = proceduralCount(item);
-      const layout = proceduralLayout(count, rand, item.reading);
-      const bg = ctx.createLinearGradient(0, 0, 0, height);
-      bg.addColorStop(0, '#111121');
-      bg.addColorStop(0.55, '#090914');
-      bg.addColorStop(1, '#05050b');
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, width, height);
-      ctx.globalCompositeOperation = 'lighter';
-      const points = [];
-      const perObject = Math.max(460, Math.floor((width < 500 ? 2200 : 6800) / count));
-      layout.forEach((object, objectIndex) => {
-        const localRand = seededRandom(`${item.date}-${objectIndex}-${meta.primitive}`);
-        for (let i = 0; i < perObject; i += 1) {
-          const base = proceduralShapePoint(meta.primitive.toLowerCase(), localRand, i, perObject);
-          const rotated = rotatePoint(base, object.rx, object.ry, object.rz);
-          const scale = Math.min(width, height) * 0.18 * object.scale;
-          const z = rotated.z * scale + object.z * Math.min(width, height);
-          const perspective = 1 / (1 + z / 1800);
-          const x = width * 0.5 + (object.x * width * 0.32 + rotated.x * scale) * perspective;
-          const y = height * 0.46 + (object.y * height * 0.24 + rotated.y * scale) * perspective;
-          if (x < -20 || x > width + 20 || y < -20 || y > height + 20) continue;
-          points.push({ x, y, z, color: colors[Math.min(colors.length - 1, Math.floor(localRand() * colors.length))], a: 0.28 + localRand() * 0.55, s: 1.1 + localRand() * (width < 500 ? 1.4 : 2.4) });
-        }
-      });
-      points.sort((a, b) => a.z - b.z);
-      points.forEach((p) => {
-        ctx.globalAlpha = p.a;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.s, 0, PROCEDURAL_TAU);
-        ctx.fill();
-      });
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = 'source-over';
-      const veil = ctx.createLinearGradient(0, height * 0.58, 0, height);
-      veil.addColorStop(0, 'rgba(7,7,15,0)');
-      veil.addColorStop(1, 'rgba(7,7,15,0.28)');
-      ctx.fillStyle = veil;
-      ctx.fillRect(0, 0, width, height);
-      const url = canvas.toDataURL('image/png');
-      proceduralCache.set(key, url);
-      return url;
-    }
-
-    const liveLightbox = {
-      item: null,
-      points: [],
-      colors: [],
-      raf: 0,
-      rotX: 0.28,
-      rotY: -0.18,
-      zoom: 0.72,
-      pointerId: null,
-      lastX: 0,
-      lastY: 0,
-      pinchDistance: 0,
-      pinchZoom: 0.72,
-      lastTap: 0,
-    };
-
-    function buildLivePoints(item) {
-      const meta = scoreMeta(item.sleepScore) || scoreMeta(72);
-      const colors = meta.hueSwatches || ['#365A41', '#4D7C5A', '#6A9A73'];
-      const rand = seededRandom(`${item.date}-${item.sleepScore}-${item.reading || ''}`);
-      const count = proceduralCount(item);
-      const layout = proceduralLayout(count, rand, item.reading);
-      const points = [];
-      const perObject = Math.max(1200, Math.floor(9600 / count));
-      layout.forEach((object, objectIndex) => {
-        const localRand = seededRandom(`${item.date}-${objectIndex}-${meta.primitive}`);
-        for (let i = 0; i < perObject; i += 1) {
-          const base = proceduralShapePoint(meta.primitive.toLowerCase(), localRand, i, perObject);
-          const rotated = rotatePoint(base, object.rx, object.ry, object.rz);
-          const scale = 1.05 * object.scale;
-          points.push({
-            x: object.x * 2.25 + rotated.x * scale,
-            y: object.y * 1.62 + rotated.y * scale,
-            z: object.z * 1.45 + rotated.z * scale,
-            color: colors[Math.min(colors.length - 1, Math.floor(localRand() * colors.length))],
-            alpha: 0.28 + localRand() * 0.58,
-            size: 1 + localRand() * 1.8,
-          });
-        }
-      });
-      return points;
-    }
-
-    function resetLiveLightbox() {
-      liveLightbox.rotX = 0.28;
-      liveLightbox.rotY = -0.18;
-      liveLightbox.zoom = 0.72;
-    }
-
-    function resizeLiveCanvas() {
-      if (!lbLive) return null;
-      const rect = lbLive.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const width = Math.max(2, Math.round(rect.width * dpr));
-      const height = Math.max(2, Math.round(rect.height * dpr));
-      if (lbLive.width !== width || lbLive.height !== height) {
-        lbLive.width = width;
-        lbLive.height = height;
-      }
-      return { width: rect.width, height: rect.height, dpr };
-    }
-
-    function drawLiveLightbox() {
-      if (!lbLive || !lightbox.classList.contains('open') || !liveLightbox.item) {
-        liveLightbox.raf = 0;
-        return;
-      }
-      const metrics = resizeLiveCanvas();
-      if (!metrics) return;
-      const { width, height, dpr } = metrics;
-      const ctx = lbLive.getContext('2d');
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const bg = ctx.createLinearGradient(0, 0, 0, height);
-      bg.addColorStop(0, '#111121');
-      bg.addColorStop(0.55, '#090914');
-      bg.addColorStop(1, '#05050b');
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, width, height);
-
-      liveLightbox.rotY += liveLightbox.pointerId == null ? 0.0018 : 0;
-      const focus = Math.min(width, height) * 0.34 * liveLightbox.zoom;
-      const projected = liveLightbox.points.map((point) => {
-        const rotated = rotatePoint(point, liveLightbox.rotX, liveLightbox.rotY, 0);
-        const perspective = 1 / (1 + (rotated.z + 2.8) / 5.8);
-        return {
-          x: width * 0.5 + rotated.x * focus * perspective,
-          y: height * 0.48 + rotated.y * focus * perspective,
-          z: rotated.z,
-          size: point.size * Math.max(0.7, perspective) * (width < 440 ? 0.72 : 0.9),
-          color: point.color,
-          alpha: point.alpha,
-        };
-      }).sort((a, b) => a.z - b.z);
-
-      ctx.globalCompositeOperation = 'lighter';
-      projected.forEach((point) => {
-        if (point.x < -12 || point.x > width + 12 || point.y < -12 || point.y > height + 12) return;
-        ctx.globalAlpha = point.alpha;
-        ctx.fillStyle = point.color;
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, point.size, 0, PROCEDURAL_TAU);
-        ctx.fill();
-      });
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = 'source-over';
-      liveLightbox.raf = requestAnimationFrame(drawLiveLightbox);
-    }
-
-    function startLiveLightbox(item) {
-      if (!lbLive) return;
-      liveLightbox.item = item;
-      liveLightbox.points = buildLivePoints(item);
-      resetLiveLightbox();
-      lbLive.classList.add('loaded');
-      if (!liveLightbox.raf) {
-        liveLightbox.raf = requestAnimationFrame(drawLiveLightbox);
-      }
-    }
-
-    function stopLiveLightbox() {
-      if (liveLightbox.raf) cancelAnimationFrame(liveLightbox.raf);
-      liveLightbox.raf = 0;
-      liveLightbox.item = null;
-      liveLightbox.points = [];
-      liveLightbox.pointerId = null;
-      if (lbLive) lbLive.classList.remove('loaded');
-    }
-
     async function createPublicShareCard(item) {
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
-      const image = await loadCardImage(proceduralVisualUrl(item, 1024, 1536));
+      const image = await loadCardImage(item.imageData);
       const canvas = document.createElement('canvas');
       canvas.width = 1080;
       canvas.height = 1350;
@@ -3764,7 +3424,6 @@
     const empty       = document.getElementById('empty');
     const gallerySentinel = document.getElementById('gallery-sentinel');
     const lightbox    = document.getElementById('lightbox');
-    const lbLive      = document.getElementById('lb-live');
     const lbImg       = document.getElementById('lb-img');
     const lbDate      = document.getElementById('lb-date');
     const lbClose     = document.getElementById('lb-close');
@@ -4367,14 +4026,8 @@
       try {
         // Always hit origin — the API itself sets a short edge TTL.
         // Cache-bust query + no-store prevents browser/CDN from holding stale JSON.
-        const todayIso = new Date().toISOString().slice(0, 10);
-        const recentStart = new Date(Date.now() - 1000 * 60 * 60 * 24 * 31).toISOString().slice(0, 10);
-        const [galleryItems, proceduralItems, privateProceduralItems] = await Promise.all([
-          fetchJsonArray(`${API}?t=${Date.now()}`, { cache: 'no-store' }),
-          fetchJsonArray(`${PROCEDURAL_PUBLIC_API}?t=${Date.now()}`, { cache: 'no-store' }),
-          fetchJsonArray(`${PROCEDURAL_PRIVATE_API}?start=${recentStart}&end=${todayIso}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' }),
-        ]);
-        allItems = mergePublicEntries(privateProceduralItems, proceduralItems, galleryItems);
+        const res  = await fetch(`${API}?t=${Date.now()}`, { cache: 'no-store' });
+        allItems   = (await res.json()).filter(d => d.imageData);
         try {
           wrapLoveCount = await fetchLoveCount('wrap');
         } catch {
@@ -4537,7 +4190,7 @@
         cell.className = 'cell';
 
         const img = document.createElement('img');
-        img.dataset.src = proceduralVisualUrl(item, 420, 630);
+        img.dataset.src = thumbnailUrl(item.imageData);
         img.alt = item.label || 'Dream art';
         img.loading = 'lazy';
         img.decoding = 'async';
@@ -4827,20 +4480,21 @@
     function closeLightbox() {
       lightbox.classList.remove('open');
       document.body.style.overflow = '';
-      stopLiveLightbox();
       lbImg.classList.remove('loaded');
-      lbImg.hidden = true;
+      lbImg.hidden = false;
       // Clear the deep-link hash so reload doesn't keep re-opening the same image.
       if (location.hash) history.replaceState(null, '', location.pathname + location.search);
     }
     function showLightbox() {
-      stopLiveLightbox();
       lbImg.classList.remove('loaded');
       lbImg.src = '';
-      lbImg.hidden = true;
+      lbImg.hidden = false;
       const item = displayed[current];
       const embedUrl = instagramEmbedUrl(item.instagramUrl);
-      setTimeout(() => startLiveLightbox(item), 20);
+      setTimeout(() => {
+        lbImg.src = item.imageData;
+        lbImg.onload = () => lbImg.classList.add('loaded');
+      }, 20);
       // Lightbox label mirrors the grid label: full date, plus a colored
       // score chip when the entry has one.
       lbDate.textContent = item.label || '';
@@ -4933,40 +4587,6 @@
       }
       setTimeout(() => { lbCard.textContent = 'Save card'; }, 1400);
     });
-    if (lbLive) {
-      lbLive.addEventListener('pointerdown', (event) => {
-        lbLive.setPointerCapture(event.pointerId);
-        liveLightbox.pointerId = event.pointerId;
-        liveLightbox.lastX = event.clientX;
-        liveLightbox.lastY = event.clientY;
-      });
-      lbLive.addEventListener('pointermove', (event) => {
-        if (liveLightbox.pointerId !== event.pointerId) return;
-        const dx = event.clientX - liveLightbox.lastX;
-        const dy = event.clientY - liveLightbox.lastY;
-        liveLightbox.lastX = event.clientX;
-        liveLightbox.lastY = event.clientY;
-        liveLightbox.rotY += dx * 0.008;
-        liveLightbox.rotX = Math.max(-1.15, Math.min(1.15, liveLightbox.rotX + dy * 0.006));
-      });
-      const endLivePointer = (event) => {
-        if (liveLightbox.pointerId === event.pointerId) liveLightbox.pointerId = null;
-      };
-      lbLive.addEventListener('pointerup', endLivePointer);
-      lbLive.addEventListener('pointercancel', endLivePointer);
-      lbLive.addEventListener('wheel', (event) => {
-        event.preventDefault();
-        const direction = event.deltaY > 0 ? -1 : 1;
-        liveLightbox.zoom = Math.max(0.42, Math.min(1.45, liveLightbox.zoom + direction * 0.07));
-      }, { passive: false });
-      lbLive.addEventListener('dblclick', resetLiveLightbox);
-      lbLive.addEventListener('touchend', () => {
-        const now = Date.now();
-        if (now - liveLightbox.lastTap < 300) resetLiveLightbox();
-        liveLightbox.lastTap = now;
-      }, { passive: true });
-      window.addEventListener('resize', resizeLiveCanvas);
-    }
 
     readingClose.addEventListener('click', closeReadingMode);
     readingPrev.addEventListener('click', prevReadingStep);
