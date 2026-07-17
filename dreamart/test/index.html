@@ -897,17 +897,17 @@
       state.date = date || '';
       if (date) entryDateInput.value = date;
       document.getElementById('datePill').textContent = date ? formatDate(date) : 'No Entry';
-      document.getElementById('scorePill').textContent = 'No data';
-      document.getElementById('shapePill').textContent = 'No dreamscape';
-      document.getElementById('entryTitle').textContent = date ? formatDate(date) : 'No Dreamscape';
+      document.getElementById('scorePill').textContent = 'Quiet gap';
+      document.getElementById('shapePill').textContent = 'No visual trace';
+      document.getElementById('entryTitle').textContent = date ? formatDate(date) : 'Archive Pause';
       document.getElementById('scoreValue').textContent = '--';
       document.getElementById('scoreValue').style.color = 'var(--dim)';
-      document.getElementById('scoreLabel').textContent = 'No public data';
+      document.getElementById('scoreLabel').textContent = 'Quiet gap';
       document.getElementById('description').textContent = message;
       document.getElementById('swatches').innerHTML = '';
-      emptyMessage.innerHTML = `<strong>No dreamscape for this date</strong>${message}`;
+      emptyMessage.innerHTML = `<strong>A quiet gap in the archive</strong>${message}`;
       emptyState.classList.add('is-visible');
-      statusEl.textContent = 'No public dreamscape is available for that date.';
+      statusEl.textContent = 'The archive is quiet on this date.';
     }
 
     function clearEmptyState() {
@@ -1018,7 +1018,7 @@
 
     function applyEntry(entry) {
       if (!entry || !entry.date || !Number.isFinite(Number(entry.sleepScore))) {
-        setEmptyState('This date does not have a public sleep score/artwork yet, so there is no procedural dreamscape to render.', entry && entry.date);
+        setEmptyState('Some nights remain unrendered: a pause in the record rather than a missing piece. When a sleep signal becomes part of the archive, the dreamscape will appear here.', entry && entry.date);
         return;
       }
       clearEmptyState();
@@ -1073,7 +1073,7 @@
         statusEl.textContent = `Loaded public entry from ${exact.date}.`;
         return;
       }
-      setEmptyState('This date is inside the project timeline, but there is no public sleep score or generated dreamscape available for it yet.', date);
+      setEmptyState('Some nights stay dark in the calendar. They mark the quiet spaces between daily translations, where no public dreamscape has entered the archive yet.', date);
       resetCamera();
     }
 
