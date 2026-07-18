@@ -3239,12 +3239,6 @@
       roundRectPath(ctx, cardX, cardY, cardW, cardH, radius);
       ctx.clip();
       drawImageCover(ctx, image, cardX, cardY, cardW, cardH);
-      const gradient = ctx.createLinearGradient(0, 720, 0, cardY + cardH);
-      gradient.addColorStop(0, 'rgba(7,7,15,0)');
-      gradient.addColorStop(0.5, 'rgba(7,7,15,0.38)');
-      gradient.addColorStop(1, 'rgba(7,7,15,0.82)');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(cardX, 720, cardW, cardH - 680);
       ctx.restore();
       drawRoundedRect(ctx, cardX, cardY, cardW, cardH, radius, 'rgba(0,0,0,0)', 'rgba(167,139,250,0.72)', 3);
 
@@ -3258,9 +3252,9 @@
       ctx.letterSpacing = '3px';
       const siteText = 'MANU.VISION/DREAMART';
       const siteWidth = Math.ceil(ctx.measureText(siteText).width + 38);
-      drawRoundedRect(ctx, contentX, pillY - 62, siteWidth, 44, 8, 'rgba(14,14,28,0.68)', 'rgba(167,139,250,0.34)', 1.5);
+      drawRoundedRect(ctx, contentX, pillY, siteWidth, 46, 8, 'rgba(14,14,28,0.82)', 'rgba(167,139,250,0.48)', 1.5);
       ctx.fillStyle = '#c4b5fd';
-      ctx.fillText(siteText, contentX + 19, pillY - 34);
+      ctx.fillText(siteText, contentX + 19, pillY + 30);
       ctx.letterSpacing = '0px';
 
       const label = item.label || item.date || 'Dreamscape';
@@ -3269,15 +3263,17 @@
       ctx.letterSpacing = '2px';
       const dateLabel = dateText.toUpperCase();
       const dateWidth = Math.ceil(ctx.measureText(dateLabel).width + 38);
-      drawRoundedRect(ctx, contentX, pillY, dateWidth, 46, 8, 'rgba(14,14,28,0.68)', 'rgba(139,92,246,0.34)', 1.5);
+      const dateX = contentX + siteWidth + 14;
+      drawRoundedRect(ctx, dateX, pillY, dateWidth, 46, 8, 'rgba(14,14,28,0.82)', 'rgba(139,92,246,0.42)', 1.5);
       ctx.fillStyle = '#f1efff';
-      ctx.fillText(dateLabel, contentX + 19, pillY + 30);
+      ctx.fillText(dateLabel, dateX + 19, pillY + 30);
 
       const scoreText = `SCORE ${score}`;
       const scoreWidth = Math.ceil(ctx.measureText(scoreText).width + 38);
-      drawRoundedRect(ctx, contentX + dateWidth + 14, pillY, scoreWidth, 46, 8, 'rgba(14,14,28,0.68)', 'rgba(139,92,246,0.34)', 1.5);
+      const scoreX = dateX + dateWidth + 14;
+      drawRoundedRect(ctx, scoreX, pillY, scoreWidth, 46, 8, 'rgba(14,14,28,0.82)', 'rgba(139,92,246,0.42)', 1.5);
       ctx.fillStyle = scoreColorValue;
-      ctx.fillText(scoreText, contentX + dateWidth + 33, pillY + 30);
+      ctx.fillText(scoreText, scoreX + 19, pillY + 30);
       ctx.letterSpacing = '0px';
 
       return canvasToBlob(canvas);
