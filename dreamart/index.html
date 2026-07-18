@@ -1519,6 +1519,21 @@
       border-color: rgba(255,208,138,0.88);
       color: #ffe2ad;
     }
+    .lb-mode-switch {
+      width: min(100%, 22rem);
+      justify-content: center;
+      padding: 0.78rem 1rem;
+      border-color: rgba(255,190,88,0.7);
+      background: rgba(255,190,88,0.13);
+      color: #ffd08a;
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+    }
+    .lb-mode-switch:hover {
+      background: rgba(255,190,88,0.2);
+      border-color: rgba(255,208,138,0.88);
+      color: #ffe2ad;
+    }
 
     /* ── Trailer card inside the About modal ─────────────────── */
     .trailer-card {
@@ -2566,6 +2581,7 @@
         <button class="lb-action" id="lb-love" type="button" aria-label="Love this dream">❤️ 0</button>
         <button class="lb-action" id="lb-card" type="button">Save card</button>
       </div>
+      <a class="lb-action lb-mode-switch" id="lb-mode-switch" href="alternative-art.html">Alternative Art</a>
       <a class="lb-action" id="lb-instagram" href="#" target="_blank" rel="noopener noreferrer">Watch video</a>
     </div>
     <button class="lb-nav" id="lb-next" aria-label="Next">
@@ -4340,6 +4356,7 @@
     const lbLove      = document.getElementById('lb-love');
     const lbCard      = document.getElementById('lb-card');
     const lbInstagram = document.getElementById('lb-instagram');
+    const lbModeSwitch = document.getElementById('lb-mode-switch');
     const calBtn      = document.getElementById('cal-btn');
     const calPanel    = document.getElementById('cal-panel');
     const calClearBtn = document.getElementById('cal-clear-btn');
@@ -5447,6 +5464,9 @@
           lbInstagram.href = '#';
           lbInstagram.style.display = 'none';
         }
+      }
+      if (lbModeSwitch) {
+        lbModeSwitch.href = item.date ? `alternative-art.html#${item.date}` : 'alternative-art.html';
       }
     }
     function prevImg() { if (current > 0) { current--; showLightbox(); } }
