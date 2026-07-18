@@ -473,6 +473,8 @@
     }
     .hm-cell.hm-data {
       cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: rgba(255, 187, 86, 0.2);
     }
     .hm-cell.hm-data:hover {
       opacity: 0.75;
@@ -4618,7 +4620,7 @@
       const dated = sortedByDateAsc(items);
       if (!dated.length) return [];
       const scored = dated.filter(item => Number.isFinite(Number(item.sleepScore)));
-      const first = dated[0];
+      const first = dated.find(item => item.date === HEATMAP_START) || dated[0];
       const latest = dated[dated.length - 1];
       const midpoint = dated[Math.floor((dated.length - 1) / 2)];
       const highest = scored.length ? [...scored].sort((a, b) => Number(b.sleepScore) - Number(a.sleepScore) || dateValue(a) - dateValue(b))[0] : null;
@@ -4886,9 +4888,10 @@
       });
 
       // ── Click → filter main grid (toggle on same cell) ───────
-      grid.addEventListener('click', (e) => {
+      grid.onclick = (e) => {
         const cell = e.target.closest('.hm-cell.hm-data');
         if (!cell || !cell.dataset.date) return;
+        e.preventDefault();
         tooltip.classList.remove('visible');
 
         const d = cell.dataset.date;
@@ -4904,7 +4907,7 @@
           applyFilter({ start: d, end: d, text: fmtLabel(d) });
           document.getElementById('grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-      });
+      };
     }
 
     function renderHeatmapLegend(items) {
