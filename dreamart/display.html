@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dream Art Daily Display</title>
+  <meta name="description" content="A fullscreen daily Dream Art display: one procedural dreamscape from sleep data." />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <script src="dreamart-pointcloud.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #05050b;
+      --panel: rgba(10, 10, 22, 0.68);
+      --panel-strong: rgba(10, 10, 22, 0.86);
+      --line: rgba(167, 139, 250, 0.36);
+      --text: #f4f1ff;
+      --muted: #c7c0e5;
+      --dim: #918cb4;
+      --gold: #ffbd63;
+      --font-ui: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --font-display: "Cormorant Garamond", Georgia, serif;
+    }
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      font-family: var(--font-ui);
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(167,139,250,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(167,139,250,0.035) 1px, transparent 1px),
+        radial-gradient(circle at 50% 40%, rgba(167,139,250,0.12), transparent 55%);
+      background-size: 28px 28px, 28px 28px, 100% 100%;
+      opacity: 0.55;
+    }
+    #display {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: clamp(14px, 3vw, 38px);
+    }
+    #stage {
+      position: relative;
+      width: min(100%, 180vh);
+      height: 100%;
+      border-radius: clamp(20px, 3vw, 46px);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: radial-gradient(circle at 50% 34%, rgba(167,139,250,0.12), rgba(7,7,15,0.96) 62%);
+      box-shadow: 0 26px 90px rgba(0,0,0,0.55), inset 0 0 90px rgba(167,139,250,0.08);
+    }
+    #dream {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 900ms ease;
+      touch-action: none;
+    }
+    #dream.ready { opacity: 1; }
+    .overlay {
+      position: absolute;
+      z-index: 3;
+      display: flex;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+      align-items: center;
+      pointer-events: none;
+    }
+    #topline {
+      left: clamp(18px, 3vw, 44px);
+      top: clamp(18px, 3vw, 44px);
+      right: clamp(18px, 3vw, 44px);
+      justify-content: space-between;
+    }
+    #bottomline {
+      left: clamp(18px, 3vw, 44px);
+      right: clamp(18px, 3vw, 44px);
+      bottom: clamp(18px, 3vw, 44px);
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+    .pill {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.68rem 0.9rem;
+      border-radius: 10px;
+      border: 1px solid rgba(167,139,250,0.42);
+      background: var(--panel);
+      color: var(--muted);
+      font-size: clamp(0.65rem, 1.15vw, 0.88rem);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      backdrop-filter: blur(18px);
+      box-shadow: 0 16px 34px rgba(0,0,0,0.24);
+      white-space: nowrap;
+    }
+    #brand {
+      color: var(--gold);
+      border-color: rgba(255,190,99,0.48);
+      background: rgba(44, 29, 20, 0.48);
+    }
+    #url {
+      color: var(--gold);
+      border-color: rgba(255,190,99,0.48);
+      background: rgba(44, 29, 20, 0.48);
+    }
+    #score {
+      color: var(--score-color, #c4b5fd);
+    }
+    #date {
+      color: var(--text);
+    }
+    #titleBlock {
+      max-width: min(46rem, 72vw);
+      padding: clamp(0.9rem, 2vw, 1.35rem);
+      border-radius: 18px;
+      border: 1px solid rgba(167,139,250,0.24);
+      background: linear-gradient(180deg, rgba(10,10,22,0.18), rgba(10,10,22,0.76));
+      backdrop-filter: blur(16px);
+    }
+    h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.4rem, 8vw, 7rem);
+      font-weight: 300;
+      font-style: italic;
+      line-height: 0.9;
+      letter-spacing: 0;
+      color: var(--text);
+      text-wrap: balance;
+    }
+    #reading {
+      max-width: min(43rem, 70vw);
+      margin-top: clamp(0.75rem, 1.5vw, 1.1rem);
+      color: var(--muted);
+      font-size: clamp(0.82rem, 1.3vw, 1.1rem);
+      line-height: 1.65;
+      letter-spacing: 0.04em;
+    }
+    #status {
+      color: var(--gold);
+      border-color: rgba(255,190,99,0.42);
+      background: rgba(44, 29, 20, 0.5);
+    }
+    #message {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      padding: 2rem;
+      text-align: center;
+      background: radial-gradient(circle at 50% 45%, rgba(167,139,250,0.11), rgba(5,5,11,0.82) 62%);
+      transition: opacity 600ms ease;
+    }
+    #message.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #message h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2.6rem, 7vw, 6.5rem);
+      font-weight: 300;
+      font-style: italic;
+      line-height: 0.92;
+    }
+    #message p {
+      max-width: 42rem;
+      margin: 1.2rem auto 0;
+      color: var(--muted);
+      font-size: clamp(0.9rem, 1.7vw, 1.15rem);
+      line-height: 1.7;
+      letter-spacing: 0.04em;
+    }
+    @media (max-width: 760px), (max-aspect-ratio: 4 / 5) {
+      html, body { overflow: auto; }
+      #display {
+        position: relative;
+        min-height: 100svh;
+        padding: 12px;
+      }
+      #stage {
+        min-height: calc(100svh - 24px);
+        height: calc(100svh - 24px);
+      }
+      #topline, #bottomline {
+        left: 14px;
+        right: 14px;
+      }
+      #bottomline {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      #titleBlock {
+        max-width: 100%;
+      }
+      #reading {
+        max-width: 100%;
+      }
+      .pill {
+        min-height: 38px;
+        padding: 0.58rem 0.7rem;
+        letter-spacing: 0.1em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="display" aria-live="polite">
+    <section id="stage">
+      <canvas id="dream" aria-label="Daily procedural dreamscape"></canvas>
+      <div id="message">
+        <div>
+          <h2>Waiting For The Signal</h2>
+          <p>The display is listening for the newest public dreamscape. If last night has not arrived yet, the latest available visual will keep the room company.</p>
+        </div>
+      </div>
+      <div class="overlay" id="topline">
+        <span class="pill" id="brand">Manu.Vision/Dreamart</span>
+      </div>
+      <div class="overlay" id="bottomline">
+        <div id="titleBlock">
+          <h1 id="title">Dream Art</h1>
+          <p id="reading">Turning my biometrics into daily art.</p>
+        </div>
+        <div class="overlay" style="position: static; justify-content: flex-end;">
+          <span class="pill" id="url">manu.vision/dreamart</span>
+          <span class="pill" id="date">Today</span>
+          <span class="pill" id="score">Score --</span>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>
+    const API = 'https://dreamart.manu.vision/api/procedural-public';
+    const REFRESH_MS = 30 * 60 * 1000;
+    const dream = document.getElementById('dream');
+    const message = document.getElementById('message');
+    const title = document.getElementById('title');
+    const reading = document.getElementById('reading');
+    const datePill = document.getElementById('date');
+    const scorePill = document.getElementById('score');
+    let renderer = null;
+    let currentDate = '';
+    let raf = 0;
+
+    function todayIso() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function scoreColor(score) {
+      if (score == null) return '#c4b5fd';
+      if (score >= 86) return '#8B5CF6';
+      if (score >= 71) return '#3A78B8';
+      if (score >= 56) return '#4D7C5A';
+      if (score >= 41) return '#D4A853';
+      return '#C8613A';
+    }
+
+    function formatDate(iso) {
+      return new Date(`${iso}T12:00:00`).toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
+
+    function normalizeItems(data) {
+      return Array.isArray(data)
+        ? data
+            .filter(item => item && item.date && Number.isFinite(Number(item.sleepScore)))
+            .sort((a, b) => b.date.localeCompare(a.date))
+        : [];
+    }
+
+    function resize() {
+      if (!renderer) return;
+      const rect = dream.getBoundingClientRect();
+      renderer.resize(rect.width, rect.height, 2);
+    }
+
+    function animate(now) {
+      if (!renderer) {
+        raf = 0;
+        return;
+      }
+      resize();
+      renderer.render(now);
+      raf = requestAnimationFrame(animate);
+    }
+
+    function start(item) {
+      if (!window.DreamPointcloudEngine) throw new Error('Dream renderer unavailable');
+      if (!renderer) {
+        renderer = new window.DreamPointcloudEngine.DreamRenderer(dream, { budget: 10000 });
+        window.addEventListener('resize', resize);
+      }
+      renderer.setItem(item);
+      renderer.resetView();
+      renderer.zoom = 1;
+      renderer.waveOverrideE = null;
+      renderer._t0 = null;
+      currentDate = item.date;
+      resize();
+      dream.classList.add('ready');
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(animate);
+    }
+
+    function updateUi(item) {
+      title.textContent = 'Dream Art';
+      reading.textContent = item.reading || 'A new biometric signal becomes shape, color, material, and atmosphere.';
+      datePill.textContent = item.label || formatDate(item.date);
+      scorePill.textContent = `Score ${item.sleepScore}`;
+      scorePill.style.setProperty('--score-color', scoreColor(item.sleepScore));
+      message.classList.add('hidden');
+    }
+
+    async function loadLatest() {
+      try {
+        const res = await fetch(`${API}?t=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('Could not load daily dreamscape');
+        const items = normalizeItems(await res.json());
+        const item = items[0];
+        if (!item) throw new Error('No public dreamscape is available yet');
+        updateUi(item);
+        if (item.date !== currentDate) start(item);
+      } catch (error) {
+        console.error(error);
+        dream.classList.remove('ready');
+        message.classList.remove('hidden');
+      }
+    }
+
+    window.addEventListener('visibilitychange', () => {
+      if (!document.hidden) loadLatest();
+    });
+    window.addEventListener('online', loadLatest);
+    setInterval(loadLatest, REFRESH_MS);
+    loadLatest();
+  </script>
+</body>
+</html>
