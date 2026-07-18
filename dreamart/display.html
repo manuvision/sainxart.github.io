@@ -110,6 +110,23 @@
       box-shadow: 0 16px 34px rgba(0,0,0,0.24);
       white-space: nowrap;
     }
+    button.pill {
+      cursor: pointer;
+      pointer-events: auto;
+      font-family: var(--font-ui);
+      appearance: none;
+    }
+    .sound-pill {
+      width: 42px;
+      min-width: 42px;
+      justify-content: center;
+      padding-inline: 0;
+      color: var(--gold);
+      border-color: rgba(255,190,99,0.48);
+      background: rgba(44, 29, 20, 0.48);
+      font-size: clamp(1rem, 1.35vw, 1.18rem);
+      letter-spacing: 0;
+    }
     #brand {
       color: var(--gold);
       border-color: rgba(255,190,99,0.48);
@@ -217,6 +234,12 @@
         padding: 0.58rem 0.7rem;
         letter-spacing: 0.1em;
       }
+      .sound-pill {
+        width: 38px;
+        min-width: 38px;
+        padding-inline: 0;
+        letter-spacing: 0;
+      }
     }
   </style>
 </head>
@@ -230,18 +253,15 @@
           <p>The display is listening for the newest public dreamscape. If last night has not arrived yet, the latest available visual will keep the room company.</p>
         </div>
       </div>
-      <div class="overlay" id="topline">
-        <span class="pill" id="brand">Manu.Vision/Dreamart</span>
-      </div>
       <div class="overlay" id="bottomline">
         <div id="titleBlock">
-          <h1 id="title">Dream Art</h1>
           <p id="reading">Turning my biometrics into daily art.</p>
         </div>
         <div class="overlay" style="position: static; justify-content: flex-end;">
           <span class="pill" id="url">manu.vision/dreamart</span>
           <span class="pill" id="date">Today</span>
           <span class="pill" id="score">Score --</span>
+          <button class="pill sound-pill" id="soundToggle" type="button" aria-label="Ambient sound off" title="Ambient sound off">🔇</button>
         </div>
       </div>
     </section>
@@ -251,13 +271,24 @@
     const REFRESH_MS = 30 * 60 * 1000;
     const dream = document.getElementById('dream');
     const message = document.getElementById('message');
-    const title = document.getElementById('title');
     const reading = document.getElementById('reading');
     const datePill = document.getElementById('date');
     const scorePill = document.getElementById('score');
+    const soundToggle = document.getElementById('soundToggle');
     let renderer = null;
     let currentDate = '';
     let raf = 0;
+    const soundStates = [
+      { id: 'off', icon: '🔇', label: 'Ambient sound off' },
+      { id: 'rainforest', icon: '🌧', label: 'Rainforest ambience', src: 'audio/rainforest.mp3' },
+      { id: 'fireplace', icon: '🔥', label: 'Fireplace ambience', src: 'audio/fireplace.mp3' },
+      { id: 'ocean', icon: '🌊', label: 'Ocean waves ambience', src: 'audio/ocean-waves.mp3' },
+    ];
+    const audio = new Audio();
+    audio.loop = true;
+    audio.preload = 'none';
+    audio.volume = 0.55;
+    let soundIndex = 0;
 
     function todayIso() {
       const now = new Date();
@@ -313,6 +344,7 @@
       if (!window.DreamPointcloudEngine) throw new Error('Dream renderer unavailable');
       if (!renderer) {
         renderer = new window.DreamPointcloudEngine.DreamRenderer(dream, { budget: 10000 });
+        window.DreamPointcloudEngine.attachInteraction(renderer, dream);
         window.addEventListener('resize', resize);
       }
       renderer.setItem(item);
@@ -328,7 +360,6 @@
     }
 
     function updateUi(item) {
-      title.textContent = 'Dream Art';
       reading.textContent = item.reading || 'A new biometric signal becomes shape, color, material, and atmosphere.';
       datePill.textContent = item.label || formatDate(item.date);
       scorePill.textContent = `Score ${item.sleepScore}`;
@@ -352,11 +383,46 @@
       }
     }
 
+    function renderSoundToggle() {
+      const state = soundStates[soundIndex];
+      soundToggle.textContent = state.icon;
+      soundToggle.setAttribute('aria-label', state.label);
+      soundToggle.title = state.label;
+    }
+
+    async function setSound(index) {
+      soundIndex = index % soundStates.length;
+      const state = soundStates[soundIndex];
+      renderSoundToggle();
+      if (!state.src) {
+        audio.pause();
+        audio.removeAttribute('src');
+        audio.load();
+        return;
+      }
+      if (!audio.src.endsWith(state.src)) {
+        audio.src = state.src;
+      }
+      audio.currentTime = 0;
+      try {
+        await audio.play();
+      } catch (error) {
+        console.warn('Ambient sound could not start yet.', error);
+      }
+    }
+
+    soundToggle.addEventListener('click', () => {
+      setSound(soundIndex + 1);
+    });
+
     window.addEventListener('visibilitychange', () => {
       if (!document.hidden) loadLatest();
+      if (document.hidden) audio.pause();
+      if (!document.hidden && soundStates[soundIndex].src) audio.play().catch(() => {});
     });
     window.addEventListener('online', loadLatest);
     setInterval(loadLatest, REFRESH_MS);
+    renderSoundToggle();
     loadLatest();
   </script>
 </body>
