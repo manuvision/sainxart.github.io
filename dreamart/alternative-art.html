@@ -2571,6 +2571,19 @@
     const GRID_INITIAL_COUNT = 36;
     const GRID_BATCH_COUNT = 36;
 
+    function generatedImagePath(item) {
+      return item && item.date ? `generated/${item.date}-Dreamart.png` : item?.imageData;
+    }
+
+    function localizeGeneratedImage(item) {
+      if (!item || !item.date) return item;
+      return {
+        ...item,
+        originalImageData: item.imageData || item.originalImageData || '',
+        imageData: generatedImagePath(item),
+      };
+    }
+
     function thumbnailUrl(src, width = THUMB_WIDTH, quality = THUMB_QUALITY) {
       if (!src || !/^https?:\/\//.test(src)) return src;
       const params = new URLSearchParams({
@@ -4027,7 +4040,7 @@
         // Always hit origin — the API itself sets a short edge TTL.
         // Cache-bust query + no-store prevents browser/CDN from holding stale JSON.
         const res  = await fetch(`${API}?t=${Date.now()}`, { cache: 'no-store' });
-        allItems   = (await res.json()).filter(d => d.imageData);
+        allItems   = (await res.json()).filter(d => d.imageData).map(localizeGeneratedImage);
         try {
           wrapLoveCount = await fetchLoveCount('wrap');
         } catch {

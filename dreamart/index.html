@@ -2590,6 +2590,19 @@
     const GRID_INITIAL_COUNT = 36;
     const GRID_BATCH_COUNT = 36;
 
+    function generatedImagePath(item) {
+      return item && item.date ? `generated/${item.date}-Dreamart.png` : item?.imageData;
+    }
+
+    function localizeGeneratedImage(item) {
+      if (!item || !item.date) return item;
+      return {
+        ...item,
+        originalImageData: item.imageData || item.originalImageData || '',
+        imageData: generatedImagePath(item),
+      };
+    }
+
     function thumbnailUrl(src, width = THUMB_WIDTH, quality = THUMB_QUALITY) {
       if (!src || !/^https?:\/\//.test(src)) return src;
       const params = new URLSearchParams({
@@ -2945,7 +2958,7 @@
       const byDate = new Map();
       groups.flat().forEach((item) => {
         if (!item || !item.date || !Number.isFinite(Number(item.sleepScore))) return;
-        byDate.set(item.date, { ...byDate.get(item.date), ...item });
+        byDate.set(item.date, localizeGeneratedImage({ ...byDate.get(item.date), ...item }));
       });
       return [...byDate.values()].sort((a, b) => b.date.localeCompare(a.date));
     }
@@ -4639,7 +4652,7 @@
           points: buildReadingPoints()
         },
         {
-          image: first.imageData,
+          image: proceduralVisualUrl(first, 1024, 1536),
           eyebrow: 'First dreamscape',
           title: first.label || fmtLabel(first.date),
           copy: `${fmtLabel(first.date)} opened the archive: the first recorded night turned into a visual object instead of staying only as a number.`,
@@ -4649,7 +4662,7 @@
           ]
         },
         {
-          image: latest.imageData,
+          image: proceduralVisualUrl(latest, 1024, 1536),
           eyebrow: 'Latest dreamscape',
           title: latest.label || fmtLabel(latest.date),
           copy: 'The project is still alive and accumulating, one night at a time, with each new image extending the same private visual diary.',
@@ -4659,7 +4672,7 @@
           ]
         },
         highest && {
-          image: highest.imageData,
+          image: proceduralVisualUrl(highest, 1024, 1536),
           eyebrow: 'Highest score',
           title: highest.label || fmtLabel(highest.date),
           copy: 'The most restored night in the gallery rises with the clearest signal: the dreamscape opens into its brightest, most buoyant register.',
@@ -4669,7 +4682,7 @@
           ]
         },
         lowest && {
-          image: lowest.imageData,
+          image: proceduralVisualUrl(lowest, 1024, 1536),
           eyebrow: 'Lowest score',
           title: lowest.label || fmtLabel(lowest.date),
           copy: 'The lowest-scoring night keeps the archive honest, translating difficulty into a sharper visual weather instead of hiding it.',
