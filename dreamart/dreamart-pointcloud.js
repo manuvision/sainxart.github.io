@@ -436,6 +436,7 @@
       this._tileCell = 0;
       this._t0 = null;
       this.waveOverrideE = null;
+      this.waveOverrideParity = null;
       this.floatOffset = spec.float * -52;
       this.toneBias = (1 - (spec.tone == null ? 1 : spec.tone)) * 0.09;
       this.colors = spec.palette.map(hexToRgb);
@@ -622,7 +623,7 @@
       let fraction;
       let parity;
       if (this.waveOverrideE != null) {
-        parity = 0;
+        parity = this.waveOverrideParity || 0;
         fraction = this.waveOverrideE;
       } else {
         if (this._t0 == null) this._t0 = timeMs;
@@ -644,12 +645,10 @@
       if (!this._tiles || this._tileCell !== tileSize) this.buildTiles(tileSize);
       if (!this._tiles) return;
 
-      const time = timeMs * 0.001;
       const band = width * 0.12;
-      const waveAmplitude = width * 0.045;
-      const overshoot = (band / 2 + waveAmplitude + cellWidth) / width;
+      const overshoot = (band / 2 + cellWidth) / width;
       const edgeProgress = fraction * (1 + 2 * overshoot) - overshoot;
-      const edgeAt = y => width * edgeProgress + waveAmplitude * Math.sin((y / height) * Math.PI * 4.6 + time * 1.35);
+      const edgeAt = () => width * edgeProgress;
       const smooth = value => value <= 0 ? 0 : value >= 1 ? 1 : value * value * (3 - 2 * value);
 
       this.bufCanvas.width = columns;
@@ -657,7 +656,7 @@
       this.bctx.drawImage(this.glyphCanvas, 0, 0, columns, rows);
       const pixels = this.bctx.getImageData(0, 0, columns, rows).data;
       const backgroundFill = mixHex(this.spec.palette[6], '#040409', 0.68);
-      const maxEdge = width * edgeProgress + waveAmplitude + band / 2 + cellWidth;
+      const maxEdge = width * edgeProgress + band / 2 + cellWidth;
 
       for (let row = 0; row < rows; row += 1) {
         const y = row * cellHeight;
