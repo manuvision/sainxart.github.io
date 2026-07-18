@@ -4339,6 +4339,44 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
+    const CROSS_MODE_DATE_KEY = 'dreamart:open-date';
+
+    function validIsoDate(value) {
+      return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : '';
+    }
+
+    function lightboxDateFromUrl() {
+      const hashDate = validIsoDate(decodeURIComponent(location.hash.replace(/^#/, '')));
+      if (hashDate) return hashDate;
+      const paramDate = validIsoDate(new URLSearchParams(location.search).get('date'));
+      if (paramDate) return paramDate;
+      try {
+        return validIsoDate(sessionStorage.getItem(CROSS_MODE_DATE_KEY));
+      } catch {
+        return '';
+      }
+    }
+
+    function crossModeHref(page, date) {
+      return date ? `${page}?date=${encodeURIComponent(date)}#${encodeURIComponent(date)}` : page;
+    }
+
+    function rememberCrossModeDate(date) {
+      try {
+        if (date) sessionStorage.setItem(CROSS_MODE_DATE_KEY, date);
+      } catch {}
+    }
+
+    function clearDeepLinkState() {
+      try {
+        sessionStorage.removeItem(CROSS_MODE_DATE_KEY);
+      } catch {}
+      const url = new URL(location.href);
+      url.searchParams.delete('date');
+      url.hash = '';
+      history.replaceState(null, '', `${url.pathname}${url.search}`);
+    }
+
     const grid        = document.getElementById('grid');
     const empty       = document.getElementById('empty');
     const gallerySentinel = document.getElementById('gallery-sentinel');
@@ -4964,11 +5002,10 @@
         applyFilter(null);
         renderHeatmap(allItems);
         scheduleHowPreload();
-        // Honor a #YYYY-MM-DD deep link if one is present — opens the lightbox
-        // straight onto that night's artwork.
-        const hashDate = decodeURIComponent(location.hash.replace(/^#/, ''));
-        if (/^\d{4}-\d{2}-\d{2}$/.test(hashDate)) {
-          const idx = displayed.findIndex(d => d.date === hashDate);
+        // Honor a date deep link from hash, query string, or the mode switch fallback.
+        const openDate = lightboxDateFromUrl();
+        if (openDate) {
+          const idx = displayed.findIndex(d => d.date === openDate);
           if (idx >= 0) openLightbox(idx);
         }
       } catch {
@@ -5411,8 +5448,7 @@
       stopLiveLightbox();
       lbImg.classList.remove('loaded');
       lbImg.hidden = true;
-      // Clear the deep-link hash so reload doesn't keep re-opening the same image.
-      if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+      clearDeepLinkState();
     }
     function showLightbox() {
       stopLiveLightbox();
@@ -5466,7 +5502,8 @@
         }
       }
       if (lbModeSwitch) {
-        lbModeSwitch.href = item.date ? `alternative-art.html#${item.date}` : 'alternative-art.html';
+        lbModeSwitch.href = crossModeHref('alternative-art.html', item.date);
+        lbModeSwitch.onclick = () => rememberCrossModeDate(item.date);
       }
     }
     function prevImg() { if (current > 0) { current--; showLightbox(); } }
