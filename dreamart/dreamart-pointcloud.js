@@ -120,10 +120,12 @@
 
   function recoilEnvelope(phase) {
     const t = ((phase / TAU) % 1 + 1) % 1;
-    if (t < 0.58) return 0;
-    const tail = (t - 0.58) / 0.42;
+    if (t < 0.42) return 0;
+    const tail = (t - 0.42) / 0.58;
     const decay = 1 - smoothstep(0, 1, tail);
-    return Math.sin(tail * TAU * 2.2) * decay * 0.16;
+    const echo = Math.sin(tail * TAU * 2.75) * decay * 0.18;
+    const shimmer = Math.sin(tail * TAU * 7.5) * (0.35 + decay * 0.65) * 0.035;
+    return echo + shimmer;
   }
 
   function liftRgb(color, amount = 0.18) {
@@ -643,7 +645,11 @@
           const normalizedRadius = radius / 230;
           const shellRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase - normalizedRadius * 7.4 + motionPhase * 0.28) * motionPulse;
           const innerRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase * 2 - normalizedRadius * 10.2 + motionPhaseB * 0.36) * motionPulse;
-          const radialPulse = REDUCED_MOTION ? 0 : Math.sin(loopPhase * 2 + motionPhase * 2.7) * (0.58 + 0.42 * Math.sin(loopPhase * 3 + motionPhaseB));
+          const radialPulse = REDUCED_MOTION ? 0 : (
+            Math.sin(loopPhase * 6 + motionPhase * 2.7) * 0.62
+            + Math.sin(loopPhase * 11 + motionPhaseB * 2.1) * 0.28
+            + Math.sin(loopPhase * 17 + motionPhase + motionPhaseB) * 0.1
+          ) * (0.72 + motionEnergy * 0.28);
           const surfaceMotion = shellRipple;
           const crossMotion = innerRipple;
           const waveMotion = shellRipple * 0.72 + innerRipple * 0.28;
@@ -666,7 +672,7 @@
           const currentPulse = motionEnergy;
           const drift = (3.6 + material.jitter * 0.85) * (0.78 + currentPulse * 0.22) * primitive.surfaceAmp;
           const surfaceDrift = waveMotion * (3.4 + material.jitter * 0.4);
-          const radialDrift = radialPulse * (1.2 + material.jitter * 0.22) * primitive.surfaceAmp;
+          const radialDrift = radialPulse * (4.8 + material.jitter * 0.55) * primitive.surfaceAmp;
           const slideA = (surfaceMotion * 0.22 + waveMotion * 0.12) * drift;
           const slideB = (crossMotion * 0.18 - waveMotion * 0.08) * drift;
           const pointX = (point.x + normalX * (surfaceDrift + radialDrift) + tangentAX * slideA + tangentBX * slideB) * pulseScale;
