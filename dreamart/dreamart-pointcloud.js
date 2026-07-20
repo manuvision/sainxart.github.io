@@ -106,6 +106,26 @@
     return Math.max(0, Math.min(1, value));
   }
 
+  function smoothstep(edge0, edge1, value) {
+    const t = clamp01((value - edge0) / Math.max(0.0001, edge1 - edge0));
+    return t * t * (3 - 2 * t);
+  }
+
+  function pulseEnvelope(phase) {
+    const t = ((phase / TAU) % 1 + 1) % 1;
+    const attack = smoothstep(0, 0.18, t);
+    const release = 1 - smoothstep(0.42, 0.62, t);
+    return attack * release;
+  }
+
+  function liftRgb(color, amount = 0.18) {
+    return {
+      r: Math.round(color.r + (255 - color.r) * amount),
+      g: Math.round(color.g + (255 - color.g) * amount),
+      b: Math.round(color.b + (255 - color.b) * amount),
+    };
+  }
+
   function hashString(seed) {
     let hash = 2166136261;
     const text = String(seed == null ? '' : seed);
@@ -382,7 +402,7 @@
         const scale = spec.scale * countScale * heroScales[primitiveCount][i] * (0.94 + random() * 0.14);
         const torusFaceTilt = spec.shape === 'torus' ? Math.PI / 2 : 0;
         const torusAxisDrift = spec.shape === 'torus' ? (random() - 0.5) * 0.22 : 0;
-        const spinSwing = (0.55 + random() * 1.0) * (random() > 0.5 ? 1 : -1);
+        const spinSwing = (0.38 + random() * 0.66) * (random() > 0.5 ? 1 : -1);
         this.prims.push({
           pts: points,
           boundR: Math.sqrt(maxNormSquared) * scale * 1.09 + bobAmplitude + 6,
@@ -391,7 +411,7 @@
           tiltX: torusFaceTilt + (random() - 0.5) * 2 * spec.tilt,
           tiltZ: torusAxisDrift + (random() - 0.5) * 2 * spec.tilt,
           spinSwing,
-          spinSwingCycles: 1 + Math.floor(random() * 2),
+          spinSwingCycles: 1,
           spinPhase: random() * TAU,
           surfacePhase: random() * TAU,
           surfaceAmp: 0.86 + random() * 0.28,
@@ -484,15 +504,15 @@
       this.waveOverrideParity = null;
       this.floatOffset = spec.float * -52;
       this.toneBias = (1 - (spec.tone == null ? 1 : spec.tone)) * 0.09;
-      this.colors = spec.palette.map(hexToRgb);
+      this.colors = spec.palette.map(hex => liftRgb(hexToRgb(hex), 0.2));
       this.rotX = 0.24 + (random() - 0.5) * 0.2;
       this.rotY = random() * TAU;
       this.velY = 0.0032;
       this.velX = 0;
-      const shapeZoom = spec.shape === 'sphere' ? 1.02 : spec.shape === 'torus' ? 1.2 : spec.shape === 'cylinder' ? 1.2 : 1.16;
-      this.defaultZoom = primitiveCount > 1 ? 1.22 : shapeZoom;
+      const shapeZoom = spec.shape === 'sphere' ? 1.06 : spec.shape === 'torus' ? 1.28 : spec.shape === 'cylinder' ? 1.28 : 1.23;
+      this.defaultZoom = primitiveCount > 1 ? 1.3 : shapeZoom;
       this.zoom = this.defaultZoom;
-      this.compositionZoom = primitiveCount > 1 ? 1.38 : spec.shape === 'sphere' ? 1 : 1.12;
+      this.compositionZoom = primitiveCount > 1 ? 1.42 : spec.shape === 'sphere' ? 1 : 1.16;
       this.dragging = false;
       this._swarm = null;
     }
@@ -596,12 +616,13 @@
         const sinTiltX = Math.sin(primitive.tiltX);
         const cosTiltZ = Math.cos(primitive.tiltZ);
         const sinTiltZ = Math.sin(primitive.tiltZ);
-        const surfacePhase = loopPhase * 12 + primitive.surfacePhase;
+        const surfacePhase = loopPhase * 6 + primitive.surfacePhase;
+        const pulse = REDUCED_MOTION ? 0 : pulseEnvelope(surfacePhase);
         const bob = Math.sin(time * primitive.bobSpeed + primitive.bobPhase) * this.bobAmp;
 
         for (let index = 0; index < pointCount; index += 1) {
           const point = points[index];
-          const breath = REDUCED_MOTION ? 0.5 : 0.5 + 0.5 * Math.sin(surfacePhase);
+          const breath = REDUCED_MOTION ? 0.5 : pulse;
           const motionPhase = (point.motionSeed || 0) * TAU;
           const motionPhaseB = (point.motionSeedB || 0) * TAU;
           const radius = Math.max(1, Math.sqrt(point.x * point.x + point.y * point.y + point.z * point.z));
@@ -609,8 +630,8 @@
           const normalY = point.y / radius;
           const normalZ = point.z / radius;
           const normalizedRadius = radius / 230;
-          const shellRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase - normalizedRadius * 7.4 + motionPhase * 0.28);
-          const innerRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase * 2 - normalizedRadius * 10.2 + motionPhaseB * 0.36);
+          const shellRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase - normalizedRadius * 7.4 + motionPhase * 0.28) * pulse;
+          const innerRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase * 2 - normalizedRadius * 10.2 + motionPhaseB * 0.36) * pulse;
           const surfaceMotion = shellRipple;
           const crossMotion = innerRipple;
           const waveMotion = shellRipple * 0.72 + innerRipple * 0.28;
@@ -630,7 +651,7 @@
           const tangentBY = normalZ * tangentAX - normalX * tangentAZ;
           const tangentBZ = normalX * tangentAY - normalY * tangentAX;
           const pulseScale = primitive.scale * (1 + waveMotion * 0.014 + Math.sin(point.f * 14 + point.phase + surfacePhase) * 0.003 + (material.jitter ? Math.sin(point.phase * 13.7 + surfacePhase) * 0.0015 * material.jitter : 0));
-          const currentPulse = 0.5 + 0.5 * Math.sin(surfacePhase + primitive.surfacePhase);
+          const currentPulse = pulse;
           const drift = (3.6 + material.jitter * 0.85) * (0.78 + currentPulse * 0.22) * primitive.surfaceAmp;
           const surfaceDrift = waveMotion * (3.4 + material.jitter * 0.4);
           const slideA = (surfaceMotion * 0.22 + waveMotion * 0.12) * drift;
@@ -674,7 +695,7 @@
           const paletteBand = point.colorSeed == null ? hashUnit(index, 17) : point.colorSeed;
           const paletteSpread = 0.22 * Math.sin(motionPhaseB * 2.3 + primitive.spinPhase + surfacePhase);
           const sizeSeed = point.sizeSeed == null ? hashUnit(index, 43) : point.sizeSeed;
-          const localPulse = REDUCED_MOTION ? 0.5 : 0.5 + 0.5 * waveMotion;
+          const localPulse = REDUCED_MOTION ? 0.5 : pulse * (0.62 + 0.38 * clamp01(0.5 + 0.5 * waveMotion));
           const sizeVariance = 0.72 + Math.pow(sizeSeed, 1.55) * 0.54;
           const pointSize = (1.38 + depth * 0.34 + glow * 0.2 + localPulse * 0.42 + pointerGlow * 0.68) * sizeVariance * material.sizeMul * scaleBasis * this.zoom;
           const maxSize = (2.25 + scaleBasis * 0.7) * this.zoom;
@@ -682,7 +703,7 @@
             x: screenX,
             y: screenY,
             z: depthZ,
-            b: clamp01(0.08 + depth * 0.035 + paletteBand * 0.68 + glow * 0.04 + paletteSpread),
+            b: clamp01(0.16 + depth * 0.035 + paletteBand * 0.62 + glow * 0.06 + paletteSpread),
             alpha: Math.min(0.94, (0.54 + depth * 0.05 + localPulse * 0.08 + glow * 0.03 + pointerGlow * 0.28) * material.alphaMul),
             size: Math.max(0.8, Math.min(maxSize, pointSize)),
           });
