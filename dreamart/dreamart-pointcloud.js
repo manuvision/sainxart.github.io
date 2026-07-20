@@ -30,11 +30,11 @@
   ];
 
   const MATERIALS = [
-    { name: 'Ceramic', sizeMul: 0.98, alphaMul: 1, glowMul: 0.7, jitter: 0, swarm: 0 },
-    { name: 'Metal', sizeMul: 0.95, alphaMul: 1.12, glowMul: 1.5, jitter: 0, swarm: 0 },
-    { name: 'Wood', sizeMul: 1.22, alphaMul: 0.92, glowMul: 0.55, jitter: 0.35, swarm: 0 },
-    { name: 'Polymer', sizeMul: 1.65, alphaMul: 0.9, glowMul: 0.85, jitter: 0.15, swarm: 0 },
-    { name: 'Glass', sizeMul: 0.92, alphaMul: 1.08, glowMul: 1.2, jitter: 0, swarm: 420 },
+    { name: 'Ceramic', sizeMul: 0.98, alphaMul: 1, glowMul: 0.62, jitter: 0, swarm: 0 },
+    { name: 'Metal', sizeMul: 0.95, alphaMul: 1.08, glowMul: 1.18, jitter: 0, swarm: 0 },
+    { name: 'Wood', sizeMul: 1.12, alphaMul: 0.92, glowMul: 0.52, jitter: 0.28, swarm: 0 },
+    { name: 'Polymer', sizeMul: 1.24, alphaMul: 0.9, glowMul: 0.76, jitter: 0.12, swarm: 0 },
+    { name: 'Glass', sizeMul: 0.92, alphaMul: 1.04, glowMul: 1.02, jitter: 0, swarm: 420 },
   ];
 
   const makeSvg = body => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${body}</svg>`;
@@ -554,19 +554,37 @@
 
         for (let index = 0; index < pointCount; index += 1) {
           const point = points[index];
+          const breath = REDUCED_MOTION ? 0.5 : 0.5 + 0.5 * Math.sin(loopPhase);
           const surfaceMotion = REDUCED_MOTION ? 0 : Math.sin(loopPhase + point.phase * 1.7 + point.f * TAU * 2.5);
           const crossMotion = REDUCED_MOTION ? 0 : Math.cos(loopPhase + point.phase * 0.9 + point.f * TAU * 4.1);
-          const waveMotion = REDUCED_MOTION ? 0 : Math.sin(loopPhase * 1.35 + point.f * TAU * 7.5 + point.phase * 0.55);
+          const waveMotion = REDUCED_MOTION ? 0 : Math.sin(loopPhase + point.f * TAU * 5.2 + point.phase * 0.55);
           const radius = Math.max(1, Math.sqrt(point.x * point.x + point.y * point.y + point.z * point.z));
           const normalX = point.x / radius;
           const normalY = point.y / radius;
           const normalZ = point.z / radius;
-          const pulseScale = primitive.scale * (1 + Math.sin(point.f * 14 + point.phase) * 0.018 + waveMotion * 0.012 + surfaceMotion * 0.006 + (material.jitter ? Math.sin(point.phase * 13.7 + loopPhase) * 0.01 * material.jitter : 0));
-          const drift = 3.2 + material.jitter * 2.8;
-          const surfaceDrift = waveMotion * drift;
-          const pointX = (point.x + normalX * surfaceDrift + surfaceMotion * drift * 0.45) * pulseScale;
-          const pointY = (point.y + normalY * surfaceDrift + crossMotion * drift * 0.35) * pulseScale;
-          const pointZ = (point.z + normalZ * surfaceDrift + Math.sin(loopPhase + point.phase * 1.2) * drift * 0.42) * pulseScale;
+          let tangentAX = -normalZ;
+          let tangentAY = 0;
+          let tangentAZ = normalX;
+          let tangentLen = Math.sqrt(tangentAX * tangentAX + tangentAZ * tangentAZ);
+          if (tangentLen < 0.001) {
+            tangentAX = 1;
+            tangentAY = 0;
+            tangentAZ = 0;
+            tangentLen = 1;
+          }
+          tangentAX /= tangentLen;
+          tangentAZ /= tangentLen;
+          const tangentBX = normalY * tangentAZ - normalZ * tangentAY;
+          const tangentBY = normalZ * tangentAX - normalX * tangentAZ;
+          const tangentBZ = normalX * tangentAY - normalY * tangentAX;
+          const pulseScale = primitive.scale * (1 + Math.sin(point.f * 14 + point.phase) * 0.012 + waveMotion * 0.006 + surfaceMotion * 0.004 + (material.jitter ? Math.sin(point.phase * 13.7 + loopPhase) * 0.006 * material.jitter : 0));
+          const drift = (2.4 + material.jitter * 1.8) * (0.64 + breath * 0.36);
+          const surfaceDrift = waveMotion * drift * 0.16;
+          const slideA = surfaceMotion * drift;
+          const slideB = crossMotion * drift * 0.62;
+          const pointX = (point.x + normalX * surfaceDrift + tangentAX * slideA + tangentBX * slideB) * pulseScale;
+          const pointY = (point.y + normalY * surfaceDrift + tangentAY * slideA + tangentBY * slideB) * pulseScale;
+          const pointZ = (point.z + normalZ * surfaceDrift + tangentAZ * slideA + tangentBZ * slideB) * pulseScale;
           const spunX = pointX * cosSpin + pointZ * sinSpin;
           const spunZ = -pointX * sinSpin + pointZ * cosSpin;
           const tiltedY = pointY * cosTiltX - spunZ * sinTiltX;
@@ -584,19 +602,21 @@
           const screenX = centerX + rotatedX * projectionScale * perspective;
           const screenY = centerY + rotatedY * projectionScale * perspective;
           const depth = Math.max(0, Math.min(1, 0.55 - depthZ / 760));
-          const surfaceLift = 0.06 + 0.1 * Math.sin(point.phase * 3.1 + primitive.spinPhase);
-          const glow = (surfaceLift + Math.max(0, waveMotion) * 0.12) * Math.min(1, material.glowMul);
+          const surfaceLift = 0.05 + 0.07 * Math.sin(point.phase * 3.1 + primitive.spinPhase + loopPhase);
+          const glow = (surfaceLift + breath * 0.035 + Math.max(0, waveMotion) * 0.035) * Math.min(1, material.glowMul);
           const paletteBand = (Math.floor(halton(index + 1, 7) * 7) + Math.floor(halton(index + 3, 5) * 3)) % 7 / 6;
-          const paletteSpread = 0.2 * Math.sin(point.phase * 2.3 + point.f * TAU * 4 + primitive.spinPhase);
+          const paletteSpread = 0.34 * Math.sin(point.phase * 2.3 + point.f * TAU * 4 + primitive.spinPhase + loopPhase * 0.22);
           const sizeSeed = halton(index + 1, 3);
-          const sizeVariance = 0.52 + Math.pow(sizeSeed, 1.7) * 1.65;
+          const sizeVariance = 0.64 + Math.pow(sizeSeed, 1.45) * 0.74;
+          const pointSize = (1.34 + depth * 1.18 + glow * 0.42 + breath * 0.18) * sizeVariance * material.sizeMul * scaleBasis * this.zoom;
+          const maxSize = (2.85 + scaleBasis * 1.15) * this.zoom;
           renderPoints.push({
             x: screenX,
             y: screenY,
             z: depthZ,
-            b: clamp01(0.04 + depth * 0.34 + paletteBand * 0.52 + glow * 0.12 + paletteSpread),
-            alpha: Math.min(0.98, (0.42 + depth * 0.4 + glow * 0.1) * material.alphaMul),
-            size: Math.max(1, (1.28 + depth * 1.85 + glow * 0.9 + Math.max(0, waveMotion) * 0.28) * sizeVariance * material.sizeMul * scaleBasis * this.zoom),
+            b: clamp01(0.02 + depth * 0.28 + paletteBand * 0.64 + glow * 0.08 + paletteSpread),
+            alpha: Math.min(0.92, (0.44 + depth * 0.3 + glow * 0.06) * material.alphaMul),
+            size: Math.max(0.8, Math.min(maxSize, pointSize)),
           });
         }
       }
@@ -623,7 +643,7 @@
         }
       }
 
-      renderPoints.sort((a, b) => a.z - b.z);
+      renderPoints.sort((a, b) => b.z - a.z);
       for (const point of renderPoints) {
         const colorIndex = 6 - Math.min(6, Math.floor(clamp01(point.b + (this.toneBias || 0)) * 6.999));
         const color = this.colors[colorIndex];
@@ -635,7 +655,7 @@
         glyphContext.globalAlpha = point.alpha;
         glyphContext.fillStyle = '#ffffff';
         glyphContext.beginPath();
-        glyphContext.arc(point.x, point.y, point.size, 0, TAU);
+        glyphContext.arc(point.x, point.y, Math.max(0.75, point.size * 0.74), 0, TAU);
         glyphContext.fill();
       }
       context.globalAlpha = 1;
@@ -700,13 +720,13 @@
           if (blend < 0.02) continue;
           const pixelIndex = (row * columns + column) * 4;
           const brightness = (pixels[pixelIndex] + pixels[pixelIndex + 1] + pixels[pixelIndex + 2]) / 3;
-          const lifted = Math.min(255, brightness * 2.2);
-          const stateIndex = 6 - Math.min(6, Math.floor(Math.pow(lifted / 255, 0.4) * 7));
-          context.globalAlpha = blend * 0.94;
+          const lifted = Math.min(255, brightness * 1.18);
+          const stateIndex = 6 - Math.min(6, Math.floor(Math.pow(lifted / 255, 0.78) * 7));
+          context.globalAlpha = blend * 0.9;
           context.fillStyle = backgroundFill;
           context.fillRect(x, y, cellWidth + 0.5, cellHeight + 0.5);
-          context.globalAlpha = blend;
-          const glyphScale = 0.72 + 0.28 * blend;
+          context.globalAlpha = blend * Math.min(0.92, 0.34 + brightness / 255 * 0.76);
+          const glyphScale = 0.68 + 0.18 * blend;
           const glyphWidth = cellWidth * glyphScale;
           const glyphHeight = cellHeight * glyphScale;
           context.drawImage(this._tiles[stateIndex], x + (cellWidth - glyphWidth) / 2, y + (cellHeight - glyphHeight) / 2, glyphWidth, glyphHeight);

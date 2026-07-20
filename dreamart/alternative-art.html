@@ -3249,7 +3249,7 @@
       const ctx = canvas.getContext('2d');
       const score = item.sleepScore != null ? item.sleepScore : '';
       const scoreColorValue = scoreColor(item.sleepScore) || '#c4b5fd';
-      const outlineColor = rgba(scoreColorValue, 0.72);
+      const outlineColor = rgba(scoreColorValue, 0.9);
       const badgeFill = 'rgba(0,0,0,0.69)';
       const uiFont = '"Space Mono", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
 
@@ -3273,7 +3273,8 @@
       const bottom = cardY + cardH - pad;
       const badgeGap = 12;
       const badgeH = 58;
-      const badgeW = (contentW - badgeGap * 2) / 3;
+      const badgeWeights = [0.46, 0.27, 0.27];
+      const availableBadgeW = contentW - badgeGap * 2;
       const pillY = bottom - badgeH;
 
       const label = item.label || item.date || 'Dreamscape';
@@ -3283,20 +3284,23 @@
         { text: dateText, color: '#f1efff' },
         { text: `SCORE ${score}`, color: scoreColorValue },
       ];
+      let badgeX = contentX;
       badges.forEach((badge, index) => {
-        const x = contentX + index * (badgeW + badgeGap);
+        const badgeW = availableBadgeW * (badgeWeights[index] || 0.27);
+        const x = badgeX;
         drawRoundedRect(ctx, x, pillY, badgeW, badgeH, 10, badgeFill, outlineColor, 3);
         const label = String(badge.text).toUpperCase();
-        let fontSize = index === 0 ? 16 : 18;
-        ctx.letterSpacing = index === 0 ? '2px' : '2.2px';
+        let fontSize = index === 0 ? 20 : 21;
+        ctx.letterSpacing = index === 0 ? '2px' : '2.1px';
         do {
           ctx.font = `700 ${fontSize}px ${uiFont}`;
           if (ctx.measureText(label).width <= badgeW - 36) break;
           fontSize -= 1;
-        } while (fontSize >= 12);
+        } while (fontSize >= 14);
         ctx.fillStyle = badge.color;
         ctx.textAlign = 'center';
         ctx.fillText(label, x + badgeW / 2, pillY + 36);
+        badgeX += badgeW + badgeGap;
       });
       ctx.textAlign = 'left';
       ctx.letterSpacing = '0px';
