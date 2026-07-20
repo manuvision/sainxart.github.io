@@ -57,11 +57,8 @@
     heart: makeSvg('<path d="M12 20.5C11 19.5 2 14 2 7.5C2 4.5 4.5 2.5 7.5 2.5C9.5 2.5 11 3.5 12 5C13 3.5 14.5 2.5 16.5 2.5C19.5 2.5 22 4.5 22 7.5C22 14 13 19.5 12 20.5Z" fill="currentColor"/>'),
     leaf: makeSvg('<path d="M12 3C12 3 21 8 21 14C21 18.4 16.9 21.5 12 21.5C7.1 21.5 3 18.4 3 14C3 8 12 3 12 3Z" fill="currentColor"/>'),
   };
-  const GLYPH_SETS = [
-    ['circle','tri-dn','tri-up','diamond','heart','leaf','rounded'],
-    ['square','x-mark','sq-out','ring','asterisk','dots-4','dot-sm'],
-    ['star-5','star-4','asterisk','plus','diamond','dots-4','dot-sm'],
-  ];
+  // Match manu.vision/glyph.html's first Glyph Dither toggle state.
+  const DEFAULT_GLYPH_SET = ['square','x-mark','sq-out','ring','asterisk','dots-4','dot-sm'];
   const GLYPH_IMAGES = {};
   Object.keys(GLYPH_SVGS).forEach(id => {
     const image = new Image();
@@ -450,7 +447,7 @@
         }
       }
 
-      this.glyphSet = GLYPH_SETS[hashString(`${spec.seed}:glyphs`) % GLYPH_SETS.length];
+      this.glyphSet = DEFAULT_GLYPH_SET;
       this._tiles = null;
       this._tileCell = 0;
       this._t0 = null;
@@ -559,11 +556,17 @@
           const point = points[index];
           const surfaceMotion = REDUCED_MOTION ? 0 : Math.sin(loopPhase + point.phase * 1.7 + point.f * TAU * 2.5);
           const crossMotion = REDUCED_MOTION ? 0 : Math.cos(loopPhase + point.phase * 0.9 + point.f * TAU * 4.1);
-          const pulseScale = primitive.scale * (1 + Math.sin(point.f * 14 + point.phase) * 0.018 + surfaceMotion * 0.006 + (material.jitter ? Math.sin(point.phase * 13.7 + loopPhase) * 0.01 * material.jitter : 0));
-          const drift = 1.7 + material.jitter * 2.2;
-          const pointX = (point.x + surfaceMotion * drift) * pulseScale;
-          const pointY = (point.y + crossMotion * drift * 0.55) * pulseScale;
-          const pointZ = (point.z + Math.sin(loopPhase + point.phase * 1.2) * drift * 0.8) * pulseScale;
+          const waveMotion = REDUCED_MOTION ? 0 : Math.sin(loopPhase * 1.35 + point.f * TAU * 7.5 + point.phase * 0.55);
+          const radius = Math.max(1, Math.sqrt(point.x * point.x + point.y * point.y + point.z * point.z));
+          const normalX = point.x / radius;
+          const normalY = point.y / radius;
+          const normalZ = point.z / radius;
+          const pulseScale = primitive.scale * (1 + Math.sin(point.f * 14 + point.phase) * 0.018 + waveMotion * 0.012 + surfaceMotion * 0.006 + (material.jitter ? Math.sin(point.phase * 13.7 + loopPhase) * 0.01 * material.jitter : 0));
+          const drift = 3.2 + material.jitter * 2.8;
+          const surfaceDrift = waveMotion * drift;
+          const pointX = (point.x + normalX * surfaceDrift + surfaceMotion * drift * 0.45) * pulseScale;
+          const pointY = (point.y + normalY * surfaceDrift + crossMotion * drift * 0.35) * pulseScale;
+          const pointZ = (point.z + normalZ * surfaceDrift + Math.sin(loopPhase + point.phase * 1.2) * drift * 0.42) * pulseScale;
           const spunX = pointX * cosSpin + pointZ * sinSpin;
           const spunZ = -pointX * sinSpin + pointZ * cosSpin;
           const tiltedY = pointY * cosTiltX - spunZ * sinTiltX;
@@ -582,16 +585,18 @@
           const screenY = centerY + rotatedY * projectionScale * perspective;
           const depth = Math.max(0, Math.min(1, 0.55 - depthZ / 760));
           const surfaceLift = 0.06 + 0.1 * Math.sin(point.phase * 3.1 + primitive.spinPhase);
-          const glow = surfaceLift * Math.min(1, material.glowMul);
-          const paletteSpread = 0.16 * Math.sin(point.phase * 2.3 + point.f * TAU * 4 + primitive.spinPhase);
-          const sizeVariance = 0.76 + halton(index + 1, 3) * 0.72;
+          const glow = (surfaceLift + Math.max(0, waveMotion) * 0.12) * Math.min(1, material.glowMul);
+          const paletteBand = (Math.floor(halton(index + 1, 7) * 7) + Math.floor(halton(index + 3, 5) * 3)) % 7 / 6;
+          const paletteSpread = 0.2 * Math.sin(point.phase * 2.3 + point.f * TAU * 4 + primitive.spinPhase);
+          const sizeSeed = halton(index + 1, 3);
+          const sizeVariance = 0.52 + Math.pow(sizeSeed, 1.7) * 1.65;
           renderPoints.push({
             x: screenX,
             y: screenY,
             z: depthZ,
-            b: clamp01(0.34 + depth * 0.42 + glow * 0.14 + paletteSpread),
+            b: clamp01(0.04 + depth * 0.34 + paletteBand * 0.52 + glow * 0.12 + paletteSpread),
             alpha: Math.min(0.98, (0.42 + depth * 0.4 + glow * 0.1) * material.alphaMul),
-            size: Math.max(1, (1.28 + depth * 1.85 + glow * 0.9) * sizeVariance * material.sizeMul * scaleBasis * this.zoom),
+            size: Math.max(1, (1.28 + depth * 1.85 + glow * 0.9 + Math.max(0, waveMotion) * 0.28) * sizeVariance * material.sizeMul * scaleBasis * this.zoom),
           });
         }
       }
@@ -711,7 +716,7 @@
     }
 
     buildTiles(cellSize) {
-      const glyphSet = this.glyphSet || GLYPH_SETS[0];
+      const glyphSet = this.glyphSet || DEFAULT_GLYPH_SET;
       if (!glyphSet.every(id => GLYPH_IMAGES[id].complete && GLYPH_IMAGES[id].naturalWidth > 0)) return;
       this._tiles = glyphSet.map((id, index) => {
         const tile = document.createElement('canvas');
