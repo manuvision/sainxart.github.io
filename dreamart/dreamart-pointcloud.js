@@ -576,7 +576,7 @@
         const cosTiltZ = Math.cos(primitive.tiltZ);
         const sinTiltZ = Math.sin(primitive.tiltZ);
         const loopPhase = time * TAU / 15;
-        const surfacePhase = loopPhase * 3 + primitive.surfacePhase;
+        const surfacePhase = loopPhase * 6 + primitive.surfacePhase;
         const bob = Math.sin(time * primitive.bobSpeed + primitive.bobPhase) * this.bobAmp;
 
         for (let index = 0; index < pointCount; index += 1) {
