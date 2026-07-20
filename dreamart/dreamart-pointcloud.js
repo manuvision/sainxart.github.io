@@ -30,11 +30,11 @@
   ];
 
   const MATERIALS = [
-    { name: 'Ceramic', sizeMul: 0.82, alphaMul: 1, glowMul: 0.7, jitter: 0, swarm: 0 },
+    { name: 'Ceramic', sizeMul: 0.98, alphaMul: 1, glowMul: 0.7, jitter: 0, swarm: 0 },
     { name: 'Metal', sizeMul: 0.95, alphaMul: 1.12, glowMul: 1.5, jitter: 0, swarm: 0 },
     { name: 'Wood', sizeMul: 1.22, alphaMul: 0.92, glowMul: 0.55, jitter: 0.35, swarm: 0 },
-    { name: 'Polymer', sizeMul: 1.5, alphaMul: 0.72, glowMul: 0.85, jitter: 0.15, swarm: 0 },
-    { name: 'Glass', sizeMul: 0.75, alphaMul: 1.05, glowMul: 1.2, jitter: 0, swarm: 420 },
+    { name: 'Polymer', sizeMul: 1.65, alphaMul: 0.9, glowMul: 0.85, jitter: 0.15, swarm: 0 },
+    { name: 'Glass', sizeMul: 0.92, alphaMul: 1.08, glowMul: 1.2, jitter: 0, swarm: 420 },
   ];
 
   const makeSvg = body => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${body}</svg>`;
@@ -358,16 +358,19 @@
           if (distance > maxNormSquared) maxNormSquared = distance;
         }
         const scale = spec.scale * countScale * heroScales[primitiveCount][i] * (0.94 + random() * 0.14);
+        const torusFaceTilt = spec.shape === 'torus' ? Math.PI / 2 : 0;
+        const torusAxisDrift = spec.shape === 'torus' ? (random() - 0.5) * 0.22 : 0;
         this.prims.push({
           pts: points,
           boundR: Math.sqrt(maxNormSquared) * scale * 1.09 + bobAmplitude + 6,
           ox: 0, oy: 0, oz: 0,
           scale,
-          tiltX: (random() - 0.5) * 2 * spec.tilt,
-          tiltZ: (random() - 0.5) * 2 * spec.tilt,
+          tiltX: torusFaceTilt + (random() - 0.5) * 2 * spec.tilt,
+          tiltZ: torusAxisDrift + (random() - 0.5) * 2 * spec.tilt,
           spinSpeed: (0.12 + random() * 0.3) * (0.4 + spec.tilt) * (random() > 0.5 ? 1 : -1),
           spinPhase: random() * TAU,
           bobPhase: random() * TAU,
+          bobSpeed: (1 + Math.floor(random() * 3)) * TAU / 15,
         });
       }
 
@@ -549,14 +552,18 @@
         const sinTiltX = Math.sin(primitive.tiltX);
         const cosTiltZ = Math.cos(primitive.tiltZ);
         const sinTiltZ = Math.sin(primitive.tiltZ);
-        const bob = Math.sin(time * 0.35 + primitive.bobPhase) * this.bobAmp;
+        const loopPhase = time * TAU / 15;
+        const bob = Math.sin(time * primitive.bobSpeed + primitive.bobPhase) * this.bobAmp;
 
         for (let index = 0; index < pointCount; index += 1) {
           const point = points[index];
-          const pulseScale = primitive.scale * (1 + Math.sin(point.f * 14 + point.phase) * 0.018 + (material.jitter ? Math.sin(point.phase * 13.7 + time * 1.1) * 0.01 * material.jitter : 0));
-          const pointX = point.x * pulseScale;
-          const pointY = point.y * pulseScale;
-          const pointZ = point.z * pulseScale;
+          const surfaceMotion = REDUCED_MOTION ? 0 : Math.sin(loopPhase + point.phase * 1.7 + point.f * TAU * 2.5);
+          const crossMotion = REDUCED_MOTION ? 0 : Math.cos(loopPhase + point.phase * 0.9 + point.f * TAU * 4.1);
+          const pulseScale = primitive.scale * (1 + Math.sin(point.f * 14 + point.phase) * 0.018 + surfaceMotion * 0.006 + (material.jitter ? Math.sin(point.phase * 13.7 + loopPhase) * 0.01 * material.jitter : 0));
+          const drift = 1.7 + material.jitter * 2.2;
+          const pointX = (point.x + surfaceMotion * drift) * pulseScale;
+          const pointY = (point.y + crossMotion * drift * 0.55) * pulseScale;
+          const pointZ = (point.z + Math.sin(loopPhase + point.phase * 1.2) * drift * 0.8) * pulseScale;
           const spunX = pointX * cosSpin + pointZ * sinSpin;
           const spunZ = -pointX * sinSpin + pointZ * cosSpin;
           const tiltedY = pointY * cosTiltX - spunZ * sinTiltX;
@@ -576,13 +583,15 @@
           const depth = Math.max(0, Math.min(1, 0.55 - depthZ / 760));
           const surfaceLift = 0.06 + 0.1 * Math.sin(point.phase * 3.1 + primitive.spinPhase);
           const glow = surfaceLift * Math.min(1, material.glowMul);
+          const paletteSpread = 0.16 * Math.sin(point.phase * 2.3 + point.f * TAU * 4 + primitive.spinPhase);
+          const sizeVariance = 0.76 + halton(index + 1, 3) * 0.72;
           renderPoints.push({
             x: screenX,
             y: screenY,
             z: depthZ,
-            b: clamp01(0.34 + depth * 0.42 + glow * 0.18),
-            alpha: Math.min(0.94, (0.32 + depth * 0.44 + glow * 0.12) * material.alphaMul),
-            size: Math.max(0.7, (1 + depth * 1.8 + glow * 1.05) * material.sizeMul * scaleBasis * this.zoom),
+            b: clamp01(0.34 + depth * 0.42 + glow * 0.14 + paletteSpread),
+            alpha: Math.min(0.98, (0.42 + depth * 0.4 + glow * 0.1) * material.alphaMul),
+            size: Math.max(1, (1.28 + depth * 1.85 + glow * 0.9) * sizeVariance * material.sizeMul * scaleBasis * this.zoom),
           });
         }
       }

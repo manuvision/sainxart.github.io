@@ -3249,6 +3249,8 @@
       const ctx = canvas.getContext('2d');
       const score = item.sleepScore != null ? item.sleepScore : '';
       const scoreColorValue = scoreColor(item.sleepScore) || '#c4b5fd';
+      const outlineColor = rgba(scoreColorValue, 0.72);
+      const badgeFill = 'rgba(0,0,0,0.69)';
       const uiFont = '"Space Mono", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -3263,40 +3265,40 @@
       ctx.clip();
       drawImageCover(ctx, image, cardX, cardY, cardW, cardH);
       ctx.restore();
-      drawRoundedRect(ctx, cardX, cardY, cardW, cardH, radius, 'rgba(0,0,0,0)', 'rgba(167,139,250,0.72)', 3);
+      drawRoundedRect(ctx, cardX, cardY, cardW, cardH, radius, 'rgba(0,0,0,0)', outlineColor, 3);
 
       const pad = 56;
       const contentX = cardX + pad;
+      const contentW = cardW - pad * 2;
       const bottom = cardY + cardH - pad;
-
-      const pillY = bottom - 46;
-
-      ctx.font = `700 20px ${uiFont}`;
-      ctx.letterSpacing = '3px';
-      const siteText = 'MANU.VISION/DREAMART';
-      const siteWidth = Math.ceil(ctx.measureText(siteText).width + 38);
-      drawRoundedRect(ctx, contentX, pillY, siteWidth, 46, 8, 'rgba(14,14,28,0.82)', 'rgba(167,139,250,0.48)', 1.5);
-      ctx.fillStyle = '#c4b5fd';
-      ctx.fillText(siteText, contentX + 19, pillY + 30);
-      ctx.letterSpacing = '0px';
+      const badgeGap = 12;
+      const badgeH = 58;
+      const badgeW = (contentW - badgeGap * 2) / 3;
+      const pillY = bottom - badgeH;
 
       const label = item.label || item.date || 'Dreamscape';
       const dateText = label.length > 30 ? (item.date || label) : label;
-      ctx.font = `700 17px ${uiFont}`;
-      ctx.letterSpacing = '2px';
-      const dateLabel = dateText.toUpperCase();
-      const dateWidth = Math.ceil(ctx.measureText(dateLabel).width + 38);
-      const dateX = contentX + siteWidth + 14;
-      drawRoundedRect(ctx, dateX, pillY, dateWidth, 46, 8, 'rgba(14,14,28,0.82)', 'rgba(139,92,246,0.42)', 1.5);
-      ctx.fillStyle = '#f1efff';
-      ctx.fillText(dateLabel, dateX + 19, pillY + 30);
-
-      const scoreText = `SCORE ${score}`;
-      const scoreWidth = Math.ceil(ctx.measureText(scoreText).width + 38);
-      const scoreX = dateX + dateWidth + 14;
-      drawRoundedRect(ctx, scoreX, pillY, scoreWidth, 46, 8, 'rgba(14,14,28,0.82)', 'rgba(139,92,246,0.42)', 1.5);
-      ctx.fillStyle = scoreColorValue;
-      ctx.fillText(scoreText, scoreX + 19, pillY + 30);
+      const badges = [
+        { text: 'MANU.VISION/DREAMART', color: '#f1efff' },
+        { text: dateText, color: '#f1efff' },
+        { text: `SCORE ${score}`, color: scoreColorValue },
+      ];
+      badges.forEach((badge, index) => {
+        const x = contentX + index * (badgeW + badgeGap);
+        drawRoundedRect(ctx, x, pillY, badgeW, badgeH, 10, badgeFill, outlineColor, 3);
+        const label = String(badge.text).toUpperCase();
+        let fontSize = index === 0 ? 16 : 18;
+        ctx.letterSpacing = index === 0 ? '2px' : '2.2px';
+        do {
+          ctx.font = `700 ${fontSize}px ${uiFont}`;
+          if (ctx.measureText(label).width <= badgeW - 36) break;
+          fontSize -= 1;
+        } while (fontSize >= 12);
+        ctx.fillStyle = badge.color;
+        ctx.textAlign = 'center';
+        ctx.fillText(label, x + badgeW / 2, pillY + 36);
+      });
+      ctx.textAlign = 'left';
       ctx.letterSpacing = '0px';
 
       return canvasToBlob(canvas);
