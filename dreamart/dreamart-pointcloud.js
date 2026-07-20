@@ -643,6 +643,7 @@
           const normalizedRadius = radius / 230;
           const shellRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase - normalizedRadius * 7.4 + motionPhase * 0.28) * motionPulse;
           const innerRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase * 2 - normalizedRadius * 10.2 + motionPhaseB * 0.36) * motionPulse;
+          const radialPulse = REDUCED_MOTION ? 0 : Math.sin(loopPhase * 2 + motionPhase * 2.7) * (0.58 + 0.42 * Math.sin(loopPhase * 3 + motionPhaseB));
           const surfaceMotion = shellRipple;
           const crossMotion = innerRipple;
           const waveMotion = shellRipple * 0.72 + innerRipple * 0.28;
@@ -665,11 +666,12 @@
           const currentPulse = motionEnergy;
           const drift = (3.6 + material.jitter * 0.85) * (0.78 + currentPulse * 0.22) * primitive.surfaceAmp;
           const surfaceDrift = waveMotion * (3.4 + material.jitter * 0.4);
+          const radialDrift = radialPulse * (1.2 + material.jitter * 0.22) * primitive.surfaceAmp;
           const slideA = (surfaceMotion * 0.22 + waveMotion * 0.12) * drift;
           const slideB = (crossMotion * 0.18 - waveMotion * 0.08) * drift;
-          const pointX = (point.x + normalX * surfaceDrift + tangentAX * slideA + tangentBX * slideB) * pulseScale;
-          const pointY = (point.y + normalY * surfaceDrift + tangentAY * slideA + tangentBY * slideB) * pulseScale;
-          const pointZ = (point.z + normalZ * surfaceDrift + tangentAZ * slideA + tangentBZ * slideB) * pulseScale;
+          const pointX = (point.x + normalX * (surfaceDrift + radialDrift) + tangentAX * slideA + tangentBX * slideB) * pulseScale;
+          const pointY = (point.y + normalY * (surfaceDrift + radialDrift) + tangentAY * slideA + tangentBY * slideB) * pulseScale;
+          const pointZ = (point.z + normalZ * (surfaceDrift + radialDrift) + tangentAZ * slideA + tangentBZ * slideB) * pulseScale;
           const spunX = pointX * cosSpin + pointZ * sinSpin;
           const spunZ = -pointX * sinSpin + pointZ * cosSpin;
           const tiltedY = pointY * cosTiltX - spunZ * sinTiltX;
@@ -825,7 +827,7 @@
           const brightness = (pixels[pixelIndex] + pixels[pixelIndex + 1] + pixels[pixelIndex + 2]) / 3;
           const lifted = Math.min(255, brightness * 1.18);
           const stateIndex = 6 - Math.min(6, Math.floor(Math.pow(lifted / 255, 0.78) * 7));
-          context.globalAlpha = blend * 0.9;
+          context.globalAlpha = blend;
           context.fillStyle = backgroundFill;
           context.fillRect(x, y, cellWidth + 0.5, cellHeight + 0.5);
           context.globalAlpha = blend * Math.min(0.92, 0.34 + brightness / 255 * 0.76);
