@@ -382,7 +382,7 @@
         const scale = spec.scale * countScale * heroScales[primitiveCount][i] * (0.94 + random() * 0.14);
         const torusFaceTilt = spec.shape === 'torus' ? Math.PI / 2 : 0;
         const torusAxisDrift = spec.shape === 'torus' ? (random() - 0.5) * 0.22 : 0;
-        const spinCycles = (1 + Math.floor(random() * 3)) * (random() > 0.5 ? 1 : -1);
+        const spinSwing = (0.55 + random() * 1.0) * (random() > 0.5 ? 1 : -1);
         this.prims.push({
           pts: points,
           boundR: Math.sqrt(maxNormSquared) * scale * 1.09 + bobAmplitude + 6,
@@ -390,12 +390,13 @@
           scale,
           tiltX: torusFaceTilt + (random() - 0.5) * 2 * spec.tilt,
           tiltZ: torusAxisDrift + (random() - 0.5) * 2 * spec.tilt,
-          spinSpeed: spinCycles * TAU / LOOP_SECONDS,
+          spinSwing,
+          spinSwingCycles: 1 + Math.floor(random() * 2),
           spinPhase: random() * TAU,
           surfacePhase: random() * TAU,
           surfaceAmp: 0.86 + random() * 0.28,
           bobPhase: random() * TAU,
-          bobSpeed: (1 + Math.floor(random() * 3)) * TAU / LOOP_SECONDS,
+          bobSpeed: (1 + Math.floor(random() * 2)) * TAU / LOOP_SECONDS,
         });
       }
 
@@ -587,15 +588,15 @@
       for (const primitive of this.prims) {
         const points = primitive.pts;
         const pointCount = points.length;
-        const spin = primitive.spinPhase + time * primitive.spinSpeed;
+        const loopPhase = time * TAU / LOOP_SECONDS;
+        const spin = primitive.spinPhase + Math.sin(loopPhase * primitive.spinSwingCycles + primitive.surfacePhase) * primitive.spinSwing;
         const cosSpin = Math.cos(spin);
         const sinSpin = Math.sin(spin);
         const cosTiltX = Math.cos(primitive.tiltX);
         const sinTiltX = Math.sin(primitive.tiltX);
         const cosTiltZ = Math.cos(primitive.tiltZ);
         const sinTiltZ = Math.sin(primitive.tiltZ);
-        const loopPhase = time * TAU / LOOP_SECONDS;
-        const surfacePhase = loopPhase * 6 + primitive.surfacePhase;
+        const surfacePhase = loopPhase * 12 + primitive.surfacePhase;
         const bob = Math.sin(time * primitive.bobSpeed + primitive.bobPhase) * this.bobAmp;
 
         for (let index = 0; index < pointCount; index += 1) {
@@ -905,5 +906,6 @@
     attachInteraction,
     renderOpeningFrame,
     specForItem,
+    LOOP_SECONDS,
   };
 })();
