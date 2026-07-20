@@ -329,17 +329,17 @@
       const random = mulberry32(hashString(spec.seed));
       const primitiveCount = Math.max(1, Math.min(5, spec.count));
       const perPrimitive = Math.floor(this.budget / primitiveCount);
-      const countScale = [1.28, 1.02, 0.9, 0.82, 0.74][primitiveCount - 1];
+      const countScale = [1.24, 1.06, 0.96, 0.88, 0.8][primitiveCount - 1];
       const bobAmplitude = spec.float > 0 ? 17 : spec.float < 0 ? 7 : 11;
       this.bobAmp = bobAmplitude;
       const collisionFactor = 1.04 + Math.max(0, spec.cluster - 0.5) * 0.16;
       const startAngle = random() * TAU;
       const heroScales = {
         1: [1],
-        2: [1.18, 0.76],
-        3: [1.2, 0.76, 0.58],
-        4: [1.22, 0.74, 0.58, 0.54],
-        5: [1.2, 0.72, 0.56, 0.52, 0.46],
+        2: [1.42, 0.82],
+        3: [1.5, 0.84, 0.64],
+        4: [1.48, 0.82, 0.64, 0.56],
+        5: [1.45, 0.8, 0.62, 0.54, 0.48],
       };
       const layoutTemplates = {
         1: [[0, 0, 0]],
@@ -374,12 +374,12 @@
       if (primitiveCount > 1) {
         const template = layoutTemplates[primitiveCount];
         const averageRadius = this.prims.reduce((sum, primitive) => sum + primitive.boundR, 0) / primitiveCount;
-        const clusterScale = averageRadius * (1.1 + spec.cluster * 0.42);
+        const clusterScale = averageRadius * (0.92 + spec.cluster * 0.28);
         for (let i = 0; i < primitiveCount; i += 1) {
           const primitive = this.prims[i];
           const base = template[i];
           const angle = startAngle + i * GOLDEN;
-          const drift = averageRadius * 0.12;
+          const drift = averageRadius * 0.08;
           primitive.ox = base[0] * clusterScale + Math.cos(angle) * drift * (0.6 + random() * 0.6);
           primitive.oy = base[1] * clusterScale * 0.9 + (random() - 0.5) * averageRadius * 0.16;
           primitive.oz = base[2] * clusterScale * 0.95 + Math.sin(angle) * drift * (0.5 + random() * 0.5);
@@ -430,7 +430,7 @@
         primitive.oz -= centerZ;
       }
 
-      const fitLimit = 315;
+      const fitLimit = primitiveCount > 1 ? 450 : 340;
       let extent = 0;
       for (const primitive of this.prims) {
         const distance = Math.sqrt(primitive.ox * primitive.ox + primitive.oy * primitive.oy + primitive.oz * primitive.oz) + primitive.boundR;
@@ -460,8 +460,9 @@
       this.rotY = random() * TAU;
       this.velY = 0.0032;
       this.velX = 0;
-      this.zoom = 1.08;
-      this.compositionZoom = primitiveCount > 1 ? 1.13 : 1.08;
+      this.defaultZoom = primitiveCount > 1 ? 1.16 : 1.02;
+      this.zoom = this.defaultZoom;
+      this.compositionZoom = primitiveCount > 1 ? 1.34 : 1;
       this.dragging = false;
       this._swarm = null;
     }
@@ -470,7 +471,7 @@
       this.rotX = 0.28;
       this.velX = 0;
       this.velY = 0.0032;
-      this.zoom = 1.08;
+      this.zoom = this.defaultZoom || 1.08;
     }
 
     resize(cssWidth, cssHeight, dprCap = 2) {
@@ -529,7 +530,7 @@
       const scaleBasis = Math.min(width, height) / 1080;
       const centerX = width / 2;
       const centerY = height / 2 + this.floatOffset * scaleBasis * this.zoom;
-      const projectionScale = 1080 * 0.00148 * scaleBasis * this.zoom * (this.compositionZoom || 1);
+      const projectionScale = 1080 * 0.00162 * scaleBasis * this.zoom * (this.compositionZoom || 1);
       const perspectiveStrength = 0.00165;
       const cosX = Math.cos(this.rotX);
       const sinX = Math.sin(this.rotX);
@@ -579,9 +580,9 @@
             x: screenX,
             y: screenY,
             z: depthZ,
-            b: clamp01(0.24 + depth * 0.46 + glow * 0.22),
-            alpha: Math.min(0.86, (0.2 + depth * 0.48 + glow * 0.16) * material.alphaMul),
-            size: Math.max(0.38, (0.64 + depth * 1.3 + glow * 0.8) * material.sizeMul * scaleBasis * this.zoom),
+            b: clamp01(0.34 + depth * 0.42 + glow * 0.18),
+            alpha: Math.min(0.94, (0.32 + depth * 0.44 + glow * 0.12) * material.alphaMul),
+            size: Math.max(0.7, (1 + depth * 1.8 + glow * 1.05) * material.sizeMul * scaleBasis * this.zoom),
           });
         }
       }
