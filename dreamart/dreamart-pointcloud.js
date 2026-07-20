@@ -118,6 +118,14 @@
     return attack * release;
   }
 
+  function recoilEnvelope(phase) {
+    const t = ((phase / TAU) % 1 + 1) % 1;
+    if (t < 0.58) return 0;
+    const tail = (t - 0.58) / 0.42;
+    const decay = 1 - smoothstep(0, 1, tail);
+    return Math.sin(tail * TAU * 2.2) * decay * 0.16;
+  }
+
   function liftRgb(color, amount = 0.18) {
     return {
       r: Math.round(color.r + (255 - color.r) * amount),
@@ -618,11 +626,14 @@
         const sinTiltZ = Math.sin(primitive.tiltZ);
         const surfacePhase = loopPhase * 6 + primitive.surfacePhase;
         const pulse = REDUCED_MOTION ? 0 : pulseEnvelope(surfacePhase);
+        const recoil = REDUCED_MOTION ? 0 : recoilEnvelope(surfacePhase);
+        const motionPulse = pulse + recoil;
+        const motionEnergy = Math.max(pulse, Math.abs(recoil) * 0.72);
         const bob = Math.sin(time * primitive.bobSpeed + primitive.bobPhase) * this.bobAmp;
 
         for (let index = 0; index < pointCount; index += 1) {
           const point = points[index];
-          const breath = REDUCED_MOTION ? 0.5 : pulse;
+          const breath = REDUCED_MOTION ? 0.5 : motionEnergy;
           const motionPhase = (point.motionSeed || 0) * TAU;
           const motionPhaseB = (point.motionSeedB || 0) * TAU;
           const radius = Math.max(1, Math.sqrt(point.x * point.x + point.y * point.y + point.z * point.z));
@@ -630,8 +641,8 @@
           const normalY = point.y / radius;
           const normalZ = point.z / radius;
           const normalizedRadius = radius / 230;
-          const shellRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase - normalizedRadius * 7.4 + motionPhase * 0.28) * pulse;
-          const innerRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase * 2 - normalizedRadius * 10.2 + motionPhaseB * 0.36) * pulse;
+          const shellRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase - normalizedRadius * 7.4 + motionPhase * 0.28) * motionPulse;
+          const innerRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase * 2 - normalizedRadius * 10.2 + motionPhaseB * 0.36) * motionPulse;
           const surfaceMotion = shellRipple;
           const crossMotion = innerRipple;
           const waveMotion = shellRipple * 0.72 + innerRipple * 0.28;
@@ -651,7 +662,7 @@
           const tangentBY = normalZ * tangentAX - normalX * tangentAZ;
           const tangentBZ = normalX * tangentAY - normalY * tangentAX;
           const pulseScale = primitive.scale * (1 + waveMotion * 0.014 + Math.sin(point.f * 14 + point.phase + surfacePhase) * 0.003 + (material.jitter ? Math.sin(point.phase * 13.7 + surfacePhase) * 0.0015 * material.jitter : 0));
-          const currentPulse = pulse;
+          const currentPulse = motionEnergy;
           const drift = (3.6 + material.jitter * 0.85) * (0.78 + currentPulse * 0.22) * primitive.surfaceAmp;
           const surfaceDrift = waveMotion * (3.4 + material.jitter * 0.4);
           const slideA = (surfaceMotion * 0.22 + waveMotion * 0.12) * drift;
@@ -695,7 +706,7 @@
           const paletteBand = point.colorSeed == null ? hashUnit(index, 17) : point.colorSeed;
           const paletteSpread = 0.22 * Math.sin(motionPhaseB * 2.3 + primitive.spinPhase + surfacePhase);
           const sizeSeed = point.sizeSeed == null ? hashUnit(index, 43) : point.sizeSeed;
-          const localPulse = REDUCED_MOTION ? 0.5 : pulse * (0.62 + 0.38 * clamp01(0.5 + 0.5 * waveMotion));
+          const localPulse = REDUCED_MOTION ? 0.5 : motionEnergy * (0.62 + 0.38 * clamp01(0.5 + 0.5 * waveMotion));
           const sizeVariance = 0.72 + Math.pow(sizeSeed, 1.55) * 0.54;
           const pointSize = (1.38 + depth * 0.34 + glow * 0.2 + localPulse * 0.42 + pointerGlow * 0.68) * sizeVariance * material.sizeMul * scaleBasis * this.zoom;
           const maxSize = (2.25 + scaleBasis * 0.7) * this.zoom;
