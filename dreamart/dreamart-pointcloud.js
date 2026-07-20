@@ -580,7 +580,7 @@
       const pointer = this.pointer || { active: false, strength: 0 };
       const pointerTarget = pointer.active && !REDUCED_MOTION ? 1 : 0;
       pointer.strength += (pointerTarget - pointer.strength) * 0.16;
-      const pointerRadius = Math.min(width, height) * 0.16;
+      const pointerRadius = Math.min(width, height) * 0.46;
 
       for (const primitive of this.prims) {
         const points = primitive.pts;
@@ -658,29 +658,29 @@
             const dy = screenY - pointer.y;
             const distance = Math.sqrt(dx * dx + dy * dy) || 1;
             if (distance < pointerRadius) {
-              const influence = Math.pow(1 - distance / pointerRadius, 2);
-              const ripple = Math.sin(distance * 0.055 - time * 8.4 + primitive.surfacePhase) * 0.5 + 0.5;
-              const push = influence * pointer.strength * (10 + ripple * 13) * scaleBasis;
+              const influence = Math.pow(1 - distance / pointerRadius, 2.35);
+              const ripple = Math.sin(distance * 0.044 - time * 8.4 + primitive.surfacePhase) * 0.5 + 0.5;
+              const push = influence * pointer.strength * (34 + ripple * 44) * scaleBasis;
               screenX += (dx / distance) * push;
               screenY += (dy / distance) * push;
               pointerGlow = influence * pointer.strength;
             }
           }
           const surfaceLift = 0.04 + 0.05 * Math.sin(normalizedRadius * 6.5 - surfacePhase + primitive.spinPhase);
-          const glow = (surfaceLift + breath * 0.018 + Math.max(0, waveMotion) * 0.026 + pointerGlow * 0.08) * Math.min(1, material.glowMul);
+          const glow = (surfaceLift + breath * 0.018 + Math.max(0, waveMotion) * 0.026 + pointerGlow * 0.26) * Math.min(1, material.glowMul);
           const paletteBand = point.colorSeed == null ? hashUnit(index, 17) : point.colorSeed;
           const paletteSpread = 0.22 * Math.sin(motionPhaseB * 2.3 + primitive.spinPhase + surfacePhase * 0.16);
           const sizeSeed = point.sizeSeed == null ? hashUnit(index, 43) : point.sizeSeed;
           const localPulse = REDUCED_MOTION ? 0.5 : 0.5 + 0.5 * waveMotion;
           const sizeVariance = 0.72 + Math.pow(sizeSeed, 1.55) * 0.54;
-          const pointSize = (1.38 + depth * 0.34 + glow * 0.2 + localPulse * 0.42 + pointerGlow * 0.22) * sizeVariance * material.sizeMul * scaleBasis * this.zoom;
+          const pointSize = (1.38 + depth * 0.34 + glow * 0.2 + localPulse * 0.42 + pointerGlow * 0.68) * sizeVariance * material.sizeMul * scaleBasis * this.zoom;
           const maxSize = (2.25 + scaleBasis * 0.7) * this.zoom;
           renderPoints.push({
             x: screenX,
             y: screenY,
             z: depthZ,
             b: clamp01(0.08 + depth * 0.035 + paletteBand * 0.68 + glow * 0.04 + paletteSpread),
-            alpha: Math.min(0.9, (0.54 + depth * 0.05 + localPulse * 0.08 + glow * 0.03 + pointerGlow * 0.1) * material.alphaMul),
+            alpha: Math.min(0.94, (0.54 + depth * 0.05 + localPulse * 0.08 + glow * 0.03 + pointerGlow * 0.28) * material.alphaMul),
             size: Math.max(0.8, Math.min(maxSize, pointSize)),
           });
         }
