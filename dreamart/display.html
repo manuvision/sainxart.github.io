@@ -103,6 +103,7 @@
       border: 1px solid rgba(167,139,250,0.42);
       background: var(--panel);
       color: var(--muted);
+      text-decoration: none;
       font-size: clamp(0.65rem, 1.15vw, 0.88rem);
       letter-spacing: 0.16em;
       text-transform: uppercase;
@@ -136,6 +137,7 @@
       color: var(--gold);
       border-color: rgba(255,190,99,0.48);
       background: rgba(44, 29, 20, 0.48);
+      pointer-events: auto;
     }
     #score {
       color: var(--score-color, #c4b5fd);
@@ -257,7 +259,7 @@
           <p id="reading">Turning my biometrics into daily art.</p>
         </div>
         <div class="overlay" style="position: static; justify-content: flex-end;">
-          <span class="pill" id="url">manu.vision/dreamart</span>
+          <a class="pill" id="url" href="https://manu.vision/dreamart/" aria-label="Open Dream Art gallery">manu.vision/dreamart</a>
           <span class="pill" id="date">Today</span>
           <span class="pill" id="score">Score --</span>
           <button class="pill sound-pill" id="soundToggle" type="button" aria-label="Ambient sound off" title="Ambient sound off">🔇</button>

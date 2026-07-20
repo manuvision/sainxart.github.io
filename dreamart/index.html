@@ -5124,16 +5124,16 @@
         mysteryCell.className = 'cell mystery-card loaded';
         mysteryCell.setAttribute('role', 'button');
         mysteryCell.setAttribute('tabindex', '0');
-        mysteryCell.setAttribute('aria-label', 'Open today’s dreamscape reading');
+        mysteryCell.setAttribute('aria-label', 'Open today’s dreamscape');
         mysteryCell.innerHTML = `
           <div class="mystery-mark">?</div>
-          <div class="mystery-pill">Today’s reading</div>
+          <div class="mystery-pill">Today’s dreamscape</div>
         `;
-        mysteryCell.addEventListener('click', openReadingMode);
+        mysteryCell.addEventListener('click', openTodayLightbox);
         mysteryCell.addEventListener('keydown', event => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
-            openReadingMode();
+            openTodayLightbox();
           }
         });
 
@@ -5518,8 +5518,20 @@
         }
       }
       if (lbDisplayLink) {
-        lbDisplayLink.href = 'display.html';
+        if (item.date === today) {
+          lbDisplayLink.href = 'display.html';
+          lbDisplayLink.style.display = '';
+        } else {
+          lbDisplayLink.href = '#';
+          lbDisplayLink.style.display = 'none';
+        }
       }
+    }
+    function openTodayLightbox() {
+      const item = todayDreamscape();
+      if (!item) return;
+      const idx = displayed.findIndex(entry => entry.date === item.date);
+      if (idx >= 0) openLightbox(idx);
     }
     function prevImg() { if (current > 0) { current--; showLightbox(); } }
     function nextImg() { if (current < displayed.length - 1) { current++; showLightbox(); } }

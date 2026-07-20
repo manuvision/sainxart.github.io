@@ -329,11 +329,25 @@
       const random = mulberry32(hashString(spec.seed));
       const primitiveCount = Math.max(1, Math.min(5, spec.count));
       const perPrimitive = Math.floor(this.budget / primitiveCount);
-      const countScale = [1.18, 0.9, 0.78, 0.7, 0.63][primitiveCount - 1];
+      const countScale = [1.28, 1.02, 0.9, 0.82, 0.74][primitiveCount - 1];
       const bobAmplitude = spec.float > 0 ? 17 : spec.float < 0 ? 7 : 11;
       this.bobAmp = bobAmplitude;
-      const spacingFactor = 0.99 + Math.max(0, spec.cluster - 0.5) * 0.85;
+      const collisionFactor = 1.04 + Math.max(0, spec.cluster - 0.5) * 0.16;
       const startAngle = random() * TAU;
+      const heroScales = {
+        1: [1],
+        2: [1.18, 0.76],
+        3: [1.2, 0.76, 0.58],
+        4: [1.22, 0.74, 0.58, 0.54],
+        5: [1.2, 0.72, 0.56, 0.52, 0.46],
+      };
+      const layoutTemplates = {
+        1: [[0, 0, 0]],
+        2: [[-0.34, 0.12, 0.1], [0.46, -0.22, -0.22]],
+        3: [[-0.28, 0.18, 0.16], [0.45, -0.2, -0.18], [0.08, -0.52, -0.38]],
+        4: [[-0.24, 0.18, 0.18], [0.44, -0.2, -0.18], [-0.44, -0.36, -0.34], [0.18, -0.58, -0.5]],
+        5: [[-0.22, 0.2, 0.2], [0.42, -0.2, -0.16], [-0.42, -0.34, -0.3], [0.14, -0.56, -0.46], [0.56, 0.14, -0.36]],
+      };
 
       this.prims = [];
       for (let i = 0; i < primitiveCount; i += 1) {
@@ -343,7 +357,7 @@
           const distance = point.x * point.x + point.y * point.y + point.z * point.z;
           if (distance > maxNormSquared) maxNormSquared = distance;
         }
-        const scale = spec.scale * countScale * (0.88 + random() * 0.24);
+        const scale = spec.scale * countScale * heroScales[primitiveCount][i] * (0.94 + random() * 0.14);
         this.prims.push({
           pts: points,
           boundR: Math.sqrt(maxNormSquared) * scale * 1.09 + bobAmplitude + 6,
@@ -358,15 +372,17 @@
       }
 
       if (primitiveCount > 1) {
-        const averageMinDistance = this.prims.reduce((sum, primitive) => sum + 2 * primitive.boundR, 0) / primitiveCount * spacingFactor;
-        const ringRadius = averageMinDistance / (2 * Math.sin(Math.PI / primitiveCount));
+        const template = layoutTemplates[primitiveCount];
+        const averageRadius = this.prims.reduce((sum, primitive) => sum + primitive.boundR, 0) / primitiveCount;
+        const clusterScale = averageRadius * (1.1 + spec.cluster * 0.42);
         for (let i = 0; i < primitiveCount; i += 1) {
           const primitive = this.prims[i];
-          const angle = startAngle + i * (TAU / primitiveCount) + (random() - 0.5) * 0.5;
-          const radius = ringRadius * (0.9 + random() * 0.25);
-          primitive.ox = Math.cos(angle) * radius;
-          primitive.oy = (random() - 0.5) * 2 * (18 + 42 * spec.cluster);
-          primitive.oz = Math.sin(angle) * radius * 0.85;
+          const base = template[i];
+          const angle = startAngle + i * GOLDEN;
+          const drift = averageRadius * 0.12;
+          primitive.ox = base[0] * clusterScale + Math.cos(angle) * drift * (0.6 + random() * 0.6);
+          primitive.oy = base[1] * clusterScale * 0.9 + (random() - 0.5) * averageRadius * 0.16;
+          primitive.oz = base[2] * clusterScale * 0.95 + Math.sin(angle) * drift * (0.5 + random() * 0.5);
         }
         for (let pass = 0; pass < 28; pass += 1) {
           let moved = false;
@@ -378,7 +394,7 @@
               let dy = b.oy - a.oy;
               let dz = b.oz - a.oz;
               let distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-              const minDistance = (a.boundR + b.boundR) * spacingFactor;
+              const minDistance = (a.boundR + b.boundR) * collisionFactor;
               if (distance >= minDistance) continue;
               if (distance < 0.0001) {
                 const angle = random() * TAU;
@@ -414,7 +430,7 @@
         primitive.oz -= centerZ;
       }
 
-      const fitLimit = 340;
+      const fitLimit = 315;
       let extent = 0;
       for (const primitive of this.prims) {
         const distance = Math.sqrt(primitive.ox * primitive.ox + primitive.oy * primitive.oy + primitive.oz * primitive.oz) + primitive.boundR;
@@ -444,7 +460,8 @@
       this.rotY = random() * TAU;
       this.velY = 0.0032;
       this.velX = 0;
-      this.zoom = 1;
+      this.zoom = 1.08;
+      this.compositionZoom = primitiveCount > 1 ? 1.13 : 1.08;
       this.dragging = false;
       this._swarm = null;
     }
@@ -453,7 +470,7 @@
       this.rotX = 0.28;
       this.velX = 0;
       this.velY = 0.0032;
-      this.zoom = 1;
+      this.zoom = 1.08;
     }
 
     resize(cssWidth, cssHeight, dprCap = 2) {
@@ -512,7 +529,7 @@
       const scaleBasis = Math.min(width, height) / 1080;
       const centerX = width / 2;
       const centerY = height / 2 + this.floatOffset * scaleBasis * this.zoom;
-      const projectionScale = 1080 * 0.00138 * scaleBasis * this.zoom;
+      const projectionScale = 1080 * 0.00148 * scaleBasis * this.zoom * (this.compositionZoom || 1);
       const perspectiveStrength = 0.00165;
       const cosX = Math.cos(this.rotX);
       const sinX = Math.sin(this.rotX);
@@ -524,7 +541,6 @@
       for (const primitive of this.prims) {
         const points = primitive.pts;
         const pointCount = points.length;
-        const pulse = (Math.sin(time * 0.42 + primitive.bobPhase) * 0.5 + 0.5) * pointCount;
         const spin = primitive.spinPhase + time * primitive.spinSpeed;
         const cosSpin = Math.cos(spin);
         const sinSpin = Math.sin(spin);
@@ -536,7 +552,7 @@
 
         for (let index = 0; index < pointCount; index += 1) {
           const point = points[index];
-          const pulseScale = primitive.scale * (1 + Math.sin(point.f * 22 - time * 1.9 + point.phase) * 0.055 + Math.sin(point.f * 11 + time * 0.7) * 0.03 + (material.jitter ? Math.sin(point.phase * 13.7 + time * 2.6) * 0.02 * material.jitter : 0));
+          const pulseScale = primitive.scale * (1 + Math.sin(point.f * 14 + point.phase) * 0.018 + (material.jitter ? Math.sin(point.phase * 13.7 + time * 1.1) * 0.01 * material.jitter : 0));
           const pointX = point.x * pulseScale;
           const pointY = point.y * pulseScale;
           const pointZ = point.z * pulseScale;
@@ -556,16 +572,16 @@
           const perspective = 1 / (1 + depthZ * perspectiveStrength);
           const screenX = centerX + rotatedX * projectionScale * perspective;
           const screenY = centerY + rotatedY * projectionScale * perspective;
-          const depth = Math.max(0, Math.min(1, 0.5 - depthZ / 440));
-          const distanceToPulse = Math.abs(index - pulse);
-          const glow = Math.exp(-(distanceToPulse * distanceToPulse) / (pointCount * 4.5)) * material.glowMul;
+          const depth = Math.max(0, Math.min(1, 0.55 - depthZ / 760));
+          const surfaceLift = 0.06 + 0.1 * Math.sin(point.phase * 3.1 + primitive.spinPhase);
+          const glow = surfaceLift * Math.min(1, material.glowMul);
           renderPoints.push({
             x: screenX,
             y: screenY,
             z: depthZ,
-            b: clamp01(0.1 + depth * 0.72 + glow * 0.5),
-            alpha: Math.min(1, (0.07 + depth * 0.8 + glow * 0.55) * material.alphaMul),
-            size: Math.max(0.35, (0.4 + depth * 2.1 + glow * 2.6) * material.sizeMul * scaleBasis * this.zoom),
+            b: clamp01(0.24 + depth * 0.46 + glow * 0.22),
+            alpha: Math.min(0.86, (0.2 + depth * 0.48 + glow * 0.16) * material.alphaMul),
+            size: Math.max(0.38, (0.64 + depth * 1.3 + glow * 0.8) * material.sizeMul * scaleBasis * this.zoom),
           });
         }
       }
