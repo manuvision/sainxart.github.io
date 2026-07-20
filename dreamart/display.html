@@ -120,8 +120,10 @@
     .sound-pill {
       width: 42px;
       min-width: 42px;
+      height: 42px;
+      min-height: 42px;
       justify-content: center;
-      padding-inline: 0;
+      padding: 0;
       color: var(--gold);
       border-color: rgba(255,190,99,0.48);
       background: rgba(44, 29, 20, 0.48);
@@ -238,7 +240,9 @@
       .sound-pill {
         width: 38px;
         min-width: 38px;
-        padding-inline: 0;
+        height: 38px;
+        min-height: 38px;
+        padding: 0;
         letter-spacing: 0;
       }
     }
@@ -350,7 +354,6 @@
       }
       renderer.setItem(item);
       renderer.resetView();
-      renderer.zoom = 1;
       renderer.waveOverrideE = null;
       renderer._t0 = null;
       currentDate = item.date;

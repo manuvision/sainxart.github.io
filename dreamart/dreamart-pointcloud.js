@@ -485,9 +485,10 @@
       this.rotY = random() * TAU;
       this.velY = 0.0032;
       this.velX = 0;
-      this.defaultZoom = primitiveCount > 1 ? 1.16 : 1.02;
+      const shapeZoom = spec.shape === 'sphere' ? 1.02 : spec.shape === 'torus' ? 1.2 : spec.shape === 'cylinder' ? 1.2 : 1.16;
+      this.defaultZoom = primitiveCount > 1 ? 1.22 : shapeZoom;
       this.zoom = this.defaultZoom;
-      this.compositionZoom = primitiveCount > 1 ? 1.34 : 1;
+      this.compositionZoom = primitiveCount > 1 ? 1.38 : spec.shape === 'sphere' ? 1 : 1.12;
       this.dragging = false;
       this._swarm = null;
     }
@@ -583,13 +584,16 @@
           const breath = REDUCED_MOTION ? 0.5 : 0.5 + 0.5 * Math.sin(surfacePhase);
           const motionPhase = (point.motionSeed || 0) * TAU;
           const motionPhaseB = (point.motionSeedB || 0) * TAU;
-          const surfaceMotion = REDUCED_MOTION ? 0 : Math.sin(surfacePhase + motionPhase * 1.7 + point.f * TAU * 1.3);
-          const crossMotion = REDUCED_MOTION ? 0 : Math.cos(surfacePhase + motionPhaseB * 1.4 + point.f * TAU * 1.9);
-          const waveMotion = REDUCED_MOTION ? 0 : Math.sin(surfacePhase + point.f * TAU * 3.2 + motionPhase * 0.55);
           const radius = Math.max(1, Math.sqrt(point.x * point.x + point.y * point.y + point.z * point.z));
           const normalX = point.x / radius;
           const normalY = point.y / radius;
           const normalZ = point.z / radius;
+          const normalizedRadius = radius / 230;
+          const shellRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase * 1.18 - normalizedRadius * 7.4 + motionPhase * 0.28);
+          const innerRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase * 1.52 - normalizedRadius * 10.2 + motionPhaseB * 0.36);
+          const surfaceMotion = shellRipple;
+          const crossMotion = innerRipple;
+          const waveMotion = shellRipple * 0.72 + innerRipple * 0.28;
           let tangentAX = -normalZ;
           let tangentAY = 0;
           let tangentAZ = normalX;
@@ -605,11 +609,12 @@
           const tangentBX = normalY * tangentAZ - normalZ * tangentAY;
           const tangentBY = normalZ * tangentAX - normalX * tangentAZ;
           const tangentBZ = normalX * tangentAY - normalY * tangentAX;
-          const pulseScale = primitive.scale * (1 + Math.sin(point.f * 14 + point.phase + surfacePhase) * 0.006 + waveMotion * 0.003 + surfaceMotion * 0.002 + (material.jitter ? Math.sin(point.phase * 13.7 + surfacePhase) * 0.003 * material.jitter : 0));
-          const drift = (3.6 + material.jitter * 1.2) * (0.62 + breath * 0.38) * primitive.surfaceAmp;
-          const surfaceDrift = waveMotion * drift * 0.018;
-          const slideA = surfaceMotion * drift;
-          const slideB = crossMotion * drift * 0.5;
+          const pulseScale = primitive.scale * (1 + waveMotion * 0.014 + Math.sin(point.f * 14 + point.phase + surfacePhase) * 0.003 + (material.jitter ? Math.sin(point.phase * 13.7 + surfacePhase) * 0.0015 * material.jitter : 0));
+          const currentPulse = 0.5 + 0.5 * Math.sin(surfacePhase * 0.74 + primitive.surfacePhase);
+          const drift = (3.6 + material.jitter * 0.85) * (0.78 + currentPulse * 0.22) * primitive.surfaceAmp;
+          const surfaceDrift = waveMotion * (3.4 + material.jitter * 0.4);
+          const slideA = (surfaceMotion * 0.22 + waveMotion * 0.12) * drift;
+          const slideB = (crossMotion * 0.18 - waveMotion * 0.08) * drift;
           const pointX = (point.x + normalX * surfaceDrift + tangentAX * slideA + tangentBX * slideB) * pulseScale;
           const pointY = (point.y + normalY * surfaceDrift + tangentAY * slideA + tangentBY * slideB) * pulseScale;
           const pointZ = (point.z + normalZ * surfaceDrift + tangentAZ * slideA + tangentBZ * slideB) * pulseScale;
@@ -630,12 +635,12 @@
           const screenX = centerX + rotatedX * projectionScale * perspective;
           const screenY = centerY + rotatedY * projectionScale * perspective;
           const depth = Math.max(0, Math.min(1, 0.5 - depthZ / 1200));
-          const surfaceLift = 0.04 + 0.05 * Math.sin(point.phase * 3.1 + primitive.spinPhase + surfacePhase);
-          const glow = (surfaceLift + breath * 0.02 + Math.max(0, waveMotion) * 0.02) * Math.min(1, material.glowMul);
+          const surfaceLift = 0.04 + 0.05 * Math.sin(normalizedRadius * 6.5 - surfacePhase + primitive.spinPhase);
+          const glow = (surfaceLift + breath * 0.018 + Math.max(0, waveMotion) * 0.026) * Math.min(1, material.glowMul);
           const paletteBand = point.colorSeed == null ? hashUnit(index, 17) : point.colorSeed;
           const paletteSpread = 0.22 * Math.sin(motionPhaseB * 2.3 + primitive.spinPhase + surfacePhase * 0.16);
           const sizeSeed = point.sizeSeed == null ? hashUnit(index, 43) : point.sizeSeed;
-          const localPulse = REDUCED_MOTION ? 0.5 : 0.5 + 0.5 * Math.sin(surfacePhase * 1.6 + motionPhase * 2.2 + point.f * TAU * 1.4);
+          const localPulse = REDUCED_MOTION ? 0.5 : 0.5 + 0.5 * waveMotion;
           const sizeVariance = 0.72 + Math.pow(sizeSeed, 1.55) * 0.54;
           const pointSize = (1.38 + depth * 0.34 + glow * 0.2 + localPulse * 0.42) * sizeVariance * material.sizeMul * scaleBasis * this.zoom;
           const maxSize = (2.25 + scaleBasis * 0.7) * this.zoom;
@@ -717,7 +722,10 @@
       if (parity === 0 && fraction < 0.004) return;
       if (parity === 1 && fraction > 0.996) return;
 
-      const columns = Math.max(20, Math.min(46, Math.round(width / 24)));
+      const isPortrait = height > width * 1.12;
+      const targetCell = isPortrait ? 30 : 18;
+      const maxColumns = isPortrait ? 42 : 82;
+      const columns = Math.max(20, Math.min(maxColumns, Math.round(width / targetCell)));
       const cellWidth = width / columns;
       const rows = Math.max(1, Math.round(height / cellWidth));
       const cellHeight = height / rows;
@@ -755,7 +763,7 @@
           context.fillStyle = backgroundFill;
           context.fillRect(x, y, cellWidth + 0.5, cellHeight + 0.5);
           context.globalAlpha = blend * Math.min(0.92, 0.34 + brightness / 255 * 0.76);
-          const glyphScale = 0.68 + 0.18 * blend;
+          const glyphScale = (isPortrait ? 0.72 : 0.64) + 0.16 * blend;
           const glyphWidth = cellWidth * glyphScale;
           const glyphHeight = cellHeight * glyphScale;
           context.drawImage(this._tiles[stateIndex], x + (cellWidth - glyphWidth) / 2, y + (cellHeight - glyphHeight) / 2, glyphWidth, glyphHeight);

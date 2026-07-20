@@ -3287,6 +3287,14 @@
       });
     }
 
+    function fmtCardDate(d) {
+      if (!d) return '';
+      const date = new Date(`${d}T12:00:00`);
+      if (Number.isNaN(date.getTime())) return d;
+      const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+      return `${month}. ${date.getDate()}, ${date.getFullYear()}`;
+    }
+
     async function createPublicShareCard(item) {
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
       const image = await loadCardImage(item.imageData);
@@ -3325,8 +3333,7 @@
       const availableBadgeW = contentW - badgeGap * 2;
       const pillY = bottom - badgeH;
 
-      const label = item.label || item.date || 'Dreamscape';
-      const dateText = label.length > 30 ? (item.date || label) : label;
+      const dateText = fmtCardDate(item.date) || item.label || 'Dreamscape';
       const badges = [
         { text: 'MANU.VISION/DREAMART', color: '#f1efff' },
         { text: dateText, color: '#f1efff' },
