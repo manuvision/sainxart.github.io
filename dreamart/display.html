@@ -186,41 +186,15 @@
 	      box-shadow: 0 24px 90px rgba(0,0,0,0.55), 0 0 0 1px rgba(var(--accent-rgb),0.08);
 	      padding: 1.15rem;
 	    }
-	    .date-tabs {
-	      display: grid;
-	      grid-template-columns: 1fr 1fr;
-	      border: 1px solid rgba(255,255,255,0.12);
-	      border-radius: 12px;
-	      overflow: hidden;
-	      margin-bottom: 1.1rem;
-	    }
-	    .date-tab {
-	      min-height: 46px;
-	      border: 0;
-	      background: transparent;
-	      color: var(--muted);
-	      font: 0.78rem var(--font-ui);
-	      letter-spacing: 0.16em;
-	      text-transform: uppercase;
-	      cursor: pointer;
-	    }
-	    .date-tab + .date-tab {
-	      border-left: 1px solid rgba(255,255,255,0.12);
-	    }
-	    .date-tab.active {
-	      background: rgba(var(--accent-rgb),0.16);
-	      color: var(--text);
-	    }
 	    .date-fields {
 	      display: grid;
 	      gap: 0.85rem;
 	    }
-	    .date-section {
-	      display: none;
-	      gap: 0.85rem;
-	    }
-	    .date-section.active {
+	    .date-picker-row {
 	      display: grid;
+	      grid-template-columns: 1fr auto;
+	      gap: 0.75rem;
+	      align-items: end;
 	    }
 	    .date-field label {
 	      display: block;
@@ -242,6 +216,18 @@
 	      letter-spacing: 0.04em;
 	      padding: 0 0.9rem;
 	    }
+	    .date-today {
+	      min-height: 52px;
+	      border: 1px solid rgba(255,190,99,0.62);
+	      border-radius: 10px;
+	      background: rgba(44,29,20,0.52);
+	      color: var(--gold);
+	      font: 0.72rem var(--font-ui);
+	      letter-spacing: 0.14em;
+	      text-transform: uppercase;
+	      padding: 0 1rem;
+	      cursor: pointer;
+	    }
 	    .date-apply {
 	      min-height: 52px;
 	      border: 1px solid rgba(var(--accent-rgb),0.72);
@@ -252,6 +238,11 @@
 	      letter-spacing: 0.16em;
 	      text-transform: uppercase;
 	      cursor: pointer;
+	    }
+	    @media (max-width: 390px) {
+	      .date-picker-row {
+	        grid-template-columns: 1fr;
+	      }
 	    }
 	    .date-apply:hover {
 	      background: rgba(var(--accent-rgb),0.24);
@@ -374,29 +365,15 @@
 	  </main>
 	  <div class="date-modal-backdrop" id="dateModal" role="dialog" aria-modal="true" aria-label="Choose display date">
 	    <div class="date-modal">
-	      <div class="date-tabs" role="tablist" aria-label="Date filter mode">
-	        <button class="date-tab active" id="singleTab" type="button" role="tab" aria-selected="true">Single Date</button>
-	        <button class="date-tab" id="rangeTab" type="button" role="tab" aria-selected="false">Date Range</button>
-	      </div>
 	      <div class="date-fields">
-	        <div class="date-section active" id="singleSection">
+	        <div class="date-picker-row">
 	          <div class="date-field">
 	            <label for="modalDate">Select Date</label>
 	            <input id="modalDate" type="date" />
 	          </div>
-	          <button class="date-apply" id="modalApply" type="button">Filter →</button>
+	          <button class="date-today" id="modalToday" type="button">Today</button>
 	        </div>
-	        <div class="date-section" id="rangeSection">
-	          <div class="date-field">
-	            <label for="modalFrom">From</label>
-	            <input id="modalFrom" type="date" />
-	          </div>
-	          <div class="date-field">
-	            <label for="modalTo">To</label>
-	            <input id="modalTo" type="date" />
-	          </div>
-	          <button class="date-apply" id="rangeApply" type="button">Open Gallery →</button>
-	        </div>
+	        <button class="date-apply" id="modalApply" type="button">Filter →</button>
 	      </div>
 	    </div>
 	  </div>
@@ -411,14 +388,8 @@
 	    const soundToggle = document.getElementById('soundToggle');
 	    const dateModal = document.getElementById('dateModal');
 	    const modalDate = document.getElementById('modalDate');
-	    const modalFrom = document.getElementById('modalFrom');
-	    const modalTo = document.getElementById('modalTo');
-	    const singleTab = document.getElementById('singleTab');
-	    const rangeTab = document.getElementById('rangeTab');
-	    const singleSection = document.getElementById('singleSection');
-	    const rangeSection = document.getElementById('rangeSection');
+	    const modalToday = document.getElementById('modalToday');
 	    const modalApply = document.getElementById('modalApply');
-	    const rangeApply = document.getElementById('rangeApply');
 	    let renderer = null;
 	    let currentDate = '';
 	    let archiveItems = [];
@@ -554,8 +525,6 @@
 	      updateUi(item);
 	      start(item);
 	      modalDate.value = item.date;
-	      modalFrom.value = archiveItems[0]?.date || item.date;
-	      modalTo.value = item.date;
 	      if (!options.keepUrl) {
 	        const url = new URL(window.location.href);
 	        url.searchParams.set('date', item.date);
@@ -582,24 +551,12 @@
 
 	    function openDateModal() {
 	      modalDate.value = currentDate || requestedDate() || latestItem()?.date || todayIso();
-	      modalFrom.value = archiveItems[0]?.date || modalDate.value;
-	      modalTo.value = modalDate.value;
 	      dateModal.classList.add('open');
 	      setTimeout(() => modalDate.focus(), 0);
 	    }
 
 	    function closeDateModal() {
 	      dateModal.classList.remove('open');
-	    }
-
-	    function setDateMode(mode) {
-	      const range = mode === 'range';
-	      singleTab.classList.toggle('active', !range);
-	      rangeTab.classList.toggle('active', range);
-	      singleTab.setAttribute('aria-selected', String(!range));
-	      rangeTab.setAttribute('aria-selected', String(range));
-	      singleSection.classList.toggle('active', !range);
-	      rangeSection.classList.toggle('active', range);
 	    }
 
 	    async function loadLatest() {
@@ -658,19 +615,14 @@
 	    dateModal.addEventListener('click', (event) => {
 	      if (event.target === dateModal) closeDateModal();
 	    });
-	    singleTab.addEventListener('click', () => setDateMode('single'));
-	    rangeTab.addEventListener('click', () => setDateMode('range'));
+	    modalToday.addEventListener('click', () => {
+	      modalDate.value = todayIso();
+	      modalDate.focus();
+	    });
 	    modalApply.addEventListener('click', () => {
 	      if (!modalDate.value) return;
 	      setDisplayDate(modalDate.value);
 	      closeDateModal();
-	    });
-	    rangeApply.addEventListener('click', () => {
-	      if (!modalFrom.value || !modalTo.value) return;
-	      const url = new URL('index.html', window.location.href);
-	      url.searchParams.set('start', modalFrom.value);
-	      url.searchParams.set('end', modalTo.value);
-	      window.location.href = url.toString();
 	    });
 	    document.addEventListener('keydown', (event) => {
 	      const tag = document.activeElement?.tagName;

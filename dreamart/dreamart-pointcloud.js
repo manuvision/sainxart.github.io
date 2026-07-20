@@ -2,6 +2,7 @@
   'use strict';
 
   const TAU = Math.PI * 2;
+  const LOOP_SECONDS = 15;
   const PHI = (1 + Math.sqrt(5)) / 2;
   const GOLDEN = TAU * (1 - 1 / PHI);
   const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -381,6 +382,7 @@
         const scale = spec.scale * countScale * heroScales[primitiveCount][i] * (0.94 + random() * 0.14);
         const torusFaceTilt = spec.shape === 'torus' ? Math.PI / 2 : 0;
         const torusAxisDrift = spec.shape === 'torus' ? (random() - 0.5) * 0.22 : 0;
+        const spinCycles = (1 + Math.floor(random() * 3)) * (random() > 0.5 ? 1 : -1);
         this.prims.push({
           pts: points,
           boundR: Math.sqrt(maxNormSquared) * scale * 1.09 + bobAmplitude + 6,
@@ -388,12 +390,12 @@
           scale,
           tiltX: torusFaceTilt + (random() - 0.5) * 2 * spec.tilt,
           tiltZ: torusAxisDrift + (random() - 0.5) * 2 * spec.tilt,
-          spinSpeed: (0.12 + random() * 0.3) * (0.4 + spec.tilt) * (random() > 0.5 ? 1 : -1),
+          spinSpeed: spinCycles * TAU / LOOP_SECONDS,
           spinPhase: random() * TAU,
           surfacePhase: random() * TAU,
           surfaceAmp: 0.86 + random() * 0.28,
           bobPhase: random() * TAU,
-          bobSpeed: (1 + Math.floor(random() * 3)) * TAU / 15,
+          bobSpeed: (1 + Math.floor(random() * 3)) * TAU / LOOP_SECONDS,
         });
       }
 
@@ -592,7 +594,7 @@
         const sinTiltX = Math.sin(primitive.tiltX);
         const cosTiltZ = Math.cos(primitive.tiltZ);
         const sinTiltZ = Math.sin(primitive.tiltZ);
-        const loopPhase = time * TAU / 15;
+        const loopPhase = time * TAU / LOOP_SECONDS;
         const surfacePhase = loopPhase * 6 + primitive.surfacePhase;
         const bob = Math.sin(time * primitive.bobSpeed + primitive.bobPhase) * this.bobAmp;
 
@@ -606,8 +608,8 @@
           const normalY = point.y / radius;
           const normalZ = point.z / radius;
           const normalizedRadius = radius / 230;
-          const shellRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase * 1.18 - normalizedRadius * 7.4 + motionPhase * 0.28);
-          const innerRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase * 1.52 - normalizedRadius * 10.2 + motionPhaseB * 0.36);
+          const shellRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase - normalizedRadius * 7.4 + motionPhase * 0.28);
+          const innerRipple = REDUCED_MOTION ? 0 : Math.sin(surfacePhase * 2 - normalizedRadius * 10.2 + motionPhaseB * 0.36);
           const surfaceMotion = shellRipple;
           const crossMotion = innerRipple;
           const waveMotion = shellRipple * 0.72 + innerRipple * 0.28;
@@ -627,7 +629,7 @@
           const tangentBY = normalZ * tangentAX - normalX * tangentAZ;
           const tangentBZ = normalX * tangentAY - normalY * tangentAX;
           const pulseScale = primitive.scale * (1 + waveMotion * 0.014 + Math.sin(point.f * 14 + point.phase + surfacePhase) * 0.003 + (material.jitter ? Math.sin(point.phase * 13.7 + surfacePhase) * 0.0015 * material.jitter : 0));
-          const currentPulse = 0.5 + 0.5 * Math.sin(surfacePhase * 0.74 + primitive.surfacePhase);
+          const currentPulse = 0.5 + 0.5 * Math.sin(surfacePhase + primitive.surfacePhase);
           const drift = (3.6 + material.jitter * 0.85) * (0.78 + currentPulse * 0.22) * primitive.surfaceAmp;
           const surfaceDrift = waveMotion * (3.4 + material.jitter * 0.4);
           const slideA = (surfaceMotion * 0.22 + waveMotion * 0.12) * drift;
@@ -669,7 +671,7 @@
           const surfaceLift = 0.04 + 0.05 * Math.sin(normalizedRadius * 6.5 - surfacePhase + primitive.spinPhase);
           const glow = (surfaceLift + breath * 0.018 + Math.max(0, waveMotion) * 0.026 + pointerGlow * 0.26) * Math.min(1, material.glowMul);
           const paletteBand = point.colorSeed == null ? hashUnit(index, 17) : point.colorSeed;
-          const paletteSpread = 0.22 * Math.sin(motionPhaseB * 2.3 + primitive.spinPhase + surfacePhase * 0.16);
+          const paletteSpread = 0.22 * Math.sin(motionPhaseB * 2.3 + primitive.spinPhase + surfacePhase);
           const sizeSeed = point.sizeSeed == null ? hashUnit(index, 43) : point.sizeSeed;
           const localPulse = REDUCED_MOTION ? 0.5 : 0.5 + 0.5 * waveMotion;
           const sizeVariance = 0.72 + Math.pow(sizeSeed, 1.55) * 0.54;
