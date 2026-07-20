@@ -19,12 +19,18 @@
     'Mint Ice': ['#c8f8e4','#78e4be','#30b890','#0a8868','#065848','#023020','#011010'],
     Candy:      ['#ffc8e8','#ff98cc','#ff50a0','#d01878','#800848','#3c0028','#180010'],
     'Gold Ink': ['#f8e898','#e8c050','#c89010','#906000','#583800','#2c1c00','#140a00'],
+    'Moss Yellow': ['#dcf7a4','#b6dd68','#86b942','#5e8e2a','#386818','#1c3d0c','#071806'],
+    'Moss True':   ['#b9f1a4','#78c86c','#3f9847','#236d31','#114a20','#082a12','#021006'],
+    'Moss Teal':   ['#b7f3e2','#63d8bc','#1ea889','#0b7866','#075147','#033128','#011411'],
+    'Powder Cyan': ['#d2f2ff','#90d4f2','#48aee0','#1b7db8','#0d5488','#052b54','#010a22'],
+    'Slate Blue':  ['#b7dcff','#6aa9e7','#2e73c6','#164c99','#0c3170','#051b44','#01091f'],
+    'Slate Indigo':['#c8cffd','#7183e5','#384fb8','#1d328a','#101f5a','#081033','#020514'],
   };
 
   const BANDS = [
     { min: 86, max: 100, label: 'Optimal', bucket: 'Aurora', shape: 'sphere', color: '#8B5CF6', palettes: ['Aurora', 'Aurora', 'Candy'], hueLabels: ['blue-violet', 'luminous violet', 'pink-magenta violet'] },
-    { min: 71, max: 85, label: 'Good', bucket: 'Slate', shape: 'torus', color: '#3A78B8', palettes: ['Ocean', 'Ocean', 'Ocean'], hueLabels: ['powder cyan-blue', 'cinematic blue', 'slate indigo'] },
-    { min: 56, max: 70, label: 'Moderate', bucket: 'Moss', shape: 'cylinder', color: '#4D7C5A', palettes: ['Forest', 'Forest', 'Mint Ice'], hueLabels: ['yellow-green moss', 'moss green', 'blue-green teal'] },
+    { min: 71, max: 85, label: 'Good', bucket: 'Slate', shape: 'torus', color: '#3A78B8', palettes: ['Powder Cyan', 'Slate Blue', 'Slate Indigo'], hueLabels: ['powder cyan-blue', 'cinematic blue', 'slate indigo'] },
+    { min: 56, max: 70, label: 'Moderate', bucket: 'Moss', shape: 'cylinder', color: '#4D7C5A', palettes: ['Moss Yellow', 'Moss True', 'Moss Teal'], hueLabels: ['yellow-green moss', 'moss green', 'blue-green teal'] },
     { min: 41, max: 55, label: 'Fair', bucket: 'Ochre', shape: 'cube', color: '#D4A853', palettes: ['Sepia', 'Gold Ink', 'Gold Ink'], hueLabels: ['deep ochre', 'warm amber', 'pale amber'] },
     { min: 0, max: 40, label: 'Poor', bucket: 'Ember', shape: 'pyramid', color: '#C8613A', palettes: ['Rust', 'Rust', 'Ember'], hueLabels: ['deep brown-red', 'rich rust', 'burnt orange-red'] },
   ];
@@ -34,7 +40,7 @@
     { name: 'Metal', sizeMul: 0.95, alphaMul: 1.08, glowMul: 1.18, jitter: 0, swarm: 0 },
     { name: 'Wood', sizeMul: 1.12, alphaMul: 0.92, glowMul: 0.52, jitter: 0.28, swarm: 0 },
     { name: 'Polymer', sizeMul: 1.24, alphaMul: 0.9, glowMul: 0.76, jitter: 0.12, swarm: 0 },
-    { name: 'Glass', sizeMul: 0.92, alphaMul: 1.04, glowMul: 1.02, jitter: 0, swarm: 420 },
+    { name: 'Glass', sizeMul: 0.92, alphaMul: 1.04, glowMul: 1.02, jitter: 0, swarm: 0 },
   ];
 
   const makeSvg = body => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${body}</svg>`;
@@ -205,6 +211,16 @@
     return result;
   }
 
+  function hashUnit(index, salt = 0) {
+    let hash = Math.imul((index + 1) ^ salt, 0x9E3779B1);
+    hash ^= hash >>> 16;
+    hash = Math.imul(hash, 0x85EBCA6B);
+    hash ^= hash >>> 13;
+    hash = Math.imul(hash, 0xC2B2AE35);
+    hash ^= hash >>> 16;
+    return (hash >>> 0) / 4294967295;
+  }
+
   function generateParticles(shape, count) {
     const points = [];
     const dimensions = SHAPE_DIMS[shape] || SHAPE_DIMS.torus;
@@ -293,6 +309,13 @@
         point.z -= centerZ;
       }
     }
+    for (let index = 0; index < points.length; index += 1) {
+      const point = points[index];
+      point.colorSeed = hashUnit(index, 17);
+      point.sizeSeed = hashUnit(index, 43);
+      point.motionSeed = hashUnit(index, 91);
+      point.motionSeedB = hashUnit(index, 137);
+    }
     return points;
   }
 
@@ -366,6 +389,8 @@
           tiltZ: torusAxisDrift + (random() - 0.5) * 2 * spec.tilt,
           spinSpeed: (0.12 + random() * 0.3) * (0.4 + spec.tilt) * (random() > 0.5 ? 1 : -1),
           spinPhase: random() * TAU,
+          surfacePhase: random() * TAU,
+          surfaceAmp: 0.86 + random() * 0.28,
           bobPhase: random() * TAU,
           bobSpeed: (1 + Math.floor(random() * 3)) * TAU / 15,
         });
@@ -550,14 +575,17 @@
         const cosTiltZ = Math.cos(primitive.tiltZ);
         const sinTiltZ = Math.sin(primitive.tiltZ);
         const loopPhase = time * TAU / 15;
+        const surfacePhase = loopPhase * 3 + primitive.surfacePhase;
         const bob = Math.sin(time * primitive.bobSpeed + primitive.bobPhase) * this.bobAmp;
 
         for (let index = 0; index < pointCount; index += 1) {
           const point = points[index];
-          const breath = REDUCED_MOTION ? 0.5 : 0.5 + 0.5 * Math.sin(loopPhase);
-          const surfaceMotion = REDUCED_MOTION ? 0 : Math.sin(loopPhase + point.phase * 1.7 + point.f * TAU * 2.5);
-          const crossMotion = REDUCED_MOTION ? 0 : Math.cos(loopPhase + point.phase * 0.9 + point.f * TAU * 4.1);
-          const waveMotion = REDUCED_MOTION ? 0 : Math.sin(loopPhase + point.f * TAU * 5.2 + point.phase * 0.55);
+          const breath = REDUCED_MOTION ? 0.5 : 0.5 + 0.5 * Math.sin(surfacePhase);
+          const motionPhase = (point.motionSeed || 0) * TAU;
+          const motionPhaseB = (point.motionSeedB || 0) * TAU;
+          const surfaceMotion = REDUCED_MOTION ? 0 : Math.sin(surfacePhase + motionPhase * 1.7 + point.f * TAU * 1.3);
+          const crossMotion = REDUCED_MOTION ? 0 : Math.cos(surfacePhase + motionPhaseB * 1.4 + point.f * TAU * 1.9);
+          const waveMotion = REDUCED_MOTION ? 0 : Math.sin(surfacePhase + point.f * TAU * 3.2 + motionPhase * 0.55);
           const radius = Math.max(1, Math.sqrt(point.x * point.x + point.y * point.y + point.z * point.z));
           const normalX = point.x / radius;
           const normalY = point.y / radius;
@@ -577,11 +605,11 @@
           const tangentBX = normalY * tangentAZ - normalZ * tangentAY;
           const tangentBY = normalZ * tangentAX - normalX * tangentAZ;
           const tangentBZ = normalX * tangentAY - normalY * tangentAX;
-          const pulseScale = primitive.scale * (1 + Math.sin(point.f * 14 + point.phase) * 0.012 + waveMotion * 0.006 + surfaceMotion * 0.004 + (material.jitter ? Math.sin(point.phase * 13.7 + loopPhase) * 0.006 * material.jitter : 0));
-          const drift = (2.4 + material.jitter * 1.8) * (0.64 + breath * 0.36);
-          const surfaceDrift = waveMotion * drift * 0.16;
+          const pulseScale = primitive.scale * (1 + Math.sin(point.f * 14 + point.phase + surfacePhase) * 0.006 + waveMotion * 0.003 + surfaceMotion * 0.002 + (material.jitter ? Math.sin(point.phase * 13.7 + surfacePhase) * 0.003 * material.jitter : 0));
+          const drift = (3.6 + material.jitter * 1.2) * (0.62 + breath * 0.38) * primitive.surfaceAmp;
+          const surfaceDrift = waveMotion * drift * 0.018;
           const slideA = surfaceMotion * drift;
-          const slideB = crossMotion * drift * 0.62;
+          const slideB = crossMotion * drift * 0.5;
           const pointX = (point.x + normalX * surfaceDrift + tangentAX * slideA + tangentBX * slideB) * pulseScale;
           const pointY = (point.y + normalY * surfaceDrift + tangentAY * slideA + tangentBY * slideB) * pulseScale;
           const pointZ = (point.z + normalZ * surfaceDrift + tangentAZ * slideA + tangentBZ * slideB) * pulseScale;
@@ -601,21 +629,22 @@
           const perspective = 1 / (1 + depthZ * perspectiveStrength);
           const screenX = centerX + rotatedX * projectionScale * perspective;
           const screenY = centerY + rotatedY * projectionScale * perspective;
-          const depth = Math.max(0, Math.min(1, 0.55 - depthZ / 760));
-          const surfaceLift = 0.05 + 0.07 * Math.sin(point.phase * 3.1 + primitive.spinPhase + loopPhase);
-          const glow = (surfaceLift + breath * 0.035 + Math.max(0, waveMotion) * 0.035) * Math.min(1, material.glowMul);
-          const paletteBand = (Math.floor(halton(index + 1, 7) * 7) + Math.floor(halton(index + 3, 5) * 3)) % 7 / 6;
-          const paletteSpread = 0.34 * Math.sin(point.phase * 2.3 + point.f * TAU * 4 + primitive.spinPhase + loopPhase * 0.22);
-          const sizeSeed = halton(index + 1, 3);
-          const sizeVariance = 0.64 + Math.pow(sizeSeed, 1.45) * 0.74;
-          const pointSize = (1.34 + depth * 1.18 + glow * 0.42 + breath * 0.18) * sizeVariance * material.sizeMul * scaleBasis * this.zoom;
-          const maxSize = (2.85 + scaleBasis * 1.15) * this.zoom;
+          const depth = Math.max(0, Math.min(1, 0.5 - depthZ / 1200));
+          const surfaceLift = 0.04 + 0.05 * Math.sin(point.phase * 3.1 + primitive.spinPhase + surfacePhase);
+          const glow = (surfaceLift + breath * 0.02 + Math.max(0, waveMotion) * 0.02) * Math.min(1, material.glowMul);
+          const paletteBand = point.colorSeed == null ? hashUnit(index, 17) : point.colorSeed;
+          const paletteSpread = 0.22 * Math.sin(motionPhaseB * 2.3 + primitive.spinPhase + surfacePhase * 0.16);
+          const sizeSeed = point.sizeSeed == null ? hashUnit(index, 43) : point.sizeSeed;
+          const localPulse = REDUCED_MOTION ? 0.5 : 0.5 + 0.5 * Math.sin(surfacePhase * 1.6 + motionPhase * 2.2 + point.f * TAU * 1.4);
+          const sizeVariance = 0.72 + Math.pow(sizeSeed, 1.55) * 0.54;
+          const pointSize = (1.38 + depth * 0.34 + glow * 0.2 + localPulse * 0.42) * sizeVariance * material.sizeMul * scaleBasis * this.zoom;
+          const maxSize = (2.25 + scaleBasis * 0.7) * this.zoom;
           renderPoints.push({
             x: screenX,
             y: screenY,
             z: depthZ,
-            b: clamp01(0.02 + depth * 0.28 + paletteBand * 0.64 + glow * 0.08 + paletteSpread),
-            alpha: Math.min(0.92, (0.44 + depth * 0.3 + glow * 0.06) * material.alphaMul),
+            b: clamp01(0.08 + depth * 0.035 + paletteBand * 0.68 + glow * 0.04 + paletteSpread),
+            alpha: Math.min(0.86, (0.54 + depth * 0.05 + localPulse * 0.08 + glow * 0.03) * material.alphaMul),
             size: Math.max(0.8, Math.min(maxSize, pointSize)),
           });
         }
