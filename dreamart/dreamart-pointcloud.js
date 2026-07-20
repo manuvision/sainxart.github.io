@@ -336,6 +336,7 @@
       this.velY = 0.0032;
       this.zoom = 1;
       this.dragging = false;
+      this.pointer = { x: 0, y: 0, active: false, strength: 0 };
       this.spec = null;
       this.prims = [];
     }
@@ -493,6 +494,18 @@
       this._swarm = null;
     }
 
+    setPointer(clientX, clientY) {
+      const rect = this.canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      this.pointer.x = ((clientX - rect.left) / rect.width) * this.canvas.width;
+      this.pointer.y = ((clientY - rect.top) / rect.height) * this.canvas.height;
+      this.pointer.active = true;
+    }
+
+    clearPointer() {
+      this.pointer.active = false;
+    }
+
     resetView() {
       this.rotX = 0.28;
       this.velX = 0;
@@ -564,6 +577,10 @@
       const sinY = Math.sin(this.rotY);
       const renderPoints = this._renderBuffer || (this._renderBuffer = []);
       renderPoints.length = 0;
+      const pointer = this.pointer || { active: false, strength: 0 };
+      const pointerTarget = pointer.active && !REDUCED_MOTION ? 1 : 0;
+      pointer.strength += (pointerTarget - pointer.strength) * 0.16;
+      const pointerRadius = Math.min(width, height) * 0.16;
 
       for (const primitive of this.prims) {
         const points = primitive.pts;
@@ -632,24 +649,38 @@
           const rotatedY = localY * cosX - rotatedZ * sinX;
           const depthZ = localY * sinX + rotatedZ * cosX;
           const perspective = 1 / (1 + depthZ * perspectiveStrength);
-          const screenX = centerX + rotatedX * projectionScale * perspective;
-          const screenY = centerY + rotatedY * projectionScale * perspective;
+          let screenX = centerX + rotatedX * projectionScale * perspective;
+          let screenY = centerY + rotatedY * projectionScale * perspective;
           const depth = Math.max(0, Math.min(1, 0.5 - depthZ / 1200));
+          let pointerGlow = 0;
+          if (pointer.strength > 0.003 && pointerRadius > 1) {
+            const dx = screenX - pointer.x;
+            const dy = screenY - pointer.y;
+            const distance = Math.sqrt(dx * dx + dy * dy) || 1;
+            if (distance < pointerRadius) {
+              const influence = Math.pow(1 - distance / pointerRadius, 2);
+              const ripple = Math.sin(distance * 0.055 - time * 8.4 + primitive.surfacePhase) * 0.5 + 0.5;
+              const push = influence * pointer.strength * (10 + ripple * 13) * scaleBasis;
+              screenX += (dx / distance) * push;
+              screenY += (dy / distance) * push;
+              pointerGlow = influence * pointer.strength;
+            }
+          }
           const surfaceLift = 0.04 + 0.05 * Math.sin(normalizedRadius * 6.5 - surfacePhase + primitive.spinPhase);
-          const glow = (surfaceLift + breath * 0.018 + Math.max(0, waveMotion) * 0.026) * Math.min(1, material.glowMul);
+          const glow = (surfaceLift + breath * 0.018 + Math.max(0, waveMotion) * 0.026 + pointerGlow * 0.08) * Math.min(1, material.glowMul);
           const paletteBand = point.colorSeed == null ? hashUnit(index, 17) : point.colorSeed;
           const paletteSpread = 0.22 * Math.sin(motionPhaseB * 2.3 + primitive.spinPhase + surfacePhase * 0.16);
           const sizeSeed = point.sizeSeed == null ? hashUnit(index, 43) : point.sizeSeed;
           const localPulse = REDUCED_MOTION ? 0.5 : 0.5 + 0.5 * waveMotion;
           const sizeVariance = 0.72 + Math.pow(sizeSeed, 1.55) * 0.54;
-          const pointSize = (1.38 + depth * 0.34 + glow * 0.2 + localPulse * 0.42) * sizeVariance * material.sizeMul * scaleBasis * this.zoom;
+          const pointSize = (1.38 + depth * 0.34 + glow * 0.2 + localPulse * 0.42 + pointerGlow * 0.22) * sizeVariance * material.sizeMul * scaleBasis * this.zoom;
           const maxSize = (2.25 + scaleBasis * 0.7) * this.zoom;
           renderPoints.push({
             x: screenX,
             y: screenY,
             z: depthZ,
             b: clamp01(0.08 + depth * 0.035 + paletteBand * 0.68 + glow * 0.04 + paletteSpread),
-            alpha: Math.min(0.86, (0.54 + depth * 0.05 + localPulse * 0.08 + glow * 0.03) * material.alphaMul),
+            alpha: Math.min(0.9, (0.54 + depth * 0.05 + localPulse * 0.08 + glow * 0.03 + pointerGlow * 0.1) * material.alphaMul),
             size: Math.max(0.8, Math.min(maxSize, pointSize)),
           });
         }
@@ -794,9 +825,13 @@
     let last = { x: 0, y: 0 };
     let pinchDistance = 0;
     let lastTap = 0;
+    const hover = (x, y) => {
+      if (typeof renderer.setPointer === 'function') renderer.setPointer(x, y);
+    };
     const begin = (x, y) => { renderer.dragging = true; last = { x, y }; };
     const move = (x, y) => {
       if (!renderer.dragging) return;
+      hover(x, y);
       const dx = x - last.x;
       const dy = y - last.y;
       last = { x, y };
@@ -811,6 +846,10 @@
       event.preventDefault();
       begin(event.clientX, event.clientY);
     });
+    element.addEventListener('mousemove', event => hover(event.clientX, event.clientY));
+    element.addEventListener('mouseleave', () => {
+      if (typeof renderer.clearPointer === 'function') renderer.clearPointer();
+    });
     window.addEventListener('mousemove', event => move(event.clientX, event.clientY));
     window.addEventListener('mouseup', end);
     element.addEventListener('dblclick', () => renderer.resetView());
@@ -824,6 +863,7 @@
         const now = Date.now();
         if (now - lastTap < 320) renderer.resetView();
         lastTap = now;
+        hover(event.touches[0].clientX, event.touches[0].clientY);
         begin(event.touches[0].clientX, event.touches[0].clientY);
       } else if (event.touches.length === 2) {
         renderer.dragging = false;
@@ -843,6 +883,7 @@
     element.addEventListener('touchend', () => {
       renderer.dragging = false;
       pinchDistance = 0;
+      if (typeof renderer.clearPointer === 'function') renderer.clearPointer();
     });
   }
 

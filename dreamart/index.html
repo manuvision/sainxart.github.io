@@ -5579,8 +5579,8 @@
         }
       }
       if (lbDisplayLink) {
-        if (item.date === today) {
-          lbDisplayLink.href = 'display.html';
+        if (item.date) {
+          lbDisplayLink.href = `display.html?date=${encodeURIComponent(item.date)}`;
           lbDisplayLink.style.display = '';
         } else {
           lbDisplayLink.href = '#';
