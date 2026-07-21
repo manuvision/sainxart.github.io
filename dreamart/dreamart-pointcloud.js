@@ -608,7 +608,7 @@
       const pointer = this.pointer || { active: false, strength: 0 };
       const pointerTarget = pointer.active && !REDUCED_MOTION ? 1 : 0;
       pointer.strength += (pointerTarget - pointer.strength) * 0.16;
-      const pointerRadius = Math.min(width, height) * 0.46;
+      const pointerRadius = Math.min(width, height) * 0.58;
 
       for (const primitive of this.prims) {
         const points = primitive.pts;
@@ -697,8 +697,8 @@
             const distance = Math.sqrt(dx * dx + dy * dy) || 1;
             if (distance < pointerRadius) {
               const influence = Math.pow(1 - distance / pointerRadius, 2.35);
-              const ripple = Math.sin(distance * 0.044 - time * 8.4 + primitive.surfacePhase) * 0.5 + 0.5;
-              const push = influence * pointer.strength * (34 + ripple * 44) * scaleBasis;
+              const ripple = Math.sin(distance * 0.026 - time * 3.35 + primitive.surfacePhase) * 0.5 + 0.5;
+              const push = influence * pointer.strength * (42 + ripple * 62) * scaleBasis;
               screenX += (dx / distance) * push;
               screenY += (dy / distance) * push;
               pointerGlow = influence * pointer.strength;
@@ -814,6 +814,12 @@
       const pixels = this.bctx.getImageData(0, 0, columns, rows).data;
       const backgroundFill = mixHex(this.spec.palette[6], '#040409', 0.68);
       const maxEdge = width * edgeProgress + band / 2 + cellWidth;
+      const cellBrightness = (column, row) => {
+        const safeColumn = Math.max(0, Math.min(columns - 1, column));
+        const safeRow = Math.max(0, Math.min(rows - 1, row));
+        const pixelIndex = (safeRow * columns + safeColumn) * 4;
+        return (pixels[pixelIndex] + pixels[pixelIndex + 1] + pixels[pixelIndex + 2]) / 3;
+      };
 
       for (let row = 0; row < rows; row += 1) {
         const y = row * cellHeight;
@@ -824,8 +830,11 @@
           const relative = (rowEdge - (x + cellWidth / 2)) / band;
           const blend = smooth((parity === 0 ? relative : -relative) + 0.5);
           if (blend < 0.02) continue;
-          const pixelIndex = (row * columns + column) * 4;
-          const brightness = (pixels[pixelIndex] + pixels[pixelIndex + 1] + pixels[pixelIndex + 2]) / 3;
+          const brightness = (
+            cellBrightness(column, row) * 0.52
+            + (cellBrightness(column - 1, row) + cellBrightness(column + 1, row) + cellBrightness(column, row - 1) + cellBrightness(column, row + 1)) * 0.09
+            + (cellBrightness(column - 1, row - 1) + cellBrightness(column + 1, row - 1) + cellBrightness(column - 1, row + 1) + cellBrightness(column + 1, row + 1)) * 0.03
+          );
           const lifted = Math.min(255, brightness * 1.18);
           const stateIndex = 6 - Math.min(6, Math.floor(Math.pow(lifted / 255, 0.78) * 7));
           context.globalAlpha = blend;
