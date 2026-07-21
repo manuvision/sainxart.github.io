@@ -113,19 +113,14 @@
 
   function pulseEnvelope(phase) {
     const t = ((phase / TAU) % 1 + 1) % 1;
-    const attack = smoothstep(0, 0.18, t);
-    const release = 1 - smoothstep(0.42, 0.62, t);
-    return attack * release;
+    const inhale = 0.5 - 0.5 * Math.cos(t * TAU);
+    const secondary = 0.5 - 0.5 * Math.cos(t * TAU * 2 + Math.PI * 0.35);
+    return 0.34 + inhale * 0.52 + secondary * 0.14;
   }
 
   function recoilEnvelope(phase) {
     const t = ((phase / TAU) % 1 + 1) % 1;
-    if (t < 0.42) return 0;
-    const tail = (t - 0.42) / 0.58;
-    const decay = 1 - smoothstep(0, 1, tail);
-    const echo = Math.sin(tail * TAU * 2.75) * decay * 0.18;
-    const shimmer = Math.sin(tail * TAU * 7.5) * (0.35 + decay * 0.65) * 0.035;
-    return echo + shimmer;
+    return Math.sin(t * TAU * 3) * 0.045 + Math.sin(t * TAU * 5 + Math.PI * 0.4) * 0.025;
   }
 
   function liftRgb(color, amount = 0.18) {
