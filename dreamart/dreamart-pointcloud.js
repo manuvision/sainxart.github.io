@@ -608,7 +608,9 @@
       const pointer = this.pointer || { active: false, strength: 0 };
       const pointerTarget = pointer.active && !REDUCED_MOTION ? 1 : 0;
       pointer.strength += (pointerTarget - pointer.strength) * 0.16;
-      const pointerRadius = Math.min(width, height) * 0.68;
+      const zoomResponse = clamp01(((this.zoom || 1) - 0.55) / 1.45);
+      const pointerRadius = Math.min(width, height) * (0.36 + zoomResponse * 0.32);
+      const pointerPower = 0.42 + zoomResponse * 0.58;
 
       for (const primitive of this.prims) {
         const points = primitive.pts;
@@ -698,7 +700,7 @@
             if (distance < pointerRadius) {
               const influence = Math.pow(1 - distance / pointerRadius, 2.35);
               const ripple = Math.sin(distance * 0.026 - time * 3.35 + primitive.surfacePhase) * 0.5 + 0.5;
-              const push = influence * pointer.strength * (42 + ripple * 62) * scaleBasis;
+              const push = influence * pointer.strength * pointerPower * (42 + ripple * 62) * scaleBasis;
               screenX += (dx / distance) * push;
               screenY += (dy / distance) * push;
               pointerGlow = influence * pointer.strength;
