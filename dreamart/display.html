@@ -380,6 +380,8 @@
 	  <script>
     const API = 'https://dreamart.manu.vision/api/procedural-public';
     const REFRESH_MS = 30 * 60 * 1000;
+    const AUTO_MODE_KEY = 'dreamart:display:auto-mode';
+    const AUTO_DATE_KEY = 'dreamart:display:auto-date';
     const dream = document.getElementById('dream');
     const message = document.getElementById('message');
 	    const reading = document.getElementById('reading');
@@ -394,6 +396,7 @@
 	    let currentDate = '';
 	    let archiveItems = [];
 	    let raf = 0;
+    let autoFollowToday = true;
     const soundStates = [
       { id: 'off', icon: '🔇', label: 'Ambient sound off' },
       { id: 'rainforest', icon: '🌧', label: 'Rainforest ambience', src: 'audio/rainforest.mp3' },
@@ -462,6 +465,37 @@
 	      return params.get('date') || params.get('day') || '';
 	    }
 
+    function storedAutoDate() {
+      try {
+        return window.localStorage.getItem(AUTO_DATE_KEY) || '';
+      } catch {
+        return '';
+      }
+    }
+
+    function setAutoMode(enabled, date = '') {
+      autoFollowToday = enabled;
+      try {
+        if (enabled) {
+          window.localStorage.setItem(AUTO_MODE_KEY, '1');
+          if (date) window.localStorage.setItem(AUTO_DATE_KEY, date);
+        } else {
+          window.localStorage.removeItem(AUTO_MODE_KEY);
+          window.localStorage.removeItem(AUTO_DATE_KEY);
+        }
+      } catch {}
+    }
+
+    function initialAutoMode() {
+      const requested = requestedDate();
+      if (!requested) return true;
+      try {
+        return window.localStorage.getItem(AUTO_MODE_KEY) === '1' && storedAutoDate() === requested;
+      } catch {
+        return requested === todayIso();
+      }
+    }
+
     function resize() {
       if (!renderer) return;
       const rect = dream.getBoundingClientRect();
@@ -525,6 +559,7 @@
 	      updateUi(item);
 	      start(item);
 	      modalDate.value = item.date;
+	      if (options.auto) setAutoMode(true, item.date);
 	      if (!options.keepUrl) {
 	        const url = new URL(window.location.href);
 	        url.searchParams.set('date', item.date);
@@ -533,6 +568,8 @@
 	    }
 
 	    function setDisplayDate(date, options = {}) {
+	      if (options.auto) setAutoMode(true, date);
+	      else setAutoMode(false);
 	      const item = itemForDate(date);
 	      if (!item) {
 	        showGap(date);
@@ -546,6 +583,7 @@
 	      const index = archiveItems.findIndex(item => item.date === currentDate);
 	      const base = index >= 0 ? index : archiveItems.length - 1;
 	      const next = archiveItems[(base + step + archiveItems.length) % archiveItems.length];
+	      setAutoMode(false);
 	      setDisplayItem(next);
 	    }
 
@@ -565,14 +603,30 @@
 	        if (!res.ok) throw new Error('Could not load daily dreamscape');
 	        archiveItems = normalizeItems(await res.json());
 	        const requested = requestedDate();
-	        const item = requested ? itemForDate(requested) : latestItem();
+	        const today = todayIso();
+	        const item = autoFollowToday
+	          ? (itemForDate(today) || latestItem())
+	          : (requested ? itemForDate(requested) : latestItem());
 	        if (!item) throw new Error('No public dreamscape is available yet');
-	        if (item.date !== currentDate) setDisplayItem(item, { keepUrl: Boolean(requested) });
+	        if (item.date !== currentDate || (autoFollowToday && requested !== item.date)) {
+	          setDisplayItem(item, { auto: autoFollowToday });
+	        }
 	      } catch (error) {
 	        console.error(error);
 	        showGap(requestedDate());
 	      }
 	    }
+
+    function scheduleDailyRollover() {
+      const now = new Date();
+      const next = new Date(now);
+      next.setDate(now.getDate() + 1);
+      next.setHours(0, 2, 0, 0);
+      window.setTimeout(() => {
+        loadLatest();
+        scheduleDailyRollover();
+      }, Math.max(1000, next.getTime() - now.getTime()));
+    }
 
     function renderSoundToggle() {
       const state = soundStates[soundIndex];
@@ -621,7 +675,7 @@
 	    });
 	    modalApply.addEventListener('click', () => {
 	      if (!modalDate.value) return;
-	      setDisplayDate(modalDate.value);
+	      setDisplayDate(modalDate.value, { auto: modalDate.value === todayIso() });
 	      closeDateModal();
 	    });
 	    document.addEventListener('keydown', (event) => {
@@ -648,7 +702,9 @@
     });
     window.addEventListener('online', loadLatest);
     setInterval(loadLatest, REFRESH_MS);
+    scheduleDailyRollover();
     renderSoundToggle();
+    autoFollowToday = initialAutoMode();
     loadLatest();
   </script>
 </body>
