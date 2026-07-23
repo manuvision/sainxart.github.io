@@ -5458,10 +5458,7 @@
 
         const dateEl = document.createElement('div');
         dateEl.className = 'item-date';
-        // Drop the year from the label (e.g. "May 21, 2026" → "May 21") so it
-        // fits cleanly next to the score, matching the private gallery format.
-        const shortLabel = (item.label || '').split(',')[0];
-        dateEl.textContent = shortLabel;
+        dateEl.textContent = fmtShortLabel(item.date);
         if (item.sleepScore != null) {
           const sep = document.createElement('span');
           sep.textContent = ' · ';
@@ -5526,7 +5523,17 @@
     });
 
     function fmtLabel(d) {
-      return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const date = new Date(d + 'T12:00:00');
+      if (Number.isNaN(date.getTime())) return d;
+      const month = date.toLocaleDateString('en-US', { month: 'short' });
+      return `${month}. ${date.getDate()}, ${date.getFullYear()}`;
+    }
+
+    function fmtShortLabel(d) {
+      const date = new Date(d + 'T12:00:00');
+      if (Number.isNaN(date.getTime())) return d;
+      const month = date.toLocaleDateString('en-US', { month: 'short' });
+      return `${month}. ${date.getDate()}`;
     }
 
     function fmtCompactDate(d) {
@@ -5751,7 +5758,7 @@
       setTimeout(() => startLiveLightbox(item), 20);
       // Lightbox label mirrors the grid label: full date, plus a colored
       // score chip when the entry has one.
-      lbDate.textContent = item.label || '';
+      lbDate.textContent = fmtLabel(item.date);
       if (item.sleepScore != null) {
         const sep = document.createElement('span');
         sep.textContent = ' · ';
