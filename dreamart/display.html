@@ -496,7 +496,7 @@
     <div class="brand-modal">
       <button class="brand-close" id="brandClose" type="button">Close</button>
       <div class="brand-modal-head">
-        <div id="reading"><p>Every morning, the display gets updated via <a href="https://manu.vision" target="_blank" rel="noopener">Manuel Sainsily</a>'s sleep data.</p><p>Turning my biometrics into daily art.</p></div>
+        <div id="reading"><p>Every morning, <a href="https://manu.vision" target="_blank" rel="noopener">Manuel Sainsily</a>'s sleep data updates this interactive display.</p><p>Turning my biometrics into daily art.</p></div>
       </div>
       <div class="brand-actions">
         <a class="brand-action gold" href="gallery/">Gallery</a>
@@ -695,7 +695,7 @@
     }
 
 	    function updateUi(item) {
-      reading.innerHTML = `<p>Every morning, the display gets updated via <a href="https://manu.vision" target="_blank" rel="noopener">Manuel Sainsily</a>'s sleep data.</p><p>${escapeHtml(displayReadingText(item))}</p>`;
+      reading.innerHTML = `<p>Every morning, <a href="https://manu.vision" target="_blank" rel="noopener">Manuel Sainsily</a>'s sleep data updates this interactive display.</p><p>${escapeHtml(displayReadingText(item))}</p>`;
       datePill.textContent = item.label || formatDate(item.date);
       scorePill.textContent = `Score ${item.sleepScore}`;
       scorePill.style.setProperty('--score-color', scoreColor(item.sleepScore));
