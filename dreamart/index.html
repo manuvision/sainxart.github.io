@@ -544,6 +544,9 @@
     .mobile-title-break {
       display: none;
     }
+    .desktop-title-space {
+      display: inline;
+    }
     #message p {
       max-width: 42rem;
       margin: 1.2rem auto 0;
@@ -575,7 +578,7 @@
       }
       .badge-row {
         width: 100%;
-        grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.9fr) minmax(0, 0.72fr) 38px;
+        grid-template-columns: minmax(0, 1.28fr) minmax(0, 1.14fr) minmax(0, 0.72fr) 38px;
         gap: 0.5rem;
       }
       .display-title {
@@ -596,6 +599,10 @@
         padding: 0.58rem 0.7rem;
         letter-spacing: 0.1em;
       }
+      #date {
+        font-size: clamp(0.42rem, 2.05vw, 0.6rem);
+        letter-spacing: 0.035em;
+      }
       .sound-pill {
         width: 38px;
         min-width: 38px;
@@ -606,6 +613,9 @@
       }
       .mobile-title-break {
         display: block;
+      }
+      .desktop-title-space {
+        display: none;
       }
     }
   </style>
@@ -939,7 +949,7 @@
 	      currentDate = date || currentDate;
 	      dream.classList.remove('ready');
 	      message.classList.remove('hidden');
-	      message.querySelector('h2').innerHTML = 'The Night<span class="mobile-title-break"></span> Has Not Settled Yet';
+	      message.querySelector('h2').innerHTML = 'The Night<span class="desktop-title-space"> </span><br class="mobile-title-break" />Has Not Settled Yet';
 	      message.querySelector('p').textContent = date
 	        ? `${formatDate(date)} has not become a public procedural dreamscape yet. Choose another night, or let the archive keep breathing with the latest available entry.`
 	        : 'No public procedural dreamscape is available yet.';
