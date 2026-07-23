@@ -1452,7 +1452,7 @@
           try {
             const blob = await createDisplayVideoBlob(item, 15000, progress => setDownloadProgress(downloadVideo, progress));
             const filename = `dream-art-${item.date || 'video'}.mp4`;
-            await shareOrDownloadBlob(blob, filename, `Daily Dream Art - ${formatDate(item.date)}`, 'A procedural artwork generated from one night of sleep data.');
+            downloadBlob(blob, filename);
             setDownloadProgress(downloadVideo, 1);
             downloadVideo.textContent = 'Downloaded';
           } catch (error) {
