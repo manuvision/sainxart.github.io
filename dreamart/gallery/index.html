@@ -1247,6 +1247,7 @@
     }
 
     /* ── Info button (twin of #cal-btn) ──────────────────────── */
+    #display-btn,
     #info-btn {
       display: inline-flex;
       align-items: center;
@@ -1264,6 +1265,7 @@
       transition: color 0.2s, border-color 0.2s, background 0.2s;
       white-space: nowrap;
     }
+    #display-btn:hover,
     #info-btn:hover, #info-btn.active {
       color: var(--link-hover);
       border-color: rgba(246,184,90,0.82);
@@ -2262,6 +2264,7 @@
     <nav>
       <div class="nav-info-row">
         <a class="nav-credit" href="https://manu.vision">by <span class="nav-credit-brand">manu.vision</span></a>
+        <a id="display-btn" href="/dreamart/" aria-label="Open Display Mode">Display</a>
         <button id="info-btn" aria-label="How It Works">
           How It Works
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
@@ -2574,9 +2577,8 @@
       <div class="lb-meta" id="lb-meta"></div>
       <div class="lb-reading" id="lb-reading"></div>
       <div class="lb-actions">
-        <button class="lb-action" id="lb-copy" type="button">Copy link</button>
-        <button class="lb-action" id="lb-love" type="button" aria-label="Love this dream">❤️ 0</button>
-        <button class="lb-action" id="lb-card" type="button">Save card</button>
+        <button class="lb-action" id="lb-card" type="button">Download Card</button>
+        <button class="lb-action" id="lb-video" type="button">Download Video</button>
       </div>
       <a class="lb-action lb-mode-switch" id="lb-mode-switch" href="alternative-art.html">Alternative Art</a>
       <a class="lb-action lb-display-link" id="lb-display-link" href="/dreamart/">Display Mode</a>
@@ -4183,14 +4185,8 @@
       return `${month}. ${date.getDate()}, ${date.getFullYear()}`;
     }
 
-    async function createPublicShareCard(item, liveCanvas) {
-      const capturedFrame = snapshotCanvas(liveCanvas);
-      if (document.fonts && document.fonts.ready) await document.fonts.ready;
-      const image = capturedFrame || await loadCardImage(proceduralVisualUrl(item, 1024, 1536));
-      const canvas = document.createElement('canvas');
-      canvas.width = 1080;
-      canvas.height = 1350;
-      const ctx = canvas.getContext('2d');
+    function drawDreamCardFrame(ctx, item, source) {
+      const canvas = ctx.canvas;
       const score = item.sleepScore != null ? item.sleepScore : '';
       const scoreColorValue = scoreColor(item.sleepScore) || '#c4b5fd';
       const accentColorValue = exportAccentHex(item, scoreColorValue);
@@ -4199,40 +4195,33 @@
       const uiFont = '"Space Mono", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      const cardX = 40;
-      const cardY = 40;
-      const cardW = 1000;
-      const cardH = 1270;
-      const radius = 46;
       ctx.save();
-      roundRectPath(ctx, cardX, cardY, cardW, cardH, radius);
+      roundRectPath(ctx, 40, 40, 1000, 1270, 44);
       ctx.clip();
-      drawImageCover(ctx, image, cardX, cardY, cardW, cardH);
+      drawImageCover(ctx, source, 40, 40, 1000, 1270);
       ctx.restore();
-      drawRoundedRect(ctx, cardX, cardY, cardW, cardH, radius, 'rgba(0,0,0,0)', outlineColor, 3);
+      drawRoundedRect(ctx, 40, 40, 1000, 1270, 44, 'rgba(0,0,0,0)', outlineColor, 3);
 
       const pad = 56;
-      const contentX = cardX + pad;
-      const contentW = cardW - pad * 2;
-      const bottom = cardY + cardH - pad;
+      const contentX = 40 + pad;
+      const contentW = 1000 - pad * 2;
+      const bottom = 1310 - pad;
       const badgeGap = 12;
       const badgeH = 58;
       const badgeWeights = [0.46, 0.27, 0.27];
       const availableBadgeW = contentW - badgeGap * 2;
       const pillY = bottom - badgeH;
-
       const dateText = fmtCardDate(item.date) || item.label || 'Dreamscape';
       const badges = [
-        { text: 'DAILYDREAM.ART', color: '#f1efff' },
+        { text: 'MANU.VISION/DREAMART', color: '#f1efff' },
         { text: dateText, color: '#f1efff' },
-        { text: `SCORE ${score}`, color: accentColorValue },
+        { text: score !== '' ? `Score ${score}` : 'Score', color: accentColorValue },
       ];
+
       let badgeX = contentX;
       badges.forEach((badge, index) => {
         const badgeW = availableBadgeW * (badgeWeights[index] || 0.27);
-        const x = badgeX;
-        drawRoundedRect(ctx, x, pillY, badgeW, badgeH, 10, badgeFill, outlineColor, 3);
+        drawRoundedRect(ctx, badgeX, pillY, badgeW, badgeH, 10, badgeFill, outlineColor, 3);
         const label = String(badge.text).toUpperCase();
         let fontSize = index === 0 ? 20 : 21;
         ctx.letterSpacing = index === 0 ? '2px' : '2.1px';
@@ -4243,13 +4232,117 @@
         } while (fontSize >= 14);
         ctx.fillStyle = badge.color;
         ctx.textAlign = 'center';
-        ctx.fillText(label, x + badgeW / 2, pillY + 36);
+        ctx.fillText(label, badgeX + badgeW / 2, pillY + 36);
         badgeX += badgeW + badgeGap;
       });
       ctx.textAlign = 'left';
       ctx.letterSpacing = '0px';
+    }
 
+    async function createPublicShareCard(item, liveCanvas) {
+      const capturedFrame = snapshotCanvas(liveCanvas);
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      const image = capturedFrame || await loadCardImage(proceduralVisualUrl(item, 1024, 1536));
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080;
+      canvas.height = 1350;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas unavailable');
+      drawDreamCardFrame(ctx, item, image);
       return canvasToBlob(canvas);
+    }
+
+    function supportedVideoType() {
+      if (typeof MediaRecorder === 'undefined') return '';
+      return [
+        'video/mp4;codecs=avc1.42E01E',
+        'video/mp4;codecs=h264',
+        'video/mp4',
+      ].find(type => MediaRecorder.isTypeSupported(type)) || '';
+    }
+
+    function waitForAnimationFrame() {
+      return new Promise(resolve => requestAnimationFrame(() => resolve()));
+    }
+
+    async function createPublicShareVideo(item, durationMs = 15000) {
+      if (!window.DreamPointcloudEngine) throw new Error('Dream renderer unavailable');
+      const mimeType = supportedVideoType();
+      if (!mimeType) throw new Error('MP4 export is not supported in this browser.');
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+
+      const renderCanvas = document.createElement('canvas');
+      const renderer = new window.DreamPointcloudEngine.DreamRenderer(renderCanvas, { budget: 10000 });
+      const cardCanvas = document.createElement('canvas');
+      cardCanvas.width = 1080;
+      cardCanvas.height = 1350;
+      const cardCtx = cardCanvas.getContext('2d');
+      if (!cardCtx || !cardCanvas.captureStream) throw new Error('Video export is not supported in this browser.');
+
+      renderer.resize(1080, 1350, 1);
+      renderer.setItem(item);
+      renderer.dragging = true;
+      if (liveLightbox.renderer && liveLightbox.item && liveLightbox.item.date === item.date) {
+        renderer.zoom = Math.max(0.4, Math.min(3.2, Number(liveLightbox.renderer.zoom)));
+        renderer.rotX = liveLightbox.renderer.rotX;
+        renderer.rotY = liveLightbox.renderer.rotY;
+      }
+      renderer.render(0);
+      drawDreamCardFrame(cardCtx, item, renderCanvas);
+      await waitForAnimationFrame();
+      await waitForAnimationFrame();
+
+      const chunks = [];
+      const fps = 60;
+      const stream = cardCanvas.captureStream(0);
+      const videoTrack = stream.getVideoTracks()[0];
+      const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 14000000 });
+      const startRotY = Number.isFinite(renderer.rotY) ? renderer.rotY : 0;
+      const startRotX = Number.isFinite(renderer.rotX) ? renderer.rotX : 0.26;
+      let startedAt = 0;
+      let timer;
+
+      return new Promise((resolve, reject) => {
+        recorder.ondataavailable = event => { if (event.data.size > 0) chunks.push(event.data); };
+        recorder.onerror = () => {
+          if (timer) window.clearInterval(timer);
+          stream.getTracks().forEach(track => track.stop());
+          reject(new Error('Video export failed.'));
+        };
+        recorder.onstop = () => {
+          if (timer) window.clearInterval(timer);
+          stream.getTracks().forEach(track => track.stop());
+          resolve(new Blob(chunks, { type: mimeType }));
+        };
+        const renderFrame = () => {
+          const elapsedMs = Math.min(durationMs, performance.now() - startedAt);
+          const progress = elapsedMs / durationMs;
+          const waveCycle = progress * 2;
+          const waveParity = Math.floor(waveCycle) % 2;
+          const waveProgress = waveCycle - waveParity;
+          renderer.rotY = startRotY + progress * Math.PI * 2;
+          renderer.rotX = startRotX + Math.sin(progress * Math.PI * 2) * 0.04;
+          renderer.waveOverrideParity = waveParity;
+          renderer.waveOverrideE = waveProgress;
+          renderer.render(elapsedMs);
+          drawDreamCardFrame(cardCtx, item, renderCanvas);
+          if (videoTrack && videoTrack.requestFrame) videoTrack.requestFrame();
+          if (elapsedMs >= durationMs && recorder.state !== 'inactive') {
+            renderer.rotY = startRotY;
+            renderer.rotX = startRotX;
+            renderer.waveOverrideParity = 0;
+            renderer.waveOverrideE = 0;
+            renderer.render(0);
+            drawDreamCardFrame(cardCtx, item, renderCanvas);
+            if (videoTrack && videoTrack.requestFrame) videoTrack.requestFrame();
+            window.setTimeout(() => recorder.stop(), 120);
+          }
+        };
+        recorder.start(1000);
+        startedAt = performance.now();
+        renderFrame();
+        timer = window.setInterval(renderFrame, 1000 / fps);
+      });
     }
 
     async function createWrapExportImage(slide, index, total) {
@@ -4453,9 +4546,8 @@
     const lbCounter   = document.getElementById('lb-counter');
     const lbBackdrop  = document.getElementById('lb-backdrop');
     const lbReading   = document.getElementById('lb-reading');
-    const lbCopy      = document.getElementById('lb-copy');
-    const lbLove      = document.getElementById('lb-love');
     const lbCard      = document.getElementById('lb-card');
+    const lbVideo     = document.getElementById('lb-video');
     const lbInstagram = document.getElementById('lb-instagram');
     const lbModeSwitch = document.getElementById('lb-mode-switch');
     const lbDisplayLink = document.getElementById('lb-display-link');
@@ -5561,9 +5653,6 @@
       lbPrev.disabled    = current === 0;
       lbNext.disabled    = current === displayed.length - 1;
       lbCounter.textContent = `${current + 1} / ${displayed.length}`;
-      lbLove.textContent = `❤️ ${item.loveCount == null ? 0 : item.loveCount}`;
-      lbLove.disabled = false;
-      lbLove.setAttribute('aria-label', `Love this dream. ${item.loveCount == null ? 0 : item.loveCount} loves`);
       if (lbInstagram) {
         if (embedUrl) {
           lbInstagram.href = item.instagramUrl;
@@ -5607,47 +5696,37 @@
     lbBackdrop.addEventListener('click', closeLightbox);
     lbPrev.addEventListener('click', prevImg);
     lbNext.addEventListener('click', nextImg);
-    lbCopy.addEventListener('click', async () => {
-      const item = displayed[current];
-      await copyText(shareUrlFor(item));
-      lbCopy.textContent = 'Copied';
-      setTimeout(() => { lbCopy.textContent = 'Copy link'; }, 1200);
-    });
-    lbLove.addEventListener('click', async () => {
-      const item = displayed[current];
-      const target = loveTargetFor(item);
-      if (!item || !target) return;
-      const previous = item.loveCount == null ? 0 : item.loveCount;
-      item.loveCount = previous + 1;
-      lbLove.textContent = `❤️ ${item.loveCount}`;
-      lbLove.disabled = true;
-      try {
-        item.loveCount = await incrementLove(target);
-        lbLove.textContent = `❤️ ${item.loveCount}`;
-        lbLove.setAttribute('aria-label', `Love this dream. ${item.loveCount} loves`);
-      } catch (error) {
-        console.error('Could not save dream love', error);
-        item.loveCount = previous;
-        lbLove.textContent = `❤️ ${item.loveCount}`;
-      } finally {
-        lbLove.disabled = false;
-      }
-    });
     lbCard.addEventListener('click', async () => {
       const item = displayed[current];
       if (!item) return;
       lbCard.textContent = 'Preparing';
+      lbCard.disabled = true;
       try {
         const isCurrentLiveFrame = liveLightbox.item && liveLightbox.item.date === item.date;
         const blob = await createPublicShareCard(item, isCurrentLiveFrame ? lbLive : null);
         const filename = `dream-art-${item.date || 'card'}.png`;
         downloadBlob(blob, filename);
-        lbCard.textContent = 'Saved';
+        lbCard.textContent = 'Downloaded';
       } catch (error) {
         console.error('Could not create share card', error);
         lbCard.textContent = 'Try again';
       }
-      setTimeout(() => { lbCard.textContent = 'Save card'; }, 1400);
+      setTimeout(() => { lbCard.textContent = 'Download Card'; lbCard.disabled = false; }, 1400);
+    });
+    lbVideo.addEventListener('click', async () => {
+      const item = displayed[current];
+      if (!item) return;
+      lbVideo.textContent = 'Recording';
+      lbVideo.disabled = true;
+      try {
+        const blob = await createPublicShareVideo(item, 15000);
+        downloadBlob(blob, `dream-art-${item.date || 'video'}.mp4`);
+        lbVideo.textContent = 'Downloaded';
+      } catch (error) {
+        console.error('Could not create share video', error);
+        lbVideo.textContent = 'Try again';
+      }
+      setTimeout(() => { lbVideo.textContent = 'Download Video'; lbVideo.disabled = false; }, 1400);
     });
     if (lbLive && !window.DreamPointcloudEngine) {
       lbLive.addEventListener('pointerdown', (event) => {
