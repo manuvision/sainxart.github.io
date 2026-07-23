@@ -54,6 +54,7 @@
       padding: clamp(14px, 3vw, 38px);
     }
     #stage {
+      --display-pad: clamp(18px, 3vw, 44px);
       position: relative;
       width: min(100%, 180vh);
       height: 100%;
@@ -79,7 +80,7 @@
     .display-title {
       position: absolute;
       z-index: 4;
-      top: max(18px, env(safe-area-inset-top));
+      top: max(var(--display-pad), env(safe-area-inset-top));
       left: clamp(18px, 4vw, 54px);
       right: clamp(18px, 4vw, 54px);
       display: grid;
@@ -123,7 +124,6 @@
       justify-content: space-between;
     }
     #bottomline {
-      --display-pad: clamp(18px, 3vw, 44px);
       left: var(--display-pad);
       right: var(--display-pad);
       bottom: var(--display-pad);
@@ -582,7 +582,7 @@
         gap: 0.5rem;
       }
       .display-title {
-        top: max(14px, env(safe-area-inset-top));
+        top: max(24px, env(safe-area-inset-top));
         gap: 0.58rem;
       }
       .display-title h1 {
