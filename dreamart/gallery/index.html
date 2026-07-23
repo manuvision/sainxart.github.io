@@ -4285,6 +4285,10 @@
     function waitForAnimationFrame() {
       return new Promise(resolve => requestAnimationFrame(() => resolve()));
     }
+    async function loadMediabunny() {
+      const importer = new Function('specifier', 'return import(specifier)');
+      return importer('/dreamart/vendor/mediabunny.mjs');
+    }
 
     function setDownloadProgress(button, progress) {
       const pct = Math.max(0, Math.min(100, Math.round(progress * 100)));
@@ -4295,7 +4299,80 @@
       button.classList.remove('is-progressing');
       button.style.removeProperty('--download-progress');
     }
-    async function createPublicShareVideo(item, durationMs = 15000, onProgress) {
+    async function encodePublicShareVideoOffline(item, durationMs = 15000, onProgress) {
+      if (!window.DreamPointcloudEngine) throw new Error('Dream renderer unavailable');
+      if (typeof VideoEncoder === 'undefined') throw new Error('Offline MP4 export is not supported in this browser.');
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+
+      const [{ Output, Mp4OutputFormat, BufferTarget, CanvasSource }] = await Promise.all([
+        loadMediabunny(),
+      ]);
+      const renderCanvas = document.createElement('canvas');
+      const renderer = new window.DreamPointcloudEngine.DreamRenderer(renderCanvas, { budget: 10000 });
+      const cardCanvas = document.createElement('canvas');
+      cardCanvas.width = 1080;
+      cardCanvas.height = 1350;
+      const cardCtx = cardCanvas.getContext('2d');
+      if (!cardCtx) throw new Error('Canvas unavailable');
+
+      const width = 1080;
+      const height = 1350;
+      const fps = 60;
+      const frameDuration = 1 / fps;
+      const totalFrames = Math.round((durationMs / 1000) * fps);
+
+      renderer.resize(width, height, 1);
+      renderer.setItem(item);
+      renderer.dragging = true;
+      if (liveLightbox.renderer && liveLightbox.item && liveLightbox.item.date === item.date) {
+        renderer.zoom = Math.max(0.4, Math.min(3.2, Number(liveLightbox.renderer.zoom)));
+        renderer.rotX = liveLightbox.renderer.rotX;
+        renderer.rotY = liveLightbox.renderer.rotY;
+      }
+
+      const target = new BufferTarget();
+      const output = new Output({ format: new Mp4OutputFormat({ fastStart: 'in-memory' }), target });
+      const source = new CanvasSource(cardCanvas, {
+        codec: 'avc',
+        bitrate: 14000000,
+        bitrateMode: 'variable',
+        frameRate: fps,
+        keyFrameInterval: 1,
+        latencyMode: 'quality',
+        hardwareAcceleration: 'prefer-hardware',
+        alpha: 'discard',
+      });
+      output.addVideoTrack(source, { width, height, frameRate: fps });
+      await output.start();
+
+      const startRotY = Number.isFinite(renderer.rotY) ? renderer.rotY : 0;
+      const startRotX = Number.isFinite(renderer.rotX) ? renderer.rotX : 0.26;
+
+      for (let frame = 0; frame < totalFrames; frame += 1) {
+        const progress = frame / totalFrames;
+        const waveCycle = progress * 2;
+        const waveParity = Math.floor(waveCycle) % 2;
+        const waveProgress = waveCycle - waveParity;
+        const elapsedMs = progress * durationMs;
+        renderer.rotY = startRotY + progress * Math.PI * 2;
+        renderer.rotX = startRotX + Math.sin(progress * Math.PI * 2) * 0.04;
+        renderer.waveOverrideParity = waveParity;
+        renderer.waveOverrideE = waveProgress;
+        renderer.render(elapsedMs);
+        drawDreamCardFrame(cardCtx, item, renderCanvas);
+        await source.add(frame * frameDuration, frameDuration, { keyFrame: frame % fps === 0 });
+        if (frame % 6 === 0 || frame === totalFrames - 1) {
+          if (onProgress) onProgress((frame + 1) / totalFrames);
+          await waitForAnimationFrame();
+        }
+      }
+
+      await output.finalize();
+      if (!target.buffer) throw new Error('Offline MP4 export produced no data.');
+      return new Blob([target.buffer], { type: 'video/mp4' });
+    }
+
+    async function recordPublicShareVideoRealtime(item, durationMs = 15000, onProgress) {
       if (!window.DreamPointcloudEngine) throw new Error('Dream renderer unavailable');
       const mimeType = supportedVideoType();
       if (!mimeType) throw new Error('MP4 export is not supported in this browser.');
@@ -4374,6 +4451,16 @@
         renderFrame();
         timer = window.setInterval(renderFrame, 1000 / fps);
       });
+    }
+
+    async function createPublicShareVideo(item, durationMs = 15000, onProgress) {
+      try {
+        return await encodePublicShareVideoOffline(item, durationMs, onProgress);
+      } catch (error) {
+        console.warn('Offline MP4 export failed, falling back to realtime recorder.', error);
+        if (onProgress) onProgress(0);
+        return recordPublicShareVideoRealtime(item, durationMs, onProgress);
+      }
     }
 
     async function createWrapExportImage(slide, index, total) {
