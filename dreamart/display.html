@@ -243,12 +243,6 @@
       display: grid;
       gap: 0.75rem;
     }
-    .brand-credit {
-      width: 100%;
-      margin: 0.2rem 0 0;
-      text-align: center;
-      justify-self: center;
-    }
     .brand-action {
       min-height: 52px;
       display: flex;
@@ -502,12 +496,11 @@
     <div class="brand-modal">
       <button class="brand-close" id="brandClose" type="button">Close</button>
       <div class="brand-modal-head">
-        <div id="reading"><p>Every morning, the display gets updated via Manuel Sainsily's sleep data.</p><p>Turning my biometrics into daily art.</p></div>
+        <div id="reading"><p>Every morning, the display gets updated via <a href="https://manu.vision" target="_blank" rel="noopener">Manuel Sainsily</a>'s sleep data.</p><p>Turning my biometrics into daily art.</p></div>
       </div>
       <div class="brand-actions">
         <a class="brand-action gold" href="gallery/">Gallery</a>
         <button class="brand-action" id="brandAbout" type="button">About this project</button>
-        <p class="brand-credit">By <a href="https://manu.vision" target="_blank" rel="noopener">manu.vision</a></p>
       </div>
     </div>
   </div>
@@ -702,7 +695,7 @@
     }
 
 	    function updateUi(item) {
-      reading.innerHTML = `<p>Every morning, the display gets updated via Manuel Sainsily's sleep data.</p><p>${escapeHtml(displayReadingText(item))}</p>`;
+      reading.innerHTML = `<p>Every morning, the display gets updated via <a href="https://manu.vision" target="_blank" rel="noopener">Manuel Sainsily</a>'s sleep data.</p><p>${escapeHtml(displayReadingText(item))}</p>`;
       datePill.textContent = item.label || formatDate(item.date);
       scorePill.textContent = `Score ${item.sleepScore}`;
       scorePill.style.setProperty('--score-color', scoreColor(item.sleepScore));
