@@ -90,20 +90,22 @@
     }
     .display-title h1 {
       font-family: var(--font-display);
-      font-size: clamp(3rem, 7.5vw, 7rem);
+      font-size: clamp(2.8rem, 7vw, 7rem);
       font-weight: 300;
       font-style: italic;
       line-height: 0.9;
       letter-spacing: 0;
       color: var(--text);
       text-shadow: 0 18px 60px rgba(0,0,0,0.48);
+      white-space: nowrap;
     }
     .display-title p {
       color: var(--muted);
-      font: 700 clamp(0.68rem, 1.15vw, 1rem) var(--font-ui);
-      letter-spacing: 0.2em;
+      font: 700 clamp(0.62rem, 1.02vw, 0.95rem) var(--font-ui);
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       text-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      white-space: nowrap;
     }
     .overlay {
       position: absolute;
@@ -373,6 +375,13 @@
       font-size: clamp(0.82rem, 1.3vw, 1.1rem);
       line-height: 1.65;
       letter-spacing: 0.04em;
+      text-align: center;
+    }
+    #reading p {
+      margin: 0;
+    }
+    #reading p + p {
+      margin-top: 0.85rem;
     }
     #status {
       color: var(--gold);
@@ -440,12 +449,13 @@
         gap: 0.35rem;
       }
       .display-title h1 {
-        font-size: clamp(2.35rem, 11vw, 4.2rem);
+        font-size: clamp(2rem, 9.4vw, 3.85rem);
       }
       .display-title p {
-        max-width: 22rem;
-        font-size: clamp(0.58rem, 2.5vw, 0.76rem);
-        line-height: 1.45;
+        max-width: none;
+        font-size: clamp(0.46rem, 1.9vw, 0.7rem);
+        line-height: 1.35;
+        letter-spacing: 0.12em;
       }
       .pill {
         min-height: 38px;
@@ -492,7 +502,7 @@
     <div class="brand-modal">
       <button class="brand-close" id="brandClose" type="button">Close</button>
       <div class="brand-modal-head">
-        <p id="reading">Turning my biometrics into daily art.</p>
+        <div id="reading"><p>Every morning, the display gets updated via Manuel Sainsily's sleep data.</p><p>Turning my biometrics into daily art.</p></div>
       </div>
       <div class="brand-actions">
         <a class="brand-action gold" href="gallery/">Gallery</a>
@@ -676,8 +686,23 @@
       raf = requestAnimationFrame(animate);
     }
 
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    function displayReadingText(item) {
+      const raw = item.reading || 'A new biometric signal becomes shape, color, material, and atmosphere.';
+      return raw.replace(/^This night becomes\b/i, 'This night was represented by');
+    }
+
 	    function updateUi(item) {
-      reading.textContent = item.reading || 'A new biometric signal becomes shape, color, material, and atmosphere.';
+      reading.innerHTML = `<p>Every morning, the display gets updated via Manuel Sainsily's sleep data.</p><p>${escapeHtml(displayReadingText(item))}</p>`;
       datePill.textContent = item.label || formatDate(item.date);
       scorePill.textContent = `Score ${item.sleepScore}`;
       scorePill.style.setProperty('--score-color', scoreColor(item.sleepScore));

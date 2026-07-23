@@ -2750,18 +2750,22 @@
       };
     }
 
+    function normalizeDreamReading(text) {
+      return String(text || '').replace(/^This night becomes\b/i, 'This night was represented by');
+    }
+
     function dreamReading(item) {
-      if (item.reading) return item.reading;
+      if (item.reading) return normalizeDreamReading(item.reading);
       const meta = scoreMeta(item.sleepScore);
       if (!meta) {
         return 'This dreamscape keeps its score quiet, leaving the night to read as pure form and atmosphere.';
       }
       const passages = {
-        Aurora: 'This night becomes aurora spheres: open, buoyant forms that suggest ease, lift, and a luminous sense of restoration.',
-        Slate: 'This night becomes slate toruses: smooth loops that hold the composition in a steady rhythm with a calm sense of return.',
-        Moss: 'This night becomes moss cylinders: grounded vertical forms that gather like quiet markers across a balanced, organic field.',
-        Ochre: 'This night becomes ochre cubes: a warmer, more compact architecture where recovery feels deliberate and held close.',
-        Ember: 'This night becomes ember pyramids: sharper forms that turn a harder night into something alert, angular, and still alive.'
+        Aurora: 'This night was represented by aurora spheres: open, buoyant forms that suggest ease, lift, and a luminous sense of restoration.',
+        Slate: 'This night was represented by slate toruses: smooth loops that hold the composition in a steady rhythm with a calm sense of return.',
+        Moss: 'This night was represented by moss cylinders: grounded vertical forms that gather like quiet markers across a balanced, organic field.',
+        Ochre: 'This night was represented by ochre cubes: a warmer, more compact architecture where recovery feels deliberate and held close.',
+        Ember: 'This night was represented by ember pyramids: sharper forms that turn a harder night into something alert, angular, and still alive.'
       };
       return `${passages[meta.palette]} The more intimate signals stay abstracted: length shapes the scale, deeper rest adds weight, dream-rich sleep loosens the motion, and recovery changes how high the forms seem to float.`;
     }
