@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dream Art Daily Display</title>
-  <meta name="description" content="A fullscreen daily Dream Art display: one procedural dreamscape from sleep data." />
+  <title>Daily Dream Art</title>
+  <meta name="description" content="Daily Dream Art: a fullscreen procedural artwork generated from daily biometrics." />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <script src="dreamart-pointcloud.js?v=20260720-hover-zoom"></script>
+  <script src="dreamart-pointcloud.js?v=20260723-dailydream"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
@@ -76,6 +76,35 @@
       touch-action: none;
     }
     #dream.ready { opacity: 1; }
+    .display-title {
+      position: absolute;
+      z-index: 4;
+      top: max(18px, env(safe-area-inset-top));
+      left: clamp(18px, 4vw, 54px);
+      right: clamp(18px, 4vw, 54px);
+      display: grid;
+      justify-items: center;
+      gap: 0.45rem;
+      text-align: center;
+      pointer-events: none;
+    }
+    .display-title h1 {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 7.5vw, 7rem);
+      font-weight: 300;
+      font-style: italic;
+      line-height: 0.9;
+      letter-spacing: 0;
+      color: var(--text);
+      text-shadow: 0 18px 60px rgba(0,0,0,0.48);
+    }
+    .display-title p {
+      color: var(--muted);
+      font: 700 clamp(0.68rem, 1.15vw, 1rem) var(--font-ui);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    }
     .overlay {
       position: absolute;
       z-index: 3;
@@ -92,11 +121,13 @@
       justify-content: space-between;
     }
     #bottomline {
-      left: clamp(18px, 3vw, 44px);
-      right: clamp(18px, 3vw, 44px);
-      bottom: clamp(18px, 3vw, 44px);
+      --display-pad: clamp(18px, 3vw, 44px);
+      left: var(--display-pad);
+      right: var(--display-pad);
+      bottom: var(--display-pad);
       align-items: flex-end;
       justify-content: space-between;
+      gap: var(--display-pad);
     }
     .pill {
       min-height: 42px;
@@ -156,14 +187,93 @@
 	      cursor: pointer;
 	      pointer-events: auto;
 	    }
-    #titleBlock {
-      max-width: min(46rem, 72vw);
-      padding: clamp(0.9rem, 2vw, 1.35rem);
-      border-radius: 18px;
-	      border: 1px solid rgba(var(--accent-rgb),0.3);
-      background: linear-gradient(180deg, rgba(10,10,22,0.18), rgba(10,10,22,0.76));
-	      backdrop-filter: blur(16px);
-	    }
+    .badge-row {
+      position: static !important;
+      width: min(100%, 56rem);
+      margin-left: auto;
+      display: grid !important;
+      grid-template-columns: minmax(13rem, 1.5fr) minmax(9rem, 0.86fr) minmax(7.6rem, 0.72fr) 42px;
+      gap: 0.65rem;
+      justify-content: end;
+      pointer-events: none;
+    }
+    .badge-row .pill {
+      width: 100%;
+      min-width: 0;
+      justify-content: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .brand-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 22;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      background: rgba(4, 4, 10, 0.72);
+      backdrop-filter: blur(18px);
+    }
+    .brand-modal-backdrop.open { display: flex; }
+    .brand-modal {
+      width: min(100%, 30rem);
+      border: 1px solid rgba(var(--accent-rgb),0.66);
+      border-radius: 24px;
+      background: rgba(11,10,24,0.96);
+      box-shadow: 0 24px 90px rgba(0,0,0,0.55), 0 0 0 1px rgba(var(--accent-rgb),0.12);
+      padding: 1.15rem;
+    }
+    .brand-modal-head {
+      display: grid;
+      gap: 0.45rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .brand-modal p,
+    .brand-modal a {
+      color: var(--muted);
+      font: 0.78rem/1.6 var(--font-ui);
+      letter-spacing: 0.08em;
+    }
+    .brand-modal a { color: var(--gold); text-decoration: none; }
+    .brand-actions {
+      display: grid;
+      gap: 0.75rem;
+    }
+    .brand-credit {
+      width: 100%;
+      margin: 0.2rem 0 0;
+      text-align: center;
+      justify-self: center;
+    }
+    .brand-action {
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(var(--accent-rgb),0.72);
+      border-radius: 10px;
+      background: rgba(var(--accent-rgb),0.16);
+      color: var(--text);
+      font: 700 0.78rem var(--font-ui);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .brand-action.gold {
+      border-color: rgba(255,190,99,0.7);
+      background: rgba(44,29,20,0.58);
+      color: var(--gold);
+    }
+    .brand-close {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
 	    .date-modal-backdrop {
 	      position: fixed;
 	      inset: 0;
@@ -315,14 +425,27 @@
         right: 14px;
       }
       #bottomline {
-        align-items: flex-start;
+        --display-pad: 14px;
+        align-items: stretch;
         flex-direction: column;
+        gap: 14px;
       }
-      #titleBlock {
-        max-width: 100%;
+      .badge-row {
+        width: 100%;
+        grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.9fr) minmax(0, 0.72fr) 38px;
+        gap: 0.5rem;
       }
-      #reading {
-        max-width: 100%;
+      .display-title {
+        top: max(14px, env(safe-area-inset-top));
+        gap: 0.35rem;
+      }
+      .display-title h1 {
+        font-size: clamp(2.35rem, 11vw, 4.2rem);
+      }
+      .display-title p {
+        max-width: 22rem;
+        font-size: clamp(0.58rem, 2.5vw, 0.76rem);
+        line-height: 1.45;
       }
       .pill {
         min-height: 38px;
@@ -344,6 +467,10 @@
   <main id="display" aria-live="polite">
     <section id="stage">
       <canvas id="dream" aria-label="Daily procedural dreamscape"></canvas>
+      <div class="display-title" aria-hidden="true">
+        <h1>Daily Dream Art</h1>
+        <p>Turning my biometrics into daily art.</p>
+      </div>
       <div id="message">
         <div>
           <h2>Waiting For The Signal</h2>
@@ -351,18 +478,29 @@
         </div>
       </div>
       <div class="overlay" id="bottomline">
-        <div id="titleBlock">
-          <p id="reading">Turning my biometrics into daily art.</p>
-        </div>
-        <div class="overlay" style="position: static; justify-content: flex-end;">
-          <a class="pill" id="url" href="https://manu.vision/dreamart/" aria-label="Open Dream Art gallery">manu.vision/dreamart</a>
-	          <span class="pill" id="date" role="button" tabindex="0" aria-label="Choose display date">Today</span>
+        <div class="badge-row">
+          <button class="pill" id="url" type="button" aria-label="Open Daily Dream Art menu">manu.vision/dreamart</button>
+          <span class="pill" id="date" role="button" tabindex="0" aria-label="Choose display date">Today</span>
           <span class="pill" id="score">Score --</span>
           <button class="pill sound-pill" id="soundToggle" type="button" aria-label="Ambient sound off" title="Ambient sound off">🔇</button>
         </div>
       </div>
 	    </section>
 	  </main>
+
+  <div class="brand-modal-backdrop" id="brandModal" role="dialog" aria-modal="true" aria-label="Daily Dream Art menu">
+    <div class="brand-modal">
+      <button class="brand-close" id="brandClose" type="button">Close</button>
+      <div class="brand-modal-head">
+        <p id="reading">Turning my biometrics into daily art.</p>
+      </div>
+      <div class="brand-actions">
+        <a class="brand-action gold" href="gallery/">Gallery</a>
+        <button class="brand-action" id="brandAbout" type="button">About this project</button>
+        <p class="brand-credit">By <a href="https://manu.vision" target="_blank" rel="noopener">manu.vision</a></p>
+      </div>
+    </div>
+  </div>
 	  <div class="date-modal-backdrop" id="dateModal" role="dialog" aria-modal="true" aria-label="Choose display date">
 	    <div class="date-modal">
 	      <div class="date-fields">
@@ -388,6 +526,10 @@
 	    const datePill = document.getElementById('date');
 	    const scorePill = document.getElementById('score');
 	    const soundToggle = document.getElementById('soundToggle');
+        const urlBadge = document.getElementById('url');
+        const brandModal = document.getElementById('brandModal');
+        const brandClose = document.getElementById('brandClose');
+        const brandAbout = document.getElementById('brandAbout');
 	    const dateModal = document.getElementById('dateModal');
 	    const modalDate = document.getElementById('modalDate');
 	    const modalToday = document.getElementById('modalToday');
@@ -656,9 +798,23 @@
       }
     }
 
+        function openBrandModal() {
+          brandModal.classList.add('open');
+        }
+        function closeBrandModal() {
+          brandModal.classList.remove('open');
+        }
 	    soundToggle.addEventListener('click', () => {
 	      setSound(soundIndex + 1);
 	    });
+        urlBadge.addEventListener('click', openBrandModal);
+        brandClose.addEventListener('click', closeBrandModal);
+        brandModal.addEventListener('click', (event) => {
+          if (event.target === brandModal) closeBrandModal();
+        });
+        brandAbout.addEventListener('click', () => {
+          window.location.href = 'gallery/?about=1';
+        });
 	    datePill.addEventListener('click', openDateModal);
 	    datePill.addEventListener('keydown', (event) => {
 	      if (event.key === 'Enter' || event.key === ' ') {
@@ -681,11 +837,15 @@
 	    document.addEventListener('keydown', (event) => {
 	      const tag = document.activeElement?.tagName;
 	      const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable;
+          if (event.key === 'Escape' && brandModal.classList.contains('open')) {
+            closeBrandModal();
+            return;
+          }
 	      if (event.key === 'Escape' && dateModal.classList.contains('open')) {
 	        closeDateModal();
 	        return;
 	      }
-	      if (isTyping || dateModal.classList.contains('open')) return;
+	      if (isTyping || dateModal.classList.contains('open') || brandModal.classList.contains('open')) return;
 	      if (event.key === 'ArrowRight') {
 	        event.preventDefault();
 	        navigateDate(1);

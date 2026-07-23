@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Daily Dream Art Alternative Gallery</title>
+  <base href="/dreamart/">
+  <title>Daily Dream Art Gallery</title>
   <meta name="description" content="Every night since May 23, 2025. Sleep data turned into generative sculptures — one artwork per night, ongoing." />
-  <link rel="canonical" href="https://manu.vision/dreamart/alternative-art.html" />
+  <link rel="canonical" href="https://manu.vision/dreamart/gallery/" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Daily Dream Art" />
-  <meta property="og:title" content="Daily Dream Art Alternative Gallery" />
+  <meta property="og:title" content="Daily Dream Art Gallery" />
   <meta property="og:description" content="Every night since May 23, 2025. Sleep data turned into generative sculptures — one artwork per night, ongoing." />
-  <meta property="og:url" content="https://manu.vision/dreamart/alternative-art.html" />
+  <meta property="og:url" content="https://manu.vision/dreamart/gallery/" />
   <meta property="og:image" content="https://manu.vision/dreamart/og-card.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -21,15 +22,10 @@
 
   <!-- Twitter / X -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Daily Dream Art Alternative Gallery" />
+  <meta name="twitter:title" content="Daily Dream Art Gallery" />
   <meta name="twitter:description" content="Every night since May 23, 2025. Sleep data turned into generative sculptures." />
   <meta name="twitter:image" content="https://manu.vision/dreamart/og-card.png" />
-  <script>
-    // Redirect /dreamart and /dreamart/ to /dreamart/index.html, while allowing test pages.
-    if (!location.pathname.endsWith('.html')) {
-      location.replace(location.pathname.replace(/\/?$/, '/index.html') + location.search + location.hash);
-    }
-  </script>
+  <script src="dreamart-pointcloud.js?v=20260720-hover-zoom"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
@@ -94,14 +90,9 @@
     /* Info button row — sits centered under the manu.vision link */
     .nav-info-row {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 0.5rem;
-    }
-    @media (max-width: 560px) {
-      .nav-info-row {
-        flex-direction: column;
-        gap: 0.65rem;
-      }
+      gap: 0.65rem;
     }
     header nav a {
       font-size: 0.68rem;
@@ -149,11 +140,11 @@
       cursor: pointer;
       font-size: 0.65rem;
       font-family: var(--font-ui);
+      text-decoration: none;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       transition: border-color 0.2s, background 0.2s, color 0.2s;
       white-space: nowrap;
-      text-decoration: none;
     }
     #cal-btn:hover,
     #cal-btn.active,
@@ -472,6 +463,8 @@
     }
     .hm-cell.hm-data {
       cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: rgba(255, 187, 86, 0.2);
     }
     .hm-cell.hm-data:hover {
       opacity: 0.75;
@@ -646,7 +639,6 @@
       #cal-btn,
       #sort-btn,
       #wrap-btn,
-      #alt-art-btn,
       #how-btn {
         font-size: 0.61rem;
         letter-spacing: 0.09em;
@@ -1137,9 +1129,25 @@
       opacity: 0;
       transition: opacity 0.3s ease;
     }
+    #lb-live {
+      width: min(100%, calc(min(54vh, 620px) * 0.6667));
+      aspect-ratio: 2 / 3;
+      border-radius: 10px;
+      background: #07070f;
+      box-shadow: 0 32px 100px rgba(0,0,0,0.8);
+      display: block;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      touch-action: none;
+      cursor: grab;
+    }
+    #lb-live.loaded { opacity: 1; }
+    #lb-live:active { cursor: grabbing; }
+    #lb-img[hidden] { display: none; }
     #lb-img.loaded { opacity: 1; }
     @media (max-height: 760px) {
       #lb-img { max-height: 46vh; }
+      #lb-live { width: min(100%, calc(46vh * 0.6667)); }
       #lb-img-wrap { gap: 0.52rem; }
     }
     #lb-date {
@@ -2423,8 +2431,8 @@
         <path d="M5 5H10M5 7.5H10M5 10H7.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
       </svg>
     </button>
-    <a id="alt-art-btn" href="gallery/" aria-label="Open procedural art gallery">
-      Procedural Art
+    <a id="alt-art-btn" href="alternative-art.html" aria-label="Open alternative generative image gallery">
+      Alternative Art
     </a>
     <div id="filter-pill">
       <span id="filter-label"></span>
@@ -2560,6 +2568,7 @@
       </svg>
     </button>
     <div id="lb-img-wrap">
+      <canvas id="lb-live" aria-label="Interactive procedural dreamscape"></canvas>
       <img id="lb-img" src="" alt="Dream art" />
       <div id="lb-date"></div>
       <div class="lb-meta" id="lb-meta"></div>
@@ -2569,7 +2578,8 @@
         <button class="lb-action" id="lb-love" type="button" aria-label="Love this dream">❤️ 0</button>
         <button class="lb-action" id="lb-card" type="button">Save card</button>
       </div>
-      <a class="lb-action lb-mode-switch" id="lb-mode-switch" href="gallery/">Procedural Art</a>
+      <a class="lb-action lb-mode-switch" id="lb-mode-switch" href="alternative-art.html">Alternative Art</a>
+      <a class="lb-action lb-display-link" id="lb-display-link" href="/dreamart/">Display Mode</a>
       <a class="lb-action" id="lb-instagram" href="#" target="_blank" rel="noopener noreferrer">Watch video</a>
     </div>
     <button class="lb-nav" id="lb-next" aria-label="Next">
@@ -2586,6 +2596,8 @@
 
   <script>
     const API = 'https://dreamart.manu.vision/api/gallery/public';
+    const PROCEDURAL_PUBLIC_API = 'https://dreamart.manu.vision/api/procedural-public';
+    const PROCEDURAL_PRIVATE_API = 'https://dreamart.manu.vision/api/procedural-dream';
     const LOVE_API = 'https://dreamart.manu.vision/api/love';
     const IMAGE_OPTIMIZER = 'https://dreamart.manu.vision/_next/image';
     const THUMB_WIDTH = 384;
@@ -2820,7 +2832,7 @@
 
     function buildHowPool(items) {
       return sortItems(items)
-        .filter(item => item.imageData && Number.isFinite(Number(item.sleepScore)))
+        .filter(item => Number.isFinite(Number(item.sleepScore)))
         .map(item => ({ item, fingerprint: howFingerprint(item) }));
     }
 
@@ -2877,7 +2889,7 @@
         img.onerror = () => {
           howPreloadedCount += 1;
         };
-        img.src = thumbnailUrl(item.imageData, PREVIEW_WIDTH);
+        img.src = proceduralVisualUrl(item, PREVIEW_WIDTH, Math.round(PREVIEW_WIDTH * 1.5));
       });
     }
 
@@ -2894,7 +2906,7 @@
       const nextImg = howShowingA ? howImgB : howImgA;
       const prevImg = howShowingA ? howImgA : howImgB;
       nextImg.alt = item.label || 'Dreamscape archive match';
-      nextImg.src = thumbnailUrl(item.imageData, PREVIEW_WIDTH);
+      nextImg.src = proceduralVisualUrl(item, PREVIEW_WIDTH, Math.round(PREVIEW_WIDTH * 1.5));
       nextImg.classList.add('active');
       prevImg.classList.remove('active');
       howShowingA = !howShowingA;
@@ -2992,6 +3004,26 @@
 
     function todayDreamscape() {
       return sortItems(allItems)[0] || null;
+    }
+
+    async function fetchJsonArray(url, options = {}) {
+      try {
+        const res = await fetch(url, options);
+        if (!res.ok) return [];
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function mergePublicEntries(...groups) {
+      const byDate = new Map();
+      groups.flat().forEach((item) => {
+        if (!item || !item.date || !Number.isFinite(Number(item.sleepScore))) return;
+        byDate.set(item.date, localizeGeneratedImage({ ...byDate.get(item.date), ...item }));
+      });
+      return [...byDate.values()].sort((a, b) => b.date.localeCompare(a.date));
     }
 
     function mysteryDateLabel(item) {
@@ -3270,12 +3302,23 @@
     }
 
     function drawImageCover(ctx, image, x, y, width, height) {
-      const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
-      const drawWidth = image.naturalWidth * scale;
-      const drawHeight = image.naturalHeight * scale;
+      const sourceWidth = image.naturalWidth || image.videoWidth || image.width;
+      const sourceHeight = image.naturalHeight || image.videoHeight || image.height;
+      const scale = Math.max(width / sourceWidth, height / sourceHeight);
+      const drawWidth = sourceWidth * scale;
+      const drawHeight = sourceHeight * scale;
       const dx = x + (width - drawWidth) / 2;
       const dy = y + (height - drawHeight) / 2;
       ctx.drawImage(image, dx, dy, drawWidth, drawHeight);
+    }
+
+    function snapshotCanvas(source) {
+      if (!source || !source.width || !source.height) return null;
+      const snapshot = document.createElement('canvas');
+      snapshot.width = source.width;
+      snapshot.height = source.height;
+      snapshot.getContext('2d').drawImage(source, 0, 0);
+      return snapshot;
     }
 
     function canvasToBlob(canvas) {
@@ -3287,6 +3330,847 @@
       });
     }
 
+    const proceduralCache = new Map();
+    const PROCEDURAL_TAU = Math.PI * 2;
+    const PROCEDURAL_PHI = (1 + Math.sqrt(5)) / 2;
+    const PROCEDURAL_GOLDEN = PROCEDURAL_TAU * (1 - 1 / PROCEDURAL_PHI);
+    const LIVE_DEFAULT_ZOOM = 0.45;
+    const LIVE_MIN_ZOOM = 0.24;
+    const LIVE_MAX_ZOOM = 1.45;
+    const LIVE_DEFAULT_DENSITY = 7200;
+    const LIVE_DEFAULT_MOTION = 40;
+    const LIVE_DEFAULT_SPREAD = 34;
+
+    function seededRandom(seed) {
+      let h = 2166136261 >>> 0;
+      const text = String(seed || 'dream-art');
+      for (let i = 0; i < text.length; i += 1) {
+        h ^= text.charCodeAt(i);
+        h = Math.imul(h, 16777619) >>> 0;
+      }
+      return () => {
+        h ^= h << 13; h >>>= 0;
+        h ^= h >>> 17;
+        h ^= h << 5; h >>>= 0;
+        return (h % 100000) / 100000;
+      };
+    }
+
+    function proceduralCount(item) {
+      const reading = String(item && item.reading || '').toLowerCase();
+      if (reading.includes('five ')) return 5;
+      if (reading.includes('four ')) return 4;
+      if (reading.includes('three ')) return 3;
+      if (reading.includes('two ')) return 2;
+      if (reading.includes('one ')) return 1;
+      const score = Number(item && item.sleepScore);
+      const meta = scoreMeta(score);
+      if (!meta) return 3;
+      const band = meta.palette === 'Aurora' ? [86, 100]
+        : meta.palette === 'Slate' ? [71, 85]
+        : meta.palette === 'Moss' ? [56, 70]
+        : meta.palette === 'Ochre' ? [41, 55]
+        : [0, 40];
+      const t = clamp01((score - band[0]) / Math.max(1, band[1] - band[0]));
+      return Math.max(1, Math.min(5, Math.ceil(t * 5)));
+    }
+
+    function proceduralTiltLift(reading) {
+      const text = String(reading || '').toLowerCase();
+      let tilt = 0.32;
+      let lift = 0;
+      if (text.includes('mostly upright') || text.includes('upright')) tilt = 0.08;
+      else if (text.includes('softly tilted') || text.includes('gently tilted')) tilt = 0.22;
+      else if (text.includes('rotated') || text.includes('dreamier drift')) tilt = 0.52;
+      if (text.includes('hovering low')) lift = 120;
+      else if (text.includes('floating higher')) lift = -120;
+      return { tilt, lift };
+    }
+
+    function proceduralShapePoint(shape, rand, i, total) {
+      const u = (i + rand()) / total;
+      const v = rand();
+      if (shape === 'sphere') {
+        const theta = PROCEDURAL_TAU * u;
+        const phi = Math.acos(2 * v - 1);
+        return { x: Math.sin(phi) * Math.cos(theta), y: Math.sin(phi) * Math.sin(theta), z: Math.cos(phi) };
+      }
+      if (shape === 'torus') {
+        const a = PROCEDURAL_TAU * u;
+        const b = PROCEDURAL_TAU * v;
+        const r = 0.38;
+        return { x: (1 + r * Math.cos(b)) * Math.cos(a), y: (1 + r * Math.cos(b)) * Math.sin(a), z: r * Math.sin(b) };
+      }
+      if (shape === 'cylinder') {
+        const a = PROCEDURAL_TAU * u;
+        const radius = rand() < 0.55 ? 1 : Math.sqrt(rand());
+        return { x: Math.cos(a) * radius, y: (v - 0.5) * 2.2, z: Math.sin(a) * radius };
+      }
+      if (shape === 'cube') {
+        const face = Math.floor(rand() * 6);
+        const a = rand() * 2 - 1;
+        const b = rand() * 2 - 1;
+        if (face === 0) return { x: 1, y: a, z: b };
+        if (face === 1) return { x: -1, y: a, z: b };
+        if (face === 2) return { x: a, y: 1, z: b };
+        if (face === 3) return { x: a, y: -1, z: b };
+        if (face === 4) return { x: a, y: b, z: 1 };
+        return { x: a, y: b, z: -1 };
+      }
+      const h = v;
+      const angle = PROCEDURAL_TAU * u;
+      const radius = 1 - h;
+      return { x: Math.cos(angle) * radius, y: h * 1.75 - 0.72, z: Math.sin(angle) * radius };
+    }
+
+    function rotatePoint(point, rx, ry, rz) {
+      let { x, y, z } = point;
+      let c = Math.cos(rx), s = Math.sin(rx);
+      [y, z] = [y * c - z * s, y * s + z * c];
+      c = Math.cos(ry); s = Math.sin(ry);
+      [x, z] = [x * c + z * s, -x * s + z * c];
+      c = Math.cos(rz); s = Math.sin(rz);
+      [x, y] = [x * c - y * s, x * s + y * c];
+      return { x, y, z };
+    }
+
+    function proceduralLayout(count, rand, reading) {
+      const directives = proceduralTiltLift(reading);
+      const presets = {
+        1: [[0, 0, 0, 1.08]],
+        2: [[-0.55, -0.22, 0.12, 1.02], [0.68, 0.3, -0.1, 0.76]],
+        3: [[-0.52, 0.04, 0.14, 1], [0.62, -0.36, -0.12, 0.76], [0.04, 0.58, -0.22, 0.56]],
+        4: [[-0.62, 0.06, 0.14, 0.88], [0.56, -0.38, -0.14, 0.72], [0.16, 0.56, -0.22, 0.54], [-0.08, -0.62, 0.02, 0.62]],
+        5: [[-0.64, 0.04, 0.16, 0.86], [0.54, -0.42, -0.12, 0.68], [0.22, 0.58, -0.22, 0.5], [-0.16, -0.62, 0.02, 0.58], [0.78, 0.2, 0.06, 0.44]],
+      };
+      return (presets[count] || presets[3]).map((item, index) => {
+        const sign = index % 2 === 0 ? 1 : -1;
+        return {
+          x: item[0] + (rand() - 0.5) * 0.18,
+          y: item[1] + directives.lift / 420 + (rand() - 0.5) * 0.12,
+          z: item[2] + (rand() - 0.5) * 0.18,
+          scale: item[3] * (0.92 + rand() * 0.2),
+          rx: sign * directives.tilt + (rand() - 0.5) * directives.tilt,
+          ry: (rand() - 0.5) * 0.7,
+          rz: -sign * directives.tilt * 0.56 + (rand() - 0.5) * directives.tilt,
+        };
+      });
+    }
+
+    function proceduralVisualUrl(item, width = 768, height = 1152) {
+      const key = `live-opening-v1:${item.date || 'entry'}:${item.sleepScore}:${width}x${height}`;
+      if (proceduralCache.has(key)) return proceduralCache.get(key);
+      const scene = buildLiveScene(item);
+      const canvas = renderOpeningLiveFrame(scene, width, height);
+      const url = canvas.toDataURL('image/png');
+      proceduralCache.set(key, url);
+      return url;
+    }
+
+    function liveHalton(idx, base) {
+      let f = 1;
+      let r = 0;
+      while (idx > 0) {
+        f /= base;
+        r += f * (idx % base);
+        idx = Math.floor(idx / base);
+      }
+      return r;
+    }
+
+    function liveRangeForScore(score) {
+      const safe = Math.max(0, Math.min(100, Number(score) || 0));
+      if (safe >= 86) return { shape: 'sphere', label: 'Aurora', colors: ['#e8c8ff','#a060e8','#6020c0','#3008a8','#180470','#080128','#020014'] };
+      if (safe >= 71) return { shape: 'torus', label: 'Slate', colors: ['#b0d8f8','#60a8e0','#2868c0','#084898','#043070','#011840','#000820'] };
+      if (safe >= 56) return { shape: 'cylinder', label: 'Moss', colors: ['#c0f0a0','#80c860','#409040','#206830','#0c5020','#063010','#021808'] };
+      if (safe >= 41) return { shape: 'cube', label: 'Ochre', colors: ['#f8e898','#e8c050','#c89010','#906000','#583800','#2c1c00','#140a00'] };
+      return { shape: 'pyramid', label: 'Ember', colors: ['#f8d060','#f0a030','#e06018','#c03008','#881800','#4c0a00','#200400'] };
+    }
+
+    function liveSeeded(seed) {
+      let h = 2166136261 >>> 0;
+      const text = String(seed || 'composition');
+      for (let i = 0; i < text.length; i += 1) {
+        h ^= text.charCodeAt(i);
+        h = Math.imul(h, 16777619) >>> 0;
+      }
+      return () => {
+        h ^= h << 13; h >>>= 0;
+        h ^= h >>> 17;
+        h ^= h << 5; h >>>= 0;
+        return (h % 100000) / 100000;
+      };
+    }
+
+    function liveDirectives(reading) {
+      const text = String(reading || '').toLowerCase();
+      let tilt = 0.34;
+      let lift = 0;
+      if (text.includes('mostly upright') || text.includes('upright')) tilt = 0.08;
+      else if (text.includes('softly tilted') || text.includes('subtle') || text.includes('gently tilted')) tilt = 0.24;
+      else if (text.includes('tilted') || text.includes('rotated')) tilt = 0.44;
+      if (text.includes('hovering low') || text.includes('float low') || text.includes('held low')) lift = 78;
+      else if (text.includes('calm suspension') || text.includes('held in calm') || text.includes('suspension')) lift = 2;
+      else if (text.includes('rises') || text.includes('floating high') || text.includes('hovering high')) lift = -72;
+      return { tilt, lift };
+    }
+
+    function liveCompositionFor(count) {
+      const presets = {
+        1: [{ offset: [0, 0, 0], scale: 1.16, rot: [0.05, -0.16, 0.04] }],
+        2: [
+          { offset: [-92, -34, 54], scale: 1.08, rot: [0.08, -0.24, 0.08] },
+          { offset: [118, 46, -72], scale: 0.76, rot: [-0.22, 0.34, -0.1] },
+        ],
+        3: [
+          { offset: [-84, 18, 82], scale: 1.04, rot: [0.06, -0.28, 0.08] },
+          { offset: [112, -66, -62], scale: 0.8, rot: [-0.22, 0.26, -0.08] },
+          { offset: [18, 96, -120], scale: 0.58, rot: [0.32, 0.5, 0.14] },
+        ],
+        4: [
+          { offset: [-122, 42, 76], scale: 0.94, rot: [0.06, -0.3, 0.1] },
+          { offset: [104, -70, -74], scale: 0.78, rot: [-0.18, 0.28, -0.06] },
+          { offset: [42, 116, -126], scale: 0.56, rot: [0.34, 0.46, 0.14] },
+          { offset: [-22, -116, 14], scale: 0.68, rot: [-0.42, -0.12, 0.2] },
+        ],
+        5: [
+          { offset: [-132, 36, 90], scale: 0.94, rot: [0.08, -0.3, 0.1] },
+          { offset: [104, -82, -76], scale: 0.76, rot: [-0.18, 0.26, -0.08] },
+          { offset: [66, 126, -142], scale: 0.54, rot: [0.34, 0.46, 0.16] },
+          { offset: [-34, -126, 28], scale: 0.64, rot: [-0.4, -0.14, 0.2] },
+          { offset: [176, 52, 44], scale: 0.46, rot: [0.18, 0.74, -0.2] },
+        ],
+      };
+      return presets[Math.max(1, Math.min(5, count))] || presets[3];
+    }
+
+    function liveRotateLocal(point, rot) {
+      let { x, y, z } = point;
+      const [rx, ry, rz] = rot;
+      let c = Math.cos(rx), s = Math.sin(rx);
+      [y, z] = [y * c - z * s, y * s + z * c];
+      c = Math.cos(ry); s = Math.sin(ry);
+      [x, z] = [x * c + z * s, -x * s + z * c];
+      c = Math.cos(rz); s = Math.sin(rz);
+      [x, y] = [x * c - y * s, x * s + y * c];
+      return { x, y, z };
+    }
+
+    function liveKeepSeparated(items) {
+      if (items.length < 2) return items;
+      const separated = items.map((item) => ({ ...item, offset: [...item.offset], rot: [...item.rot] }));
+      for (let pass = 0; pass < 18; pass += 1) {
+        for (let i = 0; i < separated.length; i += 1) {
+          for (let j = i + 1; j < separated.length; j += 1) {
+            const a = separated[i];
+            const b = separated[j];
+            const dx = b.offset[0] - a.offset[0];
+            const dy = b.offset[1] - a.offset[1];
+            const dist = Math.hypot(dx, dy) || 1;
+            const minDist = 166 * (a.scale + b.scale) * 0.5;
+            if (dist >= minDist) continue;
+            const push = (minDist - dist) * 0.56;
+            const ux = dx / dist;
+            const uy = dy / dist;
+            a.offset[0] -= ux * push;
+            a.offset[1] -= uy * push * 0.55;
+            b.offset[0] += ux * push;
+            b.offset[1] += uy * push * 0.55;
+            a.offset[2] += (i % 2 === 0 ? 1 : -1) * push * 0.42;
+            b.offset[2] -= (j % 2 === 0 ? 1 : -1) * push * 0.42;
+          }
+        }
+      }
+      return separated.map((item) => ({
+        ...item,
+        offset: [
+          Math.max(-230, Math.min(230, item.offset[0])),
+          Math.max(-180, Math.min(180, item.offset[1])),
+          Math.max(-220, Math.min(220, item.offset[2])),
+        ],
+      }));
+    }
+
+    function liveModulateComposition(baseComposition, seedText, reading) {
+      const rand = liveSeeded(seedText || 'composition');
+      const directives = liveDirectives(reading);
+      const modulated = baseComposition.map((object, index) => {
+        const amount = 0.62 + rand() * 0.76;
+        const angle = rand() * PROCEDURAL_TAU;
+        const lift = directives.lift + (rand() - 0.5) * 28;
+        const depth = (rand() - 0.5) * 82;
+        const lateral = 20 + rand() * 42;
+        const scaleShift = 0.86 + rand() * 0.28;
+        const tilt = directives.tilt;
+        const sign = index % 2 === 0 ? 1 : -1;
+        const rotShift = [
+          sign * tilt + (rand() - 0.5) * tilt * 0.5,
+          (rand() - 0.5) * 0.7,
+          -sign * tilt * 0.58 + (rand() - 0.5) * tilt * 0.45,
+        ];
+        return {
+          offset: [
+            object.offset[0] + Math.cos(angle) * lateral * amount,
+            object.offset[1] + lift,
+            object.offset[2] + Math.sin(angle) * lateral * amount + depth,
+          ],
+          scale: object.scale * scaleShift,
+          rot: [object.rot[0] + rotShift[0], object.rot[1] + rotShift[1], object.rot[2] + rotShift[2]],
+        };
+      });
+      return liveKeepSeparated(modulated);
+    }
+
+    function liveGenerateParticles(shape, count, seedText) {
+      const pts = [];
+      const rand = liveSeeded(seedText || String(shape));
+      const jitter = 0.92 + rand() * 0.18;
+      const params = {
+        sphere: { R: 185 * jitter },
+        torus: { R: 132 * jitter, r: 54 * jitter },
+        cube: { a: 118 * jitter },
+        cylinder: { R: 90 * jitter, H: 240 * jitter },
+        pyramid: { a: 270 * jitter },
+      };
+      const pp = params[shape] || params.torus;
+      if (shape === 'sphere') {
+        for (let i = 0; i < count; i += 1) {
+          const phi = Math.acos(2 * liveHalton(i, 2) - 1);
+          const theta = PROCEDURAL_TAU * liveHalton(i, 3);
+          pts.push({ x: pp.R * Math.sin(phi) * Math.cos(theta), y: pp.R * Math.cos(phi), z: pp.R * Math.sin(phi) * Math.sin(theta), f: i / count, phase: liveHalton(i, 7) * PROCEDURAL_TAU });
+        }
+      } else if (shape === 'torus') {
+        for (let i = 0; i < count; i += 1) {
+          const u = liveHalton(i, 2) * PROCEDURAL_TAU;
+          const v = liveHalton(i, 3) * PROCEDURAL_TAU;
+          pts.push({ x: (pp.R + pp.r * Math.cos(v)) * Math.cos(u), y: pp.r * Math.sin(v), z: (pp.R + pp.r * Math.cos(v)) * Math.sin(u), f: i / count, phase: liveHalton(i, 5) * PROCEDURAL_TAU });
+        }
+      } else if (shape === 'cube') {
+        const perFace = Math.floor(count / 6);
+        const a = pp.a;
+        const faces = [
+          (u,v) => ({ x: u, y: v, z: a }), (u,v) => ({ x: u, y: v, z: -a }),
+          (u,v) => ({ x: a, y: u, z: v }), (u,v) => ({ x: -a, y: u, z: v }),
+          (u,v) => ({ x: u, y: a, z: v }), (u,v) => ({ x: u, y: -a, z: v }),
+        ];
+        faces.forEach((face, fi) => {
+          for (let i = 0; i < perFace; i += 1) {
+            const gi = fi * perFace + i;
+            const u = (liveHalton(i, 2) * 2 - 1) * a;
+            const v = (liveHalton(i, 3) * 2 - 1) * a;
+            pts.push({ ...face(u, v), f: gi / count, phase: liveHalton(gi, 5) * PROCEDURAL_TAU });
+          }
+        });
+      } else if (shape === 'cylinder') {
+        const sideCount = Math.floor(count * 0.7);
+        const capCount = Math.floor(count * 0.15);
+        for (let i = 0; i < sideCount; i += 1) {
+          const theta = i * PROCEDURAL_GOLDEN;
+          pts.push({ x: pp.R * Math.cos(theta), y: (liveHalton(i, 3) * 2 - 1) * (pp.H / 2), z: pp.R * Math.sin(theta), f: i / count, phase: liveHalton(i, 5) * PROCEDURAL_TAU });
+        }
+        for (let cap = 0; cap < 2; cap += 1) {
+          for (let i = 0; i < capCount; i += 1) {
+            const gi = sideCount + cap * capCount + i;
+            const r = Math.sqrt(liveHalton(i, 2)) * pp.R;
+            const theta = (i + cap * 137) * PROCEDURAL_GOLDEN;
+            pts.push({ x: r * Math.cos(theta), y: cap === 0 ? pp.H / 2 : -pp.H / 2, z: r * Math.sin(theta), f: gi / count, phase: liveHalton(gi, 5) * PROCEDURAL_TAU });
+          }
+        }
+      } else {
+        const a = pp.a;
+        const rBase = a / Math.sqrt(3);
+        const h = a * Math.sqrt(2 / 3);
+        const apex = [0, -h, 0];
+        const base = [[rBase, 0, 0], [rBase * Math.cos(2 * Math.PI / 3), 0, rBase * Math.sin(2 * Math.PI / 3)], [rBase * Math.cos(4 * Math.PI / 3), 0, rBase * Math.sin(4 * Math.PI / 3)]];
+        const faces = [[apex, base[0], base[1]], [apex, base[1], base[2]], [apex, base[2], base[0]], [base[0], base[2], base[1]]];
+        const perFace = Math.floor(count / 4);
+        faces.forEach((face, fi) => {
+          const [v0, v1, v2] = face;
+          for (let i = 0; i < perFace; i += 1) {
+            const gi = fi * perFace + i;
+            const sq = Math.sqrt(liveHalton(i, 2));
+            const u = 1 - sq;
+            const v = sq * liveHalton(i, 3);
+            const w = sq * (1 - liveHalton(i, 3));
+            pts.push({ x: u * v0[0] + v * v1[0] + w * v2[0], y: u * v0[1] + v * v1[1] + w * v2[1], z: u * v0[2] + v * v1[2] + w * v2[2], f: gi / count, phase: liveHalton(gi, 5) * PROCEDURAL_TAU });
+          }
+        });
+      }
+      if (pts.length) {
+        const n = pts.length;
+        const cx = pts.reduce((sum, p) => sum + p.x, 0) / n;
+        const cy = pts.reduce((sum, p) => sum + p.y, 0) / n;
+        const cz = pts.reduce((sum, p) => sum + p.z, 0) / n;
+        pts.forEach((p) => { p.x -= cx; p.y -= cy; p.z -= cz; });
+      }
+      return pts;
+    }
+
+    function liveGenerateSceneParticles(shape, objectCount, totalCount, seedText, reading) {
+      const composition = liveModulateComposition(liveCompositionFor(objectCount), seedText, reading);
+      const all = [];
+      const perObject = Math.max(650, Math.floor(totalCount / composition.length));
+      composition.forEach((object, objectIndex) => {
+        const base = liveGenerateParticles(shape, perObject, `${seedText}-${objectIndex}`);
+        const phaseShift = objectIndex / Math.max(1, composition.length);
+        for (const p of base) {
+          const local = liveRotateLocal({ x: p.x * object.scale, y: p.y * object.scale, z: p.z * object.scale }, object.rot);
+          all.push({ x: local.x + object.offset[0], y: local.y + object.offset[1], z: local.z + object.offset[2], f: (p.f + phaseShift) % 1, phase: p.phase + objectIndex * 1.7 });
+        }
+      });
+      return all;
+    }
+
+    function buildLiveScene(item) {
+      const range = liveRangeForScore(item.sleepScore);
+      return {
+        item,
+        range,
+        points: liveGenerateSceneParticles(
+          range.shape,
+          proceduralCount(item),
+          LIVE_DEFAULT_DENSITY,
+          `${item.date}-${item.sleepScore}`,
+          item.reading
+        ),
+      };
+    }
+
+    const liveLightbox = {
+      item: null,
+      points: [],
+      range: liveRangeForScore(72),
+      raf: 0,
+      rotX: Math.PI / 6,
+      rotY: 0,
+      velX: 0,
+      velY: 0.003,
+      zoom: LIVE_DEFAULT_ZOOM,
+      motion: LIVE_DEFAULT_MOTION,
+      spread: LIVE_DEFAULT_SPREAD,
+      activePointers: new Map(),
+      dragging: false,
+      lastX: 0,
+      lastY: 0,
+      pinchDistance: 0,
+      pinchZoom: LIVE_DEFAULT_ZOOM,
+      lastTap: 0,
+      startedAt: 0,
+      waveStart: 0,
+    };
+
+    function buildLivePoints(item) {
+      const meta = scoreMeta(item.sleepScore) || scoreMeta(72);
+      const colors = meta.hueSwatches || ['#365A41', '#4D7C5A', '#6A9A73'];
+      const rand = seededRandom(`${item.date}-${item.sleepScore}-${item.reading || ''}`);
+      const count = proceduralCount(item);
+      const layout = proceduralLayout(count, rand, item.reading);
+      const points = [];
+      const perObject = Math.max(1200, Math.floor(9600 / count));
+      layout.forEach((object, objectIndex) => {
+        const localRand = seededRandom(`${item.date}-${objectIndex}-${meta.primitive}`);
+        for (let i = 0; i < perObject; i += 1) {
+          const base = proceduralShapePoint(meta.primitive.toLowerCase(), localRand, i, perObject);
+          const rotated = rotatePoint(base, object.rx, object.ry, object.rz);
+          const scale = 1.05 * object.scale;
+          points.push({
+            x: object.x * 2.25 + rotated.x * scale,
+            y: object.y * 1.62 + rotated.y * scale,
+            z: object.z * 1.45 + rotated.z * scale,
+            color: colors[Math.min(colors.length - 1, Math.floor(localRand() * colors.length))],
+            alpha: 0.28 + localRand() * 0.58,
+            size: 1 + localRand() * 1.8,
+          });
+        }
+      });
+      return points;
+    }
+
+    function resetLiveLightbox() {
+      liveLightbox.rotX = Math.PI / 6;
+      liveLightbox.rotY = 0;
+      liveLightbox.velX = 0;
+      liveLightbox.velY = 0.003;
+      liveLightbox.zoom = LIVE_DEFAULT_ZOOM;
+    }
+
+    function clampLiveZoom(value) {
+      return Math.max(LIVE_MIN_ZOOM, Math.min(LIVE_MAX_ZOOM, value));
+    }
+
+    function liveMixColor(hex, amount) {
+      const n = parseInt(String(hex || '#ffffff').slice(1), 16);
+      const r = (n >> 16) & 255;
+      const g = (n >> 8) & 255;
+      const b = n & 255;
+      const to = amount > 0 ? 255 : 0;
+      const a = Math.abs(amount);
+      return `rgb(${Math.round(r + (to - r) * a)},${Math.round(g + (to - g) * a)},${Math.round(b + (to - b) * a)})`;
+    }
+
+    function drawLiveGlyph(ctx, x, y, size, color, glyphIndex, alpha) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = Math.max(1, size * 0.13);
+      const s = size;
+      const h = s / 2;
+      const glyph = glyphIndex % 7;
+      if (glyph === 0) {
+        ctx.fillRect(-h, -h, s, s);
+      } else if (glyph === 1) {
+        ctx.beginPath();
+        ctx.moveTo(-h, -h); ctx.lineTo(h, h);
+        ctx.moveTo(h, -h); ctx.lineTo(-h, h);
+        ctx.stroke();
+      } else if (glyph === 2) {
+        ctx.strokeRect(-h, -h, s, s);
+      } else if (glyph === 3) {
+        ctx.beginPath();
+        ctx.arc(0, 0, h * 0.92, 0, PROCEDURAL_TAU);
+        ctx.stroke();
+      } else if (glyph === 4) {
+        ctx.beginPath();
+        for (let i = 0; i < 8; i += 1) {
+          const a = (i / 8) * PROCEDURAL_TAU;
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(a) * h, Math.sin(a) * h);
+        }
+        ctx.stroke();
+      } else if (glyph === 5) {
+        const r = Math.max(1.1, s * 0.11);
+        [[-0.24, -0.24], [0.24, -0.24], [-0.24, 0.24], [0.24, 0.24]].forEach(([dx, dy]) => {
+          ctx.beginPath();
+          ctx.arc(dx * s, dy * s, r, 0, PROCEDURAL_TAU);
+          ctx.fill();
+        });
+      } else {
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(1.2, h * 0.38), 0, PROCEDURAL_TAU);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function liveWaveStateAtElapsed(elapsed, w) {
+      const cycle = 6.2;
+      const safeElapsed = Math.max(0, elapsed);
+      const pass = Math.floor(safeElapsed / cycle);
+      const phase = (safeElapsed % cycle) / cycle;
+      const bandWidth = Math.max(110, w * 0.18);
+      const center = phase * (w + bandWidth * 2) - bandWidth;
+      const baseGlyph = pass % 2 === 1;
+      return { center, bandWidth, baseGlyph, targetGlyph: !baseGlyph };
+    }
+
+    function liveGlyphModeForX(x, wave) {
+      return x <= wave.center ? wave.targetGlyph : wave.baseGlyph;
+    }
+
+    function liveTransitionAmountForX(x, wave) {
+      const half = wave.bandWidth * 0.58;
+      return Math.max(0, 1 - Math.abs(x - wave.center) / half);
+    }
+
+    function drawLiveWaveBand(ctx, wave, w, h) {
+      const safe = 6;
+      const left = Math.max(safe, wave.center - wave.bandWidth * 0.6);
+      const right = Math.min(w - safe, wave.center + wave.bandWidth * 0.6);
+      if (right <= safe || left >= w - safe) return;
+      const fade = ctx.createLinearGradient(left, 0, right, 0);
+      fade.addColorStop(0, 'rgba(7,7,15,0)');
+      fade.addColorStop(0.5, 'rgba(7,7,15,0.78)');
+      fade.addColorStop(1, 'rgba(7,7,15,0)');
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = fade;
+      ctx.fillRect(left, safe, right - left, h - safe * 2);
+    }
+
+    function drawLiveGlyphLayer(ctx, renderPoints, wave, w, h) {
+      if (!renderPoints.length) return;
+      const safe = 6;
+      const cell = 16;
+      const gutter = 2.5;
+      const cols = Math.max(1, Math.ceil(w / cell));
+      const rows = Math.max(1, Math.ceil(h / cell));
+      const cells = new Map();
+      for (const p of renderPoints) {
+        if (p.x < safe || p.x > w - safe || p.y < safe || p.y > h - safe) continue;
+        const modeIsGlyph = liveGlyphModeForX(p.x, wave);
+        const local = liveTransitionAmountForX(p.x, wave);
+        if (!modeIsGlyph && local <= 0.1) continue;
+        const strength = modeIsGlyph ? 1 : local;
+        const gx = Math.max(0, Math.min(cols - 1, Math.floor(p.x / cell)));
+        const gy = Math.max(0, Math.min(rows - 1, Math.floor(p.y / cell)));
+        const key = gy * cols + gx;
+        const current = cells.get(key) || { x: gx * cell + cell / 2, y: gy * cell + cell / 2, alpha: 0, count: 0, color: p.color, f: p.f };
+        const weight = p.alpha * strength;
+        current.alpha += weight;
+        current.count += 1;
+        if (weight >= current.bestWeight || current.bestWeight === undefined) {
+          current.bestWeight = weight;
+          current.color = p.color;
+          current.f = p.f;
+        }
+        cells.set(key, current);
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      let drawn = 0;
+      for (const p of cells.values()) {
+        const brightness = Math.max(0.02, Math.min(1, p.alpha / Math.max(1.2, p.count * 0.68)));
+        const glyphIndex = 6 - Math.max(0, Math.min(6, Math.floor(brightness * 7)));
+        const size = Math.max(3.5, (cell - gutter) * (0.34 + brightness * 0.64));
+        drawLiveGlyph(ctx, p.x, p.y, size, p.color, glyphIndex, Math.min(0.98, 0.18 + brightness * 0.86));
+        drawn += 1;
+        if (drawn > 3600) break;
+      }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function resizeLiveCanvas() {
+      if (!lbLive) return null;
+      const rect = lbLive.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const width = Math.max(2, Math.round(rect.width * dpr));
+      const height = Math.max(2, Math.round(rect.height * dpr));
+      if (lbLive.width !== width || lbLive.height !== height) {
+        lbLive.width = width;
+        lbLive.height = height;
+      }
+      return { width: rect.width, height: rect.height, dpr };
+    }
+
+    function paintLiveSceneFrame(ctx, width, height, frame) {
+      const cx = width / 2;
+      const cy = height / 2;
+      const t = frame.sceneTime || 0;
+      const motion = frame.motion / 100;
+      const spread = frame.spread / 100;
+      const colors = frame.range.colors;
+      const renderPoints = [];
+      ctx.clearRect(0, 0, width, height);
+      const bg = ctx.createRadialGradient(cx, cy * 0.75, 10, cx, cy, Math.max(width, height) * 0.75);
+      bg.addColorStop(0, 'rgba(22,22,42,1)');
+      bg.addColorStop(0.55, 'rgba(8,8,18,1)');
+      bg.addColorStop(1, 'rgba(5,5,12,1)');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(2, 2, Math.max(0, width - 4), Math.max(0, height - 4));
+      ctx.clip();
+      if (!frame.points.length) {
+        ctx.restore();
+        return;
+      }
+      const scale = Math.min(width, height) * 0.0044 * frame.zoom;
+      const perspStr = 0.00165;
+      const pulse = (Math.sin(t * 0.42) * 0.5 + 0.5) * frame.points.length;
+      const cosX = Math.cos(frame.rotX);
+      const sinX = Math.sin(frame.rotX);
+      const cosY = Math.cos(frame.rotY);
+      const sinY = Math.sin(frame.rotY);
+      for (let i = 0; i < frame.points.length; i += 1) {
+        const p = frame.points[i];
+        const breathe = 1
+          + Math.sin(p.f * 22 - t * (1.5 + motion * 2.2) + p.phase) * (0.035 + motion * 0.04)
+          + Math.sin(p.f * 11 + t * 0.7) * 0.02;
+        let px = p.x * breathe;
+        let py = p.y * breathe;
+        let pz = p.z * breathe;
+        const radial = Math.sin(p.phase + t * 0.35) * spread * 18;
+        px += Math.cos(p.phase) * radial;
+        py += Math.sin(p.phase * 1.3) * radial * 0.55;
+        pz += Math.sin(p.phase) * radial;
+        const x3 = px * cosY + pz * sinY;
+        const z3 = -px * sinY + pz * cosY;
+        const y3 = py * cosX - z3 * sinX;
+        const z4 = py * sinX + z3 * cosX;
+        const persp = 1 / (1 + z4 * perspStr);
+        const sx = cx + x3 * scale * persp;
+        const sy = cy + y3 * scale * persp;
+        const depth = Math.max(0, Math.min(1, 0.5 - z4 / 440));
+        const dp = Math.abs(i - pulse);
+        const glow = Math.exp(-(dp * dp) / (frame.points.length * 4.5));
+        const paletteIndex = Math.max(0, Math.min(colors.length - 1, Math.floor((1 - depth) * colors.length)));
+        if (sx < -24 || sx > width + 24 || sy < -24 || sy > height + 24) continue;
+        renderPoints.push({
+          x: sx,
+          y: sy,
+          z: z4,
+          size: Math.max(0.35, 0.55 + depth * 2.3 + glow * 3.2),
+          alpha: Math.min(1, 0.11 + depth * 0.75 + glow * 0.55),
+          color: liveMixColor(colors[paletteIndex], glow * 0.18),
+          f: p.f,
+        });
+      }
+      renderPoints.sort((a, b) => a.z - b.z);
+      const wave = liveWaveStateAtElapsed(frame.waveElapsed || 0, width);
+      ctx.globalCompositeOperation = 'lighter';
+      for (const p of renderPoints) {
+        if (liveGlyphModeForX(p.x, wave)) continue;
+        const transition = liveTransitionAmountForX(p.x, wave);
+        ctx.globalAlpha = p.alpha * (1 - transition * 0.7);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, PROCEDURAL_TAU);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+      drawLiveWaveBand(ctx, wave, width, height);
+      drawLiveGlyphLayer(ctx, renderPoints, wave, width, height);
+      ctx.restore();
+    }
+
+    function renderOpeningLiveFrame(scene, width, height) {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      paintLiveSceneFrame(canvas.getContext('2d'), width, height, {
+        points: scene.points,
+        range: scene.range,
+        rotX: Math.PI / 6,
+        rotY: 0,
+        zoom: LIVE_DEFAULT_ZOOM,
+        motion: LIVE_DEFAULT_MOTION,
+        spread: LIVE_DEFAULT_SPREAD,
+        sceneTime: 0,
+        waveElapsed: 0,
+      });
+      return canvas;
+    }
+
+    function drawLiveLightbox() {
+      if (!lbLive || !lightbox.classList.contains('open') || !liveLightbox.item) {
+        liveLightbox.raf = 0;
+        return;
+      }
+      const metrics = resizeLiveCanvas();
+      if (!metrics) return;
+      const { width, height, dpr } = metrics;
+      const ctx = lbLive.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const now = performance.now() * 0.001;
+      if (!liveLightbox.startedAt) {
+        liveLightbox.startedAt = now;
+        liveLightbox.waveStart = now;
+      }
+      paintLiveSceneFrame(ctx, width, height, {
+        points: liveLightbox.points,
+        range: liveLightbox.range,
+        rotX: liveLightbox.rotX,
+        rotY: liveLightbox.rotY,
+        zoom: liveLightbox.zoom,
+        motion: liveLightbox.motion,
+        spread: liveLightbox.spread,
+        sceneTime: now - liveLightbox.startedAt,
+        waveElapsed: now - liveLightbox.waveStart,
+      });
+      if (!liveLightbox.dragging) {
+        const motion = liveLightbox.motion / 100;
+        liveLightbox.rotY += liveLightbox.velY + 0.0015 + motion * 0.004;
+        liveLightbox.rotX += liveLightbox.velX;
+        liveLightbox.velX *= 0.96;
+        liveLightbox.velY *= 0.96;
+      }
+      liveLightbox.raf = requestAnimationFrame(drawLiveLightbox);
+    }
+
+    function startLiveLightbox(item) {
+      if (!lbLive) return;
+      const scene = buildLiveScene(item);
+      liveLightbox.item = scene.item;
+      liveLightbox.range = scene.range;
+      liveLightbox.motion = LIVE_DEFAULT_MOTION;
+      liveLightbox.spread = LIVE_DEFAULT_SPREAD;
+      liveLightbox.points = scene.points;
+      liveLightbox.startedAt = 0;
+      liveLightbox.waveStart = 0;
+      resetLiveLightbox();
+      lbLive.classList.add('loaded');
+      if (!liveLightbox.raf) {
+        liveLightbox.raf = requestAnimationFrame(drawLiveLightbox);
+      }
+    }
+
+    function stopLiveLightbox() {
+      if (liveLightbox.raf) cancelAnimationFrame(liveLightbox.raf);
+      liveLightbox.raf = 0;
+      liveLightbox.item = null;
+      liveLightbox.points = [];
+      liveLightbox.startedAt = 0;
+      liveLightbox.waveStart = 0;
+      liveLightbox.activePointers.clear();
+      liveLightbox.dragging = false;
+      if (lbLive) lbLive.classList.remove('loaded');
+    }
+
+    // The renderer is sourced from the original interactive point-cloud
+    // prototype. Gallery thumbnails and the lightbox share its deterministic
+    // opening state, then the lightbox continues as the live sculpture.
+    function proceduralVisualUrl(item, width = 768, height = 1152) {
+      const key = `reference-opening-v1:${item.date || 'entry'}:${item.sleepScore}:${item.reading || ''}:${width}x${height}`;
+      if (proceduralCache.has(key)) return proceduralCache.get(key);
+      const canvas = window.DreamPointcloudEngine.renderOpeningFrame(item, width, height, 8000);
+      const url = canvas.toDataURL('image/png');
+      proceduralCache.set(key, url);
+      return url;
+    }
+
+    function resizeLiveCanvas() {
+      if (!lbLive || !liveLightbox.renderer) return null;
+      const rect = lbLive.getBoundingClientRect();
+      liveLightbox.renderer.resize(rect.width, rect.height, 2);
+      return rect;
+    }
+
+    function resetLiveLightbox() {
+      if (liveLightbox.renderer) liveLightbox.renderer.resetView();
+    }
+
+    function drawLiveLightbox(now) {
+      if (!lbLive || !lightbox.classList.contains('open') || !liveLightbox.item || !liveLightbox.renderer) {
+        liveLightbox.raf = 0;
+        return;
+      }
+      resizeLiveCanvas();
+      liveLightbox.renderer.render(now);
+      liveLightbox.raf = requestAnimationFrame(drawLiveLightbox);
+    }
+
+    function startLiveLightbox(item) {
+      if (!lbLive || !window.DreamPointcloudEngine) return;
+      if (!liveLightbox.renderer) {
+        liveLightbox.renderer = new window.DreamPointcloudEngine.DreamRenderer(lbLive, { budget: 8000 });
+        window.DreamPointcloudEngine.attachInteraction(liveLightbox.renderer, lbLive);
+        window.addEventListener('resize', resizeLiveCanvas);
+      }
+      liveLightbox.item = item;
+      liveLightbox.renderer.setItem(item);
+      resizeLiveCanvas();
+      // Paint the exact frame used by its thumbnail before animation begins.
+      liveLightbox.renderer.waveOverrideE = 0;
+      liveLightbox.renderer.render(0);
+      liveLightbox.renderer.waveOverrideE = null;
+      liveLightbox.renderer._t0 = null;
+      lbLive.classList.add('loaded');
+      if (liveLightbox.raf) cancelAnimationFrame(liveLightbox.raf);
+      liveLightbox.raf = requestAnimationFrame(drawLiveLightbox);
+    }
+
+    function stopLiveLightbox() {
+      if (liveLightbox.raf) cancelAnimationFrame(liveLightbox.raf);
+      liveLightbox.raf = 0;
+      liveLightbox.item = null;
+      if (liveLightbox.renderer) liveLightbox.renderer.dragging = false;
+      if (lbLive) lbLive.classList.remove('loaded');
+    }
+
     function fmtCardDate(d) {
       if (!d) return '';
       const date = new Date(`${d}T12:00:00`);
@@ -3295,9 +4179,10 @@
       return `${month}. ${date.getDate()}, ${date.getFullYear()}`;
     }
 
-    async function createPublicShareCard(item) {
+    async function createPublicShareCard(item, liveCanvas) {
+      const capturedFrame = snapshotCanvas(liveCanvas);
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
-      const image = await loadCardImage(item.imageData);
+      const image = capturedFrame || await loadCardImage(proceduralVisualUrl(item, 1024, 1536));
       const canvas = document.createElement('canvas');
       canvas.width = 1080;
       canvas.height = 1350;
@@ -3335,7 +4220,7 @@
 
       const dateText = fmtCardDate(item.date) || item.label || 'Dreamscape';
       const badges = [
-        { text: 'MANU.VISION/DREAMART', color: '#f1efff' },
+        { text: 'DAILYDREAM.ART', color: '#f1efff' },
         { text: dateText, color: '#f1efff' },
         { text: `SCORE ${score}`, color: accentColorValue },
       ];
@@ -3555,6 +4440,7 @@
     const empty       = document.getElementById('empty');
     const gallerySentinel = document.getElementById('gallery-sentinel');
     const lightbox    = document.getElementById('lightbox');
+    const lbLive      = document.getElementById('lb-live');
     const lbImg       = document.getElementById('lb-img');
     const lbDate      = document.getElementById('lb-date');
     const lbClose     = document.getElementById('lb-close');
@@ -3568,6 +4454,7 @@
     const lbCard      = document.getElementById('lb-card');
     const lbInstagram = document.getElementById('lb-instagram');
     const lbModeSwitch = document.getElementById('lb-mode-switch');
+    const lbDisplayLink = document.getElementById('lb-display-link');
     const calBtn      = document.getElementById('cal-btn');
     const calPanel    = document.getElementById('cal-panel');
     const calClearBtn = document.getElementById('cal-clear-btn');
@@ -3848,7 +4735,7 @@
       const dated = sortedByDateAsc(items);
       if (!dated.length) return [];
       const scored = dated.filter(item => Number.isFinite(Number(item.sleepScore)));
-      const first = dated[0];
+      const first = dated.find(item => item.date === HEATMAP_START) || dated[0];
       const latest = dated[dated.length - 1];
       const midpoint = dated[Math.floor((dated.length - 1) / 2)];
       const highest = scored.length ? [...scored].sort((a, b) => Number(b.sleepScore) - Number(a.sleepScore) || dateValue(a) - dateValue(b))[0] : null;
@@ -3882,7 +4769,7 @@
           points: buildReadingPoints()
         },
         {
-          image: first.imageData,
+          image: proceduralVisualUrl(first, 1024, 1536),
           eyebrow: 'First dreamscape',
           title: first.label || fmtLabel(first.date),
           copy: `${fmtLabel(first.date)} opened the archive: the first recorded night turned into a visual object instead of staying only as a number.`,
@@ -3892,7 +4779,7 @@
           ]
         },
         {
-          image: latest.imageData,
+          image: proceduralVisualUrl(latest, 1024, 1536),
           eyebrow: 'Latest dreamscape',
           title: latest.label || fmtLabel(latest.date),
           copy: 'The project is still alive and accumulating, one night at a time, with each new image extending the same private visual diary.',
@@ -3902,7 +4789,7 @@
           ]
         },
         highest && {
-          image: highest.imageData,
+          image: proceduralVisualUrl(highest, 1024, 1536),
           eyebrow: 'Highest score',
           title: highest.label || fmtLabel(highest.date),
           copy: 'The most restored night in the gallery rises with the clearest signal: the dreamscape opens into its brightest, most buoyant register.',
@@ -3912,7 +4799,7 @@
           ]
         },
         lowest && {
-          image: lowest.imageData,
+          image: proceduralVisualUrl(lowest, 1024, 1536),
           eyebrow: 'Lowest score',
           title: lowest.label || fmtLabel(lowest.date),
           copy: 'The lowest-scoring night keeps the archive honest, translating difficulty into a sharper visual weather instead of hiding it.',
@@ -4116,9 +5003,10 @@
       });
 
       // ── Click → filter main grid (toggle on same cell) ───────
-      grid.addEventListener('click', (e) => {
+      grid.onclick = (e) => {
         const cell = e.target.closest('.hm-cell.hm-data');
         if (!cell || !cell.dataset.date) return;
+        e.preventDefault();
         tooltip.classList.remove('visible');
 
         const d = cell.dataset.date;
@@ -4134,7 +5022,7 @@
           applyFilter({ start: d, end: d, text: fmtLabel(d) });
           document.getElementById('grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-      });
+      };
     }
 
     function renderHeatmapLegend(items) {
@@ -4154,12 +5042,21 @@
     }
 
     // ── Fetch ─────────────────────────────────────────────────
+    const shouldOpenAboutFromQuery = new URLSearchParams(window.location.search).get('about') === '1';
+
     async function load() {
       try {
         // Always hit origin — the API itself sets a short edge TTL.
         // Cache-bust query + no-store prevents browser/CDN from holding stale JSON.
-        const res  = await fetch(`${API}?t=${Date.now()}`, { cache: 'no-store' });
-        allItems   = (await res.json()).filter(d => d.imageData).map(localizeGeneratedImage);
+        const todayIso = new Date().toISOString().slice(0, 10);
+        const recentStart = new Date(Date.now() - 1000 * 60 * 60 * 24 * 31).toISOString().slice(0, 10);
+        const [galleryItems, proceduralItems, privateProceduralItems] = await Promise.all([
+          fetchJsonArray(`${API}?t=${Date.now()}`, { cache: 'no-store' }),
+          fetchJsonArray(`${PROCEDURAL_PUBLIC_API}?t=${Date.now()}`, { cache: 'no-store' }),
+          fetchJsonArray(`${PROCEDURAL_PRIVATE_API}?start=${recentStart}&end=${todayIso}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' }),
+        ]);
+        const imageGalleryItems = galleryItems.map(item => ({ ...item, hasAlternativeArt: true }));
+        allItems = mergePublicEntries(privateProceduralItems, proceduralItems, imageGalleryItems);
         try {
           wrapLoveCount = await fetchLoveCount('wrap');
         } catch {
@@ -4173,6 +5070,11 @@
         if (openDate) {
           const idx = displayed.findIndex(d => d.date === openDate);
           if (idx >= 0) openLightbox(idx);
+        }
+        if (shouldOpenAboutFromQuery) {
+          openWrap();
+          const cleanUrl = `${window.location.pathname}${window.location.hash || ''}`;
+          history.replaceState(null, '', cleanUrl);
         }
       } catch {
         empty.style.display = 'block';
@@ -4285,16 +5187,16 @@
         mysteryCell.className = 'cell mystery-card loaded';
         mysteryCell.setAttribute('role', 'button');
         mysteryCell.setAttribute('tabindex', '0');
-        mysteryCell.setAttribute('aria-label', 'Open today’s dreamscape reading');
+        mysteryCell.setAttribute('aria-label', 'Open today’s dreamscape');
         mysteryCell.innerHTML = `
           <div class="mystery-mark">?</div>
-          <div class="mystery-pill">Today’s reading</div>
+          <div class="mystery-pill">Today’s dreamscape</div>
         `;
-        mysteryCell.addEventListener('click', openReadingMode);
+        mysteryCell.addEventListener('click', openTodayLightbox);
         mysteryCell.addEventListener('keydown', event => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
-            openReadingMode();
+            openTodayLightbox();
           }
         });
 
@@ -4321,7 +5223,7 @@
         cell.className = 'cell';
 
         const img = document.createElement('img');
-        img.dataset.src = thumbnailUrl(item.imageData);
+        img.dataset.src = proceduralVisualUrl(item, 420, 630);
         img.alt = item.label || 'Dream art';
         img.loading = 'lazy';
         img.decoding = 'async';
@@ -4611,20 +5513,19 @@
     function closeLightbox() {
       lightbox.classList.remove('open');
       document.body.style.overflow = '';
+      stopLiveLightbox();
       lbImg.classList.remove('loaded');
-      lbImg.hidden = false;
+      lbImg.hidden = true;
       clearDeepLinkState();
     }
     function showLightbox() {
+      stopLiveLightbox();
       lbImg.classList.remove('loaded');
       lbImg.src = '';
-      lbImg.hidden = false;
+      lbImg.hidden = true;
       const item = displayed[current];
       const embedUrl = instagramEmbedUrl(item.instagramUrl);
-      setTimeout(() => {
-        lbImg.src = item.imageData;
-        lbImg.onload = () => lbImg.classList.add('loaded');
-      }, 20);
+      setTimeout(() => startLiveLightbox(item), 20);
       // Lightbox label mirrors the grid label: full date, plus a colored
       // score chip when the entry has one.
       lbDate.textContent = item.label || '';
@@ -4669,9 +5570,31 @@
         }
       }
       if (lbModeSwitch) {
-        lbModeSwitch.href = crossModeHref('gallery/', item.date);
-        lbModeSwitch.onclick = () => rememberCrossModeDate(item.date);
+        if (item.hasAlternativeArt) {
+          lbModeSwitch.href = crossModeHref('alternative-art.html', item.date);
+          lbModeSwitch.onclick = () => rememberCrossModeDate(item.date);
+          lbModeSwitch.style.display = '';
+        } else {
+          lbModeSwitch.href = '#';
+          lbModeSwitch.onclick = null;
+          lbModeSwitch.style.display = 'none';
+        }
       }
+      if (lbDisplayLink) {
+        if (item.date) {
+          lbDisplayLink.href = `/dreamart/?date=${encodeURIComponent(item.date)}`;
+          lbDisplayLink.style.display = '';
+        } else {
+          lbDisplayLink.href = '#';
+          lbDisplayLink.style.display = 'none';
+        }
+      }
+    }
+    function openTodayLightbox() {
+      const item = todayDreamscape();
+      if (!item) return;
+      const idx = displayed.findIndex(entry => entry.date === item.date);
+      if (idx >= 0) openLightbox(idx);
     }
     function prevImg() { if (current > 0) { current--; showLightbox(); } }
     function nextImg() { if (current < displayed.length - 1) { current++; showLightbox(); } }
@@ -4711,7 +5634,8 @@
       if (!item) return;
       lbCard.textContent = 'Preparing';
       try {
-        const blob = await createPublicShareCard(item);
+        const isCurrentLiveFrame = liveLightbox.item && liveLightbox.item.date === item.date;
+        const blob = await createPublicShareCard(item, isCurrentLiveFrame ? lbLive : null);
         const filename = `dream-art-${item.date || 'card'}.png`;
         downloadBlob(blob, filename);
         lbCard.textContent = 'Saved';
@@ -4721,6 +5645,58 @@
       }
       setTimeout(() => { lbCard.textContent = 'Save card'; }, 1400);
     });
+    if (lbLive && !window.DreamPointcloudEngine) {
+      lbLive.addEventListener('pointerdown', (event) => {
+        liveLightbox.activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        liveLightbox.dragging = true;
+        liveLightbox.lastX = event.clientX;
+        liveLightbox.lastY = event.clientY;
+        if (liveLightbox.activePointers.size === 2) {
+          const points = [...liveLightbox.activePointers.values()];
+          liveLightbox.pinchDistance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+          liveLightbox.pinchZoom = liveLightbox.zoom;
+        }
+        lbLive.setPointerCapture(event.pointerId);
+      });
+      lbLive.addEventListener('pointermove', (event) => {
+        if (!liveLightbox.activePointers.has(event.pointerId)) return;
+        liveLightbox.activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (liveLightbox.activePointers.size === 2) {
+          const points = [...liveLightbox.activePointers.values()];
+          const dist = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+          if (liveLightbox.pinchDistance > 0) {
+            liveLightbox.zoom = clampLiveZoom(liveLightbox.pinchZoom * (dist / liveLightbox.pinchDistance));
+          }
+          return;
+        }
+        const dx = event.clientX - liveLightbox.lastX;
+        const dy = event.clientY - liveLightbox.lastY;
+        liveLightbox.lastX = event.clientX;
+        liveLightbox.lastY = event.clientY;
+        liveLightbox.rotY += dx * 0.0085;
+        liveLightbox.rotX += dy * 0.0065;
+        liveLightbox.velY = dx * 0.00045;
+        liveLightbox.velX = dy * 0.00032;
+      });
+      const endLivePointer = (event) => {
+        liveLightbox.activePointers.delete(event.pointerId);
+        if (liveLightbox.activePointers.size === 0) liveLightbox.dragging = false;
+      };
+      lbLive.addEventListener('pointerup', endLivePointer);
+      lbLive.addEventListener('pointercancel', endLivePointer);
+      lbLive.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        liveLightbox.zoom *= event.deltaY < 0 ? 1.08 : 1 / 1.08;
+        liveLightbox.zoom = clampLiveZoom(liveLightbox.zoom);
+      }, { passive: false });
+      lbLive.addEventListener('dblclick', resetLiveLightbox);
+      lbLive.addEventListener('touchend', () => {
+        const now = Date.now();
+        if (now - liveLightbox.lastTap < 300) resetLiveLightbox();
+        liveLightbox.lastTap = now;
+      }, { passive: true });
+      window.addEventListener('resize', resizeLiveCanvas);
+    }
 
     readingClose.addEventListener('click', closeReadingMode);
     readingPrev.addEventListener('click', prevReadingStep);
@@ -4758,13 +5734,33 @@
       }
     });
 
-    // Swipe
+    // Swipe. If the gesture starts on the live procedural canvas, the canvas
+    // owns that touch so horizontal drags rotate the sculpture instead of
+    // advancing the lightbox.
     let touchX = null;
-    lightbox.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+    let touchStartedOnLiveCanvas = false;
+    function isLiveCanvasTouch(event) {
+      if (!lbLive || !lbLive.classList.contains('loaded')) return false;
+      const target = event.target;
+      return target === lbLive || (target instanceof Node && lbLive.contains(target));
+    }
+    lightbox.addEventListener('touchstart', e => {
+      touchStartedOnLiveCanvas = isLiveCanvasTouch(e);
+      touchX = touchStartedOnLiveCanvas ? null : e.touches[0].clientX;
+    }, { passive: true });
     lightbox.addEventListener('touchend', e => {
+      if (touchStartedOnLiveCanvas) {
+        touchStartedOnLiveCanvas = false;
+        touchX = null;
+        return;
+      }
       if (touchX === null) return;
       const dx = e.changedTouches[0].clientX - touchX;
       if (Math.abs(dx) > 50) { dx < 0 ? nextImg() : prevImg(); }
+      touchX = null;
+    }, { passive: true });
+    lightbox.addEventListener('touchcancel', () => {
+      touchStartedOnLiveCanvas = false;
       touchX = null;
     }, { passive: true });
 
