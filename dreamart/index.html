@@ -618,6 +618,29 @@
         display: none;
       }
     }
+
+    @media (max-width: 760px) and (orientation: portrait) {
+      .badge-row {
+        grid-template-columns: minmax(0, 1.42fr) minmax(0, 1fr) minmax(0, 0.7fr) 38px;
+      }
+      #url {
+        padding-inline: 0.52rem;
+        letter-spacing: 0.075em;
+      }
+      #date {
+        padding-inline: 0.5rem;
+        font-size: clamp(0.4rem, 1.92vw, 0.56rem);
+      }
+    }
+
+    @media (max-width: 390px) and (orientation: portrait) {
+      .badge-row {
+        grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.94fr) minmax(0, 0.66fr) 38px;
+      }
+      #url {
+        letter-spacing: 0.065em;
+      }
+    }
   </style>
 </head>
 <body>
@@ -689,6 +712,7 @@
 	  </div>
 	  <script>
     const API = 'https://dreamart.manu.vision/api/procedural-public';
+    const PRIVATE_SYNC_API = 'https://dreamart.manu.vision/api/procedural-dream';
     const REFRESH_MS = 30 * 60 * 1000;
     const AUTO_MODE_KEY = 'dreamart:display:auto-mode';
     const AUTO_DATE_KEY = 'dreamart:display:auto-date';
@@ -839,6 +863,12 @@
 	            .sort((a, b) => a.date.localeCompare(b.date))
 	        : [];
 	    }
+
+    function mergeArchiveItems(items) {
+      const merged = new Map(archiveItems.map(item => [item.date, item]));
+      normalizeItems(items).forEach(item => merged.set(item.date, item));
+      archiveItems = [...merged.values()].sort((a, b) => a.date.localeCompare(b.date));
+    }
 
 	    function itemForDate(date) {
 	      return archiveItems.find(item => item.date === date) || null;
@@ -1009,6 +1039,10 @@
 	        archiveItems = normalizeItems(await res.json());
 	        const requested = requestedDate();
 	        const today = todayIso();
+	        const targetDate = autoFollowToday ? today : (requested || today);
+	        if (targetDate && !itemForDate(targetDate)) {
+	          await refreshPrivateProceduralWindow(targetDate);
+	        }
 	        const item = autoFollowToday
 	          ? (itemForDate(today) || latestItem())
 	          : (requested ? itemForDate(requested) : latestItem());
@@ -1021,6 +1055,22 @@
 	        showGap(requestedDate());
 	      }
 	    }
+
+    async function refreshPrivateProceduralWindow(targetDate) {
+      try {
+        const url = `${PRIVATE_SYNC_API}?days=7&end=${encodeURIComponent(targetDate)}&t=${Date.now()}`;
+        const res = await fetch(url, {
+          cache: 'no-store',
+          credentials: 'include',
+        });
+        if (!res.ok) return false;
+        mergeArchiveItems(await res.json());
+        return true;
+      } catch (error) {
+        console.warn('Private procedural refresh unavailable.', error);
+        return false;
+      }
+    }
 
     function scheduleDailyRollover() {
       const now = new Date();
@@ -1107,10 +1157,14 @@
     async function shareOrDownloadBlob(blob, filename, title, text) {
       const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' });
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title, text });
-      } else {
-        downloadBlob(blob, filename);
+        try {
+          await navigator.share({ files: [file], title, text });
+          return;
+        } catch (error) {
+          console.warn('Native share failed; falling back to file download.', error);
+        }
       }
+      downloadBlob(blob, filename);
     }
     function fmtCardDate(iso) {
       if (!iso) return '';
