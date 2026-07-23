@@ -4613,6 +4613,15 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
+    async function shareOrDownloadBlob(blob, filename, title, text) {
+      const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title, text });
+      } else {
+        downloadBlob(blob, filename);
+      }
+    }
+
     const CROSS_MODE_DATE_KEY = 'dreamart:open-date';
 
     function validIsoDate(value) {
@@ -5839,7 +5848,8 @@
       lbVideo.disabled = true;
       try {
         const blob = await createPublicShareVideo(item, 15000, progress => setDownloadProgress(lbVideo, progress));
-        downloadBlob(blob, `dream-art-${item.date || 'video'}.mp4`);
+        const filename = `dream-art-${item.date || 'video'}.mp4`;
+        await shareOrDownloadBlob(blob, filename, `Daily Dream Art - ${fmtLabel(item.date)}`, 'A procedural artwork generated from one night of sleep data.');
         setDownloadProgress(lbVideo, 1);
         lbVideo.textContent = 'Downloaded';
       } catch (error) {

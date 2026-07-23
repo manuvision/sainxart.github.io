@@ -346,6 +346,27 @@
 	      letter-spacing: 0.04em;
 	      padding: 0 0.9rem;
 	    }
+	    .date-display {
+	      width: 100%;
+	      min-height: 52px;
+	      border: 1px solid rgba(255,255,255,0.13);
+	      border-radius: 10px;
+	      background: rgba(4,4,10,0.9);
+	      color: var(--text);
+	      font: 700 0.86rem var(--font-ui);
+	      letter-spacing: 0.08em;
+	      padding: 0 0.9rem;
+	      display: flex;
+	      align-items: center;
+	      justify-content: space-between;
+	      gap: 0.75rem;
+	      cursor: pointer;
+	    }
+	    .date-display-icon {
+	      color: var(--gold);
+	      font-size: 1rem;
+	      line-height: 1;
+	    }
 	    .date-today {
 	      min-height: 52px;
 	      border: 1px solid rgba(255,190,99,0.62);
@@ -357,6 +378,95 @@
 	      text-transform: uppercase;
 	      padding: 0 1rem;
 	      cursor: pointer;
+	    }
+	    .date-calendar {
+	      border: 1px solid rgba(255,255,255,0.1);
+	      border-radius: 18px;
+	      background: rgba(7,7,15,0.78);
+	      padding: 0.9rem;
+	    }
+	    .date-calendar-head {
+	      display: flex;
+	      align-items: center;
+	      justify-content: space-between;
+	      gap: 0.75rem;
+	      margin-bottom: 0.75rem;
+	    }
+	    .date-month {
+	      color: var(--text);
+	      font: 700 0.86rem var(--font-ui);
+	      letter-spacing: 0.08em;
+	      text-transform: uppercase;
+	    }
+	    .date-month-nav {
+	      width: 42px;
+	      height: 42px;
+	      border: 1px solid rgba(var(--accent-rgb),0.46);
+	      border-radius: 12px;
+	      background: rgba(var(--accent-rgb),0.12);
+	      color: var(--text);
+	      font: 700 1.25rem var(--font-ui);
+	      cursor: pointer;
+	    }
+	    .date-weekdays,
+	    .date-grid {
+	      display: grid;
+	      grid-template-columns: repeat(7, minmax(0, 1fr));
+	      gap: 0.28rem;
+	    }
+	    .date-weekdays {
+	      margin-bottom: 0.35rem;
+	      color: var(--muted);
+	      font: 700 0.58rem var(--font-ui);
+	      letter-spacing: 0.1em;
+	      text-align: center;
+	      text-transform: uppercase;
+	    }
+	    .date-day {
+	      aspect-ratio: 1;
+	      border: 1px solid transparent;
+	      border-radius: 11px;
+	      background: rgba(255,255,255,0.035);
+	      color: var(--dim);
+	      font: 700 0.78rem var(--font-ui);
+	      cursor: pointer;
+	    }
+	    .date-day.is-empty {
+	      pointer-events: none;
+	      opacity: 0;
+	    }
+	    .date-day.has-data {
+	      color: var(--text);
+	      background: rgba(var(--accent-rgb),0.1);
+	    }
+	    .date-day.is-today {
+	      border-color: rgba(255,190,99,0.42);
+	      color: var(--gold);
+	    }
+	    .date-day.is-selected {
+	      border-color: rgba(var(--accent-rgb),0.95);
+	      background: rgba(var(--accent-rgb),0.28);
+	      color: #fff;
+	      box-shadow: 0 0 22px rgba(var(--accent-rgb),0.18);
+	    }
+	    @media (max-width: 480px) {
+	      .date-modal {
+	        padding: 0.95rem;
+	      }
+	      .date-picker-row {
+	        grid-template-columns: minmax(0, 1fr) auto;
+	        gap: 0.6rem;
+	      }
+	      .date-today {
+	        padding: 0 0.82rem;
+	      }
+	      .date-calendar {
+	        padding: 0.72rem;
+	      }
+	      .date-weekdays,
+	      .date-grid {
+	        gap: 0.22rem;
+	      }
 	    }
 	    .date-apply {
 	      min-height: 52px;
@@ -538,10 +648,24 @@
 	      <div class="date-fields">
 	        <div class="date-picker-row">
 	          <div class="date-field">
-	            <label for="modalDate">Select Date</label>
-	            <input id="modalDate" type="date" />
+	            <label id="modalDateLabel">Select Date</label>
+	            <button class="date-display" id="modalDateButton" type="button" aria-labelledby="modalDateLabel modalDateText">
+	              <span id="modalDateText">Choose a date</span>
+	              <span class="date-display-icon" aria-hidden="true">▦</span>
+	            </button>
 	          </div>
 	          <button class="date-today" id="modalToday" type="button">Today</button>
+	        </div>
+	        <div class="date-calendar" aria-label="Calendar">
+	          <div class="date-calendar-head">
+	            <button class="date-month-nav" id="modalPrevMonth" type="button" aria-label="Previous month">‹</button>
+	            <span class="date-month" id="modalMonthLabel"></span>
+	            <button class="date-month-nav" id="modalNextMonth" type="button" aria-label="Next month">›</button>
+	          </div>
+	          <div class="date-weekdays" aria-hidden="true">
+	            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+	          </div>
+	          <div class="date-grid" id="modalDateGrid"></div>
 	        </div>
 	        <button class="date-apply" id="modalApply" type="button">Filter →</button>
 	      </div>
@@ -562,14 +686,21 @@
         const brandModal = document.getElementById('brandModal');
         const brandClose = document.getElementById('brandClose');
         const brandAbout = document.getElementById('brandAbout');
-        const downloadCard = document.getElementById('downloadCard');
-        const downloadVideo = document.getElementById('downloadVideo');
+	    const downloadCard = document.getElementById('downloadCard');
+	    const downloadVideo = document.getElementById('downloadVideo');
 	    const dateModal = document.getElementById('dateModal');
-	    const modalDate = document.getElementById('modalDate');
+	    const modalDateButton = document.getElementById('modalDateButton');
+	    const modalDateText = document.getElementById('modalDateText');
+	    const modalDateGrid = document.getElementById('modalDateGrid');
+	    const modalMonthLabel = document.getElementById('modalMonthLabel');
+	    const modalPrevMonth = document.getElementById('modalPrevMonth');
+	    const modalNextMonth = document.getElementById('modalNextMonth');
 	    const modalToday = document.getElementById('modalToday');
 	    const modalApply = document.getElementById('modalApply');
 	    let renderer = null;
 	    let currentDate = '';
+	    let modalSelectedDate = '';
+	    let modalVisibleMonth = null;
 	    let archiveItems = [];
 	    let raf = 0;
     let autoFollowToday = true;
@@ -618,6 +749,73 @@
         day: 'numeric',
         year: 'numeric',
       });
+    }
+
+    function shortDate(iso) {
+      if (!iso) return 'Choose a date';
+      const date = new Date(`${iso}T12:00:00`);
+      if (Number.isNaN(date.getTime())) return iso;
+      return date.toISOString().slice(0, 10);
+    }
+
+    function localDateFromIso(iso) {
+      const [year, month, day] = String(iso || '').split('-').map(Number);
+      if (!year || !month || !day) return new Date();
+      return new Date(year, month - 1, day);
+    }
+
+    function isoFromLocalDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function setModalSelectedDate(date) {
+      modalSelectedDate = date || todayIso();
+      modalDateText.textContent = shortDate(modalSelectedDate);
+      modalVisibleMonth = localDateFromIso(modalSelectedDate);
+      modalVisibleMonth.setDate(1);
+      renderDateCalendar();
+    }
+
+    function renderDateCalendar() {
+      if (!modalDateGrid || !modalVisibleMonth) return;
+      const year = modalVisibleMonth.getFullYear();
+      const month = modalVisibleMonth.getMonth();
+      const archiveDates = new Set(archiveItems.map(item => item.date));
+      modalMonthLabel.textContent = modalVisibleMonth.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      });
+      modalDateGrid.innerHTML = '';
+      const first = new Date(year, month, 1);
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const today = todayIso();
+      for (let i = 0; i < first.getDay(); i += 1) {
+        const empty = document.createElement('span');
+        empty.className = 'date-day is-empty';
+        modalDateGrid.appendChild(empty);
+      }
+      for (let day = 1; day <= daysInMonth; day += 1) {
+        const iso = isoFromLocalDate(new Date(year, month, day));
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = [
+          'date-day',
+          archiveDates.has(iso) ? 'has-data' : '',
+          iso === today ? 'is-today' : '',
+          iso === modalSelectedDate ? 'is-selected' : '',
+        ].filter(Boolean).join(' ');
+        button.textContent = String(day);
+        button.setAttribute('aria-label', formatDate(iso));
+        button.addEventListener('click', () => {
+          modalSelectedDate = iso;
+          modalDateText.textContent = shortDate(iso);
+          renderDateCalendar();
+        });
+        modalDateGrid.appendChild(button);
+      }
     }
 
 	    function normalizeItems(data) {
@@ -749,7 +947,9 @@
 	      if (!item) return;
 	      updateUi(item);
 	      start(item);
-	      modalDate.value = item.date;
+	      modalSelectedDate = item.date;
+	      modalDateText.textContent = shortDate(item.date);
+	      if (dateModal.classList.contains('open')) setModalSelectedDate(item.date);
 	      if (options.auto) setAutoMode(true, item.date);
 	      if (!options.keepUrl) {
 	        const url = new URL(window.location.href);
@@ -779,9 +979,9 @@
 	    }
 
 	    function openDateModal() {
-	      modalDate.value = currentDate || requestedDate() || latestItem()?.date || todayIso();
+	      setModalSelectedDate(currentDate || requestedDate() || latestItem()?.date || todayIso());
 	      dateModal.classList.add('open');
-	      setTimeout(() => modalDate.focus(), 0);
+	      setTimeout(() => modalDateButton.focus(), 0);
 	    }
 
 	    function closeDateModal() {
@@ -889,6 +1089,14 @@
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(href), 1000);
+    }
+    async function shareOrDownloadBlob(blob, filename, title, text) {
+      const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title, text });
+      } else {
+        downloadBlob(blob, filename);
+      }
     }
     function fmtCardDate(iso) {
       if (!iso) return '';
@@ -1175,7 +1383,8 @@
           downloadVideo.disabled = true;
           try {
             const blob = await createDisplayVideoBlob(item, 15000, progress => setDownloadProgress(downloadVideo, progress));
-            downloadBlob(blob, `dream-art-${item.date || 'video'}.mp4`);
+            const filename = `dream-art-${item.date || 'video'}.mp4`;
+            await shareOrDownloadBlob(blob, filename, `Daily Dream Art - ${formatDate(item.date)}`, 'A procedural artwork generated from one night of sleep data.');
             setDownloadProgress(downloadVideo, 1);
             downloadVideo.textContent = 'Downloaded';
           } catch (error) {
@@ -1195,12 +1404,25 @@
 	      if (event.target === dateModal) closeDateModal();
 	    });
 	    modalToday.addEventListener('click', () => {
-	      modalDate.value = todayIso();
-	      modalDate.focus();
+	      setModalSelectedDate(todayIso());
+	      modalDateButton.focus();
+	    });
+	    modalPrevMonth.addEventListener('click', () => {
+	      if (!modalVisibleMonth) setModalSelectedDate(todayIso());
+	      modalVisibleMonth.setMonth(modalVisibleMonth.getMonth() - 1);
+	      renderDateCalendar();
+	    });
+	    modalNextMonth.addEventListener('click', () => {
+	      if (!modalVisibleMonth) setModalSelectedDate(todayIso());
+	      modalVisibleMonth.setMonth(modalVisibleMonth.getMonth() + 1);
+	      renderDateCalendar();
+	    });
+	    modalDateButton.addEventListener('click', () => {
+	      modalDateGrid.querySelector('.is-selected')?.focus();
 	    });
 	    modalApply.addEventListener('click', () => {
-	      if (!modalDate.value) return;
-	      setDisplayDate(modalDate.value, { auto: modalDate.value === todayIso() });
+	      if (!modalSelectedDate) return;
+	      setDisplayDate(modalSelectedDate, { auto: modalSelectedDate === todayIso() });
 	      closeDateModal();
 	    });
 	    document.addEventListener('keydown', (event) => {
