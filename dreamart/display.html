@@ -84,7 +84,7 @@
       right: clamp(18px, 4vw, 54px);
       display: grid;
       justify-items: center;
-      gap: 0.45rem;
+      gap: 0.72rem;
       text-align: center;
       pointer-events: none;
     }
@@ -247,6 +247,10 @@
       gap: 0.75rem;
     }
     .brand-action {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      --download-progress: 0%;
       min-height: 52px;
       display: flex;
       align-items: center;
@@ -260,6 +264,23 @@
       text-transform: uppercase;
       text-decoration: none;
       cursor: pointer;
+    }
+    .brand-action::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      width: var(--download-progress);
+      background: linear-gradient(90deg, rgba(var(--accent-rgb),0.34), rgba(255,190,99,0.24));
+      opacity: 0;
+      transition: width 0.12s linear, opacity 0.16s ease;
+    }
+    .brand-action.is-progressing::before {
+      opacity: 1;
+    }
+    .brand-action.is-progressing {
+      background:
+        linear-gradient(90deg, rgba(var(--accent-rgb),0.34) 0 var(--download-progress), rgba(var(--accent-rgb),0.16) var(--download-progress) 100%);
     }
     .brand-action.gold {
       border-color: rgba(255,190,99,0.7);
@@ -446,7 +467,7 @@
       }
       .display-title {
         top: max(14px, env(safe-area-inset-top));
-        gap: 0.35rem;
+        gap: 0.58rem;
       }
       .display-title h1 {
         font-size: clamp(2rem, 9.4vw, 3.85rem);
@@ -479,7 +500,7 @@
       <canvas id="dream" aria-label="Daily procedural dreamscape"></canvas>
       <div class="display-title" aria-hidden="true">
         <h1>Daily Dream Art</h1>
-        <p>Turning my biometrics into daily art.</p>
+        <p>Visualizing sleep data every night.</p>
       </div>
       <div id="message">
         <div>
@@ -502,7 +523,7 @@
     <div class="brand-modal">
       <button class="brand-close" id="brandClose" type="button">Close</button>
       <div class="brand-modal-head">
-        <div id="reading"><p>Every morning, <a href="https://manu.vision" target="_blank" rel="noopener">Manuel Sainsily</a>'s sleep data updates this interactive display.</p><p>Turning my biometrics into daily art.</p></div>
+        <div id="reading"><p>Every morning, <a href="https://manu.vision" target="_blank" rel="noopener">Manuel Sainsily</a>'s sleep data updates this interactive display.</p><p>Visualizing sleep data every night.</p></div>
       </div>
       <div class="brand-actions">
         <a class="brand-action gold" href="gallery/">Gallery</a>
@@ -937,7 +958,16 @@
     function waitForAnimationFrame() {
       return new Promise(resolve => requestAnimationFrame(() => resolve()));
     }
-    async function createDisplayVideoBlob(item, durationMs = 15000) {
+    function setDownloadProgress(button, progress) {
+      const pct = Math.max(0, Math.min(100, Math.round(progress * 100)));
+      button.style.setProperty('--download-progress', `${pct}%`);
+      button.textContent = `Download Video (${pct}%)`;
+    }
+    function resetDownloadProgress(button) {
+      button.classList.remove('is-progressing');
+      button.style.removeProperty('--download-progress');
+    }
+    async function createDisplayVideoBlob(item, durationMs = 15000, onProgress) {
       if (!renderer || !window.DreamPointcloudEngine) throw new Error('Dream renderer unavailable');
       const mimeType = supportedVideoType();
       if (!mimeType) throw new Error('MP4 export is not supported in this browser.');
@@ -991,6 +1021,7 @@
         const renderFrame = () => {
           const elapsedMs = Math.min(durationMs, performance.now() - startedAt);
           const progress = elapsedMs / durationMs;
+          if (onProgress) onProgress(progress);
           const waveCycle = progress * 2;
           const waveParity = Math.floor(waveCycle) % 2;
           const waveProgress = waveCycle - waveParity;
@@ -1054,17 +1085,19 @@
         downloadVideo.addEventListener('click', async () => {
           const item = itemForDate(currentDate);
           if (!item) return;
-          downloadVideo.textContent = 'Recording';
+          setDownloadProgress(downloadVideo, 0);
+          downloadVideo.classList.add('is-progressing');
           downloadVideo.disabled = true;
           try {
-            const blob = await createDisplayVideoBlob(item, 15000);
+            const blob = await createDisplayVideoBlob(item, 15000, progress => setDownloadProgress(downloadVideo, progress));
             downloadBlob(blob, `dream-art-${item.date || 'video'}.mp4`);
+            setDownloadProgress(downloadVideo, 1);
             downloadVideo.textContent = 'Downloaded';
           } catch (error) {
             console.error('Could not export video', error);
             downloadVideo.textContent = 'Try again';
           }
-          setTimeout(() => { downloadVideo.textContent = 'Download Video'; downloadVideo.disabled = false; }, 1400);
+          setTimeout(() => { resetDownloadProgress(downloadVideo); downloadVideo.textContent = 'Download Video'; downloadVideo.disabled = false; }, 1400);
         });
 	    datePill.addEventListener('click', openDateModal);
 	    datePill.addEventListener('keydown', (event) => {

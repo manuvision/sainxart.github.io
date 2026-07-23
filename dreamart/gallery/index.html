@@ -1474,6 +1474,10 @@
       margin-top: 0.1rem;
     }
     .lb-action {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      --download-progress: 0%;
       display: inline-flex;
       align-items: center;
       gap: 0.45rem;
@@ -1489,6 +1493,23 @@
       text-transform: uppercase;
       transition: background 0.18s, border-color 0.18s, color 0.18s;
       text-decoration: none;
+    }
+    .lb-action::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      width: var(--download-progress);
+      background: linear-gradient(90deg, rgba(240,171,252,0.28), rgba(255,190,99,0.18));
+      opacity: 0;
+      transition: width 0.12s linear, opacity 0.16s ease;
+    }
+    .lb-action.is-progressing::before {
+      opacity: 1;
+    }
+    .lb-action.is-progressing {
+      background:
+        linear-gradient(90deg, rgba(240,171,252,0.3) 0 var(--download-progress), var(--pink-soft) var(--download-progress) 100%);
     }
     .lb-action:hover {
       background: rgba(240,171,252,0.18);
@@ -2260,7 +2281,7 @@
 
   <header>
     <h1>Daily Dream Art</h1>
-    <p>Turning my biometrics into daily art.</p>
+    <p>Visualizing sleep data every night.</p>
     <nav>
       <div class="nav-info-row">
         <a class="nav-credit" href="https://manu.vision">by <span class="nav-credit-brand">manu.vision</span></a>
@@ -4265,7 +4286,16 @@
       return new Promise(resolve => requestAnimationFrame(() => resolve()));
     }
 
-    async function createPublicShareVideo(item, durationMs = 15000) {
+    function setDownloadProgress(button, progress) {
+      const pct = Math.max(0, Math.min(100, Math.round(progress * 100)));
+      button.style.setProperty('--download-progress', `${pct}%`);
+      button.textContent = `Download Video (${pct}%)`;
+    }
+    function resetDownloadProgress(button) {
+      button.classList.remove('is-progressing');
+      button.style.removeProperty('--download-progress');
+    }
+    async function createPublicShareVideo(item, durationMs = 15000, onProgress) {
       if (!window.DreamPointcloudEngine) throw new Error('Dream renderer unavailable');
       const mimeType = supportedVideoType();
       if (!mimeType) throw new Error('MP4 export is not supported in this browser.');
@@ -4317,6 +4347,7 @@
         const renderFrame = () => {
           const elapsedMs = Math.min(durationMs, performance.now() - startedAt);
           const progress = elapsedMs / durationMs;
+          if (onProgress) onProgress(progress);
           const waveCycle = progress * 2;
           const waveParity = Math.floor(waveCycle) % 2;
           const waveProgress = waveCycle - waveParity;
@@ -5716,17 +5747,19 @@
     lbVideo.addEventListener('click', async () => {
       const item = displayed[current];
       if (!item) return;
-      lbVideo.textContent = 'Recording';
+      setDownloadProgress(lbVideo, 0);
+      lbVideo.classList.add('is-progressing');
       lbVideo.disabled = true;
       try {
-        const blob = await createPublicShareVideo(item, 15000);
+        const blob = await createPublicShareVideo(item, 15000, progress => setDownloadProgress(lbVideo, progress));
         downloadBlob(blob, `dream-art-${item.date || 'video'}.mp4`);
+        setDownloadProgress(lbVideo, 1);
         lbVideo.textContent = 'Downloaded';
       } catch (error) {
         console.error('Could not create share video', error);
         lbVideo.textContent = 'Try again';
       }
-      setTimeout(() => { lbVideo.textContent = 'Download Video'; lbVideo.disabled = false; }, 1400);
+      setTimeout(() => { resetDownloadProgress(lbVideo); lbVideo.textContent = 'Download Video'; lbVideo.disabled = false; }, 1400);
     });
     if (lbLive && !window.DreamPointcloudEngine) {
       lbLive.addEventListener('pointerdown', (event) => {
