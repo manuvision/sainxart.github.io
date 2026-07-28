@@ -4198,6 +4198,11 @@
       if (lbLive) lbLive.classList.remove('loaded');
     }
 
+    const EXPORT_WIDTH = 1080;
+    const EXPORT_CARD_HEIGHT = 1440;
+    const EXPORT_MEDIA_HEIGHT = 1920;
+    const EXPORT_CARD_Y = (EXPORT_MEDIA_HEIGHT - EXPORT_CARD_HEIGHT) / 2;
+
     function fmtCardDate(d) {
       if (!d) return '';
       const date = new Date(`${d}T12:00:00`);
@@ -4264,12 +4269,19 @@
       const capturedFrame = snapshotCanvas(liveCanvas);
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
       const image = capturedFrame || await loadCardImage(proceduralVisualUrl(item, 1024, 1536));
+      const frameCanvas = document.createElement('canvas');
+      frameCanvas.width = EXPORT_WIDTH;
+      frameCanvas.height = EXPORT_CARD_HEIGHT;
+      const frameCtx = frameCanvas.getContext('2d');
       const canvas = document.createElement('canvas');
-      canvas.width = 1080;
-      canvas.height = 1440;
+      canvas.width = EXPORT_WIDTH;
+      canvas.height = EXPORT_MEDIA_HEIGHT;
       const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Canvas unavailable');
-      drawDreamCardFrame(ctx, item, image);
+      if (!frameCtx || !ctx) throw new Error('Canvas unavailable');
+      drawDreamCardFrame(frameCtx, item, image);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(frameCanvas, 0, EXPORT_CARD_Y);
       return canvasToBlob(canvas);
     }
 
@@ -4309,19 +4321,24 @@
       ]);
       const renderCanvas = document.createElement('canvas');
       const renderer = new window.DreamPointcloudEngine.DreamRenderer(renderCanvas, { budget: 10000 });
+      const frameCanvas = document.createElement('canvas');
+      frameCanvas.width = EXPORT_WIDTH;
+      frameCanvas.height = EXPORT_CARD_HEIGHT;
+      const frameCtx = frameCanvas.getContext('2d');
       const cardCanvas = document.createElement('canvas');
-      cardCanvas.width = 1080;
-      cardCanvas.height = 1440;
+      cardCanvas.width = EXPORT_WIDTH;
+      cardCanvas.height = EXPORT_MEDIA_HEIGHT;
       const cardCtx = cardCanvas.getContext('2d');
-      if (!cardCtx) throw new Error('Canvas unavailable');
+      if (!frameCtx || !cardCtx) throw new Error('Canvas unavailable');
 
-      const width = 1080;
-      const height = 1440;
+      const width = EXPORT_WIDTH;
+      const cardHeight = EXPORT_CARD_HEIGHT;
+      const height = EXPORT_MEDIA_HEIGHT;
       const fps = 60;
       const frameDuration = 1 / fps;
       const totalFrames = Math.round((durationMs / 1000) * fps);
 
-      renderer.resize(width, height, 1);
+      renderer.resize(width, cardHeight, 1);
       renderer.setItem(item);
       renderer.dragging = true;
       if (liveLightbox.renderer && liveLightbox.item && liveLightbox.item.date === item.date) {
@@ -4359,7 +4376,10 @@
         renderer.waveOverrideParity = waveParity;
         renderer.waveOverrideE = waveProgress;
         renderer.render(elapsedMs);
-        drawDreamCardFrame(cardCtx, item, renderCanvas);
+        drawDreamCardFrame(frameCtx, item, renderCanvas);
+        cardCtx.fillStyle = '#000';
+        cardCtx.fillRect(0, 0, width, height);
+        cardCtx.drawImage(frameCanvas, 0, EXPORT_CARD_Y);
         await source.add(frame * frameDuration, frameDuration, { keyFrame: frame % fps === 0 });
         if (frame % 6 === 0 || frame === totalFrames - 1) {
           if (onProgress) onProgress((frame + 1) / totalFrames);
@@ -4380,13 +4400,17 @@
 
       const renderCanvas = document.createElement('canvas');
       const renderer = new window.DreamPointcloudEngine.DreamRenderer(renderCanvas, { budget: 10000 });
+      const frameCanvas = document.createElement('canvas');
+      frameCanvas.width = EXPORT_WIDTH;
+      frameCanvas.height = EXPORT_CARD_HEIGHT;
+      const frameCtx = frameCanvas.getContext('2d');
       const cardCanvas = document.createElement('canvas');
-      cardCanvas.width = 1080;
-      cardCanvas.height = 1440;
+      cardCanvas.width = EXPORT_WIDTH;
+      cardCanvas.height = EXPORT_MEDIA_HEIGHT;
       const cardCtx = cardCanvas.getContext('2d');
-      if (!cardCtx || !cardCanvas.captureStream) throw new Error('Video export is not supported in this browser.');
+      if (!frameCtx || !cardCtx || !cardCanvas.captureStream) throw new Error('Video export is not supported in this browser.');
 
-      renderer.resize(1080, 1440, 1);
+      renderer.resize(EXPORT_WIDTH, EXPORT_CARD_HEIGHT, 1);
       renderer.setItem(item);
       renderer.dragging = true;
       if (liveLightbox.renderer && liveLightbox.item && liveLightbox.item.date === item.date) {
@@ -4395,7 +4419,10 @@
         renderer.rotY = liveLightbox.renderer.rotY;
       }
       renderer.render(0);
-      drawDreamCardFrame(cardCtx, item, renderCanvas);
+      drawDreamCardFrame(frameCtx, item, renderCanvas);
+      cardCtx.fillStyle = '#000';
+      cardCtx.fillRect(0, 0, EXPORT_WIDTH, EXPORT_MEDIA_HEIGHT);
+      cardCtx.drawImage(frameCanvas, 0, EXPORT_CARD_Y);
       await waitForAnimationFrame();
       await waitForAnimationFrame();
 
@@ -4433,7 +4460,10 @@
           renderer.waveOverrideParity = waveParity;
           renderer.waveOverrideE = waveProgress;
           renderer.render(elapsedMs);
-          drawDreamCardFrame(cardCtx, item, renderCanvas);
+          drawDreamCardFrame(frameCtx, item, renderCanvas);
+          cardCtx.fillStyle = '#000';
+          cardCtx.fillRect(0, 0, EXPORT_WIDTH, EXPORT_MEDIA_HEIGHT);
+          cardCtx.drawImage(frameCanvas, 0, EXPORT_CARD_Y);
           if (videoTrack && videoTrack.requestFrame) videoTrack.requestFrame();
           if (elapsedMs >= durationMs && recorder.state !== 'inactive') {
             renderer.rotY = startRotY;
@@ -4441,7 +4471,10 @@
             renderer.waveOverrideParity = 0;
             renderer.waveOverrideE = 0;
             renderer.render(0);
-            drawDreamCardFrame(cardCtx, item, renderCanvas);
+            drawDreamCardFrame(frameCtx, item, renderCanvas);
+            cardCtx.fillStyle = '#000';
+            cardCtx.fillRect(0, 0, EXPORT_WIDTH, EXPORT_MEDIA_HEIGHT);
+            cardCtx.drawImage(frameCanvas, 0, EXPORT_CARD_Y);
             if (videoTrack && videoTrack.requestFrame) videoTrack.requestFrame();
             window.setTimeout(() => recorder.stop(), 120);
           }
