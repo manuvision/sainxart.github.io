@@ -4222,16 +4222,16 @@
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
-      roundRectPath(ctx, 40, 40, 1000, 1270, 44);
+      roundRectPath(ctx, 40, 40, 1000, 1360, 44);
       ctx.clip();
-      drawImageCover(ctx, source, 40, 40, 1000, 1270);
+      drawImageCover(ctx, source, 40, 40, 1000, 1360);
       ctx.restore();
-      drawRoundedRect(ctx, 40, 40, 1000, 1270, 44, 'rgba(0,0,0,0)', outlineColor, 3);
+      drawRoundedRect(ctx, 40, 40, 1000, 1360, 44, 'rgba(0,0,0,0)', outlineColor, 3);
 
       const pad = 56;
       const contentX = 40 + pad;
       const contentW = 1000 - pad * 2;
-      const bottom = 1310 - pad;
+      const bottom = 1400 - pad;
       const badgeGap = 12;
       const badgeH = 58;
       const badgeWeights = [0.46, 0.27, 0.27];

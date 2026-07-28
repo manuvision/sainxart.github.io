@@ -1184,18 +1184,18 @@
       const accent = scoreColor(item.sleepScore);
       const outline = rgba(accent, 0.96);
       ctx.save();
-      roundRectPath(ctx, 40, 40, 1000, 1270, 44);
+      roundRectPath(ctx, 40, 40, 1000, 1360, 44);
       ctx.clip();
-      drawImageCover(ctx, source, 40, 40, 1000, 1270);
+      drawImageCover(ctx, source, 40, 40, 1000, 1360);
       ctx.restore();
-      drawRoundedRect(ctx, 40, 40, 1000, 1270, 44, null, outline, 3);
+      drawRoundedRect(ctx, 40, 40, 1000, 1360, 44, null, outline, 3);
       const pad = 56;
       const contentX = 96;
       const contentW = 888;
       const badgeGap = 12;
       const badgeH = 58;
       const weights = [0.46, 0.27, 0.27];
-      const badgeY = 1254 - badgeH;
+      const badgeY = 1400 - pad - badgeH;
       const badgeW = contentW - badgeGap * 2;
       const badges = [
         { text: 'MANU.VISION/DREAMART', color: '#f1efff' },
