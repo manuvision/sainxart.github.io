@@ -1221,7 +1221,7 @@
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
       const canvas = document.createElement('canvas');
       canvas.width = 1080;
-      canvas.height = 1350;
+      canvas.height = 1440;
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Canvas unavailable');
       drawDreamCardFrame(ctx, item, sourceCanvas || dream);
@@ -1262,7 +1262,7 @@
       if (!cardCtx) throw new Error('Canvas unavailable');
 
       const width = 1080;
-      const height = 1350;
+      const height = 1440;
       const fps = 60;
       const frameDuration = 1 / fps;
       const totalFrames = Math.round((durationMs / 1000) * fps);
@@ -1333,7 +1333,7 @@
       }
 
       const cssWidth = 1080;
-      const cssHeight = 1350;
+      const cssHeight = 1440;
       offscreen.resize(cssWidth, cssHeight, 1);
       offscreen.setItem(item);
       offscreen.dragging = true;
