@@ -1292,45 +1292,6 @@
       const state = soundStates[soundIndex];
       return state && state.src ? state : null;
     }
-    async function createExportAudioBuffer(durationMs) {
-      const state = getSelectedExportSound();
-      if (!state) return null;
-      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextCtor) return null;
-
-      const context = new AudioContextCtor();
-      try {
-        if (context.state === 'suspended') await context.resume();
-        const response = await fetch(state.src, { cache: 'force-cache' });
-        if (!response.ok) throw new Error('Selected ambience could not be loaded.');
-        const decoded = await context.decodeAudioData(await response.arrayBuffer());
-        const durationSeconds = durationMs / 1000;
-        const sampleRate = decoded.sampleRate || context.sampleRate || 44100;
-        const frameCount = Math.max(1, Math.round(durationSeconds * sampleRate));
-        const channelCount = Math.max(1, Math.min(2, decoded.numberOfChannels || 1));
-        const fadeFrames = Math.min(Math.round(sampleRate), Math.floor(frameCount / 3));
-        const volume = audio.volume || 0.55;
-        const startOffsetFrames = Number.isFinite(audio.currentTime) && audio.currentTime > 0
-          ? Math.round((audio.currentTime % decoded.duration) * sampleRate)
-          : 0;
-        const outputBuffer = context.createBuffer(channelCount, frameCount, sampleRate);
-
-        for (let channel = 0; channel < channelCount; channel += 1) {
-          const input = decoded.getChannelData(Math.min(channel, decoded.numberOfChannels - 1));
-          const output = outputBuffer.getChannelData(channel);
-          for (let frame = 0; frame < frameCount; frame += 1) {
-            const sourceFrame = (startOffsetFrames + frame) % input.length;
-            const fadeIn = fadeFrames > 0 ? Math.min(1, frame / fadeFrames) : 1;
-            const fadeOut = fadeFrames > 0 ? Math.min(1, (frameCount - frame - 1) / fadeFrames) : 1;
-            output[frame] = input[sourceFrame] * volume * Math.min(fadeIn, fadeOut);
-          }
-        }
-
-        return outputBuffer;
-      } finally {
-        context.close().catch(() => {});
-      }
-    }
     async function createExportAudioTrack(durationMs) {
       const state = getSelectedExportSound();
       if (!state) return null;
@@ -1379,9 +1340,8 @@
       if (typeof VideoEncoder === 'undefined') throw new Error('Offline MP4 export is not supported in this browser.');
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
 
-      const [{ Output, Mp4OutputFormat, BufferTarget, CanvasSource, AudioBufferSource }, audioBuffer] = await Promise.all([
+      const [{ Output, Mp4OutputFormat, BufferTarget, CanvasSource }] = await Promise.all([
         loadMediabunny(),
-        createExportAudioBuffer(durationMs),
       ]);
       const renderCanvas = document.createElement('canvas');
       const offscreen = new window.DreamPointcloudEngine.DreamRenderer(renderCanvas, { budget: 10000 });
@@ -1422,13 +1382,7 @@
         alpha: 'discard',
       });
       output.addVideoTrack(source, { width, height, frameRate: fps });
-      const audioSource = audioBuffer ? new AudioBufferSource({
-        codec: 'aac',
-        bitrate: 160000,
-      }) : null;
-      if (audioSource) output.addAudioTrack(audioSource);
       await output.start();
-      if (audioSource && audioBuffer) await audioSource.add(audioBuffer);
 
       const startRotY = Number.isFinite(offscreen.rotY) ? offscreen.rotY : 0;
       const startRotX = Number.isFinite(offscreen.rotX) ? offscreen.rotX : 0.26;
@@ -1571,6 +1525,9 @@
     }
 
     async function createDisplayVideoBlob(item, durationMs = 15000, onProgress) {
+      if (getSelectedExportSound()) {
+        return recordDisplayVideoBlobRealtime(item, durationMs, onProgress);
+      }
       try {
         return await encodeDisplayVideoBlobOffline(item, durationMs, onProgress);
       } catch (error) {
