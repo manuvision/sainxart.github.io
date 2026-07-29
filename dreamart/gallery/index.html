@@ -4378,10 +4378,9 @@
 
       const startRotY = Number.isFinite(renderer.rotY) ? renderer.rotY : 0;
       const startRotX = Number.isFinite(renderer.rotX) ? renderer.rotX : 0.26;
-      const loopPhaseOffset = 0.173;
 
       for (let frame = 0; frame < totalFrames; frame += 1) {
-        const progress = (frame / totalFrames + loopPhaseOffset) % 1;
+        const progress = frame / totalFrames;
         const waveCycle = progress * 2;
         const waveParity = Math.floor(waveCycle) % 2;
         const waveProgress = waveCycle - waveParity;
@@ -4448,7 +4447,6 @@
       const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 14000000 });
       const startRotY = Number.isFinite(renderer.rotY) ? renderer.rotY : 0;
       const startRotX = Number.isFinite(renderer.rotX) ? renderer.rotX : 0.26;
-      const loopPhaseOffset = 0.173;
       let startedAt = 0;
       let timer;
 
@@ -4471,9 +4469,8 @@
             return;
           }
           const elapsedMs = Math.max(0, rawElapsedMs);
-          const rawProgress = elapsedMs / durationMs;
-          const progress = (rawProgress + loopPhaseOffset) % 1;
-          if (onProgress) onProgress(rawProgress);
+          const progress = elapsedMs / durationMs;
+          if (onProgress) onProgress(progress);
           const waveCycle = progress * 2;
           const waveParity = Math.floor(waveCycle) % 2;
           const waveProgress = waveCycle - waveParity;
