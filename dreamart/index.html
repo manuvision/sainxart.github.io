@@ -1256,9 +1256,21 @@
       ctx.drawImage(frameCanvas, 0, EXPORT_CARD_Y);
       return canvasToBlob(canvas);
     }
-    function supportedVideoType() {
+    function supportedVideoType(includeAudio = false) {
       if (typeof MediaRecorder === 'undefined') return '';
-      return ['video/mp4;codecs=avc1.42E01E', 'video/mp4;codecs=h264', 'video/mp4'].find(type => MediaRecorder.isTypeSupported(type)) || '';
+      const audioVideoTypes = [
+        'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+        'video/mp4;codecs="avc1.42E01E,mp4a.40.2"',
+        'video/mp4;codecs=avc1.42001E,mp4a.40.2',
+        'video/mp4;codecs="avc1.42001E,mp4a.40.2"',
+        'video/mp4;codecs=avc1.4D401E,mp4a.40.2',
+        'video/mp4;codecs="avc1.4D401E,mp4a.40.2"',
+        'video/mp4;codecs=h264,mp4a.40.2',
+        'video/mp4;codecs="h264,mp4a.40.2"',
+      ];
+      const videoTypes = ['video/mp4;codecs=avc1.42E01E', 'video/mp4;codecs=h264', 'video/mp4'];
+      return (includeAudio ? audioVideoTypes : videoTypes)
+        .find(type => MediaRecorder.isTypeSupported(type)) || '';
     }
     function waitForAnimationFrame() {
       return new Promise(resolve => requestAnimationFrame(() => resolve()));
@@ -1287,6 +1299,7 @@
       if (!AudioContextCtor) return null;
 
       const context = new AudioContextCtor();
+      if (context.state === 'suspended') await context.resume();
       const response = await fetch(state.src, { cache: 'force-cache' });
       if (!response.ok) {
         await context.close();
@@ -1403,8 +1416,9 @@
 
     async function recordDisplayVideoBlobRealtime(item, durationMs = 15000, onProgress) {
       if (!renderer || !window.DreamPointcloudEngine) throw new Error('Dream renderer unavailable');
-      const mimeType = supportedVideoType();
-      if (!mimeType) throw new Error('MP4 export is not supported in this browser.');
+      const wantsAudio = !!getSelectedExportSound();
+      const mimeType = supportedVideoType(wantsAudio);
+      if (!mimeType && !wantsAudio) throw new Error('MP4 export is not supported in this browser.');
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
 
       const renderCanvas = document.createElement('canvas');
@@ -1447,7 +1461,12 @@
         exportAudio.stream.getAudioTracks().forEach(track => stream.addTrack(track));
       }
       const videoTrack = stream.getVideoTracks()[0];
-      const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 14000000 });
+      const recorderOptions = {
+        videoBitsPerSecond: 14000000,
+      };
+      if (exportAudio) recorderOptions.audioBitsPerSecond = 160000;
+      if (mimeType) recorderOptions.mimeType = mimeType;
+      const recorder = new MediaRecorder(stream, recorderOptions);
       const startRotY = Number.isFinite(offscreen.rotY) ? offscreen.rotY : 0;
       const startRotX = Number.isFinite(offscreen.rotX) ? offscreen.rotX : 0.26;
       let startedAt = 0;
@@ -1465,7 +1484,7 @@
           if (timer) window.clearInterval(timer);
           stream.getTracks().forEach(track => track.stop());
           if (exportAudio) exportAudio.close();
-          resolve(new Blob(chunks, { type: mimeType }));
+          resolve(new Blob(chunks, { type: mimeType || 'video/mp4' }));
         };
         const renderFrame = () => {
           const elapsedMs = Math.min(durationMs, performance.now() - startedAt);
