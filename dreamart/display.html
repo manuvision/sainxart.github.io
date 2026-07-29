@@ -1211,7 +1211,7 @@
 
       const badgeGap = pad;
       const badgeH = 58;
-      const weights = [0.5, 0.32, 0.18];
+      const weights = [0.5, 0.3, 0.2];
       const badgeY = EXPORT_FRAME_Y + EXPORT_FRAME_H - pad - badgeH;
       const badgeW = contentW - badgeGap * 2;
       const badges = [
@@ -1224,14 +1224,9 @@
       badges.forEach((badge, i) => {
         const w = badgeW * weights[i];
         drawRoundedRect(ctx, x, badgeY, w, badgeH, 10, 'rgba(0,0,0,0.69)', outline, 3);
-        let fontSize = 21;
         const label = String(badge.text).toUpperCase();
         ctx.letterSpacing = '2.1px';
-        do {
-          ctx.font = `700 ${fontSize}px "Space Mono", monospace`;
-          if (ctx.measureText(label).width <= w - 36) break;
-          fontSize -= 1;
-        } while (fontSize >= 14);
+        ctx.font = '700 21px "Space Mono", monospace';
         ctx.fillStyle = badge.color;
         ctx.fillText(label, x + w / 2, badgeY + 36);
         x += w + badgeGap;

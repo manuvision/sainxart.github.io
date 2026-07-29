@@ -4248,7 +4248,7 @@
 
       const badgeGap = pad;
       const badgeH = 58;
-      const badgeWeights = [0.5, 0.32, 0.18];
+      const badgeWeights = [0.5, 0.3, 0.2];
       const availableBadgeW = contentW - badgeGap * 2;
       const pillY = bottom - badgeH;
       const dateText = fmtCardDate(item.date) || item.label || 'Dreamscape';
@@ -4263,13 +4263,8 @@
         const badgeW = availableBadgeW * (badgeWeights[index] || 0.27);
         drawRoundedRect(ctx, badgeX, pillY, badgeW, badgeH, 10, badgeFill, outlineColor, 3);
         const label = String(badge.text).toUpperCase();
-        let fontSize = 21;
         ctx.letterSpacing = '2.1px';
-        do {
-          ctx.font = `700 ${fontSize}px ${uiFont}`;
-          if (ctx.measureText(label).width <= badgeW - 36) break;
-          fontSize -= 1;
-        } while (fontSize >= 14);
+        ctx.font = `700 21px ${uiFont}`;
         ctx.fillStyle = badge.color;
         ctx.textAlign = 'center';
         ctx.fillText(label, badgeX + badgeW / 2, pillY + 36);
