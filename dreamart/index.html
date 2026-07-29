@@ -1308,7 +1308,7 @@
         const sampleRate = decoded.sampleRate || context.sampleRate || 44100;
         const frameCount = Math.max(1, Math.round(durationSeconds * sampleRate));
         const channelCount = Math.max(1, Math.min(2, decoded.numberOfChannels || 1));
-        const fadeFrames = Math.min(Math.round(sampleRate), Math.floor(frameCount / 3));
+        const crossfadeFrames = Math.min(Math.round(sampleRate), Math.floor(frameCount / 3));
         const volume = audio.volume || 0.55;
         const startOffsetFrames = Number.isFinite(audio.currentTime) && audio.currentTime > 0
           ? Math.round((audio.currentTime % decoded.duration) * sampleRate)
@@ -1320,9 +1320,14 @@
           const output = outputBuffer.getChannelData(channel);
           for (let frame = 0; frame < frameCount; frame += 1) {
             const sourceFrame = (startOffsetFrames + frame) % input.length;
-            const fadeIn = fadeFrames > 0 ? Math.min(1, frame / fadeFrames) : 1;
-            const fadeOut = fadeFrames > 0 ? Math.min(1, (frameCount - frame - 1) / fadeFrames) : 1;
-            output[frame] = input[sourceFrame] * volume * Math.min(fadeIn, fadeOut);
+            let sample = input[sourceFrame];
+            if (crossfadeFrames > 0 && frame >= frameCount - crossfadeFrames) {
+              const crossfadeFrame = frame - (frameCount - crossfadeFrames);
+              const blend = crossfadeFrames > 1 ? crossfadeFrame / (crossfadeFrames - 1) : 1;
+              const loopFrame = (startOffsetFrames + crossfadeFrame) % input.length;
+              sample = sample * (1 - blend) + input[loopFrame] * blend;
+            }
+            output[frame] = sample * volume;
           }
         }
 
@@ -1377,12 +1382,14 @@
     async function encodeDisplayVideoBlobOffline(item, durationMs = 15000, onProgress) {
       if (!renderer || !window.DreamPointcloudEngine) throw new Error('Dream renderer unavailable');
       if (typeof VideoEncoder === 'undefined') throw new Error('Offline MP4 export is not supported in this browser.');
+      if (onProgress) onProgress(0.01);
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
 
       const [{ Output, Mp4OutputFormat, BufferTarget, CanvasSource, AudioBufferSource }, audioBuffer] = await Promise.all([
         loadMediabunny(),
         createExportAudioBuffer(durationMs),
       ]);
+      if (onProgress) onProgress(0.03);
       const renderCanvas = document.createElement('canvas');
       const offscreen = new window.DreamPointcloudEngine.DreamRenderer(renderCanvas, { budget: 10000 });
       const frameCanvas = document.createElement('canvas');
@@ -1429,6 +1436,7 @@
       if (audioSource) output.addAudioTrack(audioSource);
       await output.start();
       if (audioSource && audioBuffer) await audioSource.add(audioBuffer);
+      if (onProgress) onProgress(0.04);
 
       const startRotY = Number.isFinite(offscreen.rotY) ? offscreen.rotY : 0;
       const startRotX = Number.isFinite(offscreen.rotX) ? offscreen.rotX : 0.26;
@@ -1450,7 +1458,7 @@
         cardCtx.drawImage(frameCanvas, 0, EXPORT_CARD_Y);
         await source.add(frame * frameDuration, frameDuration, { keyFrame: frame % fps === 0 });
         if (frame % 6 === 0 || frame === totalFrames - 1) {
-          if (onProgress) onProgress((frame + 1) / totalFrames);
+          if (onProgress) onProgress(0.04 + ((frame + 1) / totalFrames) * 0.96);
           await waitForAnimationFrame();
         }
       }
@@ -1533,7 +1541,12 @@
           resolve(new Blob(chunks, { type: mimeType || 'video/mp4' }));
         };
         const renderFrame = () => {
-          const elapsedMs = Math.min(durationMs, performance.now() - startedAt);
+          const rawElapsedMs = performance.now() - startedAt;
+          if (rawElapsedMs >= durationMs) {
+            if (recorder.state !== 'inactive') recorder.stop();
+            return;
+          }
+          const elapsedMs = Math.max(0, rawElapsedMs);
           const progress = elapsedMs / durationMs;
           if (onProgress) onProgress(progress);
           const waveCycle = progress * 2;
@@ -1549,19 +1562,6 @@
           cardCtx.fillRect(0, 0, cssWidth, outputHeight);
           cardCtx.drawImage(frameCanvas, 0, EXPORT_CARD_Y);
           if (videoTrack && videoTrack.requestFrame) videoTrack.requestFrame();
-          if (elapsedMs >= durationMs && recorder.state !== 'inactive') {
-            offscreen.rotY = startRotY;
-            offscreen.rotX = startRotX;
-            offscreen.waveOverrideParity = 0;
-            offscreen.waveOverrideE = 0;
-            offscreen.render(0);
-            drawDreamCardFrame(frameCtx, item, renderCanvas);
-            cardCtx.fillStyle = '#000';
-            cardCtx.fillRect(0, 0, cssWidth, outputHeight);
-            cardCtx.drawImage(frameCanvas, 0, EXPORT_CARD_Y);
-            if (videoTrack && videoTrack.requestFrame) videoTrack.requestFrame();
-            window.setTimeout(() => recorder.stop(), 120);
-          }
         };
         recorder.start(1000);
         startedAt = performance.now();

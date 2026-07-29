@@ -4463,7 +4463,12 @@
           resolve(new Blob(chunks, { type: mimeType }));
         };
         const renderFrame = () => {
-          const elapsedMs = Math.min(durationMs, performance.now() - startedAt);
+          const rawElapsedMs = performance.now() - startedAt;
+          if (rawElapsedMs >= durationMs) {
+            if (recorder.state !== 'inactive') recorder.stop();
+            return;
+          }
+          const elapsedMs = Math.max(0, rawElapsedMs);
           const progress = elapsedMs / durationMs;
           if (onProgress) onProgress(progress);
           const waveCycle = progress * 2;
@@ -4479,19 +4484,6 @@
           cardCtx.fillRect(0, 0, EXPORT_WIDTH, EXPORT_MEDIA_HEIGHT);
           cardCtx.drawImage(frameCanvas, 0, EXPORT_CARD_Y);
           if (videoTrack && videoTrack.requestFrame) videoTrack.requestFrame();
-          if (elapsedMs >= durationMs && recorder.state !== 'inactive') {
-            renderer.rotY = startRotY;
-            renderer.rotX = startRotX;
-            renderer.waveOverrideParity = 0;
-            renderer.waveOverrideE = 0;
-            renderer.render(0);
-            drawDreamCardFrame(frameCtx, item, renderCanvas);
-            cardCtx.fillStyle = '#000';
-            cardCtx.fillRect(0, 0, EXPORT_WIDTH, EXPORT_MEDIA_HEIGHT);
-            cardCtx.drawImage(frameCanvas, 0, EXPORT_CARD_Y);
-            if (videoTrack && videoTrack.requestFrame) videoTrack.requestFrame();
-            window.setTimeout(() => recorder.stop(), 120);
-          }
         };
         recorder.start(1000);
         startedAt = performance.now();
