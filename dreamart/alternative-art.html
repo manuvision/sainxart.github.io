@@ -3327,9 +3327,9 @@
       const contentX = cardX + pad;
       const contentW = cardW - pad * 2;
       const bottom = cardY + cardH - pad;
-      const badgeGap = 12;
+      const badgeGap = 24;
       const badgeH = 58;
-      const badgeWeights = [0.46, 0.27, 0.27];
+      const badgeWeights = [0.44, 0.34, 0.22];
       const availableBadgeW = contentW - badgeGap * 2;
       const pillY = bottom - badgeH;
 
@@ -3345,8 +3345,8 @@
         const x = badgeX;
         drawRoundedRect(ctx, x, pillY, badgeW, badgeH, 10, badgeFill, outlineColor, 3);
         const label = String(badge.text).toUpperCase();
-        let fontSize = index === 0 ? 20 : 21;
-        ctx.letterSpacing = index === 0 ? '2px' : '2.1px';
+        let fontSize = 21;
+        ctx.letterSpacing = '2.1px';
         do {
           ctx.font = `700 ${fontSize}px ${uiFont}`;
           if (ctx.measureText(label).width <= badgeW - 36) break;
