@@ -25,7 +25,7 @@
   <meta name="twitter:title" content="Daily Dream Art Gallery" />
   <meta name="twitter:description" content="Every night since May 23, 2025. Sleep data turned into generative sculptures." />
   <meta name="twitter:image" content="https://manu.vision/dreamart/og-card.png" />
-  <script src="dreamart-pointcloud.js?v=20260720-hover-zoom"></script>
+  <script src="dreamart-pointcloud.js?v=20260729-flat-bg"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
@@ -3979,11 +3979,7 @@
       const colors = frame.range.colors;
       const renderPoints = [];
       ctx.clearRect(0, 0, width, height);
-      const bg = ctx.createRadialGradient(cx, cy * 0.75, 10, cx, cy, Math.max(width, height) * 0.75);
-      bg.addColorStop(0, 'rgba(22,22,42,1)');
-      bg.addColorStop(0.55, 'rgba(8,8,18,1)');
-      bg.addColorStop(1, 'rgba(5,5,12,1)');
-      ctx.fillStyle = bg;
+      ctx.fillStyle = 'rgba(5,8,15,1)';
       ctx.fillRect(0, 0, width, height);
 
       ctx.save();
@@ -4202,6 +4198,12 @@
     const EXPORT_CARD_HEIGHT = 1440;
     const EXPORT_MEDIA_HEIGHT = 1920;
     const EXPORT_CARD_Y = (EXPORT_MEDIA_HEIGHT - EXPORT_CARD_HEIGHT) / 2;
+    const EXPORT_FRAME_INSET = 64;
+    const EXPORT_FRAME_X = EXPORT_FRAME_INSET;
+    const EXPORT_FRAME_Y = EXPORT_FRAME_INSET;
+    const EXPORT_FRAME_W = EXPORT_WIDTH - EXPORT_FRAME_INSET * 2;
+    const EXPORT_FRAME_H = EXPORT_CARD_HEIGHT - EXPORT_FRAME_INSET * 2;
+    const EXPORT_FRAME_RADIUS = 44;
 
     function fmtCardDate(d) {
       if (!d) return '';
@@ -4222,16 +4224,16 @@
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
-      roundRectPath(ctx, 40, 40, 1000, 1360, 44);
+      roundRectPath(ctx, EXPORT_FRAME_X, EXPORT_FRAME_Y, EXPORT_FRAME_W, EXPORT_FRAME_H, EXPORT_FRAME_RADIUS);
       ctx.clip();
-      drawImageCover(ctx, source, 40, 40, 1000, 1360);
+      drawImageCover(ctx, source, EXPORT_FRAME_X, EXPORT_FRAME_Y, EXPORT_FRAME_W, EXPORT_FRAME_H);
       ctx.restore();
-      drawRoundedRect(ctx, 40, 40, 1000, 1360, 44, 'rgba(0,0,0,0)', outlineColor, 3);
+      drawRoundedRect(ctx, EXPORT_FRAME_X, EXPORT_FRAME_Y, EXPORT_FRAME_W, EXPORT_FRAME_H, EXPORT_FRAME_RADIUS, 'rgba(0,0,0,0)', outlineColor, 3);
 
       const pad = 56;
-      const contentX = 40 + pad;
-      const contentW = 1000 - pad * 2;
-      const bottom = 1400 - pad;
+      const contentX = EXPORT_FRAME_X + pad;
+      const contentW = EXPORT_FRAME_W - pad * 2;
+      const bottom = EXPORT_FRAME_Y + EXPORT_FRAME_H - pad;
       const badgeGap = 12;
       const badgeH = 58;
       const badgeWeights = [0.46, 0.27, 0.27];

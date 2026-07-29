@@ -6,7 +6,7 @@
   <title>Daily Dream Art</title>
   <meta name="description" content="Daily Dream Art: a fullscreen procedural artwork generated from daily biometrics." />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <script src="dreamart-pointcloud.js?v=20260723-dailydream"></script>
+  <script src="dreamart-pointcloud.js?v=20260729-flat-bg"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
@@ -41,9 +41,8 @@
       pointer-events: none;
       background:
         linear-gradient(rgba(167,139,250,0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(167,139,250,0.035) 1px, transparent 1px),
-        radial-gradient(circle at 50% 40%, rgba(167,139,250,0.12), transparent 55%);
-      background-size: 28px 28px, 28px 28px, 100% 100%;
+        linear-gradient(90deg, rgba(167,139,250,0.035) 1px, transparent 1px);
+      background-size: 28px 28px, 28px 28px;
       opacity: 0.55;
     }
     #display {
@@ -61,7 +60,7 @@
       border-radius: clamp(20px, 3vw, 46px);
       overflow: hidden;
 	      border: 1px solid rgba(var(--accent-rgb), 0.72);
-      background: radial-gradient(circle at 50% 34%, rgba(167,139,250,0.12), rgba(7,7,15,0.96) 62%);
+      background: #05080f;
 	      box-shadow:
 	        0 26px 90px rgba(0,0,0,0.55),
 	        0 0 0 1px rgba(var(--accent-rgb), 0.1),
@@ -1170,6 +1169,12 @@
     const EXPORT_CARD_HEIGHT = 1440;
     const EXPORT_MEDIA_HEIGHT = 1920;
     const EXPORT_CARD_Y = (EXPORT_MEDIA_HEIGHT - EXPORT_CARD_HEIGHT) / 2;
+    const EXPORT_FRAME_INSET = 64;
+    const EXPORT_FRAME_X = EXPORT_FRAME_INSET;
+    const EXPORT_FRAME_Y = EXPORT_FRAME_INSET;
+    const EXPORT_FRAME_W = EXPORT_WIDTH - EXPORT_FRAME_INSET * 2;
+    const EXPORT_FRAME_H = EXPORT_CARD_HEIGHT - EXPORT_FRAME_INSET * 2;
+    const EXPORT_FRAME_RADIUS = 44;
 
     function fmtCardDate(iso) {
       if (!iso) return '';
@@ -1184,18 +1189,18 @@
       const accent = scoreColor(item.sleepScore);
       const outline = rgba(accent, 0.96);
       ctx.save();
-      roundRectPath(ctx, 40, 40, 1000, 1360, 44);
+      roundRectPath(ctx, EXPORT_FRAME_X, EXPORT_FRAME_Y, EXPORT_FRAME_W, EXPORT_FRAME_H, EXPORT_FRAME_RADIUS);
       ctx.clip();
-      drawImageCover(ctx, source, 40, 40, 1000, 1360);
+      drawImageCover(ctx, source, EXPORT_FRAME_X, EXPORT_FRAME_Y, EXPORT_FRAME_W, EXPORT_FRAME_H);
       ctx.restore();
-      drawRoundedRect(ctx, 40, 40, 1000, 1360, 44, null, outline, 3);
+      drawRoundedRect(ctx, EXPORT_FRAME_X, EXPORT_FRAME_Y, EXPORT_FRAME_W, EXPORT_FRAME_H, EXPORT_FRAME_RADIUS, null, outline, 3);
       const pad = 56;
-      const contentX = 96;
-      const contentW = 888;
+      const contentX = EXPORT_FRAME_X + pad;
+      const contentW = EXPORT_FRAME_W - pad * 2;
       const badgeGap = 12;
       const badgeH = 58;
       const weights = [0.46, 0.27, 0.27];
-      const badgeY = 1400 - pad - badgeH;
+      const badgeY = EXPORT_FRAME_Y + EXPORT_FRAME_H - pad - badgeH;
       const badgeW = contentW - badgeGap * 2;
       const badges = [
         { text: 'MANU.VISION/DREAMART', color: '#f1efff' },

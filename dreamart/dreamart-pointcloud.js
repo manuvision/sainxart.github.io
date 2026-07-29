@@ -553,15 +553,8 @@
 
     drawBackground(context, width, height) {
       context.globalAlpha = 1;
-      context.fillStyle = mixHex(this.spec.palette[6], '#040409', 0.68);
+      context.fillStyle = mixHex(this.spec.palette[6], '#040409', 0.72);
       context.fillRect(0, 0, width, height);
-      const aura = context.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) * 0.62);
-      aura.addColorStop(0, mixHex(this.spec.palette[4], '#000000', 0.35));
-      aura.addColorStop(1, 'rgba(0,0,0,0)');
-      context.globalAlpha = 0.5;
-      context.fillStyle = aura;
-      context.fillRect(0, 0, width, height);
-      context.globalAlpha = 1;
     }
 
     render(timeMs) {
@@ -814,7 +807,7 @@
       this.bufCanvas.height = rows;
       this.bctx.drawImage(this.glyphCanvas, 0, 0, columns, rows);
       const pixels = this.bctx.getImageData(0, 0, columns, rows).data;
-      const backgroundFill = mixHex(this.spec.palette[6], '#040409', 0.68);
+      const backgroundFill = mixHex(this.spec.palette[6], '#040409', 0.72);
       const maxEdge = width * edgeProgress + band / 2 + cellWidth;
 
       for (let row = 0; row < rows; row += 1) {
