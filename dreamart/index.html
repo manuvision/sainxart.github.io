@@ -1197,9 +1197,21 @@
       const pad = 56;
       const contentX = EXPORT_FRAME_X + pad;
       const contentW = EXPORT_FRAME_W - pad * 2;
-      const badgeGap = 12;
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#f4f1ff';
+      ctx.letterSpacing = '0px';
+      ctx.font = 'italic 300 76px "Cormorant Garamond", Georgia, serif';
+      ctx.fillText('Daily Dream Art', EXPORT_FRAME_X + EXPORT_FRAME_W / 2, EXPORT_FRAME_Y + 98);
+      ctx.fillStyle = 'rgba(244,241,255,0.82)';
+      ctx.letterSpacing = '4px';
+      ctx.font = '700 15px "Space Mono", monospace';
+      ctx.fillText('VISUALIZING SLEEP DATA EVERY NIGHT.', EXPORT_FRAME_X + EXPORT_FRAME_W / 2, EXPORT_FRAME_Y + 136);
+      ctx.restore();
+
+      const badgeGap = pad;
       const badgeH = 58;
-      const weights = [0.46, 0.27, 0.27];
+      const weights = [0.375, 0.343, 0.282];
       const badgeY = EXPORT_FRAME_Y + EXPORT_FRAME_H - pad - badgeH;
       const badgeW = contentW - badgeGap * 2;
       const badges = [
