@@ -1169,8 +1169,6 @@
     const EXPORT_CARD_HEIGHT = 1440;
     const EXPORT_MEDIA_HEIGHT = 1920;
     const EXPORT_VIDEO_DURATION_MS = 14950;
-    const EXPORT_VIDEO_FPS = 90;
-    const EXPORT_REALTIME_FPS = 60;
     const EXPORT_CARD_Y = (EXPORT_MEDIA_HEIGHT - EXPORT_CARD_HEIGHT) / 2;
     const EXPORT_FRAME_INSET = 64;
     const EXPORT_FRAME_X = EXPORT_FRAME_INSET;
@@ -1405,7 +1403,7 @@
       const width = EXPORT_WIDTH;
       const cardHeight = EXPORT_CARD_HEIGHT;
       const height = EXPORT_MEDIA_HEIGHT;
-      const fps = EXPORT_VIDEO_FPS;
+      const fps = 60;
       const frameDuration = 1 / fps;
       const totalFrames = Math.round((durationMs / 1000) * fps);
 
@@ -1511,9 +1509,7 @@
       await waitForAnimationFrame();
 
       const chunks = [];
-      const fps = EXPORT_REALTIME_FPS;
-      const totalFrames = Math.max(1, Math.round((durationMs / 1000) * fps));
-      const frameDurationMs = durationMs / totalFrames;
+      const fps = 60;
       const stream = cardCanvas.captureStream(0);
       const exportAudio = await createExportAudioTrack(durationMs);
       if (exportAudio) {
@@ -1530,36 +1526,31 @@
       const startRotX = Number.isFinite(offscreen.rotX) ? offscreen.rotX : 0.26;
       let startedAt = 0;
       let timer;
-      let frame = 0;
-      const clearTimer = () => {
-        if (timer) {
-          window.clearTimeout(timer);
-          timer = null;
-        }
-      };
 
       return new Promise((resolve, reject) => {
         recorder.ondataavailable = event => { if (event.data.size > 0) chunks.push(event.data); };
         recorder.onerror = () => {
-          clearTimer();
+          if (timer) window.clearInterval(timer);
           stream.getTracks().forEach(track => track.stop());
           if (exportAudio) exportAudio.close();
           reject(new Error('Video export failed.'));
         };
         recorder.onstop = () => {
-          clearTimer();
+          if (timer) window.clearInterval(timer);
           stream.getTracks().forEach(track => track.stop());
           if (exportAudio) exportAudio.close();
           resolve(new Blob(chunks, { type: mimeType || 'video/mp4' }));
         };
         const renderFrame = () => {
-          if (frame >= totalFrames) {
+          const rawElapsedMs = performance.now() - startedAt;
+          if (rawElapsedMs >= durationMs) {
             if (recorder.state !== 'inactive') recorder.stop();
             return;
           }
-          const progress = frame / totalFrames;
-          const elapsedMs = progress * durationMs;
-          if (onProgress) onProgress((frame + 1) / totalFrames);
+          const elapsedMs = Math.max(0, rawElapsedMs);
+          const rawProgress = elapsedMs / durationMs;
+          const progress = rawProgress;
+          if (onProgress) onProgress(rawProgress);
           const waveCycle = progress * 2;
           const waveParity = Math.floor(waveCycle) % 2;
           const waveProgress = waveCycle - waveParity;
@@ -1573,19 +1564,11 @@
           cardCtx.fillRect(0, 0, cssWidth, outputHeight);
           cardCtx.drawImage(frameCanvas, 0, EXPORT_CARD_Y);
           if (videoTrack && videoTrack.requestFrame) videoTrack.requestFrame();
-          frame += 1;
-          if (frame >= totalFrames) {
-            timer = window.setTimeout(() => {
-              if (recorder.state !== 'inactive') recorder.stop();
-            }, 0);
-            return;
-          }
-          const nextAt = startedAt + frame * frameDurationMs;
-          timer = window.setTimeout(renderFrame, Math.max(0, nextAt - performance.now()));
         };
         recorder.start(1000);
         startedAt = performance.now();
         renderFrame();
+        timer = window.setInterval(renderFrame, 1000 / fps);
       });
     }
 
