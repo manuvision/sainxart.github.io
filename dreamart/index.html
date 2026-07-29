@@ -1209,9 +1209,9 @@
       ctx.fillText('VISUALIZING SLEEP DATA EVERY NIGHT.', EXPORT_FRAME_X + EXPORT_FRAME_W / 2, EXPORT_FRAME_Y + 136);
       ctx.restore();
 
-      const badgeGap = 24;
+      const badgeGap = pad;
       const badgeH = 58;
-      const weights = [0.44, 0.34, 0.22];
+      const weights = [0.5, 0.32, 0.18];
       const badgeY = EXPORT_FRAME_Y + EXPORT_FRAME_H - pad - badgeH;
       const badgeW = contentW - badgeGap * 2;
       const badges = [
