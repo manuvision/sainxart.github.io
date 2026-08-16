@@ -1719,23 +1719,36 @@ main section h2 em {
 }
 
 .glyxel-crt {
+    --glyxel-frame: clamp(8px, 1.15vw, 17px);
     position: absolute;
     top: 9%;
     left: 9%;
     width: 82%;
     aspect-ratio: 1;
-    overflow: hidden;
-    border: clamp(8px, 1.15vw, 17px) solid #292a35;
+    box-sizing: border-box;
+    padding: var(--glyxel-frame);
     border-radius: 12% / 9%;
-    background: #050807;
+    background: #292a35;
     box-shadow:
         0 0 0 3px rgba(255, 255, 255, 0.12),
-        0 16px 28px rgba(22, 18, 28, 0.34),
-        0 0 32px rgba(0, 0, 0, 0.72) inset;
+        0 16px 28px rgba(22, 18, 28, 0.34);
     transform: translateZ(0);
 }
 
-.glyxel-crt svg {
+.glyxel-screen {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 10% / 7%;
+    background: #050807;
+    box-shadow: 0 0 32px rgba(0, 0, 0, 0.72) inset;
+    isolation: isolate;
+    transform: translateZ(0);
+}
+
+.glyxel-screen svg {
     position: absolute;
     z-index: 1;
     inset: 11%;
@@ -1744,26 +1757,24 @@ main section h2 em {
     filter: saturate(0.94) contrast(1.06);
 }
 
-.glyxel-crt::before,
-.glyxel-crt::after {
+.glyxel-screen::before,
+.glyxel-screen::after {
     position: absolute;
     z-index: 2;
     inset: 0;
-    overflow: hidden;
-    border-radius: 10% / 7%;
-    clip-path: inset(0 round 10% / 7%);
+    border-radius: inherit;
     pointer-events: none;
     content: "";
 }
 
-.glyxel-crt::before {
+.glyxel-screen::before {
     opacity: 0.82;
     background:
         repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.34) 0 1px, transparent 1px 4px),
         repeating-linear-gradient(to right, rgba(255, 58, 82, 0.05) 0 1px, rgba(53, 255, 134, 0.025) 1px 2px, rgba(62, 104, 255, 0.05) 2px 3px);
 }
 
-.glyxel-crt::after {
+.glyxel-screen::after {
     z-index: 3;
     background:
         linear-gradient(118deg, rgba(255, 255, 255, 0.12), transparent 22% 72%, rgba(143, 248, 226, 0.05)),
