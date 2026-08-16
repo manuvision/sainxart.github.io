@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="shell" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e9e6dc"/>
+      <stop offset="0.62" stop-color="#c8c5bb"/>
+      <stop offset="1" stop-color="#aaa79f"/>
+    </linearGradient>
+    <radialGradient id="shellGlow" cx="0.26" cy="0.28" r="0.68">
+      <stop offset="0" stop-color="#8ff8e2" stop-opacity="0.22"/>
+      <stop offset="0.5" stop-color="#8ff8e2" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="0.5" cy="0.46" r="0.7">
+      <stop offset="0.55" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.72"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.12"/>
+      <stop offset="0.25" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="0.72" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#8ff8e2" stop-opacity="0.05"/>
+    </linearGradient>
+    <pattern id="scanlines" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="1" fill="#000" fill-opacity="0.34"/>
+    </pattern>
+    <filter id="frameShadow" x="-25%" y="-25%" width="150%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="17" flood-color="#16121c" flood-opacity="0.34"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#shell)"/>
+  <rect width="1200" height="630" fill="url(#shellGlow)"/>
+
+  <g filter="url(#frameShadow)">
+    <rect x="54" y="45" width="540" height="540" rx="70" fill="#292a35"/>
+    <rect x="60" y="51" width="528" height="528" rx="65" fill="none" stroke="#fff" stroke-opacity="0.12" stroke-width="4"/>
+    <rect x="88" y="79" width="472" height="472" rx="50" fill="#050807"/>
+    <rect x="88" y="79" width="472" height="472" rx="50" fill="none" stroke="#81af9c" stroke-opacity="0.38" stroke-width="2"/>
+
+    <g transform="translate(139.92 130.92) scale(46.02)" shape-rendering="crispEdges">
+      <g fill="#7a3045">
+        <rect x="1" y="0" width="1" height="1"/><rect x="6" y="0" width="1" height="1"/>
+        <rect x="3" y="1" width="2" height="1"/><rect x="1" y="2" width="1" height="1"/>
+        <rect x="6" y="2" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/>
+        <rect x="5" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/>
+        <rect x="7" y="4" width="1" height="1"/><rect x="2" y="7" width="1" height="1"/>
+        <rect x="5" y="7" width="1" height="1"/>
+      </g>
+      <g fill="#fca790">
+        <rect x="3" y="0" width="2" height="1"/><rect x="0" y="3" width="1" height="1"/>
+        <rect x="7" y="3" width="1" height="1"/><rect x="3" y="5" width="2" height="1"/>
+        <rect x="3" y="6" width="2" height="1"/><rect x="0" y="7" width="2" height="1"/>
+        <rect x="6" y="7" width="2" height="1"/>
+      </g>
+      <g fill="#753c54">
+        <rect x="2" y="0" width="1" height="1"/><rect x="5" y="0" width="1" height="1"/>
+        <rect x="1" y="4" width="1" height="1"/><rect x="3" y="4" width="2" height="1"/>
+        <rect x="6" y="4" width="1" height="1"/><rect x="1" y="5" width="1" height="1"/>
+        <rect x="6" y="5" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/>
+        <rect x="5" y="6" width="1" height="1"/>
+      </g>
+    </g>
+
+    <rect x="88" y="79" width="472" height="472" rx="50" fill="url(#scanlines)" opacity="0.82"/>
+    <rect x="88" y="79" width="472" height="472" rx="50" fill="url(#glass)"/>
+    <rect x="88" y="79" width="472" height="472" rx="50" fill="url(#vignette)"/>
+  </g>
+
+  <g font-family="SFMono-Regular, Menlo, Consolas, monospace">
+    <text x="660" y="196" fill="#9c3157" font-size="25" font-weight="700" letter-spacing="3.5">PIXEL GLYPH GENERATOR</text>
+    <text x="653" y="318" fill="#292735" font-family="Arial Rounded MT Bold, Trebuchet MS, sans-serif" font-size="88" font-weight="900" letter-spacing="-4">Daily</text>
+    <text x="653" y="408" fill="#9c3157" font-family="Arial Rounded MT Bold, Trebuchet MS, sans-serif" font-size="96" font-style="italic" font-weight="900" letter-spacing="-7">Gly</text>
+    <text x="788" y="408" fill="#343349" font-family="Arial Rounded MT Bold, Trebuchet MS, sans-serif" font-size="96" font-style="italic" font-weight="900" letter-spacing="-7">xel</text>
+    <text x="660" y="486" fill="#5e5a68" font-size="18" font-weight="700" letter-spacing="3">BY MANU.VISION</text>
+  </g>
+</svg>
