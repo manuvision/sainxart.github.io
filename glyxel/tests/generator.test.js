@@ -118,8 +118,12 @@ test('very sparse settings still produce at least one mirrored mark per sprite',
   assert.ok(artwork.sprites.every((sprite) => sprite.cells.length >= 1));
 });
 
-test('PNG filenames include a stable timestamp and seed', () => {
+test('PNG filenames include the local date and seed without the time', () => {
   const artwork = createArtwork(DEFAULT_SETTINGS, 0x00C0FFEE);
-  const date = new Date(2026, 7, 16, 9, 8, 7);
-  assert.equal(makePngFilename(artwork, date), 'glyxel-20260816-090807-00C0FFEE.png');
+  const morning = new Date(2026, 7, 16, 9, 8, 7);
+  const evening = new Date(2026, 7, 16, 21, 22, 23);
+  const expected = 'glyxel-20260816-00C0FFEE.png';
+
+  assert.equal(makePngFilename(artwork, morning), expected);
+  assert.equal(makePngFilename(artwork, evening), expected);
 });

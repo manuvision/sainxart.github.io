@@ -8,7 +8,7 @@ import {
   makeSeed,
   normalizeSettings,
   renderArtwork,
-} from './generator.js?v=20260816-2';
+} from './generator.js?v=20260816-3';
 
 const CONTROL_IDS = Object.keys(CONTROL_DEFINITIONS);
 const canvas = document.querySelector('#artworkCanvas');

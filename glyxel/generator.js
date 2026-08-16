@@ -301,15 +301,11 @@ function pad(value) {
 }
 
 export function makePngFilename(artwork, date = new Date()) {
-  const stamp = [
+  const dateStamp = [
     date.getFullYear(),
     pad(date.getMonth() + 1),
     pad(date.getDate()),
-    '-',
-    pad(date.getHours()),
-    pad(date.getMinutes()),
-    pad(date.getSeconds()),
   ].join('');
   const seed = artwork.seed.toString(16).toUpperCase().padStart(8, '0');
-  return `glyxel-${stamp}-${seed}.png`;
+  return `glyxel-${dateStamp}-${seed}.png`;
 }
