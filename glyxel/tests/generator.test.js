@@ -13,7 +13,7 @@ import {
 
 test('uses the requested defaults', () => {
   assert.deepEqual(DEFAULT_SETTINGS, {
-    colors: 4,
+    colors: 3,
     pixelSize: 36,
     blackRatio: 50,
     spriteWidth: 8,

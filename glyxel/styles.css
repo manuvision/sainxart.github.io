@@ -318,7 +318,7 @@ button {
   padding: clamp(1rem, 4vw, 1.8rem) 0 clamp(0.85rem, 3vw, 1.2rem);
   display: grid;
   justify-items: center;
-  gap: 0.55rem;
+  gap: clamp(0.85rem, 2.6vw, 1.15rem);
   text-align: center;
 }
 
@@ -349,7 +349,8 @@ button {
 .brand-lockup h1 sup {
   position: relative;
   top: -1.35em;
-  margin-left: 0.28rem;
+  left: 0.22rem;
+  margin-left: 0.45rem;
   color: var(--berry);
   font: 700 0.25em/1 var(--font-mono);
 }
@@ -362,6 +363,18 @@ button {
   line-height: 1.18;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+}
+
+.brand-lockup > p a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.2em;
+}
+
+.brand-lockup > p a:hover,
+.brand-lockup > p a:focus-visible {
+  color: var(--berry);
 }
 
 .control-deck {

@@ -1,5 +1,5 @@
 export const CONTROL_DEFINITIONS = Object.freeze({
-  colors: { min: 1, max: 8, step: 1, defaultValue: 4 },
+  colors: { min: 1, max: 8, step: 1, defaultValue: 3 },
   pixelSize: { min: 2, max: 36, step: 1, defaultValue: 36 },
   blackRatio: { min: 0, max: 90, step: 5, defaultValue: 50 },
   spriteWidth: { min: 3, max: 17, step: 1, defaultValue: 8 },

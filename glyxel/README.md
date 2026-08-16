@@ -29,7 +29,7 @@ npm test
 - **Randomize** replaces the daily seed with a fresh one and keeps every other setting intact.
 - Use the round floppy-disk button—or tap the canvas—to save the current image as a PNG.
 
-The defaults are 4 colors, 36 px cells, 50% black, 8 × 8-cell sprites, and a 512 × 512 px image.
+The defaults are 3 colors, 36 px cells, 50% black, 8 × 8-cell sprites, and a 512 × 512 px image.
 
 The glass curvature, scanlines, rolling sheen, and random glitch bars are display-only effects; they are never baked into the PNG.
 

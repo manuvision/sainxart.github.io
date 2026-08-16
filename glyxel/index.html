@@ -18,8 +18,8 @@
   <title>Glyxel — Generative Pixel Ships</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css">
-  <script type="module" src="app.js"></script>
+  <link rel="stylesheet" href="styles.css?v=20260816-2">
+  <script type="module" src="app.js?v=20260816-2"></script>
 </head>
 <body>
   <a class="skip-link" href="#controls">Skip to generator controls</a>
@@ -44,7 +44,7 @@
 
       <header class="brand-lockup">
         <h1 id="glyxel-title"><span class="brand-gly">Gly</span><span class="brand-xel">xel</span><sup aria-hidden="true">®</sup></h1>
-        <p>By Manu.Vision</p>
+        <p>By <a href="https://manu.vision">Manu.Vision</a></p>
       </header>
 
       <form class="control-deck" id="controls" autocomplete="off">
@@ -52,11 +52,11 @@
           <div class="control-card" data-control="colors">
             <div class="control-heading">
               <label for="colors">Colors</label>
-              <output id="colorsValue" for="colors">4</output>
+              <output id="colorsValue" for="colors">3</output>
             </div>
             <div class="range-row">
               <button class="step-button" type="button" data-adjust="-1" data-target="colors" aria-label="Decrease colors">−</button>
-              <input id="colors" name="colors" type="range" min="1" max="8" step="1" value="4">
+              <input id="colors" name="colors" type="range" min="1" max="8" step="1" value="3">
               <button class="step-button" type="button" data-adjust="1" data-target="colors" aria-label="Increase colors">+</button>
             </div>
           </div>
