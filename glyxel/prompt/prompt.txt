@@ -1,0 +1,294 @@
+# Updated Consistent Prompt — 3-Color Sketchy Pixel Creature Sheet
+
+Create a **single clean creature concept sheet** based on the attached **8×8 pixel image**.
+
+The result must be **highly consistent in structure every time**. Do **not** improvise the page layout. Follow the required layout and content below exactly.
+
+## Main goal
+
+Interpret the attached pixel image as the seed for a **monster / creature / character**.
+
+The pixel image should guide the creature’s main design logic — overall silhouette, head shape, horn or antenna placement, body mass, limb rhythm, appendages, facial structure, armor-like areas, markings, or structural balance — but it should **not** be copied too literally.
+
+The final creature should feel like a **designed being**, not an abstract symbol, not a voxel figure, and not a rigid blocky pixel creature.
+
+## Important interpretation rule for the pixel seed
+
+Treat the **colored pixels** as the main positive mass of the creature.
+
+Treat the **black pixels / black background** as **transparency, empty space, or void**. These negative spaces should help define the overall silhouette and structure of the creature.
+
+Use the pixel design as an **approximately 80% guide**:
+
+* keep the spirit and major proportions of the pixel seed
+* preserve the overall visual logic
+* let the negative space help define the shape
+* but do **not** follow it so literally that the creature ends up with awkward square limbs, rigid block growths, or overly geometric anatomy
+
+The final design should feel **interpreted, intentional, and readable**, not mechanically traced.
+
+## Overall creature direction
+
+The creature should feel:
+
+* compact and stylized
+* proportionally **chibi-like** in the sense of **large head / compact body / readable silhouette**
+* **not necessarily cute**
+* sometimes cute, sometimes eerie, sometimes noble, sometimes villainous, depending on what is suggested by the pixel seed
+* simple enough for a beginner to redraw with markers
+* visually interesting, but not overdesigned
+
+“Chibi” here refers mainly to the **proportions**, not to a mandatory cute personality.
+
+## Design interpretation rule
+
+Do **not** assume the creature must be organic or biomimetic every time.
+
+Instead, let the **shape itself** suggest the direction. Depending on the pixel seed, the creature may lean toward:
+
+* organic
+* biomimetic
+* plant-like
+* animal-like
+* nature-spirit-like
+* techno-organic
+* robotic
+* cybernetic
+* relic-based
+* artifact-inspired
+* solarpunk
+* ancestral-future
+* or a hybrid of several of these
+
+The pixel seed should determine which of these influences feels most natural.
+
+## Visual style
+
+The whole page should look like a **minimalist hand-drawn creature design sheet** with a **sketchy doodle style**.
+
+The final aesthetic should be closer to a **loose marker doodle / rough concept sketch** than to polished fantasy illustration.
+
+Use:
+
+* loose hand-drawn linework
+* sketchy outlines
+* visible doodle energy
+* simple marker fills
+* warm off-white / beige sketchbook paper
+* a raw, spontaneous artist-sketch feel
+* hand-drawable, approachable design
+* subtle Copic-marker spirit
+
+Avoid:
+
+* over-rendering
+* realism
+* highly polished concept-art finish
+* dense texture
+* heavy lighting
+* complex shading
+* detailed blending
+* glossy fantasy rendering
+
+The result should feel like something a beginner could actually **copy by hand with a few markers**.
+
+## Design language
+
+Possible inspirations may include, when appropriate:
+
+* insects
+* frogs
+* reptiles
+* birds
+* crustaceans
+* fungi
+* leaves
+* roots
+* shells
+* coral
+* seed pods
+* tropical flora and fauna
+* solarpunk bio-technology
+* simple robotic parts
+* ritual artifacts
+* protective relics
+* respectful ancestral Caribbean-inspired forms, motifs, or material language
+
+The creature can sometimes be:
+
+* cute
+* mischievous
+* shy
+* mysterious
+* guardian-like
+* eerie
+* villainous
+* nature-powered
+* artifact-infused
+* techno-organic
+* robotic in a positive-future or symbolic way
+
+Do not force any one of these. Let the **pixel seed decide**.
+
+## Required fixed layout
+
+The sheet must contain **exactly these three visual stages**, arranged **from left to right**:
+
+### 1) Left: Barebones silhouette / shape sketch
+
+A **single very simple rough monochrome sketch** based directly on the pixel image.
+
+Requirements:
+
+* black / gray pencil or ink only
+* no color
+* minimal detail
+* primitive shape exploration only
+* clearly informed by the pixel arrangement
+* should emphasize the rough shape logic and void / negative-space structure
+* this is the rawest version on the page
+
+### 2) Middle: Advanced completed sketch
+
+A **single more developed monochrome sketch** of the same creature.
+
+Requirements:
+
+* still uncolored
+* cleaner and more readable than the first sketch
+* standard neutral mostly symmetrical pose
+* front-facing or near-front-facing
+* clearly shows the resolved final creature design
+* should still feel sketchy and hand-drawn
+* should clearly be the same creature as the final illustration
+* keep it simple, stylized, and beginner-friendly
+
+### 3) Right: Final colored illustration
+
+A **single final colored illustration** of the same creature.
+
+Requirements:
+
+* dynamic pose
+* same creature as the left and middle drawings
+* compact stylized proportions
+* sketchy doodle-style finish
+* expressive and visually appealing
+* simple enough for a beginner to redraw
+* can be cute, neutral, eerie, or villainous depending on the creature
+* use only the palette colors from the source pixel image
+* flat marker-style fills
+* no blending required
+* no extra colors
+* no soft gradients
+* minimal shading only if it can be done with simple flat color blocking
+
+The final drawing should feel like a **lively doodled marker creature**, not a polished trading-card illustration.
+
+## Color rules
+
+These are very important:
+
+* The current pixel format uses **exactly 3 colors**
+* Use **exactly those 3 colors from the source pixel image**
+* Do **not** introduce extra accent colors
+* Do **not** rely on blending
+* Do **not** use gradients
+* Keep the final creature readable with **flat areas of color**
+* Any small shading or emphasis must still be possible using only those 3 colors
+* The creature should feel designed around that strict palette
+
+## Top text
+
+At the **top of the page**, include:
+
+### Creature name
+
+Invent a **random original creature name**.
+
+The name should feel short, memorable, and suitable for a species, spirit, relic-being, guardian, villain, or techno-organic creature.
+
+### Tagline
+
+Directly under or beside the name, include **one short sentence** that hints at the creature’s defining power, role, behavior, or essence.
+
+Examples:
+
+* “Stores stormlight in its hollow crest.”
+* “A root-fed hunter that slips through sacred marshes.”
+* “Uses relic charge to bend living armor.”
+* “Builds nests from warm metal and fallen bark.”
+
+Keep it to **one short sentence only**.
+
+## Bottom palette
+
+At the **bottom of the page**, include a neat palette strip showing the **3 colors from the original pixel image**.
+
+Requirements:
+
+* exactly **3 swatches**
+* each swatch labeled with a color name
+* use simple, readable names based on the actual colors
+* the colors must match the source pixel image
+* keep the palette presentation clean and consistent
+
+## Consistency rules
+
+These are mandatory:
+
+* Include **exactly 3 creature drawings total**
+* one rough sketch on the left
+* one refined monochrome sketch in the middle
+* one final colored illustration on the right
+* include creature name and tagline at the top
+* include exactly 3 labeled palette swatches at the bottom
+* do **not** add extra poses
+* do **not** add back views
+* do **not** add extra variations
+* do **not** add bullet-point notes
+* do **not** add lore paragraphs
+* keep the page clean, simple, and repeatable every time
+
+## Strong negative constraints
+
+Avoid:
+
+* voxel look
+* blocky geometry
+* overly literal tracing of the pixel silhouette
+* awkward square limbs
+* stiff geometric body shapes
+* over-detailed fantasy rendering
+* complicated texture
+* official Pokémon-style polish
+* polished collectible-card look
+* hard-surface mecha detail unless the seed strongly suggests it
+* scenic background illustration
+* cute-only interpretation
+* assuming every creature must be organic by default
+
+## Final composition summary
+
+The final page should always contain, in this exact order:
+
+1. **Top:** creature name + one short tagline
+2. **Left:** one rough monochrome silhouette / shape sketch
+3. **Middle:** one refined monochrome completed sketch in a neutral symmetrical pose
+4. **Right:** one final colored dynamic sketchy-doodle illustration of the same creature
+5. **Bottom:** exactly 3 labeled color swatches from the original pixel palette
+
+## Final instruction
+
+Maintain this layout and structure **consistently across all generations**. The creature may change according to the pixel seed, but the **format must remain fixed**.
+
+Most importantly, the creature should be:
+
+* guided by the pixel seed, but not trapped by it
+* informed by both colored pixels and black negative space
+* about **80% faithful** to the original pixel logic
+* compact in proportion
+* sometimes cute, sometimes eerie, sometimes villainous
+* sometimes organic, sometimes robotic, sometimes hybrid, depending on the shape
+* sketchy and doodle-like
+* easy for a beginner to redraw with **only 3 flat marker colors and no blending**
