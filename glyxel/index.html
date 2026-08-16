@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#17151d">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Glyxel is a tactile generator for colorful, symmetrical pixel spaceships.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://manu.vision/glyxel/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://manu.vision/glyxel/">
+  <meta property="og:site_name" content="Manu.Vision">
+  <meta property="og:title" content="Glyxel — Generative Pixel Ships">
+  <meta property="og:description" content="Tune the controls, generate mirrored pixel fleets, and save them as crisp PNGs.">
+
+  <title>Glyxel — Generative Pixel Ships</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#controls">Skip to generator controls</a>
+
+  <main class="page-shell">
+    <article class="console" aria-labelledby="glyxel-title">
+      <section class="screen-bezel" aria-label="Glyxel display">
+        <div class="screen-glass" id="screenGlass">
+          <button class="canvas-stage" id="canvasSaveButton" type="button" aria-label="Save the current generated image as a PNG">
+            <canvas id="artworkCanvas" width="512" height="512" aria-hidden="true"></canvas>
+          </button>
+          <div class="glass-bulge" aria-hidden="true"></div>
+          <div class="scanlines" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="screen-sheen" aria-hidden="true"></div>
+          <div class="glitch-layer" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </section>
+
+      <header class="brand-lockup">
+        <h1 id="glyxel-title"><span class="brand-gly">Gly</span><span class="brand-xel">xel</span><sup aria-hidden="true">®</sup></h1>
+        <p>By Manu.Vision</p>
+      </header>
+
+      <form class="control-deck" id="controls" autocomplete="off">
+        <div class="control-grid">
+          <div class="control-card" data-control="colors">
+            <div class="control-heading">
+              <label for="colors">Colors</label>
+              <output id="colorsValue" for="colors">4</output>
+            </div>
+            <div class="range-row">
+              <button class="step-button" type="button" data-adjust="-1" data-target="colors" aria-label="Decrease colors">−</button>
+              <input id="colors" name="colors" type="range" min="1" max="8" step="1" value="4">
+              <button class="step-button" type="button" data-adjust="1" data-target="colors" aria-label="Increase colors">+</button>
+            </div>
+          </div>
+
+          <div class="control-card" data-control="pixelSize">
+            <div class="control-heading">
+              <label for="pixelSize">Pixel size</label>
+              <output id="pixelSizeValue" for="pixelSize">36 px</output>
+            </div>
+            <div class="range-row">
+              <button class="step-button" type="button" data-adjust="-1" data-target="pixelSize" aria-label="Decrease pixel size">−</button>
+              <input id="pixelSize" name="pixelSize" type="range" min="2" max="36" step="1" value="36">
+              <button class="step-button" type="button" data-adjust="1" data-target="pixelSize" aria-label="Increase pixel size">+</button>
+            </div>
+          </div>
+
+          <div class="control-card" data-control="blackRatio">
+            <div class="control-heading">
+              <label for="blackRatio">Black ratio</label>
+              <output id="blackRatioValue" for="blackRatio">50%</output>
+            </div>
+            <div class="range-row">
+              <button class="step-button" type="button" data-adjust="-1" data-target="blackRatio" aria-label="Decrease black ratio">−</button>
+              <input id="blackRatio" name="blackRatio" type="range" min="0" max="90" step="5" value="50">
+              <button class="step-button" type="button" data-adjust="1" data-target="blackRatio" aria-label="Increase black ratio">+</button>
+            </div>
+          </div>
+
+          <div class="control-card control-card--seed">
+            <div class="control-heading">
+              <span>Seed</span>
+              <output id="seedValue" aria-live="polite">--------</output>
+            </div>
+            <div class="seed-actions">
+              <button class="randomize-button" id="randomizeButton" type="button">Randomize</button>
+              <button class="save-icon-button" id="saveButton" type="button" aria-label="Save current image as PNG" title="Save PNG">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 3.5h11.2L19.5 7v13.5h-15v-17Z"></path>
+                  <path d="M8 3.5v6h8v-6M8 20.5v-7h8v7"></path>
+                  <path d="M13.5 5.5h1.5v2h-1.5z"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="control-card" data-control="spriteWidth">
+            <div class="control-heading">
+              <label for="spriteWidth">Sprite width</label>
+              <output id="spriteWidthValue" for="spriteWidth">8 cells</output>
+            </div>
+            <div class="range-row">
+              <button class="step-button" type="button" data-adjust="-1" data-target="spriteWidth" aria-label="Decrease sprite width">−</button>
+              <input id="spriteWidth" name="spriteWidth" type="range" min="3" max="17" step="1" value="8">
+              <button class="step-button" type="button" data-adjust="1" data-target="spriteWidth" aria-label="Increase sprite width">+</button>
+            </div>
+          </div>
+
+          <div class="control-card" data-control="spriteHeight">
+            <div class="control-heading">
+              <label for="spriteHeight">Sprite height</label>
+              <output id="spriteHeightValue" for="spriteHeight">8 cells</output>
+            </div>
+            <div class="range-row">
+              <button class="step-button" type="button" data-adjust="-1" data-target="spriteHeight" aria-label="Decrease sprite height">−</button>
+              <input id="spriteHeight" name="spriteHeight" type="range" min="3" max="17" step="1" value="8">
+              <button class="step-button" type="button" data-adjust="1" data-target="spriteHeight" aria-label="Increase sprite height">+</button>
+            </div>
+          </div>
+
+          <div class="control-card" data-control="imageWidth">
+            <div class="control-heading">
+              <label for="imageWidth">Image width</label>
+              <output id="imageWidthValue" for="imageWidth">512 px</output>
+            </div>
+            <div class="range-row">
+              <button class="step-button" type="button" data-adjust="-1" data-target="imageWidth" aria-label="Decrease image width">−</button>
+              <input id="imageWidth" name="imageWidth" type="range" min="256" max="1024" step="64" value="512">
+              <button class="step-button" type="button" data-adjust="1" data-target="imageWidth" aria-label="Increase image width">+</button>
+            </div>
+          </div>
+
+          <div class="control-card" data-control="imageHeight">
+            <div class="control-heading">
+              <label for="imageHeight">Image height</label>
+              <output id="imageHeightValue" for="imageHeight">512 px</output>
+            </div>
+            <div class="range-row">
+              <button class="step-button" type="button" data-adjust="-1" data-target="imageHeight" aria-label="Decrease image height">−</button>
+              <input id="imageHeight" name="imageHeight" type="range" min="256" max="1024" step="64" value="512">
+              <button class="step-button" type="button" data-adjust="1" data-target="imageHeight" aria-label="Increase image height">+</button>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <footer class="machine-footer">
+        <details>
+          <summary>About the machine</summary>
+          <div>
+            <p>Glyxel is a project by <a href="https://manu.vision">Manuel Sainsily</a>. It uses the Resurrect 64 palette from Kerrie Lake and is inspired by Eric Davidson’s genart article.</p>
+          </div>
+        </details>
+      </footer>
+    </article>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <noscript>Glyxel needs JavaScript to generate and save pixel artwork.</noscript>
+</body>
+</html>

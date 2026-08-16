@@ -1,0 +1,18 @@
+{
+  "name": "Glyxel — Pocket Pixel Foundry",
+  "short_name": "Glyxel",
+  "description": "A tactile generator for colorful, symmetrical pixel fleets.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#17151d",
+  "theme_color": "#17151d",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
