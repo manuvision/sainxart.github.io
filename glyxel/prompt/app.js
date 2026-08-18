@@ -1,20 +1,21 @@
-const copyButton = document.querySelector("#copyButton");
-const copyButtonLabel = document.querySelector("#copyButtonLabel");
-const copyStatus = document.querySelector("#copyStatus");
+const copyPromptButton = document.querySelector("#copyPromptButton");
+const copyPromptButtonLabel = document.querySelector("#copyPromptButtonLabel");
+const promptCopyStatus = document.querySelector("#promptCopyStatus");
+const copyImageButton = document.querySelector("#copyImageButton");
+const copyImageButtonLabel = document.querySelector("#copyImageButtonLabel");
+const imageCopyStatus = document.querySelector("#imageCopyStatus");
 const promptPreview = document.querySelector("#promptPreview");
+const referenceImage = document.querySelector("#referenceImage");
 
 let promptText = "";
-let resetTimer;
-
-function setStatus(message) {
-  copyStatus.textContent = message;
-}
+let referenceImageBlob = null;
+const resetTimers = new Map();
 
 function countLines(text) {
   return text.replace(/\n$/, "").split("\n").length;
 }
 
-function fallbackCopy(text) {
+function fallbackCopyText(text) {
   const textarea = document.createElement("textarea");
   textarea.value = text;
   textarea.setAttribute("readonly", "");
@@ -33,6 +34,36 @@ function fallbackCopy(text) {
   }
 }
 
+function fallbackCopyImage() {
+  const selection = window.getSelection();
+  if (!selection || !referenceImage.complete) {
+    return false;
+  }
+
+  const range = document.createRange();
+  range.selectNode(referenceImage);
+  selection.removeAllRanges();
+  selection.addRange(range);
+  const copied = document.execCommand("copy");
+  selection.removeAllRanges();
+  return copied;
+}
+
+function showCopiedState({ button, label, status, copiedLabel, readyLabel, readyStatus }) {
+  window.clearTimeout(resetTimers.get(button));
+  button.classList.add("is-copied");
+  label.textContent = copiedLabel;
+  status.textContent = "Copied — paste it into your creature chat now";
+  navigator.vibrate?.(25);
+
+  const timer = window.setTimeout(() => {
+    button.classList.remove("is-copied");
+    label.textContent = readyLabel;
+    status.textContent = readyStatus;
+  }, 2600);
+  resetTimers.set(button, timer);
+}
+
 async function copyPrompt() {
   if (!promptText) {
     return;
@@ -42,23 +73,54 @@ async function copyPrompt() {
     if (navigator.clipboard?.writeText && window.isSecureContext) {
       await navigator.clipboard.writeText(promptText);
     } else {
-      fallbackCopy(promptText);
+      fallbackCopyText(promptText);
     }
 
-    window.clearTimeout(resetTimer);
-    copyButton.classList.add("is-copied");
-    copyButtonLabel.textContent = "Prompt copied";
-    setStatus("Copied in full — ready to paste");
-    navigator.vibrate?.(25);
-
-    resetTimer = window.setTimeout(() => {
-      copyButton.classList.remove("is-copied");
-      copyButtonLabel.textContent = "Copy full prompt";
-      setStatus(`${countLines(promptText)} lines · Markdown formatting preserved`);
-    }, 2200);
+    showCopiedState({
+      button: copyPromptButton,
+      label: copyPromptButtonLabel,
+      status: promptCopyStatus,
+      copiedLabel: "Prompt copied",
+      readyLabel: "Copy master prompt",
+      readyStatus: `${countLines(promptText)} lines · Markdown formatting preserved`,
+    });
   } catch (error) {
     console.error("Could not copy the Glyxel prompt.", error);
-    setStatus("Copy failed — open the preview and select the text manually");
+    promptCopyStatus.textContent = "Copy failed — open the preview and select the text manually";
+  }
+}
+
+async function copyReferenceImage() {
+  if (!referenceImageBlob) {
+    return;
+  }
+
+  try {
+    const ClipboardItemConstructor = globalThis.ClipboardItem;
+    const supportsClipboardImage = window.isSecureContext
+      && navigator.clipboard?.write
+      && ClipboardItemConstructor
+      && (typeof ClipboardItemConstructor.supports !== "function"
+        || ClipboardItemConstructor.supports("image/png"));
+
+    if (supportsClipboardImage) {
+      const imageItem = new ClipboardItemConstructor({ "image/png": referenceImageBlob });
+      await navigator.clipboard.write([imageItem]);
+    } else if (!fallbackCopyImage()) {
+      throw new Error("This browser does not support copying images.");
+    }
+
+    showCopiedState({
+      button: copyImageButton,
+      label: copyImageButtonLabel,
+      status: imageCopyStatus,
+      copiedLabel: "Reference copied",
+      readyLabel: "Copy reference image",
+      readyStatus: "1034 × 1228 PNG · Ready to copy",
+    });
+  } catch (error) {
+    console.error("Could not copy the Glyxel reference image.", error);
+    imageCopyStatus.textContent = "Image copy is unavailable here — download it or long-press the image";
   }
 }
 
@@ -72,16 +134,40 @@ async function loadPrompt() {
 
     promptText = await response.text();
     promptPreview.textContent = promptText;
-    copyButton.disabled = false;
-    copyButtonLabel.textContent = "Copy full prompt";
-    setStatus(`${countLines(promptText)} lines · Markdown formatting preserved`);
+    copyPromptButton.disabled = false;
+    copyPromptButtonLabel.textContent = "Copy master prompt";
+    promptCopyStatus.textContent = `${countLines(promptText)} lines · Markdown formatting preserved`;
   } catch (error) {
     console.error("Could not load the Glyxel prompt.", error);
     promptPreview.textContent = "The prompt could not be loaded. Please refresh this page.";
-    copyButtonLabel.textContent = "Prompt unavailable";
-    setStatus("Could not load the prompt — please refresh");
+    copyPromptButtonLabel.textContent = "Prompt unavailable";
+    promptCopyStatus.textContent = "Could not load the prompt — please refresh";
   }
 }
 
-copyButton.addEventListener("click", copyPrompt);
+async function loadReferenceImage() {
+  try {
+    const response = await fetch("reference-illustration.png");
+
+    if (!response.ok) {
+      throw new Error(`Reference image request failed with ${response.status}.`);
+    }
+
+    const blob = await response.blob();
+    referenceImageBlob = blob.type === "image/png"
+      ? blob
+      : new Blob([await blob.arrayBuffer()], { type: "image/png" });
+    copyImageButton.disabled = false;
+    copyImageButtonLabel.textContent = "Copy reference image";
+    imageCopyStatus.textContent = "1034 × 1228 PNG · Ready to copy";
+  } catch (error) {
+    console.error("Could not load the Glyxel reference image.", error);
+    copyImageButtonLabel.textContent = "Image unavailable";
+    imageCopyStatus.textContent = "Could not load the reference image — please refresh";
+  }
+}
+
+copyPromptButton.addEventListener("click", copyPrompt);
+copyImageButton.addEventListener("click", copyReferenceImage);
 loadPrompt();
+loadReferenceImage();

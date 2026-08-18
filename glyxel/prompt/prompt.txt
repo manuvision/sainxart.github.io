@@ -1,294 +1,1317 @@
-# Updated Consistent Prompt — 3-Color Sketchy Pixel Creature Sheet
+MASTER PROMPT — PIXEL SPRITE → DUAL-ELEMENT 10-MINUTE COPIC CREATURE ENTRY
 
-Create a **single clean creature concept sheet** based on the attached **8×8 pixel image**.
+Use the supplied pixel-art image as the primary structural source and absolute color source.
 
-The result must be **highly consistent in structure every time**. Do **not** improvise the page layout. Follow the required layout and content below exactly.
+Transform it into one finished hand-drawn creature-design page that feels like a personal Pokédex entry, creature journal, animation doodle, or quick traditional marker illustration.
 
-## Main goal
+The pixel sprite provides:
 
-Interpret the attached pixel image as the seed for a **monster / creature / character**.
+* silhouette evidence
+* proportion
+* mass relationships
+* negative space
+* the exact three-color palette
 
-The pixel image should guide the creature’s main design logic — overall silhouette, head shape, horn or antenna placement, body mass, limb rhythm, appendages, facial structure, armor-like areas, markings, or structural balance — but it should **not** be copied too literally.
+It does not provide a literal surface pattern that must be copied square-for-square.
 
-The final creature should feel like a **designed being**, not an abstract symbol, not a voxel figure, and not a rigid blocky pixel creature.
+Resolve the sprite into a creature with:
 
-## Important interpretation rule for the pixel seed
+* coherent anatomy
+* logical locomotion or suspension
+* harmonized color placement
+* three distinct material/texture languages
+* two palette-derived elemental types
+* one Bridge Color
+* simple species-specific personality
+* a traditional Copic + pencil + pen rendering style
 
-Treat the **colored pixels** as the main positive mass of the creature.
+The creature should remain simple enough that a beginner could plausibly reproduce it in under 10 minutes.
 
-Treat the **black pixels / black background** as **transparency, empty space, or void**. These negative spaces should help define the overall silhouette and structure of the creature.
+The hierarchy is:
 
-Use the pixel design as an **approximately 80% guide**:
+pixel silhouette → coherent body plan → exact source palette → harmonized color anatomy → three material identities → dual elemental ecology → quick traditional illustration
 
-* keep the spirit and major proportions of the pixel seed
-* preserve the overall visual logic
-* let the negative space help define the shape
-* but do **not** follow it so literally that the creature ends up with awkward square limbs, rigid block growths, or overly geometric anatomy
+The guiding principle is:
 
-The final design should feel **interpreted, intentional, and readable**, not mechanically traced.
+maximum character from minimum marks.
 
-## Overall creature direction
+⸻
 
-The creature should feel:
+1. READ THE PIXEL SPRITE AS EVIDENCE
 
-* compact and stylized
-* proportionally **chibi-like** in the sense of **large head / compact body / readable silhouette**
-* **not necessarily cute**
-* sometimes cute, sometimes eerie, sometimes noble, sometimes villainous, depending on what is suggested by the pixel seed
-* simple enough for a beginner to redraw with markers
-* visually interesting, but not overdesigned
+Extract:
 
-“Chibi” here refers mainly to the **proportions**, not to a mandatory cute personality.
+* dominant silhouette
+* overall width and height
+* upper, central, lateral, and lower masses
+* symmetry or asymmetry
+* implied body center
+* major negative spaces
+* appendage placement
+* implied balance
+* approximate weight distribution
+* relative scale of individual masses
+* the exact three dominant non-black colors present in the source
 
-## Design interpretation rule
+Ask:
 
-Do **not** assume the creature must be organic or biomimetic every time.
+What simple creature, organism, construct, or hybrid could naturally produce this overall silhouette?
 
-Instead, let the **shape itself** suggest the direction. Depending on the pixel seed, the creature may lean toward:
+The finished creature should clearly descend from the sprite when compared side by side.
 
-* organic
-* biomimetic
-* plant-like
-* animal-like
-* nature-spirit-like
-* techno-organic
-* robotic
-* cybernetic
-* relic-based
-* artifact-inspired
-* solarpunk
-* ancestral-future
-* or a hybrid of several of these
+⸻
 
-The pixel seed should determine which of these influences feels most natural.
+2. BLACK PIXELS ARE TRANSPARENT
 
-## Visual style
+Treat every black or near-black source pixel as transparent background / empty space.
 
-The whole page should look like a **minimalist hand-drawn creature design sheet** with a **sketchy doodle style**.
+Black does not contribute to:
 
-The final aesthetic should be closer to a **loose marker doodle / rough concept sketch** than to polished fantasy illustration.
+* anatomy
+* facial features
+* markings
+* pigmentation
+* texture selection
+* elemental type
+* body material
 
-Use:
+Use black only in the finished traditional illustration for:
 
-* loose hand-drawn linework
-* sketchy outlines
-* visible doodle energy
-* simple marker fills
-* warm off-white / beige sketchbook paper
-* a raw, spontaneous artist-sketch feel
-* hand-drawable, approachable design
-* subtle Copic-marker spirit
+* outlines
+* sparse hatching
+* small shadow accents
+* handwritten text
 
-Avoid:
+The creature palette consists of exactly three non-black source colors.
 
-* over-rendering
-* realism
-* highly polished concept-art finish
-* dense texture
-* heavy lighting
-* complex shading
-* detailed blending
-* glossy fantasy rendering
+⸻
 
-The result should feel like something a beginner could actually **copy by hand with a few markers**.
+3. SOURCE COLOR FIDELITY IS NON-NEGOTIABLE
 
-## Design language
+The three non-black colors in the source pixel art are the authoritative palette for the final creature.
 
-Possible inspirations may include, when appropriate:
+Preserve their actual visual identities as closely as possible.
 
-* insects
-* frogs
-* reptiles
-* birds
-* crustaceans
-* fungi
-* leaves
-* roots
-* shells
+Do not merely approximate them as generic:
+
+* purple
+* peach
+* blue
+* green
+* orange
+
+Instead preserve:
+
+* exact hue family
+* warm/cool bias
+* saturation
+* lightness
+* relative contrast
+* relative dominance
+
+The finished creature must look as though it was colored using the same three colors that appear in the pixel sprite.
+
+If the matched Copic marker name is slightly different from the visible source color, the source pixel color wins visually.
+
+The Copic label functions as a physical marker reference, not permission to shift the creature away from the source palette.
+
+⸻
+
+4. COPIC MATCHING MUST FOLLOW THE INPUT
+
+When matching each source color to the fixed 12-marker Copic system:
+
+1. sample or visually infer the actual source color
+2. select the closest permitted marker
+3. preserve the source color appearance in the creature
+4. use the marker code/name only as the nearest physical reference
+
+Do not exaggerate the marker’s canonical color if that causes drift from the source.
+
+For example:
+
+If a source violet is muted and dusty, do not render it as a much brighter saturated violet simply because its nearest marker is V09.
+
+The creature should match the sprite first.
+
+The swatch label should identify the nearest available marker second.
+
+⸻
+
+5. SILHOUETTE FIDELITY WITHOUT PIXEL LITERALISM
+
+Preserve the sprite’s strongest relationships:
+
+* overall top width
+* body width
+* central alignment
+* side-mass placement
+* lower-form spacing
+* major open gaps
+* stance width
+* compact, tall, broad, narrow, or top-heavy character
+* symmetry when visually important
+
+The final anatomy must also make sense according to its own physical logic.
+
+The creature does not necessarily need to be:
+
+* humanoid
+* quadrupedal
+* bipedal
+* vertebrate
+* fully organic
+
+It may be:
+
+* floating
+* serpentine
+* limbless
+* tripod
+* multi-legged
+* shell-based
+* fungal
+* botanical
+* aquatic
+* coral-like or mineral
+* mechanical
+* biomechanical
+* synthetic-organic
+* suspended
+* hovering
+* colony-like
+* asymmetrical
+
+Choose whatever body plan best explains the source silhouette.
+
+⸻
+
+6. THE PIXEL GRID IS NOT THE CREATURE’S SKIN
+
+Pixel positions describe broad structural evidence.
+
+They do not prescribe literal markings.
+
+Do not translate alternating pixel colors into:
+
+* checkerboards
+* square spots
+* rectangular stripes
+* chessboard patterns
+* stacked cubes
+* floating square plates
+* repeated block markings
+* pixel-shaped armor
+* tiled skin
+
+Instead, redistribute the colors according to the final anatomy.
+
+Preserve the exact three source color identities and their approximate visual importance, not their square-by-square coordinates.
+
+⸻
+
+7. HARMONIZE COLOR PLACEMENT
+
+Use the three source colors as 2–3 major harmonious anatomical color regions across the whole creature.
+
+Color placement should follow:
+
+* body planes
+* dorsal vs. ventral surfaces
+* appendage structure
+* material boundaries
+* armor divisions
+* membrane edges
+* belly regions
+* fur masses
+* shell interiors
+* joints
+* elemental adaptations
+* sensory regions
+
+Favor:
+
+* rounded areas
+* tapered transitions
+* broad patches
+* curved boundaries
+* natural irregularity
+* clear material changes
+
+The creature should look intentionally color-designed even if the viewer never saw the sprite.
+
+The exact colors themselves must still remain faithful to the input.
+
+⸻
+
+8. COLOR HIERARCHY
+
+Of the three source colors:
+
+* one becomes the Bridge Color
+* one primarily represents Element A
+* one primarily represents Element B
+
+A useful starting proportion is:
+
+* 50–60% Bridge Color
+* 20–30% Element A color
+* 15–25% Element B color
+
+Adjust when the silhouette or source color balance suggests another proportion.
+
+Preserve the relative visual weight of the source colors where possible.
+
+Use broad, calm color fields.
+
+⸻
+
+9. LONELY PIXEL RULE
+
+A standalone colored pixel or tiny cluster of 2–3 pixels is a suggestion, not a literal object.
+
+Do not automatically turn isolated pixels into:
+
+* floating squares
+* tiny cubes
+* checker fragments
+* detached rectangular plates
+* arbitrary hovering blocks
+
+Instead ask what broader design idea those pixels might imply.
+
+Possible interpretations include:
+
+* tip of an appendage
+* edge of a membrane
+* small protrusion
+* joint
+* sensory structure
+* tail end
+* toe or pad
+* antenna
+* crest
+* small armor extension
+* part of a larger continuous color region
+
+You may:
+
+* merge the isolated pixels into a nearby anatomical mass
+* attach them with a thin organic or mechanical connection
+* enlarge them into one coherent rounded form
+* reinterpret them as part of an existing limb
+* adapt surrounding anatomy so they become structurally logical
+* redistribute their color elsewhere while preserving overall palette balance
+
+The priority is always:
+
+coherent creature design over literal pixel matching.
+
+⸻
+
+10. DETACHED FORMS MUST MAKE SENSE
+
+If the silhouette strongly suggests a separated or floating mass, give it a visually understandable relationship to the main body.
+
+It may be connected through:
+
+* membrane
+* filament
+* stalk
+* tendon
+* root
+* fur bridge
+* cable
+* hinge
+* flexible joint
+* transparent tissue
+* mechanical rail
+* magnetic suspension
+* psychic suspension
+* buoyancy
+* elemental lift
+* orbit around a central structure
+
+If no convincing reason exists for the part to remain detached, attach, merge, enlarge, simplify, or reinterpret it.
+
+Never preserve a floating form merely because several pixels appeared separated in the sprite.
+
+⸻
+
+11. COHERENT BODY PLAN
+
+Before adding details, establish:
+
+* where the creature’s center of mass is
+* how major parts connect
+* how it moves
+* how it supports itself
+* what direction is forward
+* which feature is its main silhouette idea
+
+Possible movement systems include:
+
+* walking
+* hopping
+* crawling
+* swimming
+* gliding
+* burrowing
+* rolling
+* slithering
+* hovering
+* floating
+* rooting
+* climbing
+* rotating
+* magnetic suspension
+* psychic levitation
+* mechanical propulsion
+* buoyancy
+
+The silhouette should feel believable for its chosen locomotion system.
+
+⸻
+
+12. REDUCE THE CREATURE TO 3–5 MAJOR FORMS
+
+Use approximately 3–5 major shapes total.
+
+Secondary features should be extremely limited.
+
+Complexity should come from design ideas and material contrast, not from the number of anatomical pieces.
+
+The creature should remain recognizable from a very simple filled silhouette.
+
+⸻
+
+13. 10-MINUTE DRAWABILITY
+
+The finished creature should plausibly fit:
+
+* 1–2 minutes — red-pencil construction
+* 2 minutes — black line
+* 3 minutes — Copic blocking
+* 1–2 minutes — colored-pencil texture
+* under 1 minute — white highlights and finishing accents
+
+Therefore use:
+
+* broad forms
+* few interior lines
+* limited hatching
+* minimal micro-texture
+* minimal environment
+* no intricate anatomy
+
+The final image should feel like an illustration/doodle, not a detailed concept-art painting.
+
+⸻
+
+14. MATERIAL + TEXTURE SYSTEM
+
+Every creature should use at least three distinct material or texture identities.
+
+At the beginning of each creature generation:
+
+1. select three distinct textures/materials from the library below
+2. assign exactly one primary material identity to each of the three source colors
+3. keep those color-to-material relationships consistent throughout that creature
+4. integrate them according to anatomy
+
+The selection may vary between creatures, but the final combination must remain physically and visually coherent.
+
+For example:
+
+* source Color 1 → short fur
+* source Color 2 → translucent membrane
+* source Color 3 → matte shell
+
+The material assignment must never change the actual source color itself.
+
+Texture changes how the color is rendered or the black gel pen details added on top, not what hue it becomes.
+
+⸻
+
+15. TEXTURE / MATERIAL LIBRARY
+
+SOFT BIOLOGICAL
+
+* short fur
+* long fur
+* fluffy fur
+* wool
+* hair
+* bristles
+* velvet-like fuzz
+* down
+* soft feather
+* layered feather
+* skin
+* thick hide
+* leathery skin
+* rubbery skin
+* smooth amphibian skin
+* mucus-coated skin
+* slimy membrane
+* gelatinous tissue
+* soft flesh
+* waxy tissue
+* sponge-like tissue
+
+HARD BIOLOGICAL
+
+* scales
+* overlapping scales
+* reptilian skin
+* fish scales
+* chitin
+* insect shell
+* crustacean shell
+* horn
+* keratin
+* claw
+* bone
+* cartilage
+* turtle-like shell
+* eggshell-like plate
+
+BOTANICAL / FUNGAL
+
+* bark
+* smooth wood
+* rough wood
+* cork
+* leaf
+* waxy leaf
+* petal
+* moss
+* lichen
+* root
+* vine
+* mushroom flesh
+* mushroom cap
+* fungal fuzz
+* spore-bearing tissue
+* seed-pod shell
+
+AQUATIC / ECOLOGICAL
+
 * coral
-* seed pods
-* tropical flora and fauna
-* solarpunk bio-technology
-* simple robotic parts
-* ritual artifacts
-* protective relics
-* respectful ancestral Caribbean-inspired forms, motifs, or material language
+* soft coralo
+* barnacle-like shell
+* kelp
+* algae
+* pearlescent shell
+* nacre
+* wet membrane
+* translucent fin
+* sponge
+* sea-anemone-like tissue
 
-The creature can sometimes be:
+MINERAL
 
-* cute
-* mischievous
-* shy
-* mysterious
-* guardian-like
-* eerie
-* villainous
-* nature-powered
-* artifact-infused
-* techno-organic
-* robotic in a positive-future or symbolic way
+* stone
+* chalk
+* clay
+* sandstone
+* marble
+* crystal
+* quartz-like material
+* obsidian-like material
+* salt crystal
+* mineral crust
+* porous volcanic rock
 
-Do not force any one of these. Let the **pixel seed decide**.
+SYNTHETIC / MECHANICAL
 
-## Required fixed layout
+* plastic
+* translucent plastic
+* matte plastic
+* rubber
+* silicone
+* polished metal
+* brushed metal
+* dull metal
+* oxidized metal
+* ceramic
+* painted metal
+* glass
+* frosted glass
+* translucent glass
+* acrylic
+* leather
+* stitched leather
+* carbon-like composite
+* soft polymer
+* hard polymer
+* mesh
+* cable
+* exposed mechanical framework
 
-The sheet must contain **exactly these three visual stages**, arranged **from left to right**:
+⸻
 
-### 1) Left: Barebones silhouette / shape sketch
+16. THREE COLORS = THREE MATERIAL IDENTITIES
 
-A **single very simple rough monochrome sketch** based directly on the pixel image.
+Assign one distinct material to each source color.
 
-Requirements:
+Example:
 
-* black / gray pencil or ink only
-* no color
-* minimal detail
-* primitive shape exploration only
-* clearly informed by the pixel arrangement
-* should emphasize the rough shape logic and void / negative-space structure
-* this is the rawest version on the page
+Source Color A → fur
+Source Color B → ceramic armor
+Source Color C → mucus-coated skin
 
-### 2) Middle: Advanced completed sketch
+Maintain that relationship consistently throughout the creature.
 
-A **single more developed monochrome sketch** of the same creature.
+The actual hue must remain faithful to Source Color A, B, or C.
 
-Requirements:
+Do not alter the color because the selected material would conventionally be another hue.
 
-* still uncolored
-* cleaner and more readable than the first sketch
-* standard neutral mostly symmetrical pose
-* front-facing or near-front-facing
-* clearly shows the resolved final creature design
-* should still feel sketchy and hand-drawn
-* should clearly be the same creature as the final illustration
-* keep it simple, stylized, and beginner-friendly
+For example:
 
-### 3) Right: Final colored illustration
+* metal may still be violet
+* fur may still be peach
+* glass may still be green
+* wood may still be blue
 
-A **single final colored illustration** of the same creature.
+The creature follows the source palette, not real-world default material colors.
 
-Requirements:
+⸻
 
-* dynamic pose
-* same creature as the left and middle drawings
-* compact stylized proportions
-* sketchy doodle-style finish
-* expressive and visually appealing
-* simple enough for a beginner to redraw
-* can be cute, neutral, eerie, or villainous depending on the creature
-* use only the palette colors from the source pixel image
-* flat marker-style fills
-* no blending required
-* no extra colors
-* no soft gradients
-* minimal shading only if it can be done with simple flat color blocking
+17. MATERIALS MUST FOLLOW ANATOMY
 
-The final drawing should feel like a **lively doodled marker creature**, not a polished trading-card illustration.
+Assign materials to anatomically plausible regions.
 
-## Color rules
+For example:
 
-These are very important:
+* fur → torso, insulation zones, tail
+* scales → protective outer surfaces
+* mucus → exposed soft tissue
+* feather → fins, wings, display structures
+* metal → armor plates, structural joints
+* glass → sensory dome or energy organ
+* wood → limbs, roots, rigid botanical regions
+* leather → flexible armored zones
+* plastic → casing or biomechanical shell
+* coral → growth surfaces
+* membrane → thin side appendages
 
-* The current pixel format uses **exactly 3 colors**
-* Use **exactly those 3 colors from the source pixel image**
-* Do **not** introduce extra accent colors
-* Do **not** rely on blending
-* Do **not** use gradients
-* Keep the final creature readable with **flat areas of color**
-* Any small shading or emphasis must still be possible using only those 3 colors
-* The creature should feel designed around that strict palette
+Use broad coherent zones rather than many tiny patches.
 
-## Top text
+⸻
 
-At the **top of the page**, include:
+18. MATERIAL DIFFERENTIATION MUST REMAIN QUICK
 
-### Creature name
-
-Invent a **random original creature name**.
-
-The name should feel short, memorable, and suitable for a species, spirit, relic-being, guardian, villain, or techno-organic creature.
-
-### Tagline
-
-Directly under or beside the name, include **one short sentence** that hints at the creature’s defining power, role, behavior, or essence.
+Indicate texture in a very minimal way using only a couple marks but overal keep things mostly flat and play only with shading and subtle marks.
 
 Examples:
 
-* “Stores stormlight in its hollow crest.”
-* “A root-fed hunter that slips through sacred marshes.”
-* “Uses relic charge to bend living armor.”
-* “Builds nests from warm metal and fallen bark.”
+Fur
 
-Keep it to **one short sentence only**.
+1-3 short pencil flicks at edges
 
-## Bottom palette
+Scales
 
-At the **bottom of the page**, include a neat palette strip showing the **3 colors from the original pixel image**.
+a couple of curved overlapping marks
 
-Requirements:
+Feather
 
-* exactly **3 swatches**
-* each swatch labeled with a color name
-* use simple, readable names based on the actual colors
-* the colors must match the source pixel image
-* keep the palette presentation clean and consistent
+1-3 broad feather divisions
 
-## Consistency rules
+Mucus
 
-These are mandatory:
+smooth marker + 1–2 white highlights
 
-* Include **exactly 3 creature drawings total**
-* one rough sketch on the left
-* one refined monochrome sketch in the middle
-* one final colored illustration on the right
-* include creature name and tagline at the top
-* include exactly 3 labeled palette swatches at the bottom
-* do **not** add extra poses
-* do **not** add back views
-* do **not** add extra variations
-* do **not** add bullet-point notes
-* do **not** add lore paragraphs
-* keep the page clean, simple, and repeatable every time
+Wool
 
-## Strong negative constraints
+soft scalloped contour + minimal grain
 
-Avoid:
+Metal
 
-* voxel look
-* blocky geometry
-* overly literal tracing of the pixel silhouette
-* awkward square limbs
-* stiff geometric body shapes
-* over-detailed fantasy rendering
-* complicated texture
-* official Pokémon-style polish
-* polished collectible-card look
-* hard-surface mecha detail unless the seed strongly suggests it
-* scenic background illustration
-* cute-only interpretation
-* assuming every creature must be organic by default
+flat marker plane + dark edge + white glint
 
-## Final composition summary
+Wood
 
-The final page should always contain, in this exact order:
+1-3 pencil grain lines
 
-1. **Top:** creature name + one short tagline
-2. **Left:** one rough monochrome silhouette / shape sketch
-3. **Middle:** one refined monochrome completed sketch in a neutral symmetrical pose
-4. **Right:** one final colored dynamic sketchy-doodle illustration of the same creature
-5. **Bottom:** exactly 3 labeled color swatches from the original pixel palette
+Leather
 
-## Final instruction
+matte marker + subtle edge shading
 
-Maintain this layout and structure **consistently across all generations**. The creature may change according to the pixel seed, but the **format must remain fixed**.
+Glass
 
-Most importantly, the creature should be:
+pale marker field + one or two white streaks
 
-* guided by the pixel seed, but not trapped by it
-* informed by both colored pixels and black negative space
-* about **80% faithful** to the original pixel logic
-* compact in proportion
-* sometimes cute, sometimes eerie, sometimes villainous
-* sometimes organic, sometimes robotic, sometimes hybrid, depending on the shape
-* sketchy and doodle-like
-* easy for a beginner to redraw with **only 3 flat marker colors and no blending**
+Plastic
+
+flat clean marker area + one controlled highlight
+
+Texture should read instantly without detailed rendering.
+
+⸻
+
+19. FACE AND SENSORY DESIGN
+
+Give each creature a readable focal area that functions as its face or sensory center.
+
+Invent it from the anatomy.
+
+Keep it:
+
+* species-specific
+* approachable
+* easy to read
+* quick to draw
+
+Personality should emerge from a very small number of marks.
+
+⸻
+
+20. PERSONALITY
+
+Use:
+
+* pose
+* weight
+* body tilt
+* sensory orientation
+* appendage direction
+* proportions
+
+Possible moods include:
+
+* curious
+* relaxed
+* sleepy
+* gentle
+* playful
+* awkward
+* observant
+* shy
+* confident
+* buoyant
+* strange
+* menacing
+
+Keep personality clear without adding complexity.
+
+⸻
+
+21. FIXED COPIC PALETTE
+
+Use only these twelve Copic Sketch markers as nearest physical references.
+
+PERFECT PRIMARIES
+
+* R43 — Bougainvillaea
+* R46 — Strong Red
+* Y13 — Lemon Yellow
+* Y19 — Napoli Yellow
+* B00 — Frost Blue
+* B04 — Tahitian Blue
+
+SECONDARY TONES
+
+* G02 — Spectrum Green
+* G09 — Veronese Green
+* V04 — Lilac
+* V09 — Violet
+* YR61 — Spring Orange
+* YR68 — Orange
+
+Match the source’s three non-black colors to exactly three markers from this list without changing the source’s colors.
+
+⸻
+
+22. FIXED COLOR → ELEMENT SYSTEM
+
+COPIC	TYPE
+R43 Bougainvillaea	BLOSSOM
+R46 Strong Red	FIRE
+Y13 Lemon Yellow	ELECTRICITY
+Y19 Napoli Yellow	SOLAR
+B00 Frost Blue	FROST
+B04 Tahitian Blue	WATER
+G02 Spectrum Green	PLANT
+G09 Veronese Green	POISON
+V04 Lilac	DREAM
+V09 Violet	SHADOW
+YR61 Spring Orange	STEAM
+YR68 Orange	MAGMA
+
+These associations remain fixed across the project and cole from the pixel art input image. Make sure to never deviate from it, so if there is no blue, a creature cannot adopt a water type for example.
+
+⸻
+
+23. SELECT TWO ELEMENTAL TYPES
+
+From the three matched source markers from the pixel art provided:
+
+1. choose the two with the strongest useful visual contrast
+2. use their fixed elemental identities as the creature’s two types
+3. use the third as the Bridge Color
+
+The system is always:
+
+Element A + Element B + Bridge Color
+
+⸻
+
+24. DUAL-ELEMENT ECOLOGY
+
+Treat the two types as one coherent system.
+
+Ask:
+
+How does this creature physically live with, produce, manipulate, store, channel, or survive these two phenomena?
+
+Use only one or two strong anatomical clues.
+
+The elemental logic should influence anatomy without changing the source palette.
+
+⸻
+
+25. ELEMENTAL ANATOMY
+
+Use:
+
+* one major adaptation for Element A
+* one smaller adaptation for Element B
+
+Whenever possible, one structure may support both functions.
+
+The elemental adaptations should refine the silhouette rather than clutter it.
+
+⸻
+
+26. FORM FOLLOWS FUNCTION
+
+Major features should have an implied reason to exist.
+
+Examples:
+
+* membrane → locomotion or collection surface
+* fur → insulation
+* scale → protection
+* mucus → moisture retention
+* shell → storage or armor
+* glassy dome → sensory organ
+* metal plate → heat shielding
+* coral growth → filtration
+* wood-like limb → structural support
+* rotor → hovering
+* broad foot → anchoring
+
+⸻
+
+27. NATURAL PATTERNING
+
+Natural patterning may be used sparingly.
+
+Possible forms:
+
+* mottling
+* a few spots
+* marbling
+* reaction-diffusion blobs
+* soft ring patterns
+* subtle branching
+
+Keep it organic and tied to material or biology or circuits if robotic.
+
+Never reproduce the source pixel grid.
+
+Never use a pattern to introduce a color outside the exact source three-color palette.
+
+⸻
+
+28. NO SYMBOLS OR ICONOGRAPHY
+
+Use no:
+
+* elemental icons
+* type badges
+* logos
+* runes
+* pictograms
+* emblems
+* symbol-like body markings
+
+Elemental identity should come from:
+
+* anatomy
+* color
+* material
+* form
+
+⸻
+
+29. TYPES AT THE BOTTOM
+
+Do not list abilities.
+
+Near the Copic swatches, write:
+
+types
+
+Then exactly the two selected elemental types.
+
+Plain handwriting only.
+
+⸻
+
+30. REFERENCE ART STYLE
+
+Follow the supplied traditional marker illustration as the primary rendering-style reference.
+
+The relevant qualities are:
+
+* bold black contour
+* strong simplified shape language
+* broad Copic marker fields
+* visible marker layering
+* colored-pencil texture over the marker
+* sparse black hatch shadows
+* small white gel-pen highlights
+* handmade imperfections
+* confident sketchbook finish
+
+The drawing should feel illustrated and graphic, not realistically rendered.
+
+⸻
+
+31. COPIC MARKERS DEFINE THE IMAGE
+
+Copic markers establish the main color areas.
+
+The visible Copic colors should stay as close as possible to the actual source pixel colors.
+
+Use:
+
+* broad marker shapes
+* flat local color
+* simple two-pass shading
+* visible overlap
+* visible stroke direction
+* anatomical color regions
+
+Do not use shading or blending that shifts the hue into a noticeably different color family.
+
+The Copic layer should remain visually dominant.
+
+⸻
+
+32. COLORED PENCIL ADDS MATERIAL
+
+Use colored pencil over the marker to communicate in a very subtle way as mentioned before :
+
+* fur
+* scales
+* feathers
+* wool
+* wood grain
+* leather
+* mineral texture
+* soft transitions
+* shadow edges
+
+Do not introduce unrelated pencil hues.
+
+⸻
+
+33. BLACK PEN DEFINES FORM
+
+Use thick black gel pen and fineliner for:
+
+* strong outer silhouette
+* important overlaps
+* simple facial/sensory details
+* small shadow masses
+* a few hatch groups
+* final edge cleanup
+
+Interior linework should remain intentional and a bit more sparse.
+
+⸻
+
+34. WHITE GEL PEN FINISHES MATERIALS
+
+Use approximately 3–5 white marks total.
+
+Use them for:
+
+* glass
+* metal
+* plastic
+* mucus
+* wet tissue
+* polished shell
+* sensory surfaces
+* tiny edge highlights
+
+Keep highlights selective.
+
+⸻
+
+35. RED COL-ERASE UNDERDRAWING
+
+Allow a small number of faint red construction marks:
+
+* gesture arcs
+* ellipses
+* abandoned contours
+* proportion guides
+* construction circles
+* under unfinished black outlines to delimit the silhouette or certain areas where necessary
+
+Keep them subtle and secondary.
+
+⸻
+
+36. COMPLEXITY LIMIT
+
+The creature should read as a polished 10-minute doodle, not a 30-minute design rendering.
+
+Prioritize:
+
+1. silhouette
+2. body plan
+3. exact source color fidelity
+4. harmonious color placement
+5. three clear materials
+6. readable sensory focus
+7. elemental adaptations
+8. a few finishing marks
+
+Stop there.
+
+⸻
+
+37. CENTRAL PRESENTATION
+
+Create exactly one large creature.
+
+Choose the pose that best communicates its body plan.
+
+Keep the pose readable.
+
+⸻
+
+38. PAGE FORMAT
+
+Use a 4:5 aspect ratio vertical cream sketchbook page.
+
+At the top:
+
+1. creature name
+2. short tagline
+
+Center:
+
+3. large finished creature
+
+Bottom:
+
+4. small source sprite inset
+5. three Copic marker strokes
+6. exact Copic labels
+7. two elemental type names
+
+Keep generous negative space.
+
+⸻
+
+39. TITLE + TAGLINE
+
+Invent a short species or field name.
+
+Prefer:
+
+* 1–3 syllables
+* simple spelling
+* easy handwriting
+* memorable sound
+
+Add a 3–7 word tagline hinting at type or behavior.
+
+⸻
+
+40. SOURCE SPRITE INSET
+
+Include a small faithful reconstruction of the original sprite.
+
+This is the only place where square pixel geometry should appear literally.
+
+Preserve:
+
+* block structure
+* source silhouette
+* exact source three-color appearance
+* transparent black background
+
+The inset should be the visual reference against which the creature’s palette fidelity can be judged.
+
+⸻
+
+41. THREE COPIC SWATCHES
+
+Show exactly three hand-made-looking Copic test strokes.
+
+Each swatch should visually resemble the corresponding source pixel color as closely as possible.
+
+Beside each, handwrite the nearest fixed marker code and name.
+
+The swatch’s visible color should track the sprite, even if the marker name is only an approximation.
+
+⸻
+
+42. TYPE NOTES
+
+Near the swatches write:
+
+types
+
+Then exactly:
+
+Element A
+
+Element B
+
+No icons or descriptions.
+
+⸻
+
+43. COLLECTION-WIDE CONSISTENCY
+
+Across every generated creature, keep constant:
+
+* under-10-minute complexity
+* 3–5 major shapes
+* 2–3 major anatomical color regions
+* strict source-palette fidelity
+* silhouette-driven anatomy
+* harmonized non-pixel color placement
+* three materials, one assigned to each source color
+* fixed 12-marker palette
+* fixed marker-to-element dictionary
+* dual-element system
+* one Bridge Color
+* Copic-first rendering
+* colored-pencil texture
+* bold black outlines
+* sparse white gel pen
+* faint red construction
+* source sprite inset
+* three labeled swatches
+* two text-only types
+* generous negative space
+
+⸻
+
+44. FINAL COLOR CHECK
+
+Before rendering, compare the planned creature palette directly against the source sprite.
+
+Verify:
+
+* all three colors clearly match the source
+* no source color has become noticeably warmer or cooler
+* no muted color has become overly saturated
+* no light source color has become too dark
+* no dark source color has become generic black
+* shading remains inside the three source color families
+* material rendering has not changed the underlying palette
+
+If there is a conflict between:
+
+Copic marker identity
+and
+source pixel appearance
+
+follow the source pixel appearance.
+
+⸻
+
+45. FINAL COHERENCE PASS
+
+Verify:
+
+* black pixels have been ignored as transparent
+* tiny isolated pixels have not become arbitrary square objects
+* every separated mass has believable logic
+* anatomy reads as one coherent creature
+* color placement follows anatomy rather than the grid
+* no checkerboard or pixel-stripe pattern remains
+* exact source palette remains visibly intact
+* exactly three clear material identities are present
+* each source color consistently corresponds to its assigned material
+* creature remains drawable in under 10 minutes
+* illustration resembles a marker doodle rather than detailed concept art
+
+⸻
+
+46. FINAL SIMPLIFICATION PASS
+
+Ask:
+
+* Can this become one larger shape?
+* Can this isolated pixel clue merge into an existing structure?
+* Can this texture be shown with three marks instead of twenty?
+* Can the creature use only 3–5 major masses?
+* Can the palette be organized into only 2–3 broad regions?
+* Are the colors still extremely close to the source?
+* Could a beginner redraw it from memory?
+
+Simplify until the creature feels inevitable.
+
+⸻
+
+47. FINAL GENERATION PROCEDURE
+
+STEP 1 — REMOVE BLACK
+
+Treat black / near-black pixels as transparency.
+
+STEP 2 — READ THE SILHOUETTE
+
+Identify the strongest mass relationships and negative spaces.
+
+STEP 3 — RESOLVE LONELY PIXELS
+
+Treat tiny isolated clusters as flexible structural clues rather than literal floating squares.
+
+STEP 4 — DISCOVER BODY PLAN
+
+Choose coherent anatomy, locomotion, balance, and connectedness.
+
+STEP 5 — REDUCE TO 3–5 FORMS
+
+Simplify the entire creature.
+
+STEP 6 — SAMPLE THE THREE SOURCE COLORS
+
+Preserve their actual hue, value, saturation, and contrast.
+
+STEP 7 — MATCH COPICS
+
+Match them to exactly three markers from the fixed 12-color system while keeping the visible source colors authoritative.
+
+STEP 8 — SELECT TWO TYPES
+
+Choose the two strongest contrasting elemental identities.
+
+STEP 9 — ASSIGN BRIDGE COLOR
+
+Use the third as the visual unifier.
+
+STEP 10 — RANDOMLY SELECT THREE MATERIALS
+
+Choose three distinct textures/materials from the material library.
+
+STEP 11 — ASSIGN ONE MATERIAL TO EACH COLOR
+
+Keep each source-color/material pair consistent.
+
+STEP 12 — HARMONIZE COLOR + MATERIAL PLACEMENT
+
+Redistribute the exact source palette into 2–3 broad anatomical color regions.
+
+STEP 13 — CREATE FACE/SENSORY FOCUS
+
+Design one simple readable focal region.
+
+STEP 14 — APPLY ELEMENT A
+
+Add one major functional adaptation.
+
+STEP 15 — APPLY ELEMENT B
+
+Add one secondary functional adaptation.
+
+STEP 16 — RED CONSTRUCTION
+
+Add faint Col-Erase remnants.
+
+STEP 17 — COPIC BLOCKING
+
+Build the main shapes using colors that visually remain faithful to the source sprite.
+
+STEP 18 — COLORED PENCIL
+
+Add only enough texture to distinguish the materials, staying inside the same source color families.
+
+STEP 19 — BLACK PEN
+
+Strengthen silhouette, overlaps, sensory details, and a few shadows.
+
+STEP 20 — WHITE GEL PEN
+
+Add a handful of final material highlights.
+
+STEP 21 — BUILD THE PAGE
+
+Add name, tagline, sprite inset, three source-faithful swatches, labels, and two text-only types.
+
+STEP 22 — CHECK PIXEL ARTIFACTS
+
+Remove any checker, square, stripe, or floating-block interpretation from the creature itself.
+
+STEP 23 — CHECK COLOR FIDELITY
+
+Compare final creature colors directly against the source sprite and correct any visible drift.
+
+STEP 24 — 10-MINUTE CHECK
+
+Simplify again if the creature appears laborious to redraw.
+
+⸻
+
+48. ABSOLUTE FINAL INTENT
+
+The final page should feel like:
+
+a quick, inventive traditional creature doodle discovered from a three-color pixel silhouette, using the sprite’s actual palette rather than merely borrowing its general color family.
+
+The pixel sprite determines:
+
+silhouette, mass, proportion, negative space, and exact three-color palette.
+
+Tiny pixel clusters are:
+
+design clues, not literal detached blocks.
+
+The three colors become:
+
+2–3 broad, harmonized anatomical regions with three distinct material identities.
+
+The selected Copic markers are:
+
+physical reference labels for the actual source colors, not replacements for them.
+
+The elemental pair determines:
+
+two simple ecological or functional adaptations.
+
+The rendering is built visibly from:
+
+source-faithful Copic marker color → colored pencil texture → black pen structure → sparse white gel-pen highlights.
+
+FINAL FORMULA
+
+black = transparency
+→ pixel silhouette = structural evidence
+→ lonely pixels = flexible clues
+→ coherent 3–5-shape body plan
+→ exact 3 source colors
+→ nearest 3 Copic references
+→ 2–3 broad anatomical color regions
+→ 3 distinct materials
+→ 1 material assigned consistently to each source color
+→ 2 contrasting elemental types
+→ 1 Bridge Color
+→ simple elemental adaptations
+→ source-faithful Copic-first rendering
+→ sparse pencil + pen finishing
+→ 1 beginner-friendly 10-minute creature entry
+
+Maximum character, material variety, palette fidelity, and coherence from minimum marks.

@@ -33,6 +33,10 @@ The defaults are 3 colors, 36 px cells, 50% black, 8 × 8-cell sprites, and a 51
 
 The glass curvature, scanlines, rolling sheen, and random glitch bars are display-only effects; they are never baked into the PNG.
 
+## Creature prompt kit
+
+The unlisted `/glyxel/prompt/` page provides separate copy actions for the complete master prompt and its traditional Copic illustration reference. A creature generation should receive both of those items alongside the current pixel-art Glyxel. The reference is also available as a downloadable PNG when browser image-copying is unavailable.
+
 ## Hosting
 
 The project uses relative asset paths and has no build step. Copy its contents into the `glyxel/` directory of the `manu.vision` GitHub Pages repository to serve it at `https://manu.vision/glyxel/`.
