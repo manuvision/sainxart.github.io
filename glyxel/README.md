@@ -1,6 +1,6 @@
 # Glyxel
 
-Glyxel is a dependency-free, mobile-first pixel-art generator designed like a slightly worn handheld console. It fills a real-size canvas with horizontally mirrored sprites, gives every ship its own combination from Kerrie Lake's Resurrect 64 palette, and exports the clean artwork as a PNG.
+Glyxel is a dependency-free, mobile-first pixel-art generator designed like a slightly worn handheld console. It fills a real-size canvas with horizontally mirrored sprites, gives every glyph its own combination from the Copic Sketch Perfect Primaries and Secondary Tones marker sets, and exports the clean artwork as a PNG.
 
 ## Run locally
 
@@ -19,7 +19,7 @@ npm test
 
 ## Controls
 
-- **Colors** sets how many Resurrect 64 colors are combined for each ship.
+- **Colors** sets how many of the 12 Copic marker colors are combined for each glyph.
 - **Pixel size** sets the physical size of each logical sprite cell in the exported PNG.
 - **Black ratio** sets the chance that a randomized cell stays empty.
 - **Sprite width / height** set each sprite's logical grid.
@@ -44,6 +44,5 @@ Glyxel is an original interface and implementation inspired by:
 - [Random spaceship sprite generator](https://2draw.me/random_ship_generator/index.en.htm)
 - [f2d/random_ship_generator](https://github.com/f2d/random_ship_generator)
 - [How to Create Generative Art In Less Than 100 Lines Of Code](https://www.freecodecamp.org/news/how-to-create-generative-art-in-less-than-100-lines-of-code-d37f379859f)
-- [Resurrect 64 by Kerrie Lake](https://lospec.com/palette-list/resurrect-64)
 
 See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for the referenced open-source project's license.

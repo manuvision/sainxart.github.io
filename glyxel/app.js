@@ -8,7 +8,7 @@ import {
   makeSeed,
   normalizeSettings,
   renderArtwork,
-} from './generator.js?v=20260816-3';
+} from './generator.js?v=20260818-1';
 
 const CONTROL_IDS = Object.keys(CONTROL_DEFINITIONS);
 const canvas = document.querySelector('#artworkCanvas');
@@ -75,7 +75,7 @@ function renderCurrentArtwork() {
   canvasSaveButton.setAttribute('aria-label', `${description} Save this image as a PNG.`);
   seedValue.textContent = formatSeed(artwork.seed);
 
-  const accentColor = artwork.sprites[0]?.palette.at(-1) || '#8ff8e2';
+  const accentColor = artwork.sprites[0]?.palette.at(-1) || '#8DD1E7';
   document.documentElement.style.setProperty('--screen-accent', accentColor);
   triggerScreenPulse();
 }

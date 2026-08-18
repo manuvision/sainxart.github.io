@@ -14,6 +14,6 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-## Resurrect 64
+## Copic color references
 
-Glyxel uses color values from [Resurrect 64](https://lospec.com/palette-list/resurrect-64), created by Kerrie Lake. The palette page identifies Kerrie Lake as the creator and includes their explicit confirmation that the palette may be used in a commercial game. Glyxel includes attribution in both its interface and project documentation.
+Glyxel's palette mirrors the 12 colors in Manuel Sainsily's Copic Sketch Perfect Primaries and Secondary Tones marker sets. Marker codes, names, and digital color references are based on Copic's published [Color System](https://copicmarkers.com/blogs/educational/copic-color-system). Copic is a registered trademark of Too Corporation.

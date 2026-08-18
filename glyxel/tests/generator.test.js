@@ -2,14 +2,30 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  COPIC_COLORS,
+  COPIC_MARKERS,
   DEFAULT_SETTINGS,
-  RESURRECT_64,
   createArtwork,
   createSeededRandom,
   makeDailySeed,
   makePngFilename,
   normalizeSettings,
 } from '../generator.js';
+
+const EXPECTED_COPIC_COLORS = Object.freeze({
+  B00: '#EAF6F9',
+  B04: '#8DD1E7',
+  R43: '#F18F96',
+  R46: '#E6506D',
+  Y13: '#FCF9B7',
+  Y19: '#FFEE39',
+  G02: '#DBECD9',
+  G09: '#8FC460',
+  V04: '#EDB9D1',
+  V09: '#97599A',
+  YR61: '#FEE2CC',
+  YR68: '#F67700',
+});
 
 test('uses the requested defaults', () => {
   assert.deepEqual(DEFAULT_SETTINGS, {
@@ -69,23 +85,38 @@ test('the same settings and seed create identical artwork', () => {
   assert.deepEqual(first, second);
 });
 
-test('artwork uses an exact-size curated subset of Resurrect 64', () => {
+test('palette contains only the two requested Copic Sketch sets', () => {
+  assert.deepEqual(
+    Object.fromEntries(COPIC_MARKERS.map(({ code, hex }) => [code, hex])),
+    EXPECTED_COPIC_COLORS,
+  );
+  assert.deepEqual(COPIC_COLORS, Object.values(EXPECTED_COPIC_COLORS));
+  assert.deepEqual(
+    [...new Set(COPIC_MARKERS.map(({ set }) => set))].sort(),
+    ['Perfect Primaries', 'Secondary Tones'],
+  );
+});
+
+test('artwork uses an exact-size subset of the Copic marker palette', () => {
   for (let colors = 1; colors <= 8; colors += 1) {
     const artwork = createArtwork({ ...DEFAULT_SETTINGS, colors }, 800 + colors);
     assert.equal(artwork.palette.length, colors);
-    assert.ok(artwork.palette.every((color) => RESURRECT_64.includes(color)));
-    assert.match(artwork.paletteName, /^Resurrect 64 \/ /);
+    assert.ok(artwork.palette.every((color) => COPIC_COLORS.includes(color)));
+    assert.match(artwork.paletteName, /^Copic Sketch \/ /);
   }
 });
 
-test('every ship receives its own Resurrect 64 color combination', () => {
-  const artwork = createArtwork(DEFAULT_SETTINGS, 0xEB64);
+test('every sprite receives its own Copic color combination', () => {
+  const artwork = createArtwork({
+    ...DEFAULT_SETTINGS,
+    pixelSize: 12,
+  }, 0xEB64);
   const paletteKeys = artwork.sprites.map((sprite) => [...sprite.palette].sort().join('|'));
 
   assert.equal(new Set(paletteKeys).size, artwork.sprites.length);
   for (const sprite of artwork.sprites) {
     assert.equal(sprite.palette.length, DEFAULT_SETTINGS.colors);
-    assert.ok(sprite.palette.every((color) => RESURRECT_64.includes(color)));
+    assert.ok(sprite.palette.every((color) => COPIC_COLORS.includes(color)));
     assert.ok(sprite.cells.every((cell) => sprite.palette.includes(cell.color)));
   }
 });

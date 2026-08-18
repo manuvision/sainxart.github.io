@@ -1,7 +1,7 @@
 {
-  "name": "Glyxel — Pocket Pixel Foundry",
+  "name": "Glyxel — Generative Pixel Glyphs",
   "short_name": "Glyxel",
-  "description": "A tactile generator for colorful, symmetrical pixel fleets.",
+  "description": "A daily pixel glyph generator with customizable colors, scale, shape, and seed.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

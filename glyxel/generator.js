@@ -16,32 +16,34 @@ export const DEFAULT_SETTINGS = Object.freeze(
 
 export const BACKGROUND_COLOR = '#050807';
 
-export const RESURRECT_64 = Object.freeze([
-  '#2e222f', '#3e3546', '#625565', '#966c6c', '#ab947a',
-  '#694f62', '#7f708a', '#9babb2', '#c7dcd0', '#ffffff',
-  '#6e2727', '#b33831', '#ea4f36', '#f57d4a',
-  '#ae2334', '#e83b3b', '#fb6b1d', '#f79617', '#f9c22b',
-  '#7a3045', '#9e4539', '#cd683d', '#e6904e', '#fbb954',
-  '#4c3e24', '#676633', '#a2a947', '#d5e04b', '#fbff86',
-  '#165a4c', '#239063', '#1ebc73', '#91db69', '#cddf6c',
-  '#313638', '#374e4a', '#547e64', '#92a984', '#b2ba90',
-  '#0b5e65', '#0b8a8f', '#0eaf9b', '#30e1b9', '#8ff8e2',
-  '#323353', '#484a77', '#4d65b4', '#4d9be6', '#8fd3ff',
-  '#45293f', '#6b3e75', '#905ea9', '#a884f3', '#eaaded',
-  '#753c54', '#a24b6f', '#cf657f', '#ed8099',
-  '#831c5d', '#c32454', '#f04f78', '#f68181', '#fca790', '#fdcbb0',
+// Digital color references from Copic's official Color System chart.
+export const COPIC_MARKERS = Object.freeze([
+  Object.freeze({ code: 'B00', name: 'Frost Blue', hex: '#EAF6F9', set: 'Perfect Primaries', tone: 'light' }),
+  Object.freeze({ code: 'B04', name: 'Tahitian Blue', hex: '#8DD1E7', set: 'Perfect Primaries', tone: 'rich' }),
+  Object.freeze({ code: 'R43', name: 'Bougainvillaea', hex: '#F18F96', set: 'Perfect Primaries', tone: 'light' }),
+  Object.freeze({ code: 'R46', name: 'Strong Red', hex: '#E6506D', set: 'Perfect Primaries', tone: 'rich' }),
+  Object.freeze({ code: 'Y13', name: 'Lemon Yellow', hex: '#FCF9B7', set: 'Perfect Primaries', tone: 'light' }),
+  Object.freeze({ code: 'Y19', name: 'Napoli Yellow', hex: '#FFEE39', set: 'Perfect Primaries', tone: 'rich' }),
+  Object.freeze({ code: 'G02', name: 'Spectrum Green', hex: '#DBECD9', set: 'Secondary Tones', tone: 'light' }),
+  Object.freeze({ code: 'G09', name: 'Veronese Green', hex: '#8FC460', set: 'Secondary Tones', tone: 'rich' }),
+  Object.freeze({ code: 'V04', name: 'Lilac', hex: '#EDB9D1', set: 'Secondary Tones', tone: 'light' }),
+  Object.freeze({ code: 'V09', name: 'Violet', hex: '#97599A', set: 'Secondary Tones', tone: 'rich' }),
+  Object.freeze({ code: 'YR61', name: 'Spring Orange', hex: '#FEE2CC', set: 'Secondary Tones', tone: 'light' }),
+  Object.freeze({ code: 'YR68', name: 'Orange', hex: '#F67700', set: 'Secondary Tones', tone: 'rich' }),
 ]);
 
+export const COPIC_COLORS = Object.freeze(COPIC_MARKERS.map(({ hex }) => hex));
+
+const markerByCode = new Map(COPIC_MARKERS.map((marker) => [marker.code, marker]));
+const markerColor = (code) => markerByCode.get(code).hex;
+
 const PALETTE_FAMILIES = Object.freeze([
-  { name: 'Ember', colors: ['#2e222f', '#6e2727', '#ae2334', '#e83b3b', '#ea4f36', '#f57d4a', '#f9c22b', '#fbb954'] },
-  { name: 'Rust', colors: ['#2e222f', '#7a3045', '#9e4539', '#cd683d', '#e6904e', '#fbb954', '#ab947a', '#fdcbb0'] },
-  { name: 'Solar', colors: ['#2e222f', '#4c3e24', '#676633', '#a2a947', '#d5e04b', '#fbff86', '#fbb954', '#ffffff'] },
-  { name: 'Moss', colors: ['#313638', '#374e4a', '#165a4c', '#239063', '#1ebc73', '#91db69', '#cddf6c', '#fbff86'] },
-  { name: 'Aqua', colors: ['#2e222f', '#0b5e65', '#0b8a8f', '#0eaf9b', '#30e1b9', '#8ff8e2', '#c7dcd0', '#ffffff'] },
-  { name: 'Ocean', colors: ['#2e222f', '#323353', '#484a77', '#4d65b4', '#4d9be6', '#8fd3ff', '#8ff8e2', '#ffffff'] },
-  { name: 'Violet', colors: ['#2e222f', '#45293f', '#6b3e75', '#905ea9', '#a884f3', '#eaaded', '#ed8099', '#ffffff'] },
-  { name: 'Coral', colors: ['#2e222f', '#753c54', '#a24b6f', '#cf657f', '#ed8099', '#f68181', '#fca790', '#fdcbb0'] },
-  { name: 'Dusk', colors: ['#2e222f', '#3e3546', '#694f62', '#7f708a', '#9babb2', '#c7dcd0', '#cf657f', '#ed8099'] },
+  { name: 'Blue', light: markerColor('B00'), rich: markerColor('B04') },
+  { name: 'Red', light: markerColor('R43'), rich: markerColor('R46') },
+  { name: 'Yellow', light: markerColor('Y13'), rich: markerColor('Y19') },
+  { name: 'Green', light: markerColor('G02'), rich: markerColor('G09') },
+  { name: 'Violet', light: markerColor('V04'), rich: markerColor('V09') },
+  { name: 'Orange', light: markerColor('YR61'), rich: markerColor('YR68') },
 ]);
 
 function clamp(value, minimum, maximum) {
@@ -118,30 +120,22 @@ function shuffled(random, values) {
 }
 
 function createPalette(random, colorCount, family, companion) {
-  const pool = [...new Set([...family.colors, ...companion.colors])];
-
   if (colorCount === 1) {
-    const brightPool = [...new Set([
-      ...family.colors.slice(3),
-      ...companion.colors.slice(3),
-    ])];
-    return [brightPool[randomInteger(random, 0, brightPool.length)]];
+    return [random() < 0.5 ? family.rich : companion.rich];
   }
 
-  const darkPool = [...new Set([
-    ...family.colors.slice(0, 2),
-    ...companion.colors.slice(0, 2),
-  ])];
-  const lightPool = [...new Set([
-    ...family.colors.slice(-2),
-    ...companion.colors.slice(-2),
-  ])];
-  const selected = [
-    darkPool[randomInteger(random, 0, darkPool.length)],
-    lightPool[randomInteger(random, 0, lightPool.length)],
+  const selected = random() < 0.5
+    ? [family.rich, companion.light]
+    : [companion.rich, family.light];
+  const pool = [
+    family.light,
+    family.rich,
+    companion.light,
+    companion.rich,
+    ...shuffled(random, COPIC_COLORS),
   ];
 
-  for (const color of shuffled(random, pool)) {
+  for (const color of pool) {
     if (selected.length >= colorCount) break;
     if (!selected.includes(color)) selected.push(color);
   }
@@ -246,7 +240,7 @@ export function createArtwork(inputSettings = {}, seed = makeSeed()) {
     settings,
     background: BACKGROUND_COLOR,
     palette: sprites[0]?.palette || [],
-    paletteName: 'Resurrect 64 / Mixed fleet',
+    paletteName: 'Copic Sketch / Perfect Primaries + Secondary Tones',
     sprites,
     layout: { unitWidth, unitHeight, columns, rows, offsetX, offsetY },
     stats: {
