@@ -32,6 +32,35 @@ export function createPixelGrid(width = GRID_WIDTH, height = GRID_HEIGHT) {
   return Array(width * height).fill(null);
 }
 
+export function createPixelGridFromSprite(sprite, {
+  sourceWidth,
+  sourceHeight,
+  width = GRID_WIDTH,
+  height = GRID_HEIGHT,
+} = {}) {
+  assertDimensions(sourceWidth, sourceHeight);
+  assertDimensions(width, height);
+  if (!sprite || !Array.isArray(sprite.cells)) {
+    throw new TypeError('A generated sprite with pixel cells is required.');
+  }
+
+  const grid = createPixelGrid(width, height);
+  const offsetX = Math.floor((width - sourceWidth) / 2);
+  const offsetY = Math.floor((height - sourceHeight) / 2);
+
+  sprite.cells.forEach((cell) => {
+    assertCoordinates(cell.x, cell.y, sourceWidth, sourceHeight);
+    if (typeof cell.color !== 'string') throw new TypeError('Sprite cells require a color.');
+
+    const x = offsetX + cell.x;
+    const y = offsetY + cell.y;
+    if (x < 0 || y < 0 || x >= width || y >= height) return;
+    grid[cellIndex(x, y, width)] = cell.color;
+  });
+
+  return grid;
+}
+
 function gridsMatch(first, second) {
   return first.length === second.length && first.every((cell, index) => cell === second[index]);
 }

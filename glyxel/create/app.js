@@ -1,4 +1,9 @@
-import { COPIC_MARKERS } from '../generator.js?v=20260818-1';
+import {
+  COPIC_MARKERS,
+  DEFAULT_SETTINGS,
+  createArtwork,
+  makeDailySeed,
+} from '../generator.js?v=20260818-1';
 import {
   EDITOR_BACKGROUND,
   EXPORT_SIZE,
@@ -8,10 +13,11 @@ import {
   countPaintedCells,
   createGridHistory,
   createPixelGrid,
+  createPixelGridFromSprite,
   getLinePoints,
   makeCreatedPngFilename,
   renderPixelGrid,
-} from './editor.js?v=20260818-2';
+} from './editor.js?v=20260818-3';
 
 const canvas = document.querySelector('#pixelCanvas');
 const palette = document.querySelector('#palette');
@@ -27,7 +33,11 @@ const clearButton = document.querySelector('#clearButton');
 const toast = document.querySelector('#toast');
 const toolButtons = [...document.querySelectorAll('[data-tool]')];
 
-let grid = createPixelGrid();
+const dailyArtwork = createArtwork(DEFAULT_SETTINGS, makeDailySeed());
+let grid = createPixelGridFromSprite(dailyArtwork.sprites[0], {
+  sourceWidth: dailyArtwork.settings.spriteWidth,
+  sourceHeight: dailyArtwork.settings.spriteHeight,
+});
 const history = createGridHistory(grid);
 let selectedMarker = COPIC_MARKERS.find(({ code }) => code === 'R46') || COPIC_MARKERS[0];
 let activeTool = 'pen';

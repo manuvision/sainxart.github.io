@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { DEFAULT_SETTINGS, createArtwork, makeDailySeed } from '../generator.js';
 import {
   applyEditorTool,
   countPaintedCells,
   createGridHistory,
   createPixelGrid,
+  createPixelGridFromSprite,
   floodFill,
   getLinePoints,
   getSymmetryPoints,
@@ -16,6 +18,42 @@ test('creates a blank pixel grid with the requested dimensions', () => {
   const grid = createPixelGrid(4, 3);
   assert.equal(grid.length, 12);
   assert.ok(grid.every((cell) => cell === null));
+});
+
+test('centers a generated sprite on the editable grid', () => {
+  const grid = createPixelGridFromSprite({
+    cells: [
+      { x: 0, y: 0, color: '#E6506D' },
+      { x: 7, y: 7, color: '#8DD1E7' },
+    ],
+  }, {
+    sourceWidth: 8,
+    sourceHeight: 8,
+    width: 16,
+    height: 16,
+  });
+
+  assert.equal(grid[4 * 16 + 4], '#E6506D');
+  assert.equal(grid[11 * 16 + 11], '#8DD1E7');
+  assert.equal(countPaintedCells(grid), 2);
+});
+
+test('loads the exact date-seeded daily Glyxel cells into Create mode', () => {
+  const date = new Date(2026, 7, 18, 12, 0);
+  const artwork = createArtwork(DEFAULT_SETTINGS, makeDailySeed(date));
+  const sprite = artwork.sprites[0];
+  const grid = createPixelGridFromSprite(sprite, {
+    sourceWidth: artwork.settings.spriteWidth,
+    sourceHeight: artwork.settings.spriteHeight,
+  });
+  const offsetX = Math.floor((16 - artwork.settings.spriteWidth) / 2);
+  const offsetY = Math.floor((16 - artwork.settings.spriteHeight) / 2);
+
+  assert.equal(artwork.sprites.length, 1);
+  assert.equal(countPaintedCells(grid), sprite.cells.length);
+  sprite.cells.forEach((cell) => {
+    assert.equal(grid[(offsetY + cell.y) * 16 + offsetX + cell.x], cell.color);
+  });
 });
 
 test('vertical symmetry mirrors left and right across the vertical centerline', () => {
