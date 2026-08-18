@@ -470,20 +470,17 @@
   padding: 1rem 0.2rem 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 0.8rem;
   border-top: 1px solid rgba(61, 57, 70, 0.16);
   color: var(--ink-soft);
   font-size: clamp(0.52rem, 1.9vw, 0.64rem);
   font-weight: 800;
+  text-align: center;
   text-transform: uppercase;
 }
 
 .creator-footer a {
-  color: var(--berry);
-}
-
-.creator-footer span a {
   color: var(--blue);
 }
 
