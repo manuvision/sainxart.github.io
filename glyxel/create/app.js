@@ -6,11 +6,12 @@ import {
   GRID_WIDTH,
   applyEditorTool,
   countPaintedCells,
+  createGridHistory,
   createPixelGrid,
   getLinePoints,
   makeCreatedPngFilename,
   renderPixelGrid,
-} from './editor.js?v=20260818-1';
+} from './editor.js?v=20260818-2';
 
 const canvas = document.querySelector('#pixelCanvas');
 const palette = document.querySelector('#palette');
@@ -19,12 +20,18 @@ const paintedCount = document.querySelector('#paintedCount');
 const verticalSymmetryInput = document.querySelector('#verticalSymmetry');
 const horizontalSymmetryInput = document.querySelector('#horizontalSymmetry');
 const saveButton = document.querySelector('#saveButton');
+const bucketToggle = document.querySelector('#bucketToggle');
+const undoButton = document.querySelector('#undoButton');
+const redoButton = document.querySelector('#redoButton');
+const clearButton = document.querySelector('#clearButton');
 const toast = document.querySelector('#toast');
 const toolButtons = [...document.querySelectorAll('[data-tool]')];
 
 let grid = createPixelGrid();
+const history = createGridHistory(grid);
 let selectedMarker = COPIC_MARKERS.find(({ code }) => code === 'R46') || COPIC_MARKERS[0];
 let activeTool = 'pen';
+let bucketMode = false;
 let verticalSymmetry = true;
 let horizontalSymmetry = false;
 let drawingPointerId = null;
@@ -112,9 +119,13 @@ function renderEditor() {
   drawKeyboardCursor();
   const painted = countPaintedCells(grid);
   paintedCount.textContent = `${painted} / ${GRID_WIDTH * GRID_HEIGHT} cells`;
+  undoButton.disabled = !history.canUndo();
+  redoButton.disabled = !history.canRedo();
+  clearButton.disabled = painted === 0;
+  const activeAction = bucketMode ? `bucket ${activeTool}` : activeTool;
   canvas.setAttribute(
     'aria-label',
-    `${GRID_WIDTH} by ${GRID_HEIGHT} pixel drawing grid with ${painted} colored cells. ${activeTool} selected.`,
+    `${GRID_WIDTH} by ${GRID_HEIGHT} pixel drawing grid with ${painted} colored cells. ${activeAction} selected.`,
   );
 }
 
@@ -122,6 +133,7 @@ function applyAt(point) {
   grid = applyEditorTool(grid, {
     ...point,
     tool: activeTool,
+    bucket: bucketMode,
     color: selectedMarker.hex,
     verticalSymmetry,
     horizontalSymmetry,
@@ -130,7 +142,7 @@ function applyAt(point) {
 }
 
 function drawTo(point) {
-  const points = activeTool === 'bucket' || !lastPointerCell
+  const points = bucketMode || !lastPointerCell
     ? [point]
     : getLinePoints(lastPointerCell.x, lastPointerCell.y, point.x, point.y);
   points.forEach(applyAt);
@@ -150,9 +162,11 @@ function pointFromPointer(event) {
 
 function finishPointer(event) {
   if (drawingPointerId !== event.pointerId) return;
-  if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
   drawingPointerId = null;
   lastPointerCell = null;
+  grid = history.commit(grid);
+  renderEditor();
+  if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
 }
 
 function selectTool(tool) {
@@ -164,6 +178,39 @@ function selectTool(tool) {
   });
   renderEditor();
   haptic(7);
+}
+
+function toggleBucketMode() {
+  bucketMode = !bucketMode;
+  bucketToggle.classList.toggle('is-toggled', bucketMode);
+  bucketToggle.setAttribute('aria-pressed', String(bucketMode));
+  renderEditor();
+  showToast(bucketMode ? `BUCKET ${activeTool.toUpperCase()} ON` : 'BUCKET OFF');
+  haptic(7);
+}
+
+function undo() {
+  if (!history.canUndo()) return;
+  grid = history.undo();
+  renderEditor();
+  showToast('UNDONE');
+  haptic(7);
+}
+
+function redo() {
+  if (!history.canRedo()) return;
+  grid = history.redo();
+  renderEditor();
+  showToast('REDONE');
+  haptic(7);
+}
+
+function clearAll() {
+  if (countPaintedCells(grid) === 0) return;
+  grid = history.commit(createPixelGrid());
+  renderEditor();
+  showToast('CANVAS CLEARED — UNDO AVAILABLE');
+  haptic([8, 35, 8]);
 }
 
 function canvasToBlob(targetCanvas) {
@@ -215,7 +262,7 @@ canvas.addEventListener('pointerdown', (event) => {
 });
 
 canvas.addEventListener('pointermove', (event) => {
-  if (drawingPointerId !== event.pointerId || activeTool === 'bucket') return;
+  if (drawingPointerId !== event.pointerId || bucketMode) return;
   event.preventDefault();
   const point = pointFromPointer(event);
   if (lastPointerCell?.x === point.x && lastPointerCell?.y === point.y) return;
@@ -225,8 +272,10 @@ canvas.addEventListener('pointermove', (event) => {
 canvas.addEventListener('pointerup', finishPointer);
 canvas.addEventListener('pointercancel', finishPointer);
 canvas.addEventListener('lostpointercapture', () => {
+  if (drawingPointerId !== null) grid = history.commit(grid);
   drawingPointerId = null;
   lastPointerCell = null;
+  renderEditor();
 });
 canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 
@@ -250,6 +299,7 @@ canvas.addEventListener('keydown', (event) => {
     event.preventDefault();
     keyboardMode = true;
     applyAt(keyboardCursor);
+    grid = history.commit(grid);
     renderEditor();
     haptic(5);
   }
@@ -261,6 +311,10 @@ canvas.addEventListener('blur', () => {
   renderEditor();
 });
 toolButtons.forEach((button) => button.addEventListener('click', () => selectTool(button.dataset.tool)));
+bucketToggle.addEventListener('click', toggleBucketMode);
+undoButton.addEventListener('click', undo);
+redoButton.addEventListener('click', redo);
+clearButton.addEventListener('click', clearAll);
 
 verticalSymmetryInput.addEventListener('change', () => {
   verticalSymmetry = verticalSymmetryInput.checked;

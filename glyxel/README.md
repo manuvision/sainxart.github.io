@@ -36,7 +36,7 @@ The glass curvature, scanlines, rolling sheen, and random glitch bars are displa
 
 ## Create mode
 
-The public `/glyxel/create/` editor provides a 16 × 16 touch-friendly pixel grid using the same 12-color Copic palette. Pen and eraser tools support continuous drag strokes, the bucket fills connected regions, vertical symmetry is enabled by default, and horizontal symmetry can be combined for four-way drawing. Save exports a clean 512 × 512 PNG without the editor grid or CRT glass.
+The public `/glyxel/create/` editor provides a 16 × 16 touch-friendly pixel grid using the same 12-color Copic marker palette. Pen and eraser tools support continuous drag strokes, while the independent Bucket toggle fills or clears connected regions with the active tool. Undo and redo operate on complete strokes, Clear All is undoable, vertical symmetry is enabled by default, and horizontal symmetry can be combined for four-way drawing. Save exports a clean 512 × 512 PNG without the editor grid or CRT glass.
 
 ## Creature prompt kit
 

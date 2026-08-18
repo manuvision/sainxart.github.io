@@ -2,7 +2,7 @@ export const GRID_WIDTH = 16;
 export const GRID_HEIGHT = 16;
 export const EXPORT_SIZE = 512;
 export const EDITOR_BACKGROUND = '#050807';
-export const EDITOR_TOOLS = Object.freeze(['pen', 'bucket', 'eraser']);
+export const EDITOR_TOOLS = Object.freeze(['pen', 'eraser']);
 
 function assertDimensions(width, height) {
   if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1) {
@@ -30,6 +30,53 @@ function cellIndex(x, y, width) {
 export function createPixelGrid(width = GRID_WIDTH, height = GRID_HEIGHT) {
   assertDimensions(width, height);
   return Array(width * height).fill(null);
+}
+
+function gridsMatch(first, second) {
+  return first.length === second.length && first.every((cell, index) => cell === second[index]);
+}
+
+export function createGridHistory(initialGrid, limit = 100) {
+  if (!Array.isArray(initialGrid)) throw new TypeError('A pixel grid is required.');
+  if (!Number.isInteger(limit) || limit < 1) {
+    throw new RangeError('History limit must be a positive integer.');
+  }
+
+  let present = [...initialGrid];
+  const past = [];
+  const future = [];
+  const snapshot = () => [...present];
+
+  return Object.freeze({
+    current: snapshot,
+    commit(nextGrid) {
+      if (!Array.isArray(nextGrid) || nextGrid.length !== present.length) {
+        throw new RangeError('History snapshots must match the initial grid size.');
+      }
+      if (gridsMatch(present, nextGrid)) return snapshot();
+
+      past.push(present);
+      if (past.length > limit) past.shift();
+      present = [...nextGrid];
+      future.length = 0;
+      return snapshot();
+    },
+    undo() {
+      if (past.length === 0) return snapshot();
+      future.push(present);
+      present = past.pop();
+      return snapshot();
+    },
+    redo() {
+      if (future.length === 0) return snapshot();
+      past.push(present);
+      if (past.length > limit) past.shift();
+      present = future.pop();
+      return snapshot();
+    },
+    canUndo: () => past.length > 0,
+    canRedo: () => future.length > 0,
+  });
 }
 
 export function getSymmetryPoints({
@@ -129,6 +176,7 @@ export function applyEditorTool(grid, {
   y,
   tool,
   color,
+  bucket = false,
   width = GRID_WIDTH,
   height = GRID_HEIGHT,
   verticalSymmetry = false,
@@ -137,8 +185,9 @@ export function applyEditorTool(grid, {
   assertGrid(grid, width, height);
   assertCoordinates(x, y, width, height);
   if (!EDITOR_TOOLS.includes(tool)) throw new RangeError(`Unsupported editor tool: ${tool}`);
-  if (tool !== 'eraser' && typeof color !== 'string') {
-    throw new TypeError('Pen and bucket tools require a color.');
+  if (typeof bucket !== 'boolean') throw new TypeError('Bucket mode must be a boolean.');
+  if (tool === 'pen' && typeof color !== 'string') {
+    throw new TypeError('The pen tool requires a color.');
   }
 
   const points = getSymmetryPoints({
@@ -151,7 +200,7 @@ export function applyEditorTool(grid, {
   });
   const replacement = tool === 'eraser' ? null : color;
 
-  if (tool === 'bucket') {
+  if (bucket) {
     return points.reduce(
       (result, point) => floodFill(result, { ...point, color: replacement, width, height }),
       [...grid],

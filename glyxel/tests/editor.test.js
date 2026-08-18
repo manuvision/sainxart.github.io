@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   applyEditorTool,
   countPaintedCells,
+  createGridHistory,
   createPixelGrid,
   floodFill,
   getLinePoints,
@@ -102,7 +103,8 @@ test('paint bucket respects symmetry when regions are separated', () => {
   const result = applyEditorTool(grid, {
     x: 0,
     y: 1,
-    tool: 'bucket',
+    tool: 'pen',
+    bucket: true,
     color: fill,
     width: 3,
     height: 3,
@@ -114,6 +116,89 @@ test('paint bucket respects symmetry when regions are separated', () => {
     fill, wall, fill,
     fill, wall, fill,
   ]);
+});
+
+test('bucket mode uses the eraser to clear only a connected region', () => {
+  const paint = '#E6506D';
+  const wall = '#97599A';
+  const grid = [
+    paint, wall, paint,
+    paint, wall, paint,
+    paint, wall, paint,
+  ];
+  const result = applyEditorTool(grid, {
+    x: 0,
+    y: 1,
+    tool: 'eraser',
+    bucket: true,
+    width: 3,
+    height: 3,
+  });
+
+  assert.deepEqual(result, [
+    null, wall, paint,
+    null, wall, paint,
+    null, wall, paint,
+  ]);
+});
+
+test('history moves a committed drawing backward and forward', () => {
+  const blank = createPixelGrid(2, 2);
+  const painted = [...blank];
+  painted[0] = '#E6506D';
+  const history = createGridHistory(blank);
+
+  history.commit(painted);
+  assert.equal(history.canUndo(), true);
+  assert.deepEqual(history.undo(), blank);
+  assert.equal(history.canRedo(), true);
+  assert.deepEqual(history.redo(), painted);
+});
+
+test('a new history edit after undo discards the redo branch', () => {
+  const blank = createPixelGrid(2, 2);
+  const first = [...blank];
+  first[0] = '#E6506D';
+  const second = [...first];
+  second[1] = '#FFEE39';
+  const replacement = [...first];
+  replacement[2] = '#8DD1E7';
+  const history = createGridHistory(blank);
+
+  history.commit(first);
+  history.commit(second);
+  history.undo();
+  history.commit(replacement);
+
+  assert.equal(history.canRedo(), false);
+  assert.deepEqual(history.current(), replacement);
+});
+
+test('a no-op history commit preserves the available redo', () => {
+  const blank = createPixelGrid(2, 2);
+  const first = [...blank];
+  first[0] = '#E6506D';
+  const second = [...first];
+  second[1] = '#FFEE39';
+  const history = createGridHistory(blank);
+
+  history.commit(first);
+  history.commit(second);
+  const current = history.undo();
+  history.commit(current);
+
+  assert.equal(history.canRedo(), true);
+  assert.deepEqual(history.redo(), second);
+});
+
+test('clear all is a normal history step and can be undone', () => {
+  const blank = createPixelGrid(2, 2);
+  const painted = blank.map(() => '#E6506D');
+  const history = createGridHistory(blank);
+
+  history.commit(painted);
+  assert.deepEqual(history.commit(createPixelGrid(2, 2)), blank);
+  assert.deepEqual(history.undo(), painted);
 });
 
 test('line interpolation includes every cell between fast pointer samples', () => {

@@ -250,9 +250,73 @@
   box-shadow: 0 3px 0 #5d1e36, 0 1px 1px rgba(255, 255, 255, 0.28) inset;
 }
 
+.tool-button.is-toggled {
+  border-color: #294b45;
+  background: linear-gradient(145deg, #6b8f7d, #385b52);
+  box-shadow: 0 3px 0 #203b36, 0 1px 1px rgba(255, 255, 255, 0.3) inset;
+}
+
 .tool-button:active {
   transform: translateY(2px);
   box-shadow: 0 1px 0 #201e27, 0 1px 2px rgba(0, 0, 0, 0.35) inset;
+}
+
+.tool-button:focus-visible,
+.edit-action-button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.edit-action-grid {
+  margin-top: 0.58rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.edit-action-button {
+  min-width: 0;
+  min-height: 3rem;
+  padding: 0.48rem 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.28rem;
+  border: 1px solid rgba(45, 43, 53, 0.44);
+  border-radius: 0.52rem;
+  background: linear-gradient(145deg, #e5e1d8, #aaa6a5);
+  color: #34313c;
+  box-shadow: 0 2px 0 #747077, 0 1px 1px rgba(255, 255, 255, 0.7) inset;
+  cursor: pointer;
+  font-size: clamp(0.48rem, 1.8vw, 0.58rem);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.edit-action-button svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.edit-action-button--clear {
+  color: #72233f;
+}
+
+.edit-action-button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #747077, 0 1px 2px rgba(0, 0, 0, 0.24) inset;
+}
+
+.edit-action-button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.7);
+  opacity: 0.38;
 }
 
 .symmetry-grid {
@@ -451,6 +515,7 @@
   .editor-glass,
   .editor-panel,
   .tool-button,
+  .edit-action-button,
   .symmetry-toggle,
   .export-button {
     forced-color-adjust: none;
