@@ -34,6 +34,10 @@ The defaults are 3 colors, 36 px cells, 50% black, 8 × 8-cell sprites, and a 51
 
 The glass curvature, scanlines, rolling sheen, and random glitch bars are display-only effects; they are never baked into the PNG.
 
+## Create mode
+
+The public `/glyxel/create/` editor provides a 16 × 16 touch-friendly pixel grid using the same 12-color Copic palette. Pen and eraser tools support continuous drag strokes, the bucket fills connected regions, vertical symmetry is enabled by default, and horizontal symmetry can be combined for four-way drawing. Save exports a clean 512 × 512 PNG without the editor grid or CRT glass.
+
 ## Creature prompt kit
 
 The unlisted `/glyxel/prompt/` page provides separate copy actions for the complete master prompt and its traditional Copic illustration reference. A creature generation should receive both of those items alongside the current pixel-art Glyxel. The reference is also available as a downloadable PNG when browser image-copying is unavailable.
