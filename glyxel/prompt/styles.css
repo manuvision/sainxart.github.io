@@ -487,6 +487,56 @@ footer a {
   text-underline-offset: 0.22em;
 }
 
+.daily-glyxel-button {
+  display: flex;
+  width: 100%;
+  min-height: 4.2rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 1.35rem;
+  padding: 0.95rem 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  color: #fff;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 40%),
+    linear-gradient(145deg, #4b4a58, #292832);
+  box-shadow:
+    0 0.18rem 0 rgba(255, 255, 255, 0.24) inset,
+    0 -0.3rem 0.5rem rgba(12, 11, 16, 0.4) inset,
+    0 0.45rem 0 #18171e,
+    0 0.72rem 1.2rem rgba(14, 12, 18, 0.35);
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+.daily-glyxel-button svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.daily-glyxel-button:hover {
+  filter: brightness(1.08);
+}
+
+.daily-glyxel-button:active {
+  transform: translateY(0.3rem);
+  box-shadow:
+    0 0.18rem 0 rgba(255, 255, 255, 0.18) inset,
+    0 -0.18rem 0.35rem rgba(12, 11, 16, 0.34) inset,
+    0 0.12rem 0 #18171e;
+}
+
 .noscript-message {
   position: fixed;
   right: 1rem;
