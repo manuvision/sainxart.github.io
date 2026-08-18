@@ -27,7 +27,8 @@ npm test
 - On every load, the seed is derived from the visitor's local calendar date and the controls reset to their defaults, creating a stable Glyxel of the day.
 - Every slider and −/+ button redraws immediately while keeping the current seed.
 - **Randomize** replaces the daily seed with a fresh one and keeps every other setting intact.
-- Use the round floppy-disk button—or tap the canvas—to save the current image as a PNG. Filenames contain only the local date and seed, for example `glyxel-20260816-0C8B605B.png`.
+- Tap the canvas to copy the current clean PNG to the clipboard, ready to paste into a creature-generation chat. If image copying is unavailable in the browser, Glyxel points back to the save button.
+- Use the round floppy-disk button to download the current image as a PNG. Filenames contain only the local date and seed, for example `glyxel-20260816-0C8B605B.png`.
 
 The defaults are 3 colors, 36 px cells, 50% black, 8 × 8-cell sprites, and a 512 × 512 px image.
 

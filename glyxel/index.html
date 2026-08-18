@@ -31,7 +31,7 @@
   <link rel="icon" type="image/svg+xml" href="../images/mv.svg">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="styles.css?v=20260816-2">
-  <script type="module" src="app.js?v=20260818-1"></script>
+  <script type="module" src="app.js?v=20260818-2"></script>
 </head>
 <body>
   <a class="skip-link" href="#controls">Skip to generator controls</a>
@@ -40,7 +40,7 @@
     <article class="console" aria-labelledby="glyxel-title">
       <section class="screen-bezel" aria-label="Glyxel display">
         <div class="screen-glass" id="screenGlass">
-          <button class="canvas-stage" id="canvasSaveButton" type="button" aria-label="Save the current generated image as a PNG">
+          <button class="canvas-stage" id="canvasCopyButton" type="button" aria-label="Copy the current generated image to the clipboard" title="Copy Glyxel PNG">
             <canvas id="artworkCanvas" width="512" height="512" aria-hidden="true"></canvas>
           </button>
           <div class="glass-bulge" aria-hidden="true"></div>
@@ -176,6 +176,6 @@
   </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-  <noscript>Glyxel needs JavaScript to generate and save pixel artwork.</noscript>
+  <noscript>Glyxel needs JavaScript to generate, copy, and save pixel artwork.</noscript>
 </body>
 </html>

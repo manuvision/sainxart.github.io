@@ -12,7 +12,7 @@ import {
 
 const CONTROL_IDS = Object.keys(CONTROL_DEFINITIONS);
 const canvas = document.querySelector('#artworkCanvas');
-const canvasSaveButton = document.querySelector('#canvasSaveButton');
+const canvasCopyButton = document.querySelector('#canvasCopyButton');
 const screenGlass = document.querySelector('#screenGlass');
 const randomizeButton = document.querySelector('#randomizeButton');
 const saveButton = document.querySelector('#saveButton');
@@ -72,7 +72,7 @@ function renderCurrentArtwork() {
   renderArtwork(canvas, artwork);
 
   const description = describeArtwork(artwork);
-  canvasSaveButton.setAttribute('aria-label', `${description} Save this image as a PNG.`);
+  canvasCopyButton.setAttribute('aria-label', `${description} Copy this image to the clipboard.`);
   seedValue.textContent = formatSeed(artwork.seed);
 
   const accentColor = artwork.sprites[0]?.palette.at(-1) || '#8DD1E7';
@@ -170,6 +170,46 @@ function savePng() {
   }, 'image/png');
 }
 
+function makeCanvasPngBlob() {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error('The Glyxel canvas could not be converted to PNG.'));
+    }, 'image/png');
+  });
+}
+
+async function copyPng() {
+  if (!artwork) renderCurrentArtwork();
+
+  const ClipboardItemConstructor = globalThis.ClipboardItem;
+  const supportsPngClipboard = window.isSecureContext
+    && navigator.clipboard?.write
+    && ClipboardItemConstructor
+    && (typeof ClipboardItemConstructor.supports !== 'function'
+      || ClipboardItemConstructor.supports('image/png'));
+
+  if (!supportsPngClipboard) {
+    showToast('COPY UNAVAILABLE — USE SAVE BUTTON');
+    return;
+  }
+
+  canvasCopyButton.setAttribute('aria-busy', 'true');
+
+  try {
+    const pngPromise = makeCanvasPngBlob();
+    const clipboardItem = new ClipboardItemConstructor({ 'image/png': pngPromise });
+    await navigator.clipboard.write([clipboardItem]);
+    showToast('CLEAN PNG COPIED — PASTE IT NOW');
+    haptic([8, 35, 12]);
+  } catch (error) {
+    console.error('Could not copy the Glyxel PNG.', error);
+    showToast('COPY FAILED — USE SAVE BUTTON');
+  } finally {
+    canvasCopyButton.removeAttribute('aria-busy');
+  }
+}
+
 function scheduleGlitch() {
   window.clearTimeout(glitchTimer);
   if (motionPreference.matches || document.hidden) return;
@@ -228,7 +268,7 @@ document.querySelectorAll('[data-adjust]').forEach((button) => {
 document.querySelector('#controls').addEventListener('submit', (event) => event.preventDefault());
 randomizeButton.addEventListener('click', randomizeSeed);
 saveButton.addEventListener('click', savePng);
-canvasSaveButton.addEventListener('click', savePng);
+canvasCopyButton.addEventListener('click', copyPng);
 
 if (motionPreference.addEventListener) {
   motionPreference.addEventListener('change', scheduleGlitch);
