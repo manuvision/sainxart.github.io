@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#17150f" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="Emberfall is a playable medieval fantasy tactical card-RPG prototype, made for Sandy Lions." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://manu.vision/emberfall/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Manu.Vision Lab" />
+    <meta property="og:title" content="Emberfall — A Tactical Card-RPG" />
+    <meta property="og:description" content="Build your mage through choices, read the lane, and face the Ember Crown." />
+    <meta property="og:url" content="https://manu.vision/emberfall/" />
+    <meta property="og:image" content="https://manu.vision/emberfall/social-preview.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Emberfall title over a dark medieval card table lit by orange embers" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Emberfall — A Tactical Card-RPG" />
+    <meta name="twitter:description" content="Your build is your history. Space is a resource. The world remembers." />
+    <meta name="twitter:image" content="https://manu.vision/emberfall/social-preview.png" />
+
+    <title>Emberfall — A Tactical Card-RPG</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&amp;family=DM+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css?v=20260821-1" />
+  </head>
+  <body>
+    <div class="paper-grain" aria-hidden="true"></div>
+    <div class="ember-field" id="ambientEmbers" aria-hidden="true"></div>
+
+    <header class="game-bar" id="gameBar">
+      <a class="game-brand" href="./" aria-label="Emberfall home">
+        <svg viewBox="0 0 40 48" aria-hidden="true">
+          <path d="M20 2c1 9 11 12 11 23 0 8-5 15-12 20 2-6-1-10-5-14-3-4-4-9 6-15-1 7 5 11 6 17 5-12-7-17-6-25Z" />
+          <path d="M18 43c-5-4-8-9-7-14 1-4 3-7 7-10-2 7 5 10 3 17 4-4 3-8 2-12 6 7 4 14-5 19Z" />
+        </svg>
+        <span><strong>Emberfall</strong><small>Manu.Vision Lab</small></span>
+      </a>
+
+      <div class="game-bar__center" id="topStatus" aria-live="polite"></div>
+
+      <nav class="game-actions" aria-label="Game controls">
+        <button class="round-button" id="soundButton" type="button" aria-label="Turn sound on" title="Sound">
+          <svg class="sound-on-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15 9a4 4 0 0 1 0 6M17.7 6.3a8 8 0 0 1 0 11.4"/></svg>
+          <svg class="sound-off-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="m16 9 5 6M21 9l-5 6"/></svg>
+        </button>
+        <button class="text-button" id="rulesButton" type="button">How to play</button>
+      </nav>
+    </header>
+
+    <main class="game-root" id="gameRoot" tabindex="-1">
+      <section class="loading-view" aria-label="Loading Emberfall">
+        <div class="loading-sigil" aria-hidden="true"><i></i><i></i><i></i></div>
+        <p>Stirring the old fire…</p>
+      </section>
+    </main>
+
+    <div class="modal-layer" id="modalLayer" aria-live="polite"></div>
+    <div class="toast-region" id="toastRegion" aria-live="assertive" aria-atomic="true"></div>
+    <div class="sr-only" id="announcer" aria-live="assertive" aria-atomic="true"></div>
+
+    <noscript>
+      <div class="noscript-card">
+        <strong>The ember needs JavaScript.</strong>
+        <p>Enable JavaScript to play this tactical card-RPG prototype.</p>
+      </div>
+    </noscript>
+
+    <script type="module" src="app.js?v=20260821-1"></script>
+  </body>
+</html>

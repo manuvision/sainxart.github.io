@@ -1,0 +1,10 @@
+{
+  "name": "emberfall-vertical-slice",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check engine.js && node --check art.js && node --check audio.js && node --check app.js",
+    "test": "node --test"
+  }
+}
