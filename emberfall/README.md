@@ -2,6 +2,8 @@
 
 Emberfall is a dependency-free, mobile-first tactical card-RPG vertical slice made for Sandy Lions. It translates the August 2026 design draft into one complete solo-Mage arc: a small overworld, deterministic stat and equipment card discovery, a 12-card loadout, three escalating lane battles, and a final boss.
 
+For the complete product, architecture, extension, testing, and deployment handoff, read [project.md](project.md).
+
 ## Play locally
 
 ```sh
@@ -16,6 +18,8 @@ Open `http://localhost:4174/` from this directory.
 npm run check
 npm test
 ```
+
+Without `npm`, use `node --check engine.js`, repeat for the other JavaScript modules, and run `node --test`.
 
 ## Design notes
 
