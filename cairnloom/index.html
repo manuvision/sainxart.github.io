@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#eee5d2" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="description" content="Cairnloom is a portrait-first roguelike tower defense. Weave towers from living cards, survive endless waves, and carry every defeat into the Forge." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://manu.vision/cairnloom/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Manu.Vision Lab" />
+    <meta property="og:title" content="Cairnloom — Weave the Last Light" />
+    <meta property="og:description" content="A portrait-first roguelike tower defense built from living cards, procedural roads, and infinite waves." />
+    <meta property="og:url" content="https://manu.vision/cairnloom/" />
+    <meta property="og:image" content="https://manu.vision/cairnloom/assets/cairnloom-key-art.jpg" />
+    <meta property="og:image:width" content="1024" />
+    <meta property="og:image:height" content="1536" />
+    <meta property="og:image:alt" content="A minimalist winding road defended by cairn-like towers and a warm flame" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Cairnloom — Weave the Last Light" />
+    <meta name="twitter:description" content="A portrait-first roguelike tower defense from Manu.Vision Lab." />
+    <meta name="twitter:image" content="https://manu.vision/cairnloom/assets/cairnloom-key-art.jpg" />
+
+    <title>Cairnloom — Weave the Last Light</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="preload" as="image" href="assets/cairnloom-key-art.jpg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&amp;family=DM+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css?v=20260827-1" />
+  </head>
+  <body>
+    <div class="world-backdrop" aria-hidden="true"></div>
+    <div class="paper-grain" aria-hidden="true"></div>
+    <div class="ambient-embers" id="ambientEmbers" aria-hidden="true"></div>
+
+    <main class="game-shell" id="gameShell">
+      <section class="loading-screen" aria-label="Loading Cairnloom">
+        <div class="loading-sigil" aria-hidden="true"><i></i><i></i><i></i></div>
+        <p>Waking the last flame…</p>
+      </section>
+    </main>
+
+    <div class="modal-layer" id="modalLayer"></div>
+    <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+    <div class="sr-only" id="announcer" aria-live="assertive" aria-atomic="true"></div>
+
+    <noscript>
+      <div class="noscript-card"><strong>The Ward needs JavaScript.</strong><p>Enable JavaScript to defend the last flame.</p></div>
+    </noscript>
+
+    <script type="module" src="app.js?v=20260827-1"></script>
+  </body>
+</html>

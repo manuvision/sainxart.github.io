@@ -1,0 +1,10 @@
+{
+  "name": "cairnloom",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check app.js && node --check art.js && node --check audio.js && node --check content.js && node --check engine.js && node --check renderer.js",
+    "test": "node --test"
+  }
+}
