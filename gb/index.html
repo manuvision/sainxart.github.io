@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Manu.Vision — SP Edition</title>
+  <meta name="description" content="Manuel Sainsily’s portfolio, reimagined as a playable 3D Game Boy Advance SP. Explore art, technology and culture, one button at a time.">
+  <meta name="theme-color" content="#101018">
+  <link rel="canonical" href="https://manu.vision/gb/">
+  <link rel="icon" href="/images/mv.svg" type="image/svg+xml">
+  <meta property="og:title" content="Manu.Vision — SP Edition">
+  <meta property="og:description" content="Art. Tech. Culture. Press play on Manuel Sainsily’s interactive portfolio.">
+  <meta property="og:url" content="https://manu.vision/gb/">
+  <meta property="og:image" content="https://manu.vision/images/2026/social-preview-20260710-clean.jpg">
+  <link rel="preload" href="./fonts/pixelify.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="./style.css">
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+</head>
+<body>
+  <a class="skip-link" href="#reader">Read the portfolio</a>
+  <header class="topbar">
+    <a class="wordmark" href="/" aria-label="Manu.Vision home">manu<span>●</span>vision</a>
+    <div class="edition"><span class="tiny-cross">✦</span> SP EDITION <span class="edition-number">001 / 2026</span></div>
+    <a class="classic" href="/">Classic portfolio <span>↗</span></a>
+  </header>
+  <main id="main">
+    <div class="stage" id="stage">
+      <div class="ambient" aria-hidden="true"></div>
+      <div class="intro">
+        <p class="eyebrow"><span class="live-dot"></span> A PLAYABLE PORTFOLIO</p>
+        <h1>Art. <br>Tech. <br><span>Culture.</span></h1>
+        <p class="intro-copy">Manuel Sainsily<br><span class="role">Creative Director & Speaker</span></p>
+        <p class="location">GUADELOUPE → MONTRÉAL</p>
+      </div>
+      <div id="console" role="application" aria-label="Interactive 3D Game Boy Advance SP portfolio. Use arrow keys to navigate, Enter or Z to select, X or Escape to go back, and H for home." tabindex="0"></div>
+      <div class="loading" id="loading" role="status">OPENING YOUR WORLD<span>...</span></div>
+      <aside class="side-note"><span class="side-index">01 — 10</span><span>Different worlds.<br>Same curiosity.</span><span class="side-line"></span></aside>
+      <div class="stage-bottom">
+        <span class="drag-hint"><span>↔</span> Drag to explore. Release to return.</span>
+        <div class="device-tools">
+          <button id="sound" aria-pressed="false" title="Toggle sound">♪ <span>Sound off</span></button>
+          <button id="replay" title="Replay the opening animation">↺ <span>Open again</span></button>
+          <button id="expand" aria-pressed="false" title="Read the screen at a larger size">⛶ <span>Screen view</span></button>
+        </div>
+      </div>
+    </div>
+    <nav class="control-bar" aria-label="Console controls">
+      <div class="nav-group direction-controls"><button data-input="left" aria-label="Move left">←</button><button data-input="up" aria-label="Move up">↑</button><button data-input="down" aria-label="Move down">↓</button><button data-input="right" aria-label="Move right">→</button><span>Navigate</span></div>
+      <div class="nav-group"><button data-input="a" class="round-key" aria-label="A: select">A</button><span>Select <small>/ Z or Enter</small></span></div>
+      <div class="nav-group"><button data-input="b" class="round-key" aria-label="B: go back">B</button><span>Back <small>/ X or Esc</small></span></div>
+      <div class="nav-group"><button data-input="home" class="pill-key" aria-label="Start: return home">START</button><span>Home <small>/ H</small></span></div>
+      <button id="reader-toggle" class="reader-toggle" aria-expanded="false" aria-controls="reader">Read portfolio <span>↗</span></button>
+    </nav>
+    <section id="reader" class="reader" aria-label="Portfolio text view" hidden></section>
+    <div id="screen-view" class="screen-view" hidden>
+      <div class="screen-heading"><span>MANU.VISION / SP</span><button id="close-screen" aria-label="Close expanded screen">Close ×</button></div>
+      <canvas id="large-screen" width="480" height="320" role="img" aria-label="Expanded portfolio screen; use the controls below to navigate"></canvas>
+    </div>
+    <p id="announcement" class="sr-only" aria-live="polite" aria-atomic="true"></p>
+    <noscript><p class="noscript">The interactive console needs JavaScript. <a href="/">Read the full portfolio here.</a></p></noscript>
+  </main>
+  <footer><span>© 2026 MANUVISION INC.</span><span>MADE OF CURIOSITY. POWERED BY PLAY.</span><a href="mailto:hello@manu.vision">LET’S CONNECT ↗</a></footer>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
