@@ -4,7 +4,7 @@ const ITEM_IDS=[1,3,5,7,10];
 const clamp=THREE.MathUtils.clamp;
 
 // The view model keeps its own self-occlusion, but occupies the nearest half
-// percent of the existing depth buffer. Walls cannot cut through the hand and
+// percent of the existing depth buffer. Walls cannot cut through the prop and
 // the post-process depth still masks sun shafts behind it. Never clear depth.
 function viewMaterial(material) {
   material.onBeforeCompile=shader=>{
@@ -38,10 +38,6 @@ function textureField(kind) {
       rgb=[49,124,133];
       const ripples=Math.sin(u*.42+Math.sin(v*.34))*.5+Math.sin(v*.53-u*.14)*.5;
       shade=1+ripples*.13+grain*.035;
-    } else if(kind==='skin') {
-      rgb=[185,133,99];shade=1+grain*.055;
-    } else if(kind==='sleeve') {
-      rgb=[73,88,66];shade=1+grain*.075+(u%4===0?.018:0);
     } else {rgb=[102,74,45];shade=1+grain*.08;}
     const i=(y*width+x)*4;
     for(let channel=0;channel<3;channel++)data[i+channel]=Math.round(clamp(rgb[channel]*shade,0,255));
@@ -68,29 +64,26 @@ export class HeldItem {
   constructor(worldScene) {
     this.worldScene=worldScene;this.scene=new THREE.Scene();this.scene.name='First-person held item';
     this.camera=new THREE.PerspectiveCamera(66,1,.08,260);
-    this.root=new THREE.Group();this.root.name='Hand and selected block';this.scene.add(this.root);
+    this.root=new THREE.Group();this.root.name='Selected block at screen edge';this.scene.add(this.root);
     this.materials=new Set();this.geometries=new Set();this.textures=new Set();this.models=new Map();
     this.time={value:0};this.ready=false;this.visible=false;this.disposed=false;this.warmVersion=0;
     this.selected=1;this.walkPhase=0;this.moveBlend=0;this.swingTime=1;this.swingAmount=0;this.selectionDip=0;
     this.inverseCamera=new THREE.Quaternion();this.lightOffset=new THREE.Vector3();this.sunView=new THREE.Vector3();
+    this.layoutMatrix=new THREE.Matrix4();this.layoutRotation=new THREE.Quaternion().setFromEuler(new THREE.Euler(-.045,0,.035));
+    this.layoutScale=new THREE.Vector3();this.layoutPoint=new THREE.Vector3();this.layoutOrigin=new THREE.Vector3(0,0,-.9);
+    this.layoutKey='';this.edgePosition=0;
     this.root.visible=false;
 
     // Both light layouts are permanent. A held torch changes intensity and
     // position only, so selecting it cannot rebuild the world's shaders.
     this.worldLight=new THREE.PointLight(0xffbd75,0,9,1.8);
     this.worldLight.name='Held torch illumination';worldScene.add(this.worldLight);
-    this.handLight=new THREE.PointLight(0xffb666,0,2.5,2);
-    this.scene.add(this.handLight);
+    this.itemLight=new THREE.PointLight(0xffb666,0,2.5,2);
+    this.scene.add(this.itemLight);
     this.hemi=new THREE.HemisphereLight(0xe6ebd6,0x665641,.9);this.scene.add(this.hemi);
     this.sun=new THREE.DirectionalLight(0xffe8c0,2.5);this.sun.position.set(-3,4,2);this.scene.add(this.sun,this.sun.target);
 
-    const skin=this._mat('skin'),sleeve=this._mat('sleeve'),leather=this._mat('leather');
-    this.forearm=this._box(this.root,sleeve,[.115,.31,.135],[.060,-.25,.115]);
-    this.forearm.rotation.set(-.28,0,-.24);
-    const cuff=this._box(this.root,leather,[.125,.055,.145],[.018,-.115,.076]);cuff.rotation.x=-.2;
-    this._box(this.root,skin,[.126,.113,.137],[0,-.046,.058]);
-    this._box(this.root,skin,[.046,.078,.083],[-.071,-.020,.025]);
-
+    const leather=this._mat('leather');
     const meadow=this._mat('meadow'),stone=this._mat('stone'),wood=this._mat('wood'),water=this._mat('water');
     const previous=water.onBeforeCompile;
     water.onBeforeCompile=shader=>{
@@ -123,6 +116,8 @@ export class HeldItem {
     this._box(this.flame,core,[.048,.085,.050],[-.006,.028,.019]);
     this._box(this.flame,amber,[.042,.080,.045],[.018,.123,-.008]);
     this.models.set(10,torch);this.root.add(torch);
+    this.root.updateMatrixWorld(true);
+    for(const group of this.models.values())group.userData.bounds=new THREE.Box3().setFromObject(group);
   }
 
   _mat(kind) {
@@ -148,11 +143,35 @@ export class HeldItem {
     if(this.selected===id)return true;
     this.models.get(this.selected).visible=false;this.models.get(id).visible=true;
     this.selected=id;this.selectionDip=.022;
-    if(id!==10){this.worldLight.intensity=0;this.handLight.intensity=0;}
+    if(id!==10){this.worldLight.intensity=0;this.itemLight.intensity=0;}
     return true;
   }
 
   swing() {if(!this.disposed)this.swingTime=0;}
+
+  _alignToEdge(scale,halfX) {
+    const key=`${this.selected}:${scale}:${this.camera.projectionMatrix.elements[0]}`;
+    if(key===this.layoutKey)return;
+    this.layoutKey=key;
+    const bounds=this.models.get(this.selected).userData.bounds,projected=[];
+    this.layoutScale.setScalar(scale);this.layoutMatrix.compose(this.layoutOrigin,this.layoutRotation,this.layoutScale);
+    // The cube and narrow torch have different silhouettes. Project their
+    // bounds, then place roughly two thirds of either silhouette inside the
+    // viewport. This keeps every selection anchored to the screen edge.
+    const projectionX=this.camera.projectionMatrix.elements[0];
+    for(let i=0;i<8;i++) {
+      this.layoutPoint.set(i&1?bounds.max.x:bounds.min.x,i&2?bounds.max.y:bounds.min.y,i&4?bounds.max.z:bounds.min.z).applyMatrix4(this.layoutMatrix);
+      const slope=projectionX/-this.layoutPoint.z;
+      projected.push([slope,this.layoutPoint.x*slope]);
+    }
+    let low=0,high=halfX*1.8;
+    for(let step=0;step<14;step++) {
+      const x=(low+high)*.5;let left=Infinity,right=-Infinity;
+      for(const [slope,offset] of projected){const edge=x*slope+offset;left=Math.min(left,edge);right=Math.max(right,edge);}
+      if(left*.35+right*.65<1)low=x;else high=x;
+    }
+    this.edgePosition=(low+high)*.5;
+  }
 
   update(dt,time,{camera,daylight=1,moving=false,visible=true,mobile=false,underwater=false,sunDirection}={}) {
     if(this.disposed||!camera)return;
@@ -175,19 +194,14 @@ export class HeldItem {
     this.swingAmount=THREE.MathUtils.damp(this.swingAmount,Math.sin(this.swingTime*Math.PI),23,dt);
     this.selectionDip=THREE.MathUtils.damp(this.selectionDip,0,17,dt);
     const distance=.9,halfY=Math.tan(THREE.MathUtils.degToRad(camera.fov)/2)*distance;
-    const aspect=camera.aspect,scale=mobile?.65*Math.min(.8,aspect*.98):.74;
+    const aspect=camera.aspect,scale=mobile?.46:.74;
+    this._alignToEdge(scale,halfY*aspect);
     const bobX=Math.sin(this.walkPhase)*.009*this.moveBlend;
     const bobY=Math.cos(this.walkPhase*2)*.006*this.moveBlend+Math.sin(time*.8)*.0015;
-    // Portrait touch controls occupy the lower right. The wrist stays above
-    // them while the sleeve connects diagonally to the right screen edge,
-    // preserving a first-person silhouette instead of a floating little hand.
-    this.forearm.scale.y=mobile?.85/.31:1;
-    this.forearm.position.set(mobile?.30:.060,mobile?-.425:-.25,.115);
-    this.forearm.rotation.set(-.28,0,mobile?.70:-.24);
     this.root.scale.setScalar(scale);
     this.root.position.set(
-      halfY*aspect*(mobile?.70:.73)+bobX-this.swingAmount*.085*scale,
-      halfY*(mobile?-.08:-.68)+bobY-this.selectionDip+this.swingAmount*.02*scale,
+      this.edgePosition+bobX-this.swingAmount*.085*scale,
+      halfY*(mobile?-.30:-.68)+bobY-this.selectionDip+this.swingAmount*.02*scale,
       -distance-this.swingAmount*.12*scale,
     );
     this.root.rotation.set(-.045-this.swingAmount*.47,0,.035-Math.sin(this.walkPhase)*.012*this.moveBlend-this.swingAmount*.19);
@@ -195,9 +209,9 @@ export class HeldItem {
     const flicker=1+Math.sin(time*7.3)*.025+Math.sin(time*11.8+.7)*.017;
     this.flame.scale.y=flicker;
     this.root.updateMatrixWorld(true);
-    this.flame.getWorldPosition(this.handLight.position);
-    this.handLight.position.z+=.045;
-    this.handLight.intensity=torch?(underwater?.018:.055)*flicker:0;
+    this.flame.getWorldPosition(this.itemLight.position);
+    this.itemLight.position.z+=.045;
+    this.itemLight.intensity=torch?(underwater?.018:.055)*flicker:0;
     this.lightOffset.set(.16,-.12,-.30).applyQuaternion(camera.quaternion);
     this.worldLight.position.copy(camera.position).add(this.lightOffset);
     this.worldLight.intensity=torch?(underwater?1.2:5.0)*flicker:0;

@@ -16,15 +16,16 @@ test('held models stay outside the world and reuse a permanent light and prebuil
   try {
     assert.deepEqual(ITEM_IDS,[1,3,5,7,10]);
     assert.equal(world.children.length,1);assert.equal(world.children[0],held.worldLight);
+    assert.deepEqual(held.root.children,[...held.models.values()],'the view contains only selectable props, with no arm, hand, thumb or cuff');
     assert.ok(held.worldLight.isPointLight);assert.equal(held.worldLight.intensity,0);
-    const worldLights=visibleLights(world),handLights=visibleLights(held.scene);
+    const worldLights=visibleLights(world),viewLights=visibleLights(held.scene);
     const geometries=[...held.geometries],materials=[...held.materials],textures=[...held.textures];
     for(let i=0;i<25;i++) {
       const id=ITEM_IDS[i%ITEM_IDS.length];assert.equal(held.select(id),true);update();
       assert.equal(held.diagnostics.selected,id);
       assert.equal([...held.models.values()].filter(group=>group.visible).length,1);
-      assert.ok(held.diagnostics.meshes>=5&&held.diagnostics.meshes<20,'one active prop plus hand stays within the draw budget');
-      assert.deepEqual(visibleLights(world),worldLights);assert.deepEqual(visibleLights(held.scene),handLights);
+      assert.ok(held.diagnostics.meshes>=1&&held.diagnostics.meshes<20,'one active prop stays within the draw budget');
+      assert.deepEqual(visibleLights(world),worldLights);assert.deepEqual(visibleLights(held.scene),viewLights);
       assert.deepEqual([...held.geometries],geometries);assert.deepEqual([...held.materials],materials);assert.deepEqual([...held.textures],textures);
     }
     const selected=held.selected;assert.equal(held.select(999),false);assert.equal(held.selected,selected);
@@ -42,8 +43,8 @@ test('the view copies world projection while sunlight and torch illumination fol
     assert.ok(direction.distanceTo(sunDirection)<1e-9,'directional light is expressed in view coordinates');
     const offset=held.worldLight.position.clone().sub(camera.position).applyQuaternion(camera.quaternion.clone().invert());
     assert.ok(offset.distanceTo(new THREE.Vector3(.16,-.12,-.30))<1e-9);
-    assert.ok(held.worldLight.intensity>4&&held.handLight.intensity>0);
-    assert.ok(held.handLight.position.length()<2,'hand illumination belongs to the small view scene');
+    assert.ok(held.worldLight.intensity>4&&held.itemLight.intensity>0);
+    assert.ok(held.itemLight.position.length()<2,'prop illumination belongs to the small view scene');
   } finally {held.dispose();}
 });
 
@@ -51,9 +52,9 @@ test('leaving play or selecting another block switches held illumination off wit
   const {held,world,update}=fixture();
   try {
     held.select(10);update();assert.ok(held.worldLight.intensity>0);
-    update({visible:false});assert.equal(held.root.visible,false);assert.equal(held.worldLight.intensity,0);assert.equal(held.handLight.intensity,0);
+    update({visible:false});assert.equal(held.root.visible,false);assert.equal(held.worldLight.intensity,0);assert.equal(held.itemLight.intensity,0);
     update({visible:true,underwater:true});assert.ok(held.worldLight.intensity>0&&held.worldLight.intensity<2);
-    held.select(3);assert.equal(held.worldLight.intensity,0);assert.equal(held.handLight.intensity,0);
+    held.select(3);assert.equal(held.worldLight.intensity,0);assert.equal(held.itemLight.intensity,0);
     assert.equal(world.children[0],held.worldLight);assert.equal(world.children.length,1);
   } finally {held.dispose();}
 });
@@ -115,22 +116,24 @@ test('render overlays HDR without clearing world depth and restores state even o
   } finally {held.dispose();}
 });
 
-test('mobile composition keeps the selected block small and above the touch action area',()=>{
+test('blocks and narrow torches peek through the right screen edge across mobile and desktop layouts',()=>{
   const {held,camera,update}=fixture();
   try {
-    for(const aspect of [390/844,700/390]) {
-      camera.aspect=aspect;camera.updateProjectionMatrix();update({mobile:true});
-      const block=held.models.get(1).children[0],bounds=new THREE.Box3().setFromObject(block);
-      const min=bounds.min.clone().project(held.camera),max=bounds.max.clone().project(held.camera);
-      assert.ok(min.x>.3&&max.x<1,'prop fits in the right edge without covering the center crosshair');
-      assert.ok(min.y>-.15&&max.y<.5,'the prop stays above the mobile action buttons');
-      assert.ok(max.x-min.x<.5&&max.y-min.y<.5,'the selected block remains a small foreground object');
-      const sleeveEnd=new THREE.Vector3(0,-.31/2,0).applyMatrix4(held.forearm.matrixWorld).project(held.camera);
-      assert.ok(sleeveEnd.x>1,'the mobile sleeve continues through the screen edge instead of floating in view');
+    for(const [aspect,mobile] of [[390/844,true],[700/390,true],[16/9,false]])for(const id of [1,3,5,7,10]) {
+      camera.aspect=aspect;camera.updateProjectionMatrix();held.select(id);update({mobile});
+      const min=new THREE.Vector3(Infinity,Infinity,Infinity),max=new THREE.Vector3(-Infinity,-Infinity,-Infinity),point=new THREE.Vector3();
+      held.models.get(id).traverseVisible(object=>{
+        if(!object.isMesh)return;
+        const positions=object.geometry.attributes.position;
+        for(let i=0;i<positions.count;i++) {
+          point.fromBufferAttribute(positions,i).applyMatrix4(object.matrixWorld).project(held.camera);min.min(point);max.max(point);
+        }
+      });
+      assert.ok(min.x>.35&&max.x>1,`item ${id} stays at the right edge with part of its silhouette cropped`);
+      const visibleFraction=(1-min.x)/(max.x-min.x);
+      assert.ok(visibleFraction>.4&&visibleFraction<.85,`item ${id} remains visibly connected to the edge (${visibleFraction})`);
+      if(mobile)assert.ok(min.y>-.6&&max.y<.25,'the prop remains in the lower right near the action controls');
     }
-    camera.aspect=16/9;camera.updateProjectionMatrix();update({mobile:false});
-    const sleeveEnd=new THREE.Vector3(0,-.31/2,0).applyMatrix4(held.forearm.matrixWorld).project(held.camera);
-    assert.ok(sleeveEnd.y< -1,'desktop returns to its lower-edge first-person silhouette');
   } finally {held.dispose();}
 });
 
