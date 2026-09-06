@@ -89,7 +89,8 @@ export class Graphics {
     this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;
     this.renderer.shadowMap.autoUpdate=false;
     this.scene=new THREE.Scene();
-    this.scene.fog=new THREE.FogExp2(0xaac6b5,.014);
+    // Keep the foreground clear; reserve haze for the streaming horizon.
+    this.scene.fog=new THREE.Fog(0xaac6b5,36,mobile?88:120);
     this.camera=new THREE.PerspectiveCamera(66,1,.08,260);
     this.time={value:0}; this.day={value:1};
     this.wetColumns=new WaterColumnMask(mobile?48:64,mobile?128:192);
@@ -137,10 +138,14 @@ export class Graphics {
     this.refraction.depthTexture=new THREE.DepthTexture(1,1,THREE.UnsignedIntType);
     this.reflection=new THREE.WebGLRenderTarget(mobile?256:512,mobile?256:512,{minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter});
     this.mirrorCamera=this.camera.clone();this.reflectionMatrix=new THREE.Matrix4();
-    this.waterMaterial=new THREE.ShaderMaterial({transparent:true,side:THREE.DoubleSide,uniforms:{uTime:this.time,uDay:this.day,tScene:{value:this.refraction.texture},tDepth:{value:this.refraction.depthTexture},tReflection:{value:this.reflection.texture},uReflectionMatrix:{value:this.reflectionMatrix},uResolution:{value:new THREE.Vector2()},uNear:{value:.08},uFar:{value:260},uUnder:{value:0},uReflect:{value:1},uSun:{value:this.sunDirection}},vertexShader:`
+    this.waterMaterial=new THREE.ShaderMaterial({transparent:true,fog:true,side:THREE.DoubleSide,uniforms:{...THREE.UniformsUtils.clone(THREE.UniformsLib.fog),uTime:this.time,uDay:this.day,tScene:{value:this.refraction.texture},tDepth:{value:this.refraction.depthTexture},tReflection:{value:this.reflection.texture},uReflectionMatrix:{value:this.reflectionMatrix},uResolution:{value:new THREE.Vector2()},uNear:{value:.08},uFar:{value:260},uUnder:{value:0},uReflect:{value:1},uSun:{value:this.sunDirection}},vertexShader:`
+      #include <fog_pars_vertex>
       varying vec3 vWorld;varying vec3 vNormal;varying vec4 vReflect;uniform float uTime;uniform mat4 uReflectionMatrix;
-      void main(){vec3 p=position;vec4 wp=modelMatrix*vec4(p,1.);vWorld=wp.xyz;vNormal=normal;vReflect=uReflectionMatrix*wp;gl_Position=projectionMatrix*viewMatrix*wp;}
+      void main(){vec3 p=position;vec4 wp=modelMatrix*vec4(p,1.);vWorld=wp.xyz;vNormal=normal;vReflect=uReflectionMatrix*wp;vec4 mvPosition=viewMatrix*wp;gl_Position=projectionMatrix*mvPosition;
+        #include <fog_vertex>
+      }
     `,fragmentShader:`
+      #include <fog_pars_fragment>
       uniform sampler2D tScene,tDepth,tReflection;uniform float uTime,uDay,uNear,uFar,uUnder,uReflect;uniform vec2 uResolution;uniform vec3 uSun;varying vec3 vWorld,vNormal;varying vec4 vReflect;
       float viewDepth(float d){return (uNear*uFar)/((uFar-uNear)*d-uFar);}
       void main(){
@@ -159,10 +164,10 @@ export class Graphics {
         float spec=pow(max(0.,dot(reflect(-uSun,n),eye)),240.);col+=vec3(1.,.86,.56)*spec*1.2*uDay;
         float foam=(1.-smoothstep(.02,.35,depth))*(.4+.6*sin(p.x*9.+p.y*7.+t));col+=vec3(.43,.57,.41)*foam*.20*uDay;
         if(uUnder>.5){col=mix(col,vec3(.04,.29,.31),.17);col+=vec3(.13,.29,.23)*pow(facing,6.)*uDay;}
-        float fog=1.-exp(-length(cameraPosition-vWorld)*.013);col=mix(col,mix(vec3(.03,.07,.12),vec3(.57,.71,.61),uDay),fog*.6);
         gl_FragColor=vec4(col,1.);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
+        #include <fog_fragment>
       }`});
     this.rays=new THREE.Group();this.scene.add(this.rays);
     const rayMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,uniforms:{uDay:this.day},vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:'varying vec2 vUv;uniform float uDay;void main(){float a=pow(sin(vUv.x*3.14159),2.)*pow(sin(vUv.y*3.14159),1.5);gl_FragColor=vec4(.88,.83,.54,a*.045*uDay);}'});
@@ -178,7 +183,8 @@ export class Graphics {
     this.sun.intensity=.12+daylight*3.1;this.fill.intensity=.48+daylight*1.65;
     this.fill.color.setHex(daylight<.3?0x728daa:0xc2dcce);
     this.scene.fog.color.setHex(underwater?0x136463:0xa8c4b2).lerp(new THREE.Color(0x0d2237),1-daylight);
-    this.scene.fog.density=underwater?.085:this.quality==='low'?.021:.0145;
+    this.scene.fog.near=underwater?0:this.mobile?30:40;
+    this.scene.fog.far=underwater?27:this.mobile?88:120;
     this.waterMaterial.uniforms.uUnder.value=underwater?1:0;
     this.rays.visible=daylight>.4&&!underwater;this.renderer.toneMappingExposure=1.02+daylight*.1;
   }
@@ -189,10 +195,10 @@ export class Graphics {
       if(x*x+z*z>(radius+.45)**2)continue;
       wanted++;if(!world.chunks.has(`${center.x+x},${center.z+z}`))missing++;
     }
-    const target=.0022*missing/Math.max(1,wanted);
+    const target=10*missing/Math.max(1,wanted);
     const settle=target>this.streamingFog?.9:2.4;
     this.streamingFog+=(target-this.streamingFog)*(1-Math.exp(-this.frameDt/settle));
-    if(this.waterMaterial.uniforms.uUnder.value<.5)this.scene.fog.density+=this.streamingFog;
+    if(this.waterMaterial.uniforms.uUnder.value<.5)this.scene.fog.far-=this.streamingFog;
   }
   _updateReflection(){
     const camera=this.camera,mirror=this.mirrorCamera;

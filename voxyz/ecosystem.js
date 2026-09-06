@@ -76,11 +76,21 @@ export class Ecosystem {
     this.color = new THREE.Color();
     this.windTime = { value: 0 };
     this.flyTime = { value: 0 };
+    this.viewer = { value: new THREE.Vector3() };
+    this.detailFade = { value: new THREE.Vector2(mobile ? 20 : 32, mobile ? 26 : 42) };
     this.center = new THREE.Vector3(Infinity, 0, Infinity);
     this.pending = null;
     this.dirty = false;
     this.animals = { fish: [], bee: [], bird: [], sheep: [] };
     this.capacity = mobile ? 19000 : 56000;
+    this.detailRadius = mobile ? 26 : 42;
+    this.cellSize = 16;
+    this.cellRadius = mobile ? 2 : 3;
+    // Dense near detail and a persistent sparse outer tier share one draw call.
+    // The tier belongs to the sample, never to the current camera distance.
+    this.cellCapacity = mobile ? 1300 : 2600;
+    this.nearDetailRadius = mobile ? 18 : 24;
+    this.detailBuffer = 7;
     this.materials = [];
     this.geometries = [];
     this._setupFlora();
@@ -100,18 +110,26 @@ export class Ecosystem {
     this.floraMaterial = this._material({ vertexColors: false });
     this.floraMaterial.onBeforeCompile = shader => {
       shader.uniforms.ecoWind = this.windTime;
-      shader.vertexShader = 'attribute float ecoSway;\nuniform float ecoWind;\n' + shader.vertexShader;
+      shader.uniforms.ecoViewer = this.viewer;
+      shader.uniforms.ecoDetailFade = this.detailFade;
+      shader.vertexShader = 'attribute float ecoSway;\nattribute float ecoRange;\nuniform float ecoWind;\nuniform vec3 ecoViewer;\nuniform vec2 ecoDetailFade;\n' + shader.vertexShader;
       shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', `
         #include <begin_vertex>
+        float detailEnd = min(ecoRange, ecoDetailFade.y);
+        float detailStart = max(0.0, detailEnd - (ecoDetailFade.y - ecoDetailFade.x));
+        float detailScale = 1.0 - smoothstep(detailStart, detailEnd, distance(instanceMatrix[3].xz, ecoViewer.xz));
+        transformed.xz *= detailScale;
+        transformed.y = mix(-.5, transformed.y, detailScale);
         float phase = ecoWind * 1.35 + instanceMatrix[3].x * .31 + instanceMatrix[3].z * .24;
         float width = max(length(instanceMatrix[0].xyz), .035);
-        transformed.x += sin(phase) * ecoSway * (position.y + .5) / width;
+        transformed.x += sin(phase) * ecoSway * (position.y + .5) * detailScale / width;
       `);
     };
-    this.floraMaterial.customProgramCacheKey = () => 'voxyz-microflora-1';
+    this.floraMaterial.customProgramCacheKey = () => 'voxyz-microflora-stable-distance-2';
     this.flora = [0, 1].map(() => {
       const geometry = new THREE.BoxGeometry(1, 1, 1);
       geometry.setAttribute('ecoSway', new THREE.InstancedBufferAttribute(new Float32Array(this.capacity), 1));
+      geometry.setAttribute('ecoRange', new THREE.InstancedBufferAttribute(new Float32Array(this.capacity), 1));
       this.geometries.push(geometry);
       const mesh = new THREE.InstancedMesh(geometry, this.floraMaterial, this.capacity);
       mesh.name = 'Instanced meadow, reeds, flowers and underwater garden';
@@ -250,9 +268,11 @@ export class Ecosystem {
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage));
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     this.particleSeeds = [];
+    this.particleGround = [];
     const random = rng(this.seed ^ 0x58a7b31);
     for (let i = 0; i < count; i++) {
       this.particleSeeds.push([random(), random(), random(), random(), random()]);
+      this.particleGround.push({ x: Infinity, z: Infinity, y: 0, target: 0 });
       this.color.setHex(i % 3 === 0 ? 0xffed9b : 0xcdeca0);
       colors[i * 3] = this.color.r;
       colors[i * 3 + 1] = this.color.g;
@@ -275,7 +295,11 @@ export class Ecosystem {
 
   _box(x, y, z, sx, sy, sz, color, sway = 0, rotation = 0) {
     const pending = this.pending;
-    if (!pending || pending.count >= this.capacity) return;
+    if (!pending || pending.logicalCount >= pending.logicalLimit) return;
+    // Invisible buffered samples still occupy their logical place in the cell.
+    // Entering the buffer can therefore never evict a later visible sample.
+    pending.logicalCount++;
+    if (!pending.sampleVisible || pending.count >= this.capacity) return;
     const i = pending.count++;
     this.dummy.position.set(x, y, z);
     this.dummy.scale.set(sx, sy, sz);
@@ -284,6 +308,7 @@ export class Ecosystem {
     pending.mesh.setMatrixAt(i, this.dummy.matrix);
     pending.mesh.setColorAt(i, this.color.setHex(color));
     pending.mesh.geometry.getAttribute('ecoSway').array[i] = sway;
+    pending.mesh.geometry.getAttribute('ecoRange').array[i] = pending.detailEnd ?? this.detailRadius;
   }
 
   _flower(x, ground, z, random, jungle = false) {
@@ -321,14 +346,15 @@ export class Ecosystem {
 
   _canopy(tree) {
     if (!tree || tree.biome === 'desert') return;
-    const random = rng(hash(tree.x, tree.z, this.seed ^ 0x47213ca));
     const palette = tree.conifer ? C.evergreen : tree.biome === 'jungle' ? C.jungle : C.canopy;
-    const near = Math.hypot(tree.x - this.pending.x, tree.z - this.pending.z) < 24;
-    const samples = this.mobile ? 56 : near ? 170 : 104;
+    const samples = this.mobile ? 56 : 144;
     // Sample the outside of actual leaf voxels. Small clusters break up large
     // canopy planes without replacing their editable, collidable world blocks.
     for (let i = 0; i < samples; i++) {
-      if (this.pending.count >= this.capacity - 24) return;
+      if (this.pending.logicalCount >= this.pending.logicalLimit - 24) return;
+      // Removing one supporting leaf must not re-roll any other leaf cluster.
+      const random = rng(hash(tree.x, tree.z, this.seed ^ Math.imul(i + 1, 0x47213ca)));
+      this.pending.detailEnd = random() < .38 ? this.detailRadius : this.nearDetailRadius;
       let x = tree.x, y = tree.y, z = tree.z;
       let nx = 0, ny = 0, nz = 0;
       let found = false;
@@ -357,6 +383,7 @@ export class Ecosystem {
         }
       }
       if (!found) continue;
+      this.pending.sampleVisible = Math.hypot(x - this.pending.x, z - this.pending.z) <= this.pending.detailEnd + this.detailBuffer;
       const support = this._block(x, y, z);
       if (support !== 6 && support !== 13) continue;
       if (this._block(x + nx, y + ny, z + nz) !== 0) continue;
@@ -377,24 +404,49 @@ export class Ecosystem {
   }
 
   _cell(cx, cz) {
-    const random = rng(hash(cx, cz, this.seed));
-    const cellSize = 12;
-    const subdivisions = this.mobile ? 10 : 15;
+    const cellSize = this.cellSize;
+    const subdivisions = this.mobile ? 14 : 21;
     const stride = cellSize / subdivisions;
     const pending = this.pending;
-    for (let ix = 0; ix < subdivisions; ix++) {
-      for (let iz = 0; iz < subdivisions; iz++) {
-        if (pending.count >= this.capacity - 24) return;
+    pending.logicalCount = 0;
+    pending.logicalLimit = Math.floor(this.cellCapacity * .43);
+    // Crown and ground each have room; neither can replace another cell's
+    // details. Tree ownership and density are independent of the viewer.
+    if (this.world.terrain?.tree && this.world.terrain?.treeBlock) {
+      for (let tx = Math.floor(cx * cellSize / 8); tx <= Math.floor((cx + 1) * cellSize / 8); tx++) {
+        for (let tz = Math.floor(cz * cellSize / 8); tz <= Math.floor((cz + 1) * cellSize / 8); tz++) {
+          const tree = this.world.terrain.tree(tx, tz);
+          if (!tree || tree.x < cx * cellSize || tree.x >= (cx + 1) * cellSize || tree.z < cz * cellSize || tree.z >= (cz + 1) * cellSize) continue;
+          this._canopy(tree);
+        }
+      }
+    }
+    pending.logicalLimit = this.cellCapacity;
+    const sampleCount = subdivisions * subdivisions;
+    const offset = hash(cx, cz, this.seed ^ 0x54f231) % sampleCount;
+    // An affine permutation spreads a bounded cell's samples over its whole
+    // area instead of cutting off a visible row when its allowance is full.
+    const step = this.mobile ? 37 : 97;
+    for (let sample = 0; sample < sampleCount; sample++) {
+        if (pending.logicalCount >= this.cellCapacity - 24) break;
+        const index = (sample * step + offset) % sampleCount;
+        const ix = Math.floor(index / subdivisions), iz = index % subdivisions;
+        const sampleId = `${cx}:${cz}:${ix}:${iz}`;
+        const random = rng(hash(cx * subdivisions + ix, cz * subdivisions + iz, this.seed ^ 0x782a912));
+        // Both the existence and the range tier are fixed in world space.
+        const rank = random();
+        if (rank > .95) continue;
+        pending.detailEnd = rank < .34 ? this.detailRadius : this.nearDetailRadius;
         const x = cx * cellSize + (ix + random()) * stride;
         const z = cz * cellSize + (iz + random()) * stride;
-        const radius = Math.hypot(x - pending.x, z - pending.z);
-        if (radius > (this.mobile ? 29 : 42) || (radius > 23 && random() < .45)) continue;
+        pending.sampleVisible = Math.hypot(x - pending.x, z - pending.z) <= pending.detailEnd + this.detailBuffer;
         const height = this.world.heightAt(Math.floor(x), Math.floor(z));
         const ground = height + 1;
         const biome = this.world.biomeAt(Math.floor(x), Math.floor(z));
         const above = this._block(x, ground, z);
         if (above === WATER && height < 12) {
-          if (pending.water.length < 100 && random() < .16) pending.water.push({ x, z, y: ground });
+          const habitat = random() < .16;
+          if (habitat && pending.sampleVisible && pending.water.length < 240) pending.water.push({ id: sampleId, x, z, y: ground });
           // Patchy shallow-water colonies leave the middle of the pond open.
           const patch = Math.sin(x * .39 + this.seed % 13) + Math.cos(z * .47 - this.seed % 17);
           const lilyChance = height >= 10 ? (patch > -.05 ? .25 : .028) : .006;
@@ -456,34 +508,24 @@ export class Ecosystem {
         }
         if (random() < (jungle ? .055 : .085)) {
           this._flower(x, ground, z, random, jungle);
-          if (pending.flowers.length < 100) pending.flowers.push({ x, z, y: ground + (jungle ? 1.3 : .6) });
+          if (pending.sampleVisible && pending.flowers.length < 240) pending.flowers.push({ id: sampleId, x, z, y: ground + (jungle ? 1.3 : .6) });
         }
-        if (!jungle && radius < 30 && random() < .03 && pending.meadow.length < 60) pending.meadow.push({ x, z, y: ground });
-      }
+        if (!jungle && random() < .03 && pending.sampleVisible && pending.meadow.length < 160) pending.meadow.push({ id: sampleId, x, z, y: ground });
     }
-    // A tree belongs to exactly one detail cell, even when its crown overlaps.
-    if (this.world.terrain?.tree) {
-      for (let tx = Math.floor(cx * cellSize / 8); tx <= Math.floor((cx + 1) * cellSize / 8); tx++) {
-        for (let tz = Math.floor(cz * cellSize / 8); tz <= Math.floor((cz + 1) * cellSize / 8); tz++) {
-          const tree = this.world.terrain.tree(tx, tz);
-          if (!tree || tree.x < cx * cellSize || tree.x >= (cx + 1) * cellSize || tree.z < cz * cellSize || tree.z >= (cz + 1) * cellSize) continue;
-          if (Math.hypot(tree.x - pending.x, tree.z - pending.z) < (this.mobile ? 30 : 43)) this._canopy(tree);
-        }
-      }
-    }
+    pending.logicalLimit = this.capacity;
   }
 
   _beginRebuild(position) {
     this.dirty = false;
-    const cx = Math.floor(position.x / 12), cz = Math.floor(position.z / 12);
-    const radius = this.mobile ? 2 : 3;
+    const cx = Math.floor(position.x / this.cellSize), cz = Math.floor(position.z / this.cellSize);
+    const radius = this.cellRadius;
     const cells = [];
     for (let x = -radius; x <= radius; x++) for (let z = -radius; z <= radius; z++) cells.push([cx + x, cz + z, x * x + z * z]);
     cells.sort((a, b) => a[2] - b[2]);
     const mesh = this.flora[1 - this.activeFlora];
     mesh.visible = false;
     mesh.count = 0;
-    this.pending = { x: position.x, z: position.z, mesh, cells, next: 0, count: 0, water: [], flowers: [], meadow: [] };
+    this.pending = { x: position.x, z: position.z, mesh, cells, next: 0, count: 0, logicalCount: 0, logicalLimit: this.capacity, sampleVisible: true, water: [], flowers: [], meadow: [] };
   }
 
   _advanceRebuild() {
@@ -499,6 +541,7 @@ export class Ecosystem {
     pending.mesh.instanceMatrix.needsUpdate = true;
     pending.mesh.instanceColor.needsUpdate = true;
     pending.mesh.geometry.getAttribute('ecoSway').needsUpdate = true;
+    pending.mesh.geometry.getAttribute('ecoRange').needsUpdate = true;
     pending.mesh.visible = true;
     this.flora[this.activeFlora].visible = false;
     this.activeFlora = 1 - this.activeFlora;
@@ -508,22 +551,45 @@ export class Ecosystem {
   }
 
   _populateAnimals(pending) {
-    const random = rng(hash(Math.floor(pending.x / 12), Math.floor(pending.z / 12), this.seed ^ 0x6184da));
+    const birdAnchors = [];
+    for (const [cx, cz] of pending.cells) {
+      const random = rng(hash(cx, cz, this.seed ^ 0x117ab85));
+      if (random() < .35) continue;
+      const x = cx * this.cellSize + random() * this.cellSize, z = cz * this.cellSize + random() * this.cellSize;
+      birdAnchors.push({ id: `${cx}:${cz}`, x, z, y: Math.max(30, this.world.heightAt(Math.floor(x), Math.floor(z)) + 15) + random() * 8 });
+    }
     for (const [kind, mesh] of Object.entries(this.entityMeshes)) {
-      const anchors = kind === 'fish' ? pending.water : kind === 'bee' ? pending.flowers : pending.meadow;
+      const anchors = kind === 'fish' ? pending.water : kind === 'bee' ? pending.flowers : kind === 'bird' ? birdAnchors : pending.meadow;
       const list = this.animals[kind];
-      list.length = 0;
-      for (let i = 0; i < mesh.instanceMatrix.count; i++) {
-        if (kind !== 'bird' && anchors.length === 0) break;
-        const anchor = kind === 'bird' ? { x: pending.x + (random() - .5) * 70, z: pending.z + (random() - .5) * 70, y: 28 + random() * 13 } : anchors[Math.floor(random() * anchors.length)];
+      const retainDistance = this.detailRadius + (kind === 'bird' ? 28 : 18);
+      // Keep each existing creature, its position and its animation phase until
+      // its habitat is well outside view. Editing/rebatching scenery is not a
+      // respawn event. The wider retirement radius prevents boundary churn.
+      let kept = 0;
+      for (const animal of list) {
+        if (Math.hypot(animal.x - pending.x, animal.z - pending.z) <= retainDistance) list[kept++] = animal;
+      }
+      list.length = kept;
+      const identities = new Set(list.map(animal => animal.id));
+      const candidates = anchors.map(anchor => ({ anchor, distance: Math.hypot(anchor.x - pending.x, anchor.z - pending.z) }));
+      candidates.sort((a, b) => a.distance - b.distance || a.anchor.id.localeCompare(b.anchor.id));
+      for (const { anchor, distance } of candidates) {
+        if (list.length >= mesh.instanceMatrix.count) break;
+        if (distance > this.detailRadius) continue;
+        const id = `${kind}:${anchor.id}`;
+        if (identities.has(id)) continue;
+        const random = rng(seedValue(id) ^ this.seed ^ 0x6184da);
         const y = kind === 'fish' ? Math.min(WATER_SURFACE - .6, anchor.y + .3 + random() * Math.max(.1, WATER_SURFACE - anchor.y - 1)) : anchor.y;
-        list.push({ x: anchor.x, y, z: anchor.z, phase: random() * TAU, speed: .14 + random() * .21, radius: kind === 'bird' ? 8 + random() * 16 : kind === 'sheep' ? .7 + random() : .35 + random() * 1.1, size: kind === 'fish' ? .7 + random() * .9 : kind === 'sheep' ? .8 + random() * .25 : .8 + random() * .4 });
+        list.push({ id, x: anchor.x, y, z: anchor.z, phase: random() * TAU, speed: .14 + random() * .21, radius: kind === 'bird' ? 8 + random() * 16 : kind === 'sheep' ? .7 + random() : .35 + random() * 1.1, size: kind === 'fish' ? .7 + random() * .9 : kind === 'sheep' ? .8 + random() * .25 : .8 + random() * .4,
+          current: new THREE.Vector3(anchor.x, y, anchor.z), initialized: false });
+        identities.add(id);
       }
       mesh.count = list.length;
     }
   }
 
-  _updateAnimals(time) {
+  _updateAnimals(time, dt = 1 / 60) {
+    const blend = 1 - Math.exp(-Math.max(0, Math.min(dt, .1)) * 4);
     for (const [kind, mesh] of Object.entries(this.entityMeshes)) {
       this.animals[kind].forEach((animal, i) => {
         const a = time * animal.speed + animal.phase;
@@ -532,7 +598,7 @@ export class Ecosystem {
         let y = animal.y;
         if (kind === 'fish') {
           y += Math.sin(a * 2.5) * .13;
-          if (this._block(x, y, z) !== WATER) { x = animal.x; z = animal.z; }
+          if (this._block(x, y, z) !== WATER) { x = animal.current.x; y = animal.current.y; z = animal.current.z; }
         } else if (kind === 'bee') {
           y += Math.sin(time * 3.4 + animal.phase) * .14 + .10;
         } else if (kind === 'bird') {
@@ -540,13 +606,25 @@ export class Ecosystem {
         } else {
           // A grazing sheep only steps onto a dry, almost level neighboring block.
           const floor = this.world.heightAt(Math.floor(x), Math.floor(z)) + 1;
-          if (floor < 14 || Math.abs(floor - animal.y) > 1.01 || this._block(x, floor, z) !== 0) { x = animal.x; z = animal.z; }
+          if (floor < 14 || Math.abs(floor - animal.y) > .1 || this._block(x, floor, z) !== 0) { x = animal.current.x; z = animal.current.z; }
           else y = floor;
           y += Math.max(0, Math.sin(time * 2 + animal.phase)) * .018;
         }
-        this.dummy.position.set(x, y, z);
+        if (!animal.initialized) {
+          animal.current.set(x, y, z);
+          animal.initialized = true;
+        } else {
+          const nextX = THREE.MathUtils.lerp(animal.current.x, x, blend);
+          const nextY = THREE.MathUtils.lerp(animal.current.y, y, blend);
+          const nextZ = THREE.MathUtils.lerp(animal.current.z, z, blend);
+          if (kind !== 'fish' || this._block(nextX, nextY, nextZ) === WATER) animal.current.set(nextX, nextY, nextZ);
+        }
+        this.dummy.position.copy(animal.current);
         this.dummy.rotation.set(0, -a, kind === 'bird' ? Math.sin(a) * .14 : 0);
-        this.dummy.scale.setScalar(animal.size);
+        const distance = Math.hypot(animal.current.x - this.viewer.value.x, animal.current.z - this.viewer.value.z);
+        const extra = kind === 'bird' ? 16 : 0;
+        const visibility = 1 - THREE.MathUtils.smoothstep(distance, this.detailFade.value.x + extra, this.detailFade.value.y + extra);
+        this.dummy.scale.setScalar(animal.size * visibility);
         this.dummy.updateMatrix();
         mesh.setMatrixAt(i, this.dummy.matrix);
       });
@@ -559,9 +637,14 @@ export class Ecosystem {
     time = Number.isFinite(time) ? time : 0;
     this.windTime.value = time;
     this.flyTime.value = time;
-    if (!this.pending && (this.dirty || Math.hypot(playerPosition.x - this.center.x, playerPosition.z - this.center.z) > 13)) this._beginRebuild(playerPosition);
+    this.viewer.value.copy(playerPosition);
+    // Every range tier is generated beyond its invisible edge. The short
+    // hysteresis starts the next batch before walking can consume that buffer.
+    const changedCell = Math.floor(playerPosition.x / this.cellSize) !== Math.floor(this.center.x / this.cellSize)
+      || Math.floor(playerPosition.z / this.cellSize) !== Math.floor(this.center.z / this.cellSize);
+    if (!this.pending && (this.dirty || changedCell || Math.hypot(playerPosition.x - this.center.x, playerPosition.z - this.center.z) > 3)) this._beginRebuild(playerPosition);
     this._advanceRebuild();
-    this._updateAnimals(time);
+    this._updateAnimals(time, dt);
     const cloudDrift = time * .28;
     for (let i = 0; i < this.clouds.count; i++) {
       const cloud = this.cloudParts[i];
@@ -577,18 +660,32 @@ export class Ecosystem {
     const night = 1 - THREE.MathUtils.smoothstep(daylight, .08, .6);
     const positions = this.particles.geometry.getAttribute('position');
     const belowGround = playerPosition.y < this.world.heightAt(Math.floor(playerPosition.x), Math.floor(playerPosition.z));
+    let nearestLight = 0, nearestDistance = Infinity;
     for (let i = 0; i < this.particleSeeds.length; i++) {
       const p = this.particleSeeds[i];
       const x = playerPosition.x + ((p[0] * 36 + time * .025 - playerPosition.x + 180) % 36 + 36) % 36 - 18 + Math.sin(time * (.17 + p[3] * .1) + p[4] * TAU) * 1.1;
       const z = playerPosition.z + ((p[1] * 36 - playerPosition.z + 180) % 36 + 36) % 36 - 18 + Math.cos(time * .19 + p[3] * TAU) * .8;
-      const y = belowGround ? playerPosition.y + (p[2] - .5) * 6 : playerPosition.y - 1 + p[2] * 5 + Math.sin(time * .35 + p[4] * TAU) * .7;
+      const ground = this.particleGround[i];
+      // Height belongs to the particle's patch of terrain. Walking or jumping
+      // no longer carries the whole pollen/firefly layer upward with the camera.
+      const gx = Math.floor(x / 4) * 4, gz = Math.floor(z / 4) * 4;
+      if (gx !== ground.x || gz !== ground.z) {
+        const initial = !Number.isFinite(ground.x);
+        ground.x = gx; ground.z = gz;
+        ground.target = Math.max(WATER_SURFACE, this.world.heightAt(gx, gz) + 1);
+        if (initial) ground.y = ground.target;
+      }
+      ground.y += (ground.target - ground.y) * Math.min(1, Math.max(0, dt) * 1.5);
+      const y = belowGround ? playerPosition.y + ((p[2] * 8 - playerPosition.y + 80) % 8 + 8) % 8 - 4 : ground.y + .5 + p[2] * 4 + Math.sin(time * .35 + p[4] * TAU) * .7;
       positions.setXYZ(i, x, y, z);
+      const distance = (x - playerPosition.x) ** 2 + (y - playerPosition.y) ** 2 + (z - playerPosition.z) ** 2;
+      if (distance < nearestDistance) { nearestDistance = distance; nearestLight = i; }
     }
     positions.needsUpdate = true;
     this.particleMaterial.size = belowGround ? .035 : .048 + night * .045;
     this.particleMaterial.opacity = belowGround ? .22 : .27 + night * .55;
     this.fireflyLight.intensity = night * (.22 + Math.sin(time * 2.2) * .06);
-    this.fireflyLight.position.set(playerPosition.x + Math.sin(time * .25) * 2, playerPosition.y + .4, playerPosition.z + Math.cos(time * .25) * 2);
+    this.fireflyLight.position.fromBufferAttribute(positions, nearestLight);
   }
 
   // Rebuild fine scenery after terrain editing so grass never hangs in the air.

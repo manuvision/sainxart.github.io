@@ -7,7 +7,9 @@ class Surface {
   constructor() {
     this.listeners = new Map();
     this.style = {};
-    this.classList = { add() {}, remove() {} };
+    this.classes = new Set();
+    this.classList = { add: (...names) => names.forEach(name => this.classes.add(name)), remove: (...names) => names.forEach(name => this.classes.delete(name)) };
+    this.captured = new Set();
     this.knob = { style: {} };
   }
   addEventListener(name, callback) {
@@ -16,27 +18,34 @@ class Surface {
   }
   removeEventListener(name, callback) { this.listeners.get(name)?.delete(callback); }
   dispatch(name, data = {}) {
-    const event = { type: name, target: this, preventDefault() {}, stopPropagation() {}, ...data };
-    for (const callback of this.listeners.get(name) || []) callback(event);
+    const event = { type: name, target: this, preventDefault() {}, stopPropagation() { this.stopped = true; }, ...data };
+    for (let surface = this; surface; surface = event.stopped ? null : surface.parent) {
+      for (const callback of surface.listeners.get(name) || []) callback(event);
+    }
   }
   querySelector() { return this.knob; }
   getBoundingClientRect() { return { left: 0, top: 0, width: 100, height: 100 }; }
-  setPointerCapture() {}
-  releasePointerCapture() {}
+  closest() { return this.ui ? this : null; }
+  setPointerCapture(id) { this.captured.add(id); }
+  releasePointerCapture(id) { this.captured.delete(id); }
 }
 
-function fixture(getBlock = (x, y) => y < 1 ? 1 : 0, getWaterLevel) {
+function fixture(getBlock = (x, y) => y < 1 ? 1 : 0, getWaterLevel, options = {}) {
   const win = new Surface();
   win.matchMedia = () => ({ matches: false });
+  win.innerWidth = options.width ?? 1280;
   const doc = new Surface();
   doc.defaultView = win;
-  const controls = Object.fromEntries(['move-stick', 'look-stick', 'jump-button', 'break-button', 'place-button', 'sprint-button']
+  const controls = Object.fromEntries(['move-stick', 'jump-button', 'break-button', 'place-button']
     .map((id) => [id, new Surface()]));
-  doc.querySelector = (selector) => controls[selector.slice(1)];
+  doc.querySelector = (selector) => selector.startsWith('dialog[open]') ? (doc.modalOpen ? {} : null) : controls[selector.slice(1)];
+  for (const element of Object.values(controls)) { element.parent = doc; element.ui = true; }
   doc.pointerLockElement = null;
   doc.exitPointerLock = () => { doc.pointerLockElement = null; doc.dispatch('pointerlockchange'); };
   const canvas = new Surface();
   canvas.ownerDocument = doc;
+  canvas.parent = doc;
+  if (options.requestPointerLock) canvas.requestPointerLock = options.requestPointerLock;
   const camera = new THREE.PerspectiveCamera();
   const actions = [];
   const selections = [];
@@ -45,6 +54,7 @@ function fixture(getBlock = (x, y) => y < 1 ? 1 : 0, getWaterLevel) {
     onAction: (kind) => actions.push(kind),
     onSelect: (index) => selections.push(index),
     onPause: () => pauses++,
+    slotCount: options.slotCount ?? 5,
   });
   player.teleport(0.5, 1.06, 0.5);
   player.enable();
@@ -163,18 +173,25 @@ test('diagonal input has the same horizontal speed as cardinal input', () => {
   assert.ok(Math.abs(a - b) < 0.000001);
 });
 
-test('joysticks and jump remain independent across multiple pointers', () => {
+test('movement, direct touch look and jump remain independent across three pointers', () => {
   const f = fixture();
   f.tick(0.4);
-  f.controls['move-stick'].dispatch('pointerdown', { pointerId: 1, clientX: 50, clientY: 18 });
-  f.controls['look-stick'].dispatch('pointerdown', { pointerId: 2, clientX: 82, clientY: 50 });
-  f.controls['jump-button'].dispatch('pointerdown', { pointerId: 3 });
-  f.tick(0.1);
+  f.controls['move-stick'].dispatch('pointerdown', { pointerId: 1, pointerType: 'touch', clientX: 50, clientY: 18 });
+  assert.equal(f.player._drag, null, 'movement joystick never starts camera dragging');
+  f.canvas.dispatch('pointerdown', { pointerId: 2, pointerType: 'touch', button: 0, clientX: 450, clientY: 200 });
+  f.win.dispatch('pointermove', { pointerId: 2, clientX: 550, clientY: 210 });
   assert.ok(f.player.yaw < -0.2);
+  assert.equal(f.camera.rotation.y, f.player.yaw, 'camera responds before another animation frame');
+  f.controls['jump-button'].dispatch('pointerdown', { pointerId: 3, pointerType: 'touch' });
+  f.tick(0.1);
   assert.ok(f.player.position.z < 0.5);
   assert.ok(f.player.position.y > 1.5);
+  const yaw = f.player.yaw;
+  const pitch = f.player.pitch;
   f.win.dispatch('pointerup', { pointerId: 2 });
-  assert.equal(f.player._lookStick.x, 0);
+  f.tick(0.1);
+  assert.ok(Math.abs(f.player.yaw - yaw) < 1e-12, 'look has no yaw inertia');
+  assert.equal(f.player.pitch, pitch, 'look has no pitch inertia');
   assert.equal(f.player._moveStick.y, -1);
   assert.equal(f.player._touchJump, true);
   f.win.dispatch('pointercancel', { pointerId: 1 });
@@ -182,6 +199,7 @@ test('joysticks and jump remain independent across multiple pointers', () => {
   assert.equal(f.player._touchJump, true);
   f.win.dispatch('pointerup', { pointerId: 3 });
   assert.equal(f.player._touchJump, false);
+  assert.deepEqual(f.actions, [], 'touch look never mines a block');
 });
 
 test('pointer-lock rejection supports drag-look, and actual lock loss pauses once', () => {
@@ -218,9 +236,10 @@ test('starter input is suppressed; held actions repeat and release cleanly', () 
   f.win.dispatch('pointerup', { pointerId: 1, button: 0 });
   f.tick(0.5);
   assert.equal(f.actions.length, 3);
+  f.doc.dispatch('keydown', { code: 'Digit5' });
   f.doc.dispatch('keydown', { code: 'Digit9' });
   f.canvas.dispatch('wheel', { deltaY: 30, timeStamp: 1000 });
-  assert.deepEqual(f.selections, [8, 0]);
+  assert.deepEqual(f.selections, [4, 0]);
 });
 
 test('fast locked clicks act synchronously and release before the next frame', () => {
@@ -251,4 +270,124 @@ test('fast fallback clicks and touch action buttons work without a frame between
   f.tick(0.5);
   assert.deepEqual(f.actions, ['break', 'place']);
   f.player.dispose();
+});
+
+test('touch camera drag applies the first small delta anywhere outside UI and cancels cleanly', () => {
+  const f = fixture();
+  const overlay = new Surface();
+  overlay.parent = f.doc;
+  overlay.dispatch('pointerdown', { pointerId: 8, pointerType: 'touch', button: 0, clientX: 80, clientY: 120 });
+  f.win.dispatch('pointermove', { pointerId: 8, clientX: 81, clientY: 122 });
+  assert.equal(f.player.yaw, -.0022);
+  assert.equal(f.player.pitch, -.0044);
+  assert.equal(f.camera.rotation.y, -.0022);
+  f.canvas.dispatch('lostpointercapture', { pointerId: 8 });
+  f.win.dispatch('pointermove', { pointerId: 8, clientX: 180, clientY: 220 });
+  assert.equal(f.player.yaw, -.0022);
+  assert.equal(f.player._drag, null);
+  assert.deepEqual(f.actions, []);
+});
+
+test('UI presses and open settings never become camera drags, movement or attacks', () => {
+  const f = fixture();
+  const map = new Surface();
+  map.parent = f.doc;
+  map.ui = true;
+  map.dispatch('pointerdown', { pointerId: 8, pointerType: 'touch', button: 0, clientX: 80, clientY: 120 });
+  f.win.dispatch('pointermove', { pointerId: 8, clientX: 180, clientY: 220 });
+  assert.equal(f.player._drag, null);
+  assert.equal(f.player.yaw, 0);
+  f.doc.modalOpen = true;
+  f.canvas.dispatch('pointerdown', { pointerId: 9, pointerType: 'touch', button: 0, clientX: 0, clientY: 0 });
+  f.controls['move-stick'].dispatch('pointerdown', { pointerId: 1, pointerType: 'touch', clientX: 50, clientY: 18 });
+  f.controls['break-button'].dispatch('pointerdown', { pointerId: 2, pointerType: 'touch' });
+  f.doc.dispatch('keydown', { code: 'KeyW' });
+  assert.equal(f.player._drag, null);
+  assert.equal(f.player._moveStick.y, 0);
+  assert.equal(f.player.keys.size, 0);
+  assert.deepEqual(f.actions, []);
+  f.player.update(1 / 60);
+  assert.equal(f.player.enabled, false);
+  assert.equal(f.pauses, 1);
+});
+
+test('narrow desktop view uses direct drag and action buttons without requesting pointer lock', () => {
+  let requests = 0;
+  const f = fixture(undefined, undefined, { width: 390, requestPointerLock: () => { requests++; } });
+  assert.equal(requests, 0);
+  f.canvas.dispatch('pointerdown', { pointerId: 1, pointerType: 'mouse', button: 0, clientX: 120, clientY: 200 });
+  f.win.dispatch('pointermove', { pointerId: 1, pointerType: 'mouse', clientX: 121, clientY: 200 });
+  assert.equal(f.player.yaw, -.0022);
+  f.win.dispatch('pointerup', { pointerId: 1, pointerType: 'mouse', button: 0 });
+  assert.deepEqual(f.actions, []);
+  f.controls['break-button'].dispatch('pointerdown', { pointerId: 2, pointerType: 'mouse', button: 0 });
+  assert.deepEqual(f.actions, ['break'], 'explicit action buttons respond even during launch-click suppression');
+  assert.ok(f.controls['break-button'].classes.has('is-pressed'));
+  f.tick(.5);
+  assert.deepEqual(f.actions, ['break', 'break', 'break']);
+  f.win.dispatch('pointercancel', { pointerId: 2, pointerType: 'mouse', button: -1 });
+  assert.ok(!f.controls['break-button'].classes.has('is-pressed'));
+  f.tick(.5);
+  assert.equal(f.actions.length, 3);
+});
+
+test('recenter levels pitch and roll immediately while preserving heading and movement', () => {
+  const f = fixture();
+  f.player.yaw = 1.234;
+  f.player.pitch = -.8;
+  f.camera.rotation.set(-.8, 1.234, .3, 'YXZ');
+  f.player.keys.add('KeyW');
+  f.player.recenter();
+  assert.equal(f.player.yaw, 1.234);
+  assert.equal(f.player.pitch, 0);
+  assert.equal(f.camera.rotation.y, 1.234);
+  assert.equal(f.camera.rotation.x, 0);
+  assert.equal(f.camera.rotation.z, 0);
+  assert.ok(f.player.keys.has('KeyW'));
+});
+
+test('slot count controls number keys, bounds and bidirectional wheel wrapping', () => {
+  const f = fixture(undefined, undefined, { slotCount: 3 });
+  f.doc.dispatch('keydown', { code: 'Digit3' });
+  f.doc.dispatch('keydown', { code: 'Digit4' });
+  f.canvas.dispatch('wheel', { deltaY: 20, timeStamp: 1000 });
+  f.canvas.dispatch('wheel', { deltaY: -20, timeStamp: 1100 });
+  assert.deepEqual(f.selections, [2, 0, 2]);
+  f.player.select(50);
+  assert.equal(f.player.selected, 2);
+  f.player.select(-10);
+  assert.equal(f.player.selected, 0);
+  f.player.select(NaN);
+  assert.equal(f.player.selected, 0);
+});
+
+test('pause releases every held pointer and no look or action survives re-enabling', () => {
+  const f = fixture();
+  f.controls['move-stick'].dispatch('pointerdown', { pointerId: 1, pointerType: 'touch', clientX: 50, clientY: 18 });
+  f.canvas.dispatch('pointerdown', { pointerId: 2, pointerType: 'touch', button: 0, clientX: 80, clientY: 120 });
+  f.controls['place-button'].dispatch('pointerdown', { pointerId: 3, pointerType: 'touch' });
+  f.win.dispatch('blur');
+  assert.equal(f.player.enabled, false);
+  assert.equal(f.player._moveStick.y, 0);
+  assert.equal(f.player._drag, null);
+  assert.equal(f.canvas.captured.size, 0);
+  assert.equal(f.player._actions.size, 0);
+  assert.ok(!f.controls['place-button'].classes.has('is-pressed'));
+  f.player.enable();
+  const yaw = f.player.yaw;
+  f.win.dispatch('pointermove', { pointerId: 2, clientX: 800, clientY: 120 });
+  f.tick(.5);
+  assert.equal(f.player.yaw, yaw);
+  assert.deepEqual(f.actions, ['place']);
+});
+
+test('a cancelled locked pointer stops its held action even without a button number', () => {
+  const f = fixture();
+  f.doc.pointerLockElement = f.canvas;
+  f.doc.dispatch('pointerlockchange');
+  f.tick(.3);
+  f.canvas.dispatch('pointerdown', { pointerId: 5, pointerType: 'mouse', button: 0 });
+  f.win.dispatch('pointercancel', { pointerId: 5, pointerType: 'mouse', button: -1 });
+  f.tick(.5);
+  assert.deepEqual(f.actions, ['break']);
 });

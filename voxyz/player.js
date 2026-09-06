@@ -10,7 +10,7 @@ const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 /** First-person controller. Position is the center of the player's feet. */
 export class Player {
-  constructor(camera, canvas, world, { onAction = () => {}, onSelect = () => {}, onPause = () => {} } = {}) {
+  constructor(camera, canvas, world, { onAction = () => {}, onSelect = () => {}, onPause = () => {}, slotCount = 5 } = {}) {
     this.camera = camera;
     this.canvas = canvas;
     this.world = world;
@@ -28,6 +28,7 @@ export class Player {
     this.moving = false;
     this.sprinting = false;
     this.selected = 0;
+    this.slotCount = Number.isFinite(slotCount) && slotCount >= 1 ? Math.floor(slotCount) : 5;
     this.height = BODY_HEIGHT;
     this.radius = HALF_WIDTH;
     this.eyeHeight = EYE_HEIGHT;
@@ -38,9 +39,7 @@ export class Player {
     this._listeners = [];
     this._controlResets = [];
     this._moveStick = { x: 0, y: 0 };
-    this._lookStick = { x: 0, y: 0 };
     this._touchJump = false;
-    this._touchSprint = false;
     this._actions = new Map();
     this._jumpBuffer = 0;
     this._coyoteTime = 0;
@@ -60,11 +59,31 @@ export class Player {
     return target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName || '');
   }
 
+  _usesTouchLayout() {
+    return (this._window.matchMedia?.('(pointer: coarse)').matches ?? this._touchDevice) || (Number.isFinite(this._window.innerWidth) && this._window.innerWidth < 760);
+  }
+
+  _modalOpen() {
+    return !!this._document.querySelector('dialog[open], [role="dialog"][aria-modal="true"]:not([hidden])');
+  }
+
+  _isLookUi(target) {
+    return this._isInput(target) || !!target?.closest?.('button, a, input, textarea, select, label, dialog, [role="dialog"], [role="button"], [data-no-look], #hotbar, .inventory, #move-stick, #minimap, #map, #map-panel, #map-dialog, #world-map, #map-overlay, .map-panel, .modal-backdrop');
+  }
+
+  _resetDrag() {
+    const drag = this._drag;
+    this._drag = null;
+    if (drag) {
+      try { this.canvas.releasePointerCapture(drag.id); } catch { /* Already released. */ }
+    }
+  }
+
   _bindInputs() {
     const doc = this._document;
     const win = this._window;
     this._listen(doc, 'keydown', (event) => {
-      if (!this.enabled || this._isInput(event.target)) return;
+      if (!this.enabled || this._isInput(event.target) || this._modalOpen()) return;
       if (event.code === 'Escape') {
         event.preventDefault();
         this._pause();
@@ -73,8 +92,9 @@ export class Player {
       if (event.code === 'Space' || event.code.startsWith('Arrow')) event.preventDefault();
       if (event.code === 'Space' && !this.keys.has('Space')) this._jumpBuffer = 0.16;
       this.keys.add(event.code);
-      const digit = /^(?:Digit|Numpad)([1-9])$/.exec(event.code);
-      if (digit && !event.repeat) this.select(Number(digit[1]) - 1);
+      const digit = /^(?:Digit|Numpad)(\d)$/.exec(event.code);
+      const slot = digit ? Number(digit[1]) - 1 : -1;
+      if (slot >= 0 && slot < this.slotCount && !event.repeat) this.select(slot);
     });
     this._listen(doc, 'keyup', (event) => this.keys.delete(event.code));
     this._listen(doc, 'pointerlockchange', () => {
@@ -82,7 +102,7 @@ export class Player {
       if (locked) {
         if (!this.enabled) { doc.exitPointerLock?.(); return; }
         this._hadPointerLock = true;
-        this._drag = null;
+        this._resetDrag();
         this._actions.clear();
       } else if (this.enabled && this._hadPointerLock) {
         this._pause();
@@ -93,70 +113,79 @@ export class Player {
       if (doc.pointerLockElement !== this.canvas) this._hadPointerLock = false;
     });
     this._listen(doc, 'mousemove', (event) => {
-      if (this.enabled && doc.pointerLockElement === this.canvas) {
+      if (this.enabled && !this._modalOpen() && doc.pointerLockElement === this.canvas) {
         this._look(event.movementX, event.movementY);
       }
     });
     this._listen(this.canvas, 'contextmenu', (event) => event.preventDefault());
-    this._listen(this.canvas, 'pointerdown', (event) => {
-      if (!this.enabled) return;
+    // Delegate play-surface presses so non-interactive overlays do not create
+    // dead zones. UI controls and the movement stick keep their own pointers.
+    this._listen(doc, 'pointerdown', (event) => {
+      if (!this.enabled || this._modalOpen() || this._isLookUi(event.target)) return;
+      const touch = event.pointerType === 'touch' || event.pointerType === 'pen' || this._usesTouchLayout();
+      if (event.button !== 0 && event.button !== 2 && !touch) return;
       event.preventDefault();
       const locked = doc.pointerLockElement === this.canvas;
-      if (locked && (event.button === 0 || event.button === 2)) {
-        this._startAction(`mouse:${event.button}`, event.button === 0 ? 'break' : 'place');
-      } else if (event.button === 2 && event.pointerType !== 'touch') {
-        this._startAction(`mouse:${event.button}`, 'place');
-      } else if (!this._drag && (event.button === 0 || event.pointerType === 'touch')) {
-        // An un-dragged click breaks; dragging looks without excavating a trail.
+      if (!touch && locked && (event.button === 0 || event.button === 2)) {
+        this._startAction(`mouse:${event.button}`, event.button === 0 ? 'break' : 'place', event.pointerId);
+      } else if (!touch && event.button === 2) {
+        this._startAction(`mouse:${event.button}`, 'place', event.pointerId);
+      } else if (!this._drag && (event.button === 0 || touch)) {
+        // Touch movement follows each pointer delta immediately, with no spring,
+        // easing or momentum. Desktop fallback still distinguishes click/drag.
         this._drag = {
           id: event.pointerId, x: event.clientX, y: event.clientY,
-          distance: 0, moved: false, touch: event.pointerType === 'touch',
+          distance: 0, moved: false, touch,
         };
-        try { this.canvas.setPointerCapture(event.pointerId); } catch { /* Older browser. */ }
+        try { this.canvas.setPointerCapture(event.pointerId); } catch { /* Window listeners remain active. */ }
       }
     });
     this._listen(win, 'pointermove', (event) => {
       const drag = this._drag;
-      if (!this.enabled || !drag || event.pointerId !== drag.id) return;
+      if (!this.enabled || this._modalOpen() || !drag || event.pointerId !== drag.id) return;
       const dx = event.clientX - drag.x;
       const dy = event.clientY - drag.y;
       drag.x = event.clientX;
       drag.y = event.clientY;
       drag.distance += Math.abs(dx) + Math.abs(dy);
       if (drag.distance > 5) drag.moved = true;
-      if (drag.moved) this._look(dx, dy);
-    });
+      if (drag.touch || drag.moved) {
+        event.preventDefault();
+        this._look(dx, dy);
+      }
+    }, { passive: false });
     const releasePointer = (event) => {
-      this._actions.delete(`mouse:${event.button}`);
+      for (const [key, action] of this._actions) {
+        if (key.startsWith('mouse:') && action.pointerId === event.pointerId
+          && (event.type !== 'pointerup' || key === `mouse:${event.button}`)) this._actions.delete(key);
+      }
       const drag = this._drag;
       if (drag && event.pointerId === drag.id) {
-        if (event.type === 'pointerup' && !drag.moved && !drag.touch && this.enabled && this._actionDelay <= 0) {
+        if (event.type === 'pointerup' && !drag.moved && !drag.touch && this.enabled && !this._modalOpen() && this._actionDelay <= 0) {
           this.onAction('break');
         }
-        this._drag = null;
-        try { this.canvas.releasePointerCapture(event.pointerId); } catch { /* Already released. */ }
+        this._resetDrag();
       }
     };
     this._listen(win, 'pointerup', releasePointer);
     this._listen(win, 'pointercancel', releasePointer);
+    this._listen(this.canvas, 'lostpointercapture', releasePointer);
     this._listen(this.canvas, 'wheel', (event) => {
-      if (!this.enabled || Math.abs(event.deltaY) < 1) return;
+      if (!this.enabled || this._modalOpen() || Math.abs(event.deltaY) < 1) return;
       event.preventDefault();
       const time = event.timeStamp;
       if (time - this._wheelTime < 75) return;
       this._wheelTime = time;
-      this.select((this.selected + Math.sign(event.deltaY) + 9) % 9);
+      this.select((this.selected + Math.sign(event.deltaY) + this.slotCount) % this.slotCount);
     }, { passive: false });
     this._listen(win, 'blur', () => { if (this.enabled) this._pause(); });
     this._listen(doc, 'visibilitychange', () => { if (doc.hidden && this.enabled) this._pause(); });
 
     this._bindStick('#move-stick', this._moveStick);
-    this._bindStick('#look-stick', this._lookStick);
     this._bindButton('#jump-button', (held) => {
       this._touchJump = held;
       if (held) this._jumpBuffer = 0.16;
     });
-    this._bindButton('#sprint-button', (held) => { this._touchSprint = held; });
     this._bindButton('#break-button', (held) => {
       if (held) this._startAction('touch:break', 'break');
       else this._actions.delete('touch:break');
@@ -177,13 +206,13 @@ export class Player {
       pointerId = null;
       value.x = value.y = 0;
       if (knob) knob.style.translate = '0px 0px';
-      element.classList.remove('active');
+      element.classList.remove('active', 'is-pressed');
       if (previous !== null) {
         try { element.releasePointerCapture(previous); } catch { /* Not captured. */ }
       }
     };
     const move = (event) => {
-      if (pointerId !== event.pointerId) return;
+      if (!this.enabled || this._modalOpen() || pointerId !== event.pointerId) return;
       const rect = element.getBoundingClientRect();
       const radius = Math.max(20, Math.min(rect.width, rect.height) * 0.32);
       let x = (event.clientX - rect.left - rect.width / 2) / radius;
@@ -198,11 +227,11 @@ export class Player {
     };
     element.style.touchAction = 'none';
     this._listen(element, 'pointerdown', (event) => {
-      if (!this.enabled || pointerId !== null) return;
+      if (!this.enabled || this._modalOpen() || pointerId !== null) return;
       event.preventDefault();
       event.stopPropagation();
       pointerId = event.pointerId;
-      element.classList.add('active');
+      element.classList.add('active', 'is-pressed');
       try { element.setPointerCapture(pointerId); } catch { /* Window listeners remain active. */ }
       move(event);
     });
@@ -222,7 +251,7 @@ export class Player {
     const reset = () => {
       const previous = pointerId;
       pointerId = null;
-      element.classList.remove('active');
+      element.classList.remove('active', 'is-pressed');
       setHeld(false);
       if (previous !== null) {
         try { element.releasePointerCapture(previous); } catch { /* Already released. */ }
@@ -230,11 +259,11 @@ export class Player {
     };
     element.style.touchAction = 'none';
     this._listen(element, 'pointerdown', (event) => {
-      if (!this.enabled || pointerId !== null) return;
+      if (!this.enabled || this._modalOpen() || pointerId !== null) return;
       event.preventDefault();
       event.stopPropagation();
       pointerId = event.pointerId;
-      element.classList.add('active');
+      element.classList.add('active', 'is-pressed');
       try { element.setPointerCapture(pointerId); } catch { /* Window listeners remain active. */ }
       setHeld(true);
     });
@@ -247,21 +276,28 @@ export class Player {
     this._controlResets.push(reset);
   }
 
-  _startAction(key, kind) {
-    // Enabling the game on a click must never consume that click as an attack.
-    if (this._actionDelay > 0) return;
+  _startAction(key, kind, pointerId) {
+    // Suppress the launch click, but explicit action-button presses respond now.
+    if (!this.enabled || this._modalOpen() || (this._actionDelay > 0 && key.startsWith('mouse:'))) return;
     this.onAction(kind);
-    this._actions.set(key, { kind, remaining: kind === 'break' ? 0.21 : 0.25 });
+    this._actions.set(key, { kind, pointerId, remaining: kind === 'break' ? 0.21 : 0.25 });
   }
 
   _look(dx, dy) {
     if (!Number.isFinite(dx) || !Number.isFinite(dy)) return;
     this.yaw -= dx * 0.0022;
     this.pitch = clamp(this.pitch - dy * 0.0022, -MAX_PITCH, MAX_PITCH);
+    this._updateCamera();
+  }
+
+  /** Level the horizon immediately without changing the compass heading. */
+  recenter() {
+    this.pitch = 0;
+    this._updateCamera();
   }
 
   select(index) {
-    const next = clamp(Math.floor(index), 0, 8);
+    const next = clamp(Math.floor(index), 0, this.slotCount - 1);
     if (!Number.isFinite(next)) return;
     this.selected = next;
     this.onSelect(next);
@@ -273,9 +309,10 @@ export class Player {
     this._hadPointerLock = this._document.pointerLockElement === this.canvas;
     this.keys.clear();
     this._actions.clear();
-    this._drag = null;
+    this._resetDrag();
+    for (const reset of this._controlResets) reset();
     // Touch and environments without pointer lock use the same movement engine.
-    if (!this._touchDevice && !this._hadPointerLock && this.canvas.requestPointerLock) {
+    if (!this._usesTouchLayout() && !this._hadPointerLock && this.canvas.requestPointerLock) {
       try {
         const result = this.canvas.requestPointerLock();
         result?.catch?.(() => { /* Drag-look remains available after rejection. */ });
@@ -290,7 +327,7 @@ export class Player {
     this.velocity.set(0, 0, 0);
     this.keys.clear();
     this._actions.clear();
-    this._drag = null;
+    this._resetDrag();
     this._jumpBuffer = 0;
     this._hadPointerLock = false;
     for (const reset of this._controlResets) reset();
@@ -380,6 +417,7 @@ export class Player {
 
   update(dt) {
     if (!this.enabled || !Number.isFinite(dt) || dt <= 0) return;
+    if (this._modalOpen()) { this._pause(); return; }
     // Avoid tunnelling on a suspended tab, and cap work before the next draw.
     dt = Math.min(dt, 0.1);
     this._actionDelay = Math.max(0, this._actionDelay - dt);
@@ -390,8 +428,6 @@ export class Player {
         action.remaining += action.kind === 'break' ? 0.21 : 0.25;
       }
     }
-    this.yaw -= this._lookStick.x * 2.4 * dt;
-    this.pitch = clamp(this.pitch - this._lookStick.y * 2.0 * dt, -MAX_PITCH, MAX_PITCH);
     // Keep yaw small after long play sessions without changing its orientation.
     this.yaw = THREE.MathUtils.euclideanModulo(this.yaw + Math.PI, Math.PI * 2) - Math.PI;
     let sideways = Number(this.keys.has('KeyD') || this.keys.has('ArrowRight'))
@@ -400,7 +436,7 @@ export class Player {
       - Number(this.keys.has('KeyS') || this.keys.has('ArrowDown')) - this._moveStick.y;
     const inputLength = Math.hypot(sideways, forward);
     if (inputLength > 1) { sideways /= inputLength; forward /= inputLength; }
-    this.sprinting = this.keys.has('ShiftLeft') || this.keys.has('ShiftRight') || this._touchSprint;
+    this.sprinting = this.keys.has('ShiftLeft') || this.keys.has('ShiftRight');
     const wantsUp = this.keys.has('Space') || this._touchJump;
     const wantsDown = this.keys.has('ControlLeft') || this.keys.has('ControlRight') || this.keys.has('KeyC');
     const sin = Math.sin(this.yaw);
