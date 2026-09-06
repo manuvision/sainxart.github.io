@@ -74,13 +74,13 @@ Browser checks verified title-to-play camera handoff, hotbar keyboard selection,
 
 ## Control and exploration revision
 
-All 55 automated tests pass for this revision, and the local HTTP smoke check returns 200 for the entry page and every updated module. Browser visual verification and publishing remain pending because the development Mac is locked.
+All 56 automated tests pass for this revision, and the local HTTP smoke check returns 200 for the entry page and every updated module. Browser checks on September 6, 2026 verified the minimal title, five-slot inventory, direct camera dragging, camera leveling, immediate break/place actions, saved edits and discovery, map open/close, seed changes, and responsive control spacing at 390 × 844, 390 × 480 and 700 × 390. The map close button remains accessible with a 48-character seed.
 
 The title now contains only the logo, entry button and world-settings button, with the site and sound controls in the upper corners. The in-game inventory has five slots: Meadow, Stone, Timber, Water and Lantern. Touch action buttons respond on press and repeat while held; camera dragging follows pointer deltas without momentum. Center camera levels pitch and roll while preserving heading.
 
 Fine scenery uses coordinate-specific random streams so camera movement and edits cannot re-roll unrelated plants. Animal identities and animation state survive scenery refreshes. Map discovery has its own compact, persistent per-seed grid; raster sampling is cached, bounded and restricted to discovered cells.
 
-A terrain-only CPU benchmark of the expanded `fern-62408` neighborhood generated 137 chunks / 514,210 triangles / 49 MiB of geometry for radius six, and 221 chunks / 823,118 triangles / 78.5 MiB for radius eight. These figures describe generation and geometry, not GPU frame rate. Browser performance measurements above belong to the original release; this revision still needs its browser visual and frame-rate check before publishing.
+A terrain-only CPU benchmark of the expanded `fern-62408` neighborhood generated 137 chunks / 514,210 triangles / 49 MiB of geometry for radius six, and 221 chunks / 823,118 triangles / 78.5 MiB for radius eight. These figures describe generation and geometry, not GPU frame rate. The revised scene settled at 60 fps at 1280 × 720, adaptive scale 1, with all 221 chunks resident. A fresh 390 × 844 load used 137 chunks at scale .85 and held 60 fps while moving into the pond, growing map discovery and swimming underwater. These are browser measurements on the development Mac, not physical-phone benchmarks. Brief drops were observed during initial shader compilation and the first newly placed lantern; the steady-state 60 fps target is not an absolute frame-time guarantee. No shader or browser console errors were reported.
 
 ## Rendering scope and performance
 

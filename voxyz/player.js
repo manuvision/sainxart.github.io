@@ -466,7 +466,9 @@ export class Player {
       if (this._swimming) {
         // Buoyancy is conditional on being in water: holding jump cannot fly.
         this.velocity.y -= 4.5 * step;
-        if (wantsUp) this.velocity.y += 15.5 * step;
+        // A tap can start and finish between frames. Reuse the short jump
+        // buffer as a swim stroke while held input continues sustained ascent.
+        if (wantsUp || this._jumpBuffer > 0) this.velocity.y += 15.5 * step;
         if (wantsDown) this.velocity.y -= 7 * step;
         this.velocity.y *= Math.exp(-2.6 * step);
         this.velocity.y = clamp(this.velocity.y, -4, 3.6);

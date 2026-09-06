@@ -391,3 +391,25 @@ test('a cancelled locked pointer stops its held action even without a button num
   f.tick(.5);
   assert.deepEqual(f.actions, ['break']);
 });
+
+test('a swim-up tap released before the next frame creates a short stroke, not a lost input or a held ascent', () => {
+  const water = (x, y) => y < 1 ? 1 : y < 8 ? 7 : 0;
+  const idle = fixture(water);
+  const tapped = fixture(water);
+  const held = fixture(water);
+  for (const f of [idle, tapped, held]) { f.player.teleport(.5, 1, .5); f.tick(.3); }
+  tapped.controls['jump-button'].dispatch('pointerdown', { pointerId: 1, pointerType: 'touch' });
+  tapped.win.dispatch('pointerup', { pointerId: 1, pointerType: 'touch' });
+  held.controls['jump-button'].dispatch('pointerdown', { pointerId: 2, pointerType: 'touch' });
+  assert.equal(tapped.player._touchJump, false, 'the complete tap happened before any physics update');
+  for (const f of [idle, tapped, held]) f.tick(.12);
+  assert.ok(tapped.player.position.y > idle.player.position.y + .05, 'buffered tap visibly lifts the player from the pond floor');
+  assert.ok(tapped.player.velocity.y > 0);
+  for (const f of [idle, tapped, held]) f.tick(.7);
+  assert.ok(held.player.position.y > tapped.player.position.y + .7, 'holding still sustains swimming after the tap stroke ends');
+  assert.equal(tapped.player._jumpBuffer, 0);
+  assert.ok(tapped.player.velocity.y <= 0, 'a released tap does not keep accelerating upward');
+  tapped.tick(1);
+  assert.ok(Math.abs(tapped.player.position.y - 1) < .0001);
+  for (const f of [idle, tapped, held]) f.player.dispose();
+});
