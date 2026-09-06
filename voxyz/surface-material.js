@@ -114,17 +114,23 @@ export function createTerrainMaterial({time,day,wetColumns}) {
       float materialGrain=(field.r-.5)*.24+(field.a-.5)*.055;
       float relief=(field.r-.5)*.045;
       bool leaf=(vBlockType>5.5&&vBlockType<6.5)||(vBlockType>12.5&&vBlockType<13.5);
+      bool wood=vBlockType>4.5&&vBlockType<5.5;
+      bool torch=vBlockType>9.5&&vBlockType<10.5;
       if(vBlockType>.5&&vBlockType<1.5){
         if(face.y<.5){
           float turf=smoothstep(.71+field.r*.13,.83+field.r*.08,fract(vWaterWorld.y));
           diffuseColor.rgb=mix(vec3(.265,.173,.102)*(.82+field.r*.34),diffuseColor.rgb,turf);
         }
         materialGrain=(field.r-.5)*.36;relief*=.6;
-      }else if(vBlockType>4.5&&vBlockType<5.5){
+      }else if(wood||torch){
         float bark=field.g;
-        if(face.y>.5){vec2 ring=fract(surfaceUV)-.5;float phase=length(ring)*76.+field.r*3.;bark=.45+.2*sin(phase)*(1.-smoothstep(.6,2.5,fwidth(phase)));}
-        materialGrain=(bark-.5)*.72;relief=(bark-.5)*.075;
-        diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(1.1,.99,.84),field.r*.35);
+        if(wood&&face.y>.5){vec2 ring=fract(surfaceUV)-.5;float phase=length(ring)*76.+field.r*3.;bark=.45+.2*sin(phase)*(1.-smoothstep(.6,2.5,fwidth(phase)));}
+        materialGrain=(bark-.5)*(torch?.16:.28);
+        relief=(bark-.5)*(torch?.004:.014);
+        // The amber torch palette belongs to its flame. Its separate wooden
+        // post uses a dry brown albedo while retaining baked vertex shading.
+        if(torch)diffuseColor.rgb=vec3(.32,.14,.05)*diffuseColor.r;
+        else diffuseColor.rgb*=mix(vec3(1.0),vec3(1.04,1.0,.95),field.r*.25);
       }else if(vBlockType>2.5&&vBlockType<3.5){
         materialGrain=(field.r-.5)*.42+(field.b-.5)*.12;relief*=1.8;
         diffuseColor.rgb*=mix(vec3(.94,.97,1.02),vec3(1.07,1.035,.95),field.r);
@@ -146,6 +152,7 @@ export function createTerrainMaterial({time,day,wetColumns}) {
     `);
     shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
       roughnessFactor=mix(roughnessFactor,.65,isWet);
+      if(wood||torch)roughnessFactor=mix(.99,.90,isWet);
       if(vBlockType>13.5&&vBlockType<14.5)roughnessFactor=.24;
       if(leaf)roughnessFactor=.84;
     `);

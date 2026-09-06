@@ -1,8 +1,8 @@
 import * as THREE from './vendor/three.module.js';
-import { Terrain, BLOCK, BLOCK_NAMES, BLOCK_COLORS, CHUNK_SIZE, WORLD_HEIGHT, WATER_LEVEL, PAD, indexOf, seedNumber, isSolid } from './terrain.js?v=3.4';
-import { meshChunk } from './mesher.js?v=3.4';
-import { nextWaterLevel, WATER_SOURCE, WATER_TICK_SECONDS } from './water.js?v=3.4';
-export { nextWaterLevel, waterSpreadMask, waterCellHeight, WATER_SOURCE, WATER_FALLING, WATER_TICK_SECONDS } from './water.js?v=3.4';
+import { Terrain, BLOCK, BLOCK_NAMES, BLOCK_COLORS, CHUNK_SIZE, WORLD_HEIGHT, WATER_LEVEL, PAD, indexOf, seedNumber, isSolid } from './terrain.js?v=3.5';
+import { meshChunk } from './mesher.js?v=3.5';
+import { nextWaterLevel, WATER_SOURCE, WATER_TICK_SECONDS } from './water.js?v=3.5';
+export { nextWaterLevel, waterSpreadMask, waterCellHeight, WATER_SOURCE, WATER_FALLING, WATER_TICK_SECONDS } from './water.js?v=3.5';
 export { BLOCK, BLOCK_NAMES, BLOCK_COLORS, CHUNK_SIZE, WORLD_HEIGHT, WATER_LEVEL, isSolid };
 export const palette=BLOCK_COLORS;
 export const names=BLOCK_NAMES;
@@ -26,7 +26,7 @@ export class World {
       const count=(globalThis.navigator?.hardwareConcurrency||4)>=4?2:1;
       for(let i=0;i<count;i++) {
         try {
-          const worker=new Worker(new URL('./world-worker.js?v=3.4',import.meta.url),{type:'module'});
+          const worker=new Worker(new URL('./world-worker.js?v=3.5',import.meta.url),{type:'module'});
           const slot={worker,busy:false,task:null};
           worker.onmessage=({data})=>{
             slot.busy=false;

@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three.module.js';
-import { attachWaterCaustics } from './surface-material.js?v=3.4';
+import { attachWaterCaustics } from './surface-material.js?v=3.5';
 
 // All small scenery shares a cube geometry and an instanced draw call. The next
 // neighborhood is built a few cells at a time while the current one stays visible.

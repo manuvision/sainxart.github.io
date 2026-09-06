@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three.module.js';
-import { SunRays, sunRayCompositeShader } from './sun-rays.js?v=3.4';
+import { SunRays, sunRayCompositeShader } from './sun-rays.js?v=3.5';
 
 // Linear scene values survive until this final output pass. ACES and the sRGB
 // transfer function come from the vendored Three.js shaders (vendor/THREE-LICENSE.txt).

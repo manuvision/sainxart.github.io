@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three.module.js';
-import { waterCellHeight } from './water.js?v=3.4';
+import { waterCellHeight } from './water.js?v=3.5';
 
 const HALF_WIDTH = 0.29;
 const BODY_HEIGHT = 1.78;
@@ -54,6 +54,11 @@ export class Player {
     this._lastJumpPress = -Infinity;
     this._coyoteTime = 0;
     this._hadPointerLock = false;
+    this._pointerLockPending = false;
+    this._pointerLockRequest = 0;
+    this.pointerLockState = { supported: typeof canvas.requestPointerLock === 'function', status: 'idle', error: null };
+    this._mousePosition = null;
+    this._lastPointerType = this._touchDevice ? 'touch' : 'mouse';
     this._drag = null;
     this._wheelTime = -Infinity;
     this._actionDelay = 0;
@@ -69,8 +74,44 @@ export class Player {
     return target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName || '');
   }
 
-  _usesTouchLayout() {
-    return (this._window.matchMedia?.('(pointer: coarse)').matches ?? this._touchDevice) || (Number.isFinite(this._window.innerWidth) && this._window.innerWidth < 760);
+  _usesTouchInput() {
+    // Responsive controls do not change a physical mouse into a touch pointer.
+    // Pointer events also let a real mouse take over on a tablet or hybrid.
+    return this._lastPointerType !== 'mouse';
+  }
+
+  get lookMode() {
+    if (this._document.pointerLockElement === this.canvas) return 'locked';
+    return this._usesTouchInput() ? 'touch' : 'free';
+  }
+
+  _syncCursor() {
+    this.canvas.style.cursor = this.enabled && this.lookMode !== 'touch' ? 'none' : '';
+  }
+
+  _requestPointerLock() {
+    if (!this.enabled || this._modalOpen() || this._usesTouchInput() || this._pointerLockPending
+      || this._document.pointerLockElement === this.canvas) return;
+    if (!this.pointerLockState.supported) { this.pointerLockState.status = 'unsupported'; return; }
+    const request = ++this._pointerLockRequest;
+    const finish = (error) => {
+      if (request !== this._pointerLockRequest) return;
+      this._pointerLockPending = false;
+      if (error) {
+        this.pointerLockState.status = 'rejected';
+        this.pointerLockState.error = { name: error.name || 'Error', message: error.message || String(error) };
+      } else if (this._document.pointerLockElement === this.canvas) this.pointerLockState.status = 'locked';
+      else if (this.pointerLockState.status === 'pending') this.pointerLockState.status = 'requested';
+    };
+    this._pointerLockPending = true;
+    this.pointerLockState.status = 'pending';
+    this.pointerLockState.error = null;
+    try {
+      // Capture is retried only from entry/resume and intentional world clicks.
+      const result = this.canvas.requestPointerLock();
+      if (result?.then) result.then(() => finish(), finish);
+      else finish();
+    } catch (error) { finish(error); /* Free mouse look remains usable after denial. */ }
   }
 
   _modalOpen() {
@@ -112,44 +153,74 @@ export class Player {
     this._listen(doc, 'keyup', (event) => this.keys.delete(event.code));
     this._listen(doc, 'pointerlockchange', () => {
       const locked = doc.pointerLockElement === this.canvas;
+      this._pointerLockPending = false;
+      this._mousePosition = null;
+      this.pointerLockState.status = locked ? 'locked' : 'released';
       if (locked) {
         if (!this.enabled) { doc.exitPointerLock?.(); return; }
         this._hadPointerLock = true;
         this._resetDrag();
-        this._actions.clear();
       } else if (this.enabled && this._hadPointerLock) {
         this._pause();
       }
+      this._syncCursor();
     });
-    // Failure is a supported drag-look mode, not a pause or a game error.
+    // Embedded browsers may not expose pointer lock. Mouse look still works
+    // without a held button, but only within the available screen boundaries.
     this._listen(doc, 'pointerlockerror', () => {
+      this._pointerLockPending = false;
+      this.pointerLockState.status = 'rejected';
       if (doc.pointerLockElement !== this.canvas) this._hadPointerLock = false;
     });
     this._listen(doc, 'mousemove', (event) => {
-      if (this.enabled && !this._modalOpen() && doc.pointerLockElement === this.canvas) {
-        this._look(event.movementX, event.movementY);
+      if (!this.enabled || this._modalOpen() || this._isLookUi(event.target)) {
+        this._mousePosition = null;
+        return;
       }
+      if (doc.pointerLockElement === this.canvas) {
+        this._mousePosition = null;
+        this._look(event.movementX, event.movementY);
+        return;
+      }
+      if (this._usesTouchInput() || event.sourceCapabilities?.firesTouchEvents
+        || !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY)) {
+        this._mousePosition = null;
+        return;
+      }
+      const previous = this._mousePosition;
+      this._mousePosition = { x: event.clientX, y: event.clientY };
+      if (previous) this._look(event.clientX - previous.x, event.clientY - previous.y);
+    });
+    this._listen(doc, 'pointermove', (event) => {
+      if (event.pointerType) this._lastPointerType = event.pointerType;
+      this._syncCursor();
+      if (this._lastPointerType !== 'mouse' || this._isLookUi(event.target)) this._mousePosition = null;
+    });
+    this._listen(doc, 'mouseover', (event) => { if (this._isLookUi(event.target)) this._mousePosition = null; });
+    this._listen(doc, 'mouseout', (event) => {
+      if (!event.relatedTarget || this._isLookUi(event.relatedTarget)) this._mousePosition = null;
     });
     this._listen(this.canvas, 'contextmenu', (event) => event.preventDefault());
     // Delegate play-surface presses so non-interactive overlays do not create
     // dead zones. UI controls and the movement stick keep their own pointers.
     this._listen(doc, 'pointerdown', (event) => {
-      if (!this.enabled || this._modalOpen() || this._isLookUi(event.target)) return;
-      const touch = event.pointerType === 'touch' || event.pointerType === 'pen' || this._usesTouchLayout();
+      if (event.pointerType) this._lastPointerType = event.pointerType;
+      this._syncCursor();
+      if (!this.enabled || this._modalOpen() || this._isLookUi(event.target)) {
+        this._mousePosition = null;
+        return;
+      }
+      const touch = this._usesTouchInput();
       if (event.button !== 0 && event.button !== 2 && !touch) return;
       event.preventDefault();
-      const locked = doc.pointerLockElement === this.canvas;
-      if (!touch && locked && (event.button === 0 || event.button === 2)) {
+      if (!touch) {
         this._startAction(`mouse:${event.button}`, event.button === 0 ? 'break' : 'place', event.pointerId);
-      } else if (!touch && event.button === 2) {
-        this._startAction(`mouse:${event.button}`, 'place', event.pointerId);
+        this._requestPointerLock();
       } else if (!this._drag && (event.button === 0 || touch)) {
         // Touch movement follows each pointer delta immediately, with no spring,
-        // easing or momentum. Desktop fallback still distinguishes click/drag.
-        this._drag = {
-          id: event.pointerId, x: event.clientX, y: event.clientY,
-          distance: 0, moved: false, touch,
-        };
+        // easing or momentum. Each touch keeps its own captured pointer.
+        this._drag = { id: event.pointerId, x: event.clientX, y: event.clientY };
+        this._mousePosition = null;
         try { this.canvas.setPointerCapture(event.pointerId); } catch { /* Window listeners remain active. */ }
       }
     });
@@ -160,12 +231,8 @@ export class Player {
       const dy = event.clientY - drag.y;
       drag.x = event.clientX;
       drag.y = event.clientY;
-      drag.distance += Math.abs(dx) + Math.abs(dy);
-      if (drag.distance > 5) drag.moved = true;
-      if (drag.touch || drag.moved) {
-        event.preventDefault();
-        this._look(dx, dy);
-      }
+      event.preventDefault();
+      this._look(dx, dy);
     }, { passive: false });
     const releasePointer = (event) => {
       for (const [key, action] of this._actions) {
@@ -173,12 +240,7 @@ export class Player {
           && (event.type !== 'pointerup' || key === `mouse:${event.button}`)) this._actions.delete(key);
       }
       const drag = this._drag;
-      if (drag && event.pointerId === drag.id) {
-        if (event.type === 'pointerup' && !drag.moved && !drag.touch && this.enabled && !this._modalOpen() && this._actionDelay <= 0) {
-          this.onAction('break');
-        }
-        this._resetDrag();
-      }
+      if (drag && event.pointerId === drag.id) this._resetDrag();
     };
     this._listen(win, 'pointerup', releasePointer);
     this._listen(win, 'pointercancel', releasePointer);
@@ -360,16 +422,12 @@ export class Player {
     this.keys.clear();
     this._actions.clear();
     this._resetDrag();
+    this._mousePosition = null;
     this._lastJumpPress = -Infinity;
     for (const reset of this._controlResets) reset();
     this._flightUpBuffer = this._flightDownBuffer = 0;
-    // Touch and environments without pointer lock use the same movement engine.
-    if (!this._usesTouchLayout() && !this._hadPointerLock && this.canvas.requestPointerLock) {
-      try {
-        const result = this.canvas.requestPointerLock();
-        result?.catch?.(() => { /* Drag-look remains available after rejection. */ });
-      } catch { /* Safari, embedded browsers and denied permissions use drag-look. */ }
-    }
+    this._syncCursor();
+    this._requestPointerLock();
   }
 
   disable() {
@@ -380,10 +438,14 @@ export class Player {
     this.keys.clear();
     this._actions.clear();
     this._resetDrag();
+    this._mousePosition = null;
+    this._pointerLockPending = false;
+    this._pointerLockRequest++;
     this._jumpBuffer = 0;
     this._flightUpBuffer = this._flightDownBuffer = 0;
     this._lastJumpPress = -Infinity;
     this._hadPointerLock = false;
+    this._syncCursor();
     for (const reset of this._controlResets) reset();
     if (this._document.pointerLockElement === this.canvas) this._document.exitPointerLock?.();
   }

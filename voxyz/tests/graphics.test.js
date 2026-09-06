@@ -204,3 +204,48 @@ test('underwater light-shaft bounds follow the current exposed water column',()=
   put(world,8,13,8,BLOCK.STONE);settle(mask,world);
   assert.equal(mask.surfaceAt({x:8.5,y:11,z:8.5}),null,'a sealed pool cannot receive direct sunlight');
 });
+
+function waterShadowFixture(){
+  const graphics=Object.create(Graphics.prototype);
+  graphics.sun=new THREE.DirectionalLight();graphics.sun.castShadow=true;
+  graphics.sun.shadow.map=new THREE.WebGLRenderTarget(2048,1024);
+  graphics.sun.shadow.matrix.makeTranslation(.2,.3,.4);
+  graphics.sun.shadow.radius=6;graphics.sun.shadow.bias=-.00035;
+  graphics.renderer={shadowMap:{enabled:true,type:THREE.PCFShadowMap}};
+  graphics.waterMaterial={uniforms:{tSunShadow:{value:null},uSunShadowReady:{value:0},
+    uSunShadowMatrix:{value:new THREE.Matrix4()},uSunShadowTexel:{value:new THREE.Vector2()},uSunShadowBias:{value:0}}};
+  return graphics;
+}
+
+test('water glints use the packed caster map and its cached matrix without refreshing shadows',()=>{
+  const graphics=waterShadowFixture(),uniforms=graphics.waterMaterial.uniforms;
+  graphics._updateWaterShadow();
+  assert.equal(uniforms.uSunShadowReady.value,1);
+  assert.equal(uniforms.tSunShadow.value,graphics.sun.shadow.map.texture);
+  assert.deepEqual(uniforms.uSunShadowMatrix.value.elements,graphics.sun.shadow.matrix.elements);
+  assert.deepEqual(uniforms.uSunShadowTexel.value.toArray(),[3/2048,3/1024],'the soft kernel remains bounded even with broad terrain shadows');
+  assert.equal(uniforms.uSunShadowBias.value,-.00035);
+  const snapshot=uniforms.uSunShadowMatrix.value.clone();
+  graphics.sun.position.set(100,80,90);graphics.sun.shadow.matrix.elements[12]+=1;
+  assert.deepEqual(uniforms.uSunShadowMatrix.value.elements,snapshot.elements,'a light pose change cannot alter the paired sample matrix mid-draw');
+  graphics._updateWaterShadow();assert.equal(uniforms.uSunShadowMatrix.value.elements[12],1.2);
+  graphics.sun.shadow.map.dispose();
+});
+
+test('water glints reject unavailable or unsupported shadow maps instead of inventing unoccluded sunlight',()=>{
+  const graphics=waterShadowFixture(),uniforms=graphics.waterMaterial.uniforms,map=graphics.sun.shadow.map;
+  const changes=[
+    ()=>{graphics.renderer.shadowMap.enabled=false;},
+    ()=>{graphics.renderer.shadowMap.type=THREE.VSMShadowMap;},
+    ()=>{graphics.sun.shadow.map=null;},
+    ()=>{graphics.sun.shadow.matrix.elements[0]=NaN;}
+  ];
+  for(const invalidate of changes){
+    graphics.renderer.shadowMap.enabled=true;graphics.renderer.shadowMap.type=THREE.PCFShadowMap;
+    graphics.sun.shadow.map=map;graphics.sun.shadow.matrix.identity();
+    graphics._updateWaterShadow();assert.equal(uniforms.uSunShadowReady.value,1);
+    invalidate();graphics._updateWaterShadow();
+    assert.equal(uniforms.uSunShadowReady.value,0);assert.equal(uniforms.tSunShadow.value,null);
+  }
+  map.dispose();
+});

@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import * as THREE from '../vendor/three.module.js';
 import { Player } from '../player.js';
 
+const assertAngle = (actual, expected, message) => assert.ok(Math.abs(actual - expected) < 1e-12, message || `angle ${actual} should equal ${expected}`);
+
 class Surface {
   constructor() {
     this.listeners = new Map();
@@ -32,7 +34,7 @@ class Surface {
 
 function fixture(getBlock = (x, y) => y < 1 ? 1 : 0, getWaterLevel, options = {}) {
   const win = new Surface();
-  win.matchMedia = () => ({ matches: false });
+  win.matchMedia = () => ({ matches: options.coarse ?? false });
   win.innerWidth = options.width ?? 1280;
   const doc = new Surface();
   doc.defaultView = win;
@@ -239,15 +241,14 @@ test('movement, direct touch look and jump remain independent across three point
   assert.deepEqual(f.actions, [], 'touch look never mines a block');
 });
 
-test('pointer-lock rejection supports drag-look, and actual lock loss pauses once', () => {
+test('pointer-lock rejection supports button-free look, and actual lock loss pauses once', () => {
   const f = fixture();
   f.doc.dispatch('pointerlockerror');
   assert.equal(f.player.enabled, true);
   assert.equal(f.pauses, 0);
   f.tick(0.4);
-  f.canvas.dispatch('pointerdown', { pointerId: 1, button: 0, clientX: 0, clientY: 0 });
-  f.win.dispatch('pointermove', { pointerId: 1, clientX: 100, clientY: 10 });
-  f.win.dispatch('pointerup', { pointerId: 1, button: 0 });
+  f.canvas.dispatch('mousemove', { buttons: 0, clientX: 0, clientY: 0 });
+  f.canvas.dispatch('mousemove', { buttons: 0, clientX: 100, clientY: 10 });
   assert.ok(f.player.yaw < -0.2);
   assert.deepEqual(f.actions, []);
   f.doc.pointerLockElement = f.canvas;
@@ -297,10 +298,12 @@ test('fast locked clicks act synchronously and release before the next frame', (
   f.player.dispose();
 });
 
-test('fast fallback clicks and touch action buttons work without a frame between press and release', () => {
+test('free-look desktop clicks act on press and touch action buttons remain immediate', () => {
   const f = fixture();
   f.tick(0.3);
   f.canvas.dispatch('pointerdown', { pointerId: 1, pointerType: 'mouse', button: 0, clientX: 50, clientY: 50 });
+  assert.deepEqual(f.actions, ['break'], 'desktop construction starts on the press, not the release');
+  assert.equal(f.player._drag, null);
   f.win.dispatch('pointerup', { pointerId: 1, pointerType: 'mouse', button: 0, clientX: 50, clientY: 50 });
   assert.deepEqual(f.actions, ['break']);
   f.controls['place-button'].dispatch('pointerdown', { pointerId: 2, pointerType: 'touch', button: 0 });
@@ -369,16 +372,39 @@ test('UI presses and open settings never become camera drags, movement or attack
   assert.equal(f.pauses, 1);
 });
 
-test('narrow desktop view uses direct drag and action buttons without requesting pointer lock', () => {
+test('narrow desktop still requests native capture and uses mouse look and click actions', () => {
   let requests = 0;
   const f = fixture(undefined, undefined, { width: 390, requestPointerLock: () => { requests++; } });
-  assert.equal(requests, 0);
-  f.canvas.dispatch('pointerdown', { pointerId: 1, pointerType: 'mouse', button: 0, clientX: 120, clientY: 200 });
-  f.win.dispatch('pointermove', { pointerId: 1, pointerType: 'mouse', clientX: 121, clientY: 200 });
+  assert.equal(requests, 1);
+  assert.equal(f.player.lookMode, 'free');
+  f.canvas.dispatch('mousemove', { buttons: 0, clientX: 120, clientY: 200 });
+  f.canvas.dispatch('mousemove', { buttons: 0, clientX: 121, clientY: 200 });
   assert.equal(f.player.yaw, -.0022);
+  f.tick(.3);
+  f.canvas.dispatch('pointerdown', { pointerId: 1, pointerType: 'mouse', button: 0, clientX: 121, clientY: 200 });
   f.win.dispatch('pointerup', { pointerId: 1, pointerType: 'mouse', button: 0 });
+  assert.deepEqual(f.actions, ['break']);
+  assert.equal(f.player._drag, null);
+  f.doc.pointerLockElement = f.canvas;
+  f.doc.dispatch('pointerlockchange');
+  assert.equal(f.player.lookMode, 'locked');
+  f.doc.dispatch('keydown', { code: 'Escape' });
+  assert.equal(f.doc.pointerLockElement, null);
+  assert.equal(f.pauses, 1);
+  f.player.dispose();
+});
+
+test('actual coarse touch input keeps direct drag and action buttons without requesting pointer lock', () => {
+  let requests = 0;
+  const f = fixture(undefined, undefined, { width: 390, coarse: true, requestPointerLock: () => { requests++; } });
+  assert.equal(requests, 0);
+  assert.equal(f.player.lookMode, 'touch');
+  f.canvas.dispatch('pointerdown', { pointerId: 1, pointerType: 'touch', button: 0, clientX: 120, clientY: 200 });
+  f.win.dispatch('pointermove', { pointerId: 1, pointerType: 'touch', clientX: 121, clientY: 200 });
+  assert.equal(f.player.yaw, -.0022);
+  f.win.dispatch('pointerup', { pointerId: 1, pointerType: 'touch', button: 0 });
   assert.deepEqual(f.actions, []);
-  f.controls['break-button'].dispatch('pointerdown', { pointerId: 2, pointerType: 'mouse', button: 0 });
+  f.controls['break-button'].dispatch('pointerdown', { pointerId: 2, pointerType: 'touch', button: 0 });
   assert.deepEqual(f.actions, ['break'], 'explicit action buttons respond even during launch-click suppression');
   assert.ok(f.controls['break-button'].classes.has('is-pressed'));
   f.tick(.5);
@@ -387,6 +413,21 @@ test('narrow desktop view uses direct drag and action buttons without requesting
   assert.ok(!f.controls['break-button'].classes.has('is-pressed'));
   f.tick(.5);
   assert.equal(f.actions.length, 3);
+  assert.equal(requests, 0);
+  f.player.dispose();
+});
+
+test('a physical mouse can acquire native capture on a coarse device without changing its responsive layout', () => {
+  let requests = 0;
+  const f = fixture(undefined, undefined, { width: 390, coarse: true, requestPointerLock: () => { requests++; } });
+  f.tick(.3);
+  f.canvas.dispatch('pointerdown', { pointerId: 1, pointerType: 'mouse', button: 0 });
+  assert.equal(requests, 1);
+  assert.deepEqual(f.actions, ['break']);
+  assert.equal(f.player.lookMode, 'free');
+  assert.equal(f.canvas.style.cursor, 'none');
+  assert.equal(f.player._drag, null);
+  f.player.dispose();
 });
 
 test('recenter levels pitch and roll immediately while preserving heading and movement', () => {
@@ -751,4 +792,155 @@ test('pause and pointer cancellation discard unobserved flight taps instead of r
     assert.equal(f.player.flying, true);
     f.player.dispose();
   }
+});
+
+
+test('unlocked desktop look follows unpressed mouse movement once and does not capture or auto-turn', () => {
+  const f = fixture();
+  assert.equal(f.player.lookMode, 'free');
+  assert.equal(f.canvas.style.cursor, 'none');
+  f.canvas.dispatch('mousemove', { buttons: 0, clientX: 100, clientY: 100, movementX: 900, movementY: 900 });
+  assertAngle(f.player.yaw, 0, 'first movement establishes the mouse baseline');
+  f.canvas.dispatch('pointermove', { pointerType: 'mouse', pointerId: 1, clientX: 120, clientY: 90 });
+  f.canvas.dispatch('mousemove', { buttons: 0, clientX: 120, clientY: 90, movementX: 20, movementY: -10 });
+  assertAngle(f.player.yaw, -.044);
+  assertAngle(f.player.pitch, .022);
+  assertAngle(f.camera.rotation.y, -.044, 'look updates without waiting for a frame');
+  assert.equal(f.player._drag, null);
+  assert.equal(f.canvas.captured.size, 0);
+  assert.deepEqual(f.actions, []);
+  const yaw = f.player.yaw;
+  f.tick(.5);
+  assert.ok(Math.abs(f.player.yaw - yaw) < 1e-12, 'no edge-pan or look inertia is introduced');
+  f.player.dispose();
+  assert.equal(f.canvas.style.cursor, '');
+});
+
+test('free mouse look resets across UI, modals, window edges and pause without camera jumps', () => {
+  const f = fixture();
+  const move = (x, y = 100) => f.canvas.dispatch('mousemove', { clientX: x, clientY: y, buttons: 0 });
+  move(100); move(110);
+  let yaw = f.player.yaw;
+  const ui = new Surface(); ui.ui = true; ui.parent = f.doc;
+  ui.dispatch('mousemove', { clientX: 500, clientY: 500 });
+  assertAngle(f.player.yaw, yaw);
+  move(900);
+  assertAngle(f.player.yaw, yaw, 'returning from UI establishes a fresh baseline');
+  move(910);
+  assert.ok(f.player.yaw < yaw);
+  yaw = f.player.yaw;
+  f.doc.modalOpen = true;
+  move(20, 20);
+  f.doc.modalOpen = false;
+  move(700);
+  assertAngle(f.player.yaw, yaw, 'modal input does not leave a stale coordinate');
+  f.doc.dispatch('mouseout', { relatedTarget: null });
+  move(10);
+  assertAngle(f.player.yaw, yaw, 're-entering the browser window does not spin the camera');
+  f.win.dispatch('blur');
+  assert.equal(f.canvas.style.cursor, '');
+  move(1200);
+  assertAngle(f.player.yaw, yaw);
+  f.player.enable();
+  move(20);
+  assertAngle(f.player.yaw, yaw, 'resuming ignores cursor relocation while paused');
+  move(30);
+  assert.ok(f.player.yaw < yaw);
+  f.doc.dispatch('keydown', { code: 'Escape' });
+  assert.equal(f.player.enabled, false);
+  assert.equal(f.canvas.style.cursor, '');
+  f.player.dispose();
+});
+
+test('native pointer lock uses relative mouse movement exactly once and still ignores UI and modals', () => {
+  const f = fixture();
+  f.doc.pointerLockElement = f.canvas;
+  f.doc.dispatch('pointerlockchange');
+  assert.equal(f.player.lookMode, 'locked');
+  f.canvas.dispatch('pointermove', { pointerType: 'mouse', movementX: 40, movementY: -10, clientX: 640, clientY: 360 });
+  f.canvas.dispatch('mousemove', { movementX: 40, movementY: -10, clientX: 640, clientY: 360 });
+  assertAngle(f.player.yaw, -.088);
+  assertAngle(f.player.pitch, .022);
+  f.canvas.dispatch('mousemove', { movementX: 10, movementY: 0, clientX: 640, clientY: 360 });
+  assertAngle(f.player.yaw, -.11, 'relative deltas work even when the captured screen position is fixed');
+  const ui = new Surface(); ui.ui = true; ui.parent = f.doc;
+  ui.dispatch('mousemove', { movementX: 500, movementY: 500 });
+  assertAngle(f.player.yaw, -.11);
+  f.doc.modalOpen = true;
+  f.canvas.dispatch('mousemove', { movementX: 500, movementY: 500 });
+  assertAngle(f.player.yaw, -.11);
+  f.player.dispose();
+});
+
+test('pointer-lock rejection retries on world intent, deduplicates pending requests and preserves a held action on acquisition', async () => {
+  const requests = [];
+  const f = fixture(undefined, undefined, { requestPointerLock: () => new Promise((resolve, reject) => requests.push({ resolve, reject })) });
+  assert.equal(requests.length, 1, 'entry requests native capture');
+  assert.deepEqual(f.player.pointerLockState, { supported: true, status: 'pending', error: null });
+  f.tick(.3);
+  f.canvas.dispatch('pointerdown', { pointerId: 1, pointerType: 'mouse', button: 0 });
+  assert.deepEqual(f.actions, ['break']);
+  assert.equal(requests.length, 1, 'an outstanding request is not duplicated');
+  f.win.dispatch('pointerup', { pointerId: 1, button: 0 });
+  requests[0].reject(new Error('capture denied'));
+  await Promise.resolve();
+  assert.equal(f.player.enabled, true);
+  assert.equal(f.player.lookMode, 'free');
+  assert.deepEqual(f.player.pointerLockState, { supported: true, status: 'rejected', error: { name: 'Error', message: 'capture denied' } });
+  f.canvas.dispatch('pointerdown', { pointerId: 1, pointerType: 'mouse', button: 2 });
+  assert.equal(requests.length, 2, 'an intentional later click retries capture');
+  assert.equal(f.player.pointerLockState.error, null, 'a fresh request clears an earlier rejection');
+  assert.deepEqual(f.actions, ['break', 'place'], 'construction does not await capture approval');
+  f.doc.pointerLockElement = f.canvas;
+  f.doc.dispatch('pointerlockchange');
+  requests[1].resolve();
+  await Promise.resolve();
+  assert.equal(f.player.pointerLockState.status, 'locked');
+  f.tick(.3);
+  assert.deepEqual(f.actions, ['break', 'place', 'place'], 'capturing the mouse does not cancel a held placement');
+  f.win.dispatch('pointerup', { pointerId: 1, button: 2 });
+  f.player.disable();
+  f.player.enable();
+  assert.equal(requests.length, 3, 'resume requests capture again');
+  requests[2].reject(new Error('capture denied'));
+  await Promise.resolve();
+  f.player.dispose();
+});
+
+test('synchronous capture failures keep free look and retry only on entry or a world click', () => {
+  let requests = 0;
+  const f = fixture(undefined, undefined, { requestPointerLock: () => { requests++; throw new Error('unsupported'); } });
+  assert.equal(requests, 1);
+  assert.deepEqual(f.player.pointerLockState, { supported: true, status: 'rejected', error: { name: 'Error', message: 'unsupported' } });
+  f.canvas.dispatch('mousemove', { clientX: 0, clientY: 0 });
+  f.canvas.dispatch('mousemove', { clientX: 20, clientY: 0 });
+  assertAngle(f.player.yaw, -.044);
+  f.tick(.4);
+  assert.equal(requests, 1, 'frames and free movement never create request loops');
+  f.controls['place-button'].dispatch('pointerdown', { pointerId: 2, pointerType: 'mouse', button: 0 });
+  assert.equal(requests, 1, 'UI presses are not native-capture intent');
+  f.win.dispatch('pointerup', { pointerId: 2 });
+  f.canvas.dispatch('pointerdown', { pointerId: 1, pointerType: 'mouse', button: 2 });
+  assert.equal(requests, 2);
+  assert.equal(f.player._mousePosition.x, 20, 'a rejected retry does not reset a working free-look baseline');
+  f.player.dispose();
+});
+
+test('touch still needs dragging and compatibility mouse events cannot duplicate its look', () => {
+  const f = fixture();
+  f.canvas.dispatch('pointerdown', { pointerId: 1, pointerType: 'touch', button: 0, clientX: 100, clientY: 100 });
+  f.win.dispatch('pointermove', { pointerId: 1, pointerType: 'touch', clientX: 120, clientY: 90 });
+  assertAngle(f.player.yaw, -.044);
+  f.canvas.dispatch('mousemove', { clientX: 300, clientY: 200, sourceCapabilities: { firesTouchEvents: true } });
+  f.canvas.dispatch('mousemove', { clientX: 500, clientY: 400 });
+  assertAngle(f.player.yaw, -.044, 'touch compatibility mouse events never add another rotation');
+  f.win.dispatch('pointerup', { pointerId: 1 });
+  f.win.dispatch('pointermove', { pointerId: 1, pointerType: 'touch', clientX: 160, clientY: 80 });
+  assertAngle(f.player.yaw, -.044, 'unpressed touch cannot look');
+  f.canvas.dispatch('pointermove', { pointerId: 2, pointerType: 'mouse', clientX: 700, clientY: 200 });
+  f.canvas.dispatch('mousemove', { clientX: 700, clientY: 200 });
+  f.canvas.dispatch('mousemove', { clientX: 710, clientY: 200 });
+  assertAngle(f.player.yaw, -.066, 'a real mouse can take over without holding a button');
+  assert.deepEqual(f.actions, []);
+  f.player.dispose();
 });

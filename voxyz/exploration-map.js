@@ -1,4 +1,4 @@
-import { WATER_LEVEL } from './terrain.js?v=3.4';
+import { WATER_LEVEL } from './terrain.js?v=3.5';
 
 export const MAP_CELL_SIZE=4;
 export const MAP_REVEAL_RADIUS=128;

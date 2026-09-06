@@ -1,8 +1,8 @@
 import * as THREE from './vendor/three.module.js';
-import { BLOCK, CHUNK_SIZE, WORLD_HEIGHT, indexOf } from './terrain.js?v=3.4';
-import { waterCellHeight } from './water.js?v=3.4';
-import { createTerrainMaterial, createForestEnvironment } from './surface-material.js?v=3.4';
-import { PostProcessing } from './post-processing.js?v=3.4';
+import { BLOCK, CHUNK_SIZE, WORLD_HEIGHT, indexOf } from './terrain.js?v=3.5';
+import { waterCellHeight } from './water.js?v=3.5';
+import { createTerrainMaterial, createForestEnvironment } from './surface-material.js?v=3.5';
+import { PostProcessing } from './post-processing.js?v=3.5';
 
 // One texel per nearby terrain column: exposed surface, contiguous water bottom,
 // and presence. Reading loaded arrays keeps this work independent of generation.
@@ -132,7 +132,8 @@ export class Graphics {
     this.reflection=new THREE.WebGLRenderTarget(mobile?256:512,mobile?256:512,{type:this.post.hdr?THREE.HalfFloatType:THREE.UnsignedByteType,minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter});
     this.refraction.texture.colorSpace=this.reflection.texture.colorSpace=THREE.LinearSRGBColorSpace;
     this.mirrorCamera=this.camera.clone();this.reflectionMatrix=new THREE.Matrix4();
-    this.waterMaterial=new THREE.ShaderMaterial({transparent:true,fog:true,side:THREE.DoubleSide,uniforms:{...THREE.UniformsUtils.clone(THREE.UniformsLib.fog),uTime:this.time,uDay:this.day,tScene:{value:this.refraction.texture},tDepth:{value:this.refraction.depthTexture},tReflection:{value:this.reflection.texture},uReflectionMatrix:{value:this.reflectionMatrix},uResolution:{value:new THREE.Vector2()},uNear:{value:.08},uFar:{value:260},uUnder:{value:0},uReflect:{value:1},uSun:{value:this.sunDirection}},vertexShader:`
+    this.waterMaterial=new THREE.ShaderMaterial({transparent:true,fog:true,side:THREE.DoubleSide,uniforms:{...THREE.UniformsUtils.clone(THREE.UniformsLib.fog),uTime:this.time,uDay:this.day,tScene:{value:this.refraction.texture},tDepth:{value:this.refraction.depthTexture},tReflection:{value:this.reflection.texture},uReflectionMatrix:{value:this.reflectionMatrix},uResolution:{value:new THREE.Vector2()},uNear:{value:.08},uFar:{value:260},uUnder:{value:0},uReflect:{value:1},uSun:{value:this.sunDirection},
+      tSunShadow:{value:null},uSunShadowMatrix:{value:new THREE.Matrix4()},uSunShadowTexel:{value:new THREE.Vector2(1,1)},uSunShadowBias:{value:0},uSunShadowReady:{value:0}},vertexShader:`
       #include <fog_pars_vertex>
       varying vec3 vWorld;varying vec3 vNormal;varying vec4 vReflect;uniform float uTime;uniform mat4 uReflectionMatrix;
       void main(){vec3 p=position;vec4 wp=modelMatrix*vec4(p,1.);vWorld=wp.xyz;vNormal=normal;vReflect=uReflectionMatrix*wp;vec4 mvPosition=viewMatrix*wp;gl_Position=projectionMatrix*mvPosition;
@@ -140,8 +141,24 @@ export class Graphics {
       }
     `,fragmentShader:`
       #include <fog_pars_fragment>
+      #include <packing>
       uniform sampler2D tScene,tDepth,tReflection;uniform float uTime,uDay,uNear,uFar,uUnder,uReflect;uniform vec2 uResolution;uniform vec3 uSun;varying vec3 vWorld,vNormal;varying vec4 vReflect;
+      uniform sampler2D tSunShadow;uniform mat4 uSunShadowMatrix;uniform vec2 uSunShadowTexel;uniform float uSunShadowBias,uSunShadowReady;
       float viewDepth(float d){return (uNear*uFar)/((uFar-uNear)*d-uFar);}
+      float sunVisibility(vec3 position){
+        if(uSunShadowReady<.5)return 0.;
+        vec4 light=uSunShadowMatrix*vec4(position,1.);vec3 p=light.xyz/light.w;
+        float border=min(min(p.x,p.y),min(1.-p.x,1.-p.y));
+        if(border<=0.||p.z<0.||p.z>1.)return 0.;
+        float compare=p.z+uSunShadowBias;
+        vec2 d=uSunShadowTexel;
+        float visibility=step(compare,unpackRGBAToDepth(texture2D(tSunShadow,p.xy)))*.4;
+        visibility+=step(compare,unpackRGBAToDepth(texture2D(tSunShadow,p.xy+vec2(d.x,d.y))))*.15;
+        visibility+=step(compare,unpackRGBAToDepth(texture2D(tSunShadow,p.xy+vec2(-d.x,d.y))))*.15;
+        visibility+=step(compare,unpackRGBAToDepth(texture2D(tSunShadow,p.xy+vec2(d.x,-d.y))))*.15;
+        visibility+=step(compare,unpackRGBAToDepth(texture2D(tSunShadow,p.xy-d)))*.15;
+        return visibility*smoothstep(0.,.025,border);
+      }
       void main(){
         vec2 p=vWorld.xz;float t=uTime;
         // Two slow capillary scales: reflection stays readable instead of melting.
@@ -149,6 +166,11 @@ export class Graphics {
         bool surface=abs(vNormal.y)>.5;
         vec3 n=normalize(vNormal+vec3(ripple.x*.026,0.,ripple.y*.026));
         if(!surface)n=normalize(vNormal+vec3(ripple.x*.022,0.,ripple.y*.022));
+        // Analytic capillary detail is anchored in world space. Filter it out
+        // before its wavelength becomes subpixel; vertices never move.
+        float detailFade=1.-smoothstep(.18,.65,length(fwidth(p)));
+        vec2 capillary=vec2(dot(p,vec2(.85,.526))*4.+t*.42,dot(p,vec2(-.45,.893))*2.75-t*.31);
+        if(surface&&uUnder<.5)n=normalize(n+vec3(cos(capillary.x),0.,cos(capillary.y))*.011*detailFade);
         vec3 eye=normalize(cameraPosition-vWorld);float facing=abs(dot(n,eye));
         // The underwater view favors a clear window at every angle. Reflection
         // is intentionally reserved for viewing the water from above.
@@ -168,16 +190,27 @@ export class Graphics {
         vec3 absorption=exp(-extinction*opticalDepth);
         vec3 tint=vec3(.009,.061,.058)*mix(.18,1.,uDay);
         transmitted=transmitted*absorption+tint*(1.-absorption);
+        float shallow=1.-smoothstep(.30,2.5,depth);
+        if(surface&&uUnder<.5){
+          // A thin layer still reads as blue-green water over bright ground.
+          // Keep the underlying floor visible without a white shoreline overlay.
+          vec3 shallowTint=vec3(.009,.078,.10)*mix(.18,1.,uDay);
+          transmitted=mix(transmitted,shallowTint,.035+.135*shallow);
+          float rippleBand=pow(.5+.5*sin(capillary.x+.24*sin(capillary.y)),5.);
+          transmitted+=vec3(.004,.015,.018)*rippleBand*shallow*detailFade*uDay;
+        }
         vec2 ruv=vReflect.xy/vReflect.w+ripple*.0013;
         vec3 reflected=texture2D(tReflection,clamp(ruv,vec2(.001),vec2(.999))).rgb;
         vec3 reflectionDir=reflect(-eye,n);
-        vec3 reflectedSky=mix(vec3(.71,.78,.67),vec3(.28,.50,.59),smoothstep(0.,.7,reflectionDir.y))*mix(.08,1.,uDay);
+        // These are linear radiance values, not display RGB. The previous pale
+        // fallback washed out every shallow pool without a planar reflection.
+        vec3 reflectedSky=mix(vec3(.10,.18,.18),vec3(.045,.14,.205),smoothstep(0.,.7,reflectionDir.y))*mix(.08,1.,uDay);
         // One planar pass belongs to the natural pond level. Other elevations
         // use the sky rather than displaying a physically misplaced reflection.
         float pondPlane=(1.-smoothstep(.025,.13,abs(vWorld.y-12.875)))*(surface?1.:0.);
         float reflectionEdge=min(min(ruv.x,ruv.y),min(1.-ruv.x,1.-ruv.y));
         float inReflection=smoothstep(0.,.018,reflectionEdge)*step(0.,vReflect.w);
-        reflected=mix(reflectedSky,reflected,uReflect*pondPlane*inReflection);
+        reflected=mix(reflectedSky,reflected*.82,uReflect*pondPlane*inReflection);
         vec3 col=mix(transmitted,reflected,fresnel);
         if(uUnder>.5){
           // A rippled blue interface remains visible without becoming a mirror.
@@ -188,14 +221,16 @@ export class Graphics {
           float rippleLight=pow(.5+.5*sin(p.x*.78+p.y*.52+t*.64),10.);
           col+=vec3(.008,.016,.025)*rippleLight*uDay;
         }
-        float spec=pow(max(0.,dot(reflect(-uSun,n),eye)),460.);
-        col+=vec3(1.,.84,.57)*spec*3.4*uDay*(1.-uUnder);
-        float edge=1.-smoothstep(.015,.22,depth);
-        float sparkle=.65+.35*sin(p.x*5.3+p.y*4.7+t*.55);
-        col+=vec3(.52,.61,.48)*edge*sparkle*.085*uDay*(1.-uUnder);
+        float normalVariance=max(dot(dFdx(n),dFdx(n)),dot(dFdy(n),dFdy(n)));
+        float specPower=340./(1.+340.*normalVariance);
+        float spec=pow(max(0.,dot(reflect(-uSun,n),eye)),specPower)*(specPower/340.);
+        // The sun disk in the real reflection is already occluded by geometry;
+        // its procedural surface glint must obey the same canopy shadows.
+        if(uUnder<.5&&spec>.0001)col+=vec3(1.,.84,.57)*spec*2.1*uDay*sunVisibility(vWorld);
         if(!surface){
           float streak=pow(.5+.5*sin((vWorld.x+vWorld.z)*23.+sin(vWorld.y*2.5+t*5.)),9.);
-          col+=vec3(.24,.34,.30)*streak*.16*mix(.2,1.,uDay);
+          vec3 streakTint=uUnder>.5?vec3(.24,.34,.30)*.16:vec3(.08,.19,.22)*.065;
+          col+=streakTint*streak*mix(.2,1.,uDay);
         }
         gl_FragColor=vec4(col,1.);
         if(uUnder<.5){
@@ -236,6 +271,20 @@ export class Graphics {
     const settle=target>this.streamingFog?.9:2.4;
     this.streamingFog+=(target-this.streamingFog)*(1-Math.exp(-this.frameDt/settle));
     if(this.waterMaterial.uniforms.uUnder.value<.5)this.scene.fog.far-=this.streamingFog;
+  }
+  _updateWaterShadow(){
+    const uniforms=this.waterMaterial.uniforms,shadow=this.sun.shadow,map=shadow?.map,type=this.renderer.shadowMap.type;
+    uniforms.uSunShadowReady.value=0;uniforms.tSunShadow.value=null;
+    if(!this.renderer.shadowMap.enabled||!this.sun.castShadow||!this.sun.visible||!map?.texture?.isTexture||
+      !(map.width>0&&map.height>0)||!shadow.matrix.elements.every(Number.isFinite)||
+      ![THREE.BasicShadowMap,THREE.PCFShadowMap,THREE.PCFSoftShadowMap].includes(type))return;
+    // Snapshot the matrix paired with the last rendered map, not the current
+    // moving light pose. The refraction pass has refreshed it when necessary.
+    uniforms.tSunShadow.value=map.texture;uniforms.uSunShadowMatrix.value.copy(shadow.matrix);
+    const radius=THREE.MathUtils.clamp(shadow.radius||1,1,3);
+    uniforms.uSunShadowTexel.value.set(radius/map.width,radius/map.height);
+    uniforms.uSunShadowBias.value=Number.isFinite(shadow.bias)?shadow.bias:0;
+    uniforms.uSunShadowReady.value=1;
   }
   _updateReflection(){
     if(this.waterMaterial.uniforms.uUnder.value>.5)return false;
@@ -302,6 +351,7 @@ export class Graphics {
     }
     this.waterVisible=visible;
     this.waterMaterial.uniforms.uReflect.value=this.waterMaterial.uniforms.uUnder.value<.5&&this.quality!=='low'&&this.reflectionReady?THREE.MathUtils.smoothstep(Math.abs(camera.position.y-12.875),.006,.035):0;
+    this._updateWaterShadow();
     renderer.setRenderTarget(this.post.target);renderer.render(scene,camera);this.sceneStats={...renderer.info.render};
     // Snapshot the shadow matrix only after rendering; its cached map and matrix
     // must describe the same light pose between scheduled shadow refreshes.

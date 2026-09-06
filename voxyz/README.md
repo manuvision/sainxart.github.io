@@ -19,7 +19,7 @@ The world starts generating while the title screen is visible. Starting reveals 
 | Action | Desktop | Touchscreen |
 | --- | --- | --- |
 | Move | WASD or arrow keys | Left joystick |
-| Look | Mouse; drag fallback if pointer lock is unavailable | Drag anywhere on the world outside the movement stick and UI |
+| Look | Mouse, without holding a button; native pointer lock where supported | Drag anywhere on the world outside the movement stick and UI |
 | Jump / swim up | Space | Jump button |
 | Sprint | Shift | — |
 | Toggle flight | Double-tap Space | Double-tap Jump / Up |
@@ -33,6 +33,8 @@ The world starts generating while the title screen is visible. Starting reveals 
 | Level camera | R or center-camera button | Center-camera button |
 | Exploration map | M or circular minimap | Tap circular minimap |
 | Pause | Escape or menu | Menu button |
+
+Desktop entry and resume request native mouse capture; Escape releases it and pauses. Embedded browsers without pointer-lock support use free mouse movement within the window bounds. UI controls and dialogs suspend looking.
 
 The settings panel controls the seed, lighting, graphics quality and sound. The same seed reproduces the same landscape. **Reloading starts a pristine session:** block edits, placed water and map discovery are not read from or written to browser storage. Pausing or returning to the title screen keeps the current session; changing seeds starts a fresh one. Seed and display preferences can still be remembered.
 
@@ -50,6 +52,7 @@ Holding break or place repeats normal construction. Water pours once per press, 
 | `world-worker.js` | Terrain generation and remeshing away from the main thread |
 | `mesher.js` | Exposed-face chunk geometry, hidden-face removal, vertex colors, ambient occlusion |
 | `water.js` | Pure gravity, downhill routing, source/flow states and shared water heights |
+| `torch-lights.js` | Fixed light pool and prewarmed flame/glow shaders for responsive torch placement |
 | `player.js` | Player collision, gravity, jumping, swimming, pointer lock and touch input |
 | `graphics.js` | Sky, shadows, water reflection/refraction, fog and nearby water-column cache |
 | `surface-material.js` | World-aligned material textures, relief, roughness and filtered environment light |
@@ -82,17 +85,19 @@ The tests cover deterministic generation, chunk seams and stale workers, collisi
 
 The world uses rough PBR materials with original procedural bark, stone, turf, sand and leaf relief. Mipmapped textures and derivative-filtered fine detail keep surfaces stable at distance. Rounded crowns and tapered spruce silhouettes replace repeated flat foliage shelves; leaf clusters, reeds and grasses add smaller scale detail within bounded instance budgets.
 
-Scene lighting, refraction and reflection remain in linear HDR. A single final pass combines thresholded bloom, ACES tone mapping, subtle grading and FXAA. Lantern flames exceed display white to produce true bloom; ordinary foliage does not receive a blanket glow. Water has calmer multi-scale ripples, depth-dependent absorption, foreground-aware refraction and a sky fallback for elevated streams. Planar reflections refresh every moving-camera frame, including slow approaches; stationary scenes update less often. From below, the surface stays transmissive at every angle so the sky and trees remain visible; underwater floor reflection is deliberately disabled for this art direction. Blue absorption, a subtle surface tint and stronger ripple distortion keep the interface visible. Above-water refraction is rendered without underwater fog, avoiding double attenuation, and reflection clip offsets remain valid near surface crossings. Sun shadows snap in light space to reduce shimmer. A wider PCF filter softens their edges, while stronger diffuse sky fill and gentle distance haze balance the lower sun without washing out nearby color.
+Scene lighting, refraction and reflection remain in linear HDR. A single final pass combines thresholded bloom, ACES tone mapping, subtle grading and FXAA. Lantern flames exceed display white to produce true bloom; ordinary foliage does not receive a blanket glow. Water has calmer multi-scale ripples, depth-dependent absorption, foreground-aware refraction and a darker sky fallback for elevated streams. Shallow placed water has blue-green tint and filtered ripple detail. Sun glints sample the existing tree-shadow map instead of shining through blocked sunlight. Planar reflections refresh every moving-camera frame, including slow approaches; stationary scenes update less often. From below, the surface stays transmissive at every angle so the sky and trees remain visible; underwater floor reflection is deliberately disabled for this art direction. Blue absorption, a subtle surface tint and stronger ripple distortion keep the interface visible. Above-water refraction is rendered without underwater fog, avoiding double attenuation, and reflection clip offsets remain valid near surface crossings. Sun shadows snap in light space to reduce shimmer. A wider PCF filter softens their edges, while stronger diffuse sky fill and gentle distance haze balance the lower sun without washing out nearby color.
 
 Grass keeps its full size through distance fades, bends away from the nearby player and settles back after footsteps. Fine scenery reaches 48 blocks on desktop and 32 on mobile. Coverage fading avoids translucent-instance sorting. Decorative geometry remains tied to stable world coordinates.
+
+Torch posts use matte brown wood. Six reusable lights keep the shader light count constant, while flame and glow shaders compile against the HDR scene target during launch. Torch edits avoid rebuilding surrounding decorative foliage.
 
 Double-tap jump toggles flight with collision, hovering, vertical controls and sprinting. On mobile, Down occupies the former Jump position while Up sits directly above. Pausing preserves flight and releases held inputs; returning to title or changing worlds exits flight.
 
 The title stays minimal: logo, entry and settings buttons, plus site and sound controls. In-game UI retains the five-slot inventory, direct touch looking, large action buttons, camera-level control and circular exploration map.
 
-Verified on 6 September 2026: all 106 automated tests and 15 JavaScript syntax checks pass. Browser checks covered title/start, session reset, block and water edits, flight/hover/up/down, portrait and landscape controls, map overlays, grass contact, moving-camera reflections, the blue underwater interface, shared caustics, sun-shadow shafts, and night/Lightweight fallbacks. No browser or shader errors appeared in the checked views.
+Verified on 6 September 2026: all 119 automated tests and 16 JavaScript syntax checks pass. Chrome native mouse capture, Escape release/pause, and resume recapture were verified; narrow desktop and hybrid input have regression coverage. Browser checks covered button-free desktop looking, title/start, session reset, block and water edits, flight/hover/up/down, portrait and landscape controls, map overlays, grass contact, moving-camera reflections, the blue underwater interface, shared caustics, sun-shadow shafts, and night/Lightweight fallbacks. No browser or shader errors appeared in the checked views.
 
-On the development Mac, the 1280 × 720 desktop view held 60 FPS at render scale 1 with 221 loaded chunks and roughly 1.05 million visible scene triangles. The 390 × 844 mobile layout held 60 FPS at scale 0.85 with 137 chunks and about 283,000 visible triangles underwater. These measurements include the six-pass post-processing path with sun shafts; night drops to four passes and Lightweight to one. First-time shader compilation can briefly dip below target. Responsive browser tests are not a physical-phone performance benchmark.
+On the development Mac, the 1280 × 720 desktop view held 60 FPS at render scale 1 with 221 loaded chunks and roughly 1.05 million visible scene triangles. The 390 × 844 mobile layout held 60 FPS at scale 0.85 with 137 chunks and about 283,000 visible triangles underwater. These measurements include the six-pass post-processing path with sun shafts; night drops to four passes and Lightweight to one. The first torch-placement measurement held 60 FPS with a peak frame interval of 17.4 ms and no added shader programs during its 1.2-second measurement window. Initial launch or graphics-mode shader compilation can briefly dip below target. Responsive browser tests are not a physical-phone performance benchmark.
 
 ## Rendering scope and performance
 
