@@ -203,9 +203,10 @@ test('the seeded opening retains foreground richness within the existing instanc
         near++;
         if (y < world.heightAt(Math.floor(x), Math.floor(z)) + 3) ground++;
       }
-      // Previous opening: 4,483 desktop / 1,751 mobile instances within 12 m.
+      // Soil-only roots leave the sandy shore bare while preserving the dense
+      // foreground: 2,391 desktop / 1,086 mobile ground details within 12 m.
       assert.ok(near >= (mobile ? 1700 : 4000), 'buffering must not thin out the foreground');
-      assert.ok(ground >= (mobile ? 1050 : 2500), 'retain the rich near-camera grass, reeds and flowers');
+      assert.ok(ground >= (mobile ? 1050 : 2300), 'retain rich soil-rooted grass, reeds and flowers');
       assert.ok(mesh.count <= eco.capacity);
       t.diagnostic(JSON.stringify({ mobile, total: mesh.count, within12m: near, nearGround: ground }));
     } finally { eco.dispose(); }
@@ -287,6 +288,70 @@ test('grass contact has a rooted bend mask while flowers, lily pads and canopy k
       assert.ok(eco.pending.count > 0);
       const mask = eco.pending.mesh.geometry.getAttribute('ecoBend');
       for (let i = 0; i < eco.pending.count; i++) assert.equal(mask.getX(i), 0, `${kind} must not receive a whole-body grass bend`);
+    }
+  } finally { eco.dispose(); }
+});
+
+test('grass and reeds root only in live dirt or turf, including clump offsets across material boundaries', () => {
+  const surfaces = [1, 2, 4, 3, 8, 5, 7]; // Turf, dirt, sand, stone, snow, wood, water.
+  for (const biome of ['meadow', 'jungle', 'desert']) {
+    const world = {
+      seed: 'grass-substrates', terrain: {},
+      heightAt: x => x < -1 ? 10 : 13,
+      biomeAt: () => biome,
+      getBlock(x, y, z) {
+        const height = this.heightAt(x, z);
+        if (y < height) return 3;
+        if (y === height) return surfaces[((x % surfaces.length) + surfaces.length) % surfaces.length];
+        return 0;
+      },
+    };
+    const eco = new Ecosystem(new THREE.Scene(), world);
+    try {
+      eco._beginRebuild(new THREE.Vector3(8, 15, 8));
+      eco._cell(0, 0);
+      const { mesh, count } = eco.pending;
+      const contact = mesh.geometry.getAttribute('ecoBend');
+      let grass = 0, reeds = 0;
+      for (let i = 0; i < count; i++) {
+        if (contact.getX(i) < .5) continue;
+        grass++;
+        const x = Math.floor(mesh.instanceMatrix.array[i * 16 + 12]);
+        const z = Math.floor(mesh.instanceMatrix.array[i * 16 + 14]);
+        const ground = contact.getY(i);
+        const support = world.getBlock(x, ground - 1, z);
+        assert.ok(support === 1 || support === 2, `${biome}: blade root grew on block ${support}`);
+        assert.equal(world.getBlock(x, ground, z), 0, 'the root has exposed air above it');
+        if (contact.getZ(i) > .8) reeds++;
+      }
+      assert.ok(grass > 0, `${biome}: soil still supports grass`);
+      if (biome === 'meadow') assert.ok(reeds > 0, 'the same root check covers tall shoreline reeds');
+      if (biome !== 'desert') {
+        const previousBlock = world.getBlock.bind(world);
+        world.getBlock = (x, y, z) => y === world.heightAt(x, z) ? 4 : previousBlock(x, y, z);
+        eco._beginRebuild(new THREE.Vector3(8, 15, 8));
+        eco._cell(0, 0);
+        assert.equal(eco.pending.count, 0, 'replacing live soil with sand removes plants without changing the seed or height field');
+      }
+    } finally { eco.dispose(); }
+  }
+});
+
+test('bare desert sand keeps cactus while losing terrestrial grass', () => {
+  const world = {
+    seed: 'grass-substrates', terrain: {}, heightAt: () => 15, biomeAt: () => 'desert',
+    getBlock: (x, y) => y <= 15 ? 4 : 0,
+  };
+  const eco = new Ecosystem(new THREE.Scene(), world);
+  try {
+    eco._beginRebuild(new THREE.Vector3(8, 17, 8));
+    eco._cell(0, 0);
+    const { mesh, count } = eco.pending;
+    assert.ok(count > 0, 'cacti remain on their native sandy substrate');
+    const contact = mesh.geometry.getAttribute('ecoBend');
+    for (let i = 0; i < count; i++) {
+      assert.equal(contact.getX(i), 0, 'no grass blades survive on sand');
+      assert.ok(mesh.instanceMatrix.array[i * 16] >= .17, 'remaining plants are substantial cactus parts, not thin tufts');
     }
   } finally { eco.dispose(); }
 });

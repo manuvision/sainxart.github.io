@@ -1,8 +1,8 @@
 import * as THREE from './vendor/three.module.js';
-import { BLOCK, CHUNK_SIZE, WORLD_HEIGHT, indexOf } from './terrain.js?v=3.5';
-import { waterCellHeight } from './water.js?v=3.5';
-import { createTerrainMaterial, createForestEnvironment } from './surface-material.js?v=3.5';
-import { PostProcessing } from './post-processing.js?v=3.5';
+import { BLOCK, CHUNK_SIZE, WORLD_HEIGHT, indexOf } from './terrain.js?v=3.6';
+import { waterCellHeight } from './water.js?v=3.6';
+import { createTerrainMaterial, createForestEnvironment } from './surface-material.js?v=3.6';
+import { PostProcessing } from './post-processing.js?v=3.6';
 
 // One texel per nearby terrain column: exposed surface, contiguous water bottom,
 // and presence. Reading loaded arrays keeps this work independent of generation.
@@ -129,7 +129,10 @@ export class Graphics {
     this.sky.frustumCulled=false;this.scene.add(this.sky);
     this.refraction=new THREE.WebGLRenderTarget(1,1,{type:this.post.hdr?THREE.HalfFloatType:THREE.UnsignedByteType,minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,depthBuffer:true});
     this.refraction.depthTexture=new THREE.DepthTexture(1,1,THREE.UnsignedIntType);
-    this.reflection=new THREE.WebGLRenderTarget(mobile?256:512,mobile?256:512,{type:this.post.hdr?THREE.HalfFloatType:THREE.UnsignedByteType,minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter});
+    // Resolve subpixel canopy edges before water samples them. The final screen
+    // FXAA cannot reconstruct detail already aliased inside a reflection texture.
+    this.reflection=new THREE.WebGLRenderTarget(1,1,{type:this.post.hdr?THREE.HalfFloatType:THREE.UnsignedByteType,minFilter:THREE.LinearMipmapLinearFilter,magFilter:THREE.LinearFilter,generateMipmaps:true});
+    this.reflection.texture.anisotropy=Math.min(4,this.renderer.capabilities.getMaxAnisotropy());
     this.refraction.texture.colorSpace=this.reflection.texture.colorSpace=THREE.LinearSRGBColorSpace;
     this.mirrorCamera=this.camera.clone();this.reflectionMatrix=new THREE.Matrix4();
     this.waterMaterial=new THREE.ShaderMaterial({transparent:true,fog:true,side:THREE.DoubleSide,uniforms:{...THREE.UniformsUtils.clone(THREE.UniformsLib.fog),uTime:this.time,uDay:this.day,tScene:{value:this.refraction.texture},tDepth:{value:this.refraction.depthTexture},tReflection:{value:this.reflection.texture},uReflectionMatrix:{value:this.reflectionMatrix},uResolution:{value:new THREE.Vector2()},uNear:{value:.08},uFar:{value:260},uUnder:{value:0},uReflect:{value:1},uSun:{value:this.sunDirection},
@@ -142,7 +145,7 @@ export class Graphics {
     `,fragmentShader:`
       #include <fog_pars_fragment>
       #include <packing>
-      uniform sampler2D tScene,tDepth,tReflection;uniform float uTime,uDay,uNear,uFar,uUnder,uReflect;uniform vec2 uResolution;uniform vec3 uSun;varying vec3 vWorld,vNormal;varying vec4 vReflect;
+      uniform sampler2D tScene,tDepth,tReflection;uniform float uTime,uDay,uNear,uFar,uUnder,uReflect;uniform vec2 uResolution;uniform vec3 uSun;uniform mat4 uReflectionMatrix;varying vec3 vWorld,vNormal;varying vec4 vReflect;
       uniform sampler2D tSunShadow;uniform mat4 uSunShadowMatrix;uniform vec2 uSunShadowTexel;uniform float uSunShadowBias,uSunShadowReady;
       float viewDepth(float d){return (uNear*uFar)/((uFar-uNear)*d-uFar);}
       float sunVisibility(vec3 position){
@@ -199,8 +202,11 @@ export class Graphics {
           float rippleBand=pow(.5+.5*sin(capillary.x+.24*sin(capillary.y)),5.);
           transmitted+=vec3(.004,.015,.018)*rippleBand*shallow*detailFade*uDay;
         }
-        vec2 ruv=vReflect.xy/vReflect.w+ripple*.0013;
-        vec3 reflected=texture2D(tReflection,clamp(ruv,vec2(.001),vec2(.999))).rgb;
+        // Project a small world-space surface displacement through the same
+        // mirror camera. Screen-aligned UV offsets used to swim as the view turned.
+        vec4 rippledReflect=vReflect+(uReflectionMatrix[0]*ripple.x+uReflectionMatrix[2]*ripple.y)*.025;
+        vec2 ruv=rippledReflect.xy/rippledReflect.w;
+        vec3 reflected=texture2D(tReflection,clamp(ruv,vec2(.001),vec2(.999)),.4).rgb;
         vec3 reflectionDir=reflect(-eye,n);
         // These are linear radiance values, not display RGB. The previous pale
         // fallback washed out every shallow pool without a planar reflection.
@@ -241,7 +247,16 @@ export class Graphics {
       }`});
     this.resize();window.addEventListener('resize',()=>this.resize());
   }
-  resize(){const w=innerWidth,h=innerHeight;this.renderer.setPixelRatio(Math.min(devicePixelRatio,this.mobile?1.5:1.5)*this.scale);this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();const size=this.renderer.getDrawingBufferSize(new THREE.Vector2());this.post.mobile=this.mobile;this.post.resize(size.x,size.y);this.waterMaterial?.uniforms.uResolution.value.copy(size);this.refraction.setSize(Math.max(1,Math.round(size.x*.65)),Math.max(1,Math.round(size.y*.65)));}
+  resize(){const w=innerWidth,h=innerHeight;this.renderer.setPixelRatio(Math.min(devicePixelRatio,this.mobile?1.5:1.5)*this.scale);this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();const size=this.renderer.getDrawingBufferSize(new THREE.Vector2());this.post.mobile=this.mobile;this.post.resize(size.x,size.y);this.waterMaterial?.uniforms.uResolution.value.copy(size);this.refraction.setSize(Math.max(1,Math.round(size.x*.65)),Math.max(1,Math.round(size.y*.65)));this._resizeReflection(size.x,size.y);}
+  _resizeReflection(width,height){
+    const ratio=Math.min(.5,(this.mobile?512:1024)/Math.max(width,height));
+    const w=Math.max(1,Math.round(width*ratio)),h=Math.max(1,Math.round(height*ratio));
+    const samples=Math.min(this.mobile?2:4,this.renderer.capabilities.maxSamples);
+    if(this.reflection.width===w&&this.reflection.height===h&&this.reflection.samples===samples)return;
+    this.reflection.dispose();this.reflection.samples=samples;this.reflection.setSize(w,h);
+    // Resizing destroys the old image even when the camera pose is unchanged.
+    this.reflectionReady=false;
+  }
   setQuality(quality){this.quality=quality;this.post.setQuality(quality);this.scale=quality==='low'?.7:quality==='high'?1:this.mobile?.85:1;this.renderer.shadowMap.enabled=quality!=='low';this.waterMaterial.uniforms.uReflect.value=quality==='low'?0:1;this.resize();}
   update(time,daylight,position,underwater){
     this.frameDt=Math.max(1/240,Math.min(.1,time-this.lastTime));this.lastTime=time;
@@ -342,9 +357,10 @@ export class Graphics {
         if(this.waterMaterial.uniforms.uUnder.value>.5){scene.fog.near=10000;scene.fog.far=20000;}
         renderer.setRenderTarget(this.refraction);renderer.render(scene,camera);this.waterPasses++;
       }finally{scene.fog.near=fogNear;scene.fog.far=fogFar;}
-      const reflectionMoved=this.reflectionPosition.distanceToSquared(camera.position)>1e-10||1-Math.abs(this.reflectionRotation.dot(camera.quaternion))>1e-12||this.reflectionAspect!==camera.aspect||this.reflectionFov!==camera.fov;
       const under=this.waterMaterial.uniforms.uUnder.value>.5;
-      if(!under&&this.quality!=='low'&&Math.abs(camera.position.y-12.875)>.006&&(!this.waterVisible||!this.reflectionReady||this.reflectionUnder!==under||reflectionMoved||this.frame%8===1)){
+      // Wind and wildlife move even between mouse events. A consistent visible
+      // cadence avoids switching reflected motion between full rate and 1/8 rate.
+      if(!under&&this.quality!=='low'&&Math.abs(camera.position.y-12.875)>.006){
         if(this._updateReflection())this.waterPasses++;
       }
       for(const mesh of water)mesh.visible=true;

@@ -27,6 +27,13 @@ export function attachWaterCaustics(material, {time,day,wetColumns}) {
       varying vec3 vWaterWorld,vWaterNormal;
       uniform float uWaterTime,uWaterDay,uWaterSize;
       uniform sampler2D uWaterColumns;uniform vec2 uWaterOrigin;
+      float waterCausticBand(float phase,float width) {
+        // Integrate the narrow light ridge over the pixel footprint. Fine lines
+        // disappear smoothly in the distance instead of sparkling as we move.
+        float footprint=max(fwidth(phase),.002);
+        float ridge=1.0-smoothstep(max(0.0,width-footprint),width+footprint,abs(sin(phase)));
+        return ridge*(1.0-smoothstep(.45,1.30,footprint));
+      }
       vec2 waterCausticLight(vec3 worldPoint,vec3 worldNormal) {
         float daylight=smoothstep(.12,.70,uWaterDay);
         vec3 wetPoint=worldPoint+worldNormal*.035;
@@ -37,13 +44,27 @@ export function attachWaterCaustics(material, {time,day,wetColumns}) {
         if(wet.b<.5||wetDepth<=0.0||wetDepth>=7.0||wetPoint.y<wet.g)return vec2(0.0);
         float wetness=smoothstep(0.0,.25,wetDepth);
         if(daylight<=0.0)return vec2(wetness,0.0);
-        vec2 p=worldPoint.xz*2.15;
-        float a=sin(p.x+sin(p.y*1.4+uWaterTime*.65))+sin(p.y+sin(p.x*1.2-uWaterTime*.57));
-        float b=sin(p.y*.87+sin(p.x*1.55-uWaterTime*.42))+sin(p.x*.92+sin(p.y*1.35+uWaterTime*.55));
-        float caustic=pow(1.0-abs(sin(a*2.8+uWaterTime*.24)),15.0)*.65+pow(1.0-abs(sin(b*2.5)),18.0)*.35;
+        // Use the outward geometric normal, not the camera-facing or bumped
+        // normal: floors and object tops receive light, walls/undersides do not.
+        float receiver=smoothstep(.45,.92,worldNormal.y);
+        if(receiver<=0.0)return vec2(wetness,0.0);
+        vec2 p=worldPoint.xz*1.85;
+        float t=uWaterTime;
+        // Two interacting wave families deform at different rates. The slower
+        // envelopes vary the focus and width locally rather than pulsing every
+        // line together or changing a random seed between frames.
+        float swell=sin(dot(p,vec2(.37,.29))+t*.31);
+        float crossSwell=sin(dot(p,vec2(-.21,.43))-t*.23);
+        float a=sin(p.x+sin(p.y*1.4+t*.47+swell*.35))+sin(p.y+sin(p.x*1.2-t*.39));
+        float b=sin(p.y*.87+sin(p.x*1.55-t*.29))+sin(p.x*.92+sin(p.y*1.35+t*.41+crossSwell*.3));
+        float focusA=smoothstep(-.8,.95,swell*.65+crossSwell*.35);
+        float focusB=smoothstep(-.9,.85,sin(dot(p,vec2(.28,-.32))+t*.37));
+        float lineA=waterCausticBand(a*2.8+sin(t*.19+p.y*.2)*.8,mix(.045,.115,focusA));
+        float lineB=waterCausticBand(b*2.5+sin(t*.13-p.x*.24)*.6,mix(.035,.095,focusB));
+        float caustic=lineA*(.18+.52*focusA)+lineB*(.08+.22*focusB);
         float edge=min(min(wetUV.x,wetUV.y),min(1.0-wetUV.x,1.0-wetUV.y))*uWaterSize;
         float surfaceFade=smoothstep(0.0,.08,wetDepth);
-        float light=caustic*daylight*exp(-wetDepth*.24)*smoothstep(0.0,4.0,edge)*(1.0-smoothstep(6.0,7.0,wetDepth))*surfaceFade;
+        float light=caustic*receiver*daylight*exp(-wetDepth*.24)*smoothstep(0.0,4.0,edge)*(1.0-smoothstep(6.0,7.0,wetDepth))*surfaceFade;
         return vec2(wetness,light);
       }
     `+shader.fragmentShader;
@@ -51,10 +72,14 @@ export function attachWaterCaustics(material, {time,day,wetColumns}) {
       vec2 waterLight=waterCausticLight(vWaterWorld,normalize(vWaterNormal));
       float isWet=waterLight.x;
       diffuseColor.rgb*=1.0-isWet*.09;
-      totalEmissiveRadiance+=vec3(.24,.40,.36)*waterLight.y;
+    `);
+    shader.fragmentShader=shader.fragmentShader.replace('#include <lights_fragment_end>',`#include <lights_fragment_end>
+      // Neutral focused light reflects the final textured albedo. It does not
+      // paint blue emission over every material or illuminate black surfaces.
+      reflectedLight.directDiffuse+=diffuseColor.rgb*(waterLight.y*.72);
     `);
   };
-  material.customProgramCacheKey=()=>`${programKey}|shared-water-caustics-v1`;
+  material.customProgramCacheKey=()=>`${programKey}|shared-water-caustics-v2`;
   material.needsUpdate=true;
   return material;
 }

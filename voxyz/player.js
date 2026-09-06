@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three.module.js';
-import { waterCellHeight } from './water.js?v=3.5';
+import { waterCellHeight } from './water.js?v=3.6';
 
 const HALF_WIDTH = 0.29;
 const BODY_HEIGHT = 1.78;

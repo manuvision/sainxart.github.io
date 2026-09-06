@@ -1,4 +1,4 @@
-import { BLOCK } from './terrain.js?v=3.5';
+import { BLOCK } from './terrain.js?v=3.6';
 
 export const WATER_SOURCE = 8;
 export const WATER_FALLING = 9;

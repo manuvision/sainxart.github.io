@@ -1,5 +1,5 @@
-import { BLOCK, BLOCK_COLORS, CHUNK_SIZE, WORLD_HEIGHT, indexOf, hash2, isSolid } from './terrain.js?v=3.5';
-import { waterCellHeight } from './water.js?v=3.5';
+import { BLOCK, BLOCK_COLORS, CHUNK_SIZE, WORLD_HEIGHT, indexOf, hash2, isSolid } from './terrain.js?v=3.6';
+import { waterCellHeight } from './water.js?v=3.6';
 
 const FACES=[
   {n:[1,0,0],u:[0,0,-1],v:[0,1,0],shade:.9},

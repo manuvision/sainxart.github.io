@@ -1,5 +1,5 @@
-import { Terrain } from './terrain.js?v=3.5';
-import { meshChunk } from './mesher.js?v=3.5';
+import { Terrain } from './terrain.js?v=3.6';
+import { meshChunk } from './mesher.js?v=3.6';
 let terrain;
 self.onmessage=({data})=>{
   try {

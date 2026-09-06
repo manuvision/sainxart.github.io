@@ -1,11 +1,11 @@
 import * as THREE from './vendor/three.module.js';
-import { Graphics } from './graphics.js?v=3.5';
-import { World, BLOCK_NAMES } from './world.js?v=3.5';
-import { Player } from './player.js?v=3.5';
-import { TorchLights } from './torch-lights.js?v=3.5';
-import { Ecosystem } from './ecosystem.js?v=3.5';
+import { Graphics } from './graphics.js?v=3.6';
+import { World, BLOCK_NAMES } from './world.js?v=3.6';
+import { Player } from './player.js?v=3.6';
+import { TorchLights } from './torch-lights.js?v=3.6';
+import { Ecosystem } from './ecosystem.js?v=3.6';
 import { AmbientAudio } from './audio.js';
-import { ExplorationMap } from './exploration-map.js?v=3.5';
+import { ExplorationMap } from './exploration-map.js?v=3.6';
 import { voxelRaycast, overlapsPlayer } from './interaction.js';
 
 const $=id=>document.getElementById(id);
@@ -127,7 +127,7 @@ function animate(now){
     }
     if(world.ready&&!readyAt)readyAt=now;
     if(readyAt&&torchRig.ready&&now-readyAt>800&&$('start-button').disabled){$('start-button').disabled=false;$('start-button').setAttribute('aria-busy','false');$('start-arrow').textContent='→';}
-    fpsFrames++;fpsTime+=rawDt;if(fpsTime>=1){fps=Math.round(fpsFrames/fpsTime);$('fps').textContent=`${fps} FPS`;fpsFrames=0;fpsTime=0;$('world').dataset.diagnostics=JSON.stringify({fps,scale:graphics.scale,chunks:world.stats.chunks,triangles:world.stats.triangles,queued:world.stats.queued,position:position.toArray(),yaw:player.yaw,pitch:player.pitch,flight:player.flying,lookMode:player.lookMode,pointerLock:player.pointerLockState,torchLights:torchRig.active.length,shaderPrograms:graphics.renderer.info.programs.length,lastTorchPlacement:torchPlacementProbe,drawRadius:world.radius,exploredCells:explorationMap.discovery.count,fogNear:graphics.scene.fog.near,fogFar:graphics.scene.fog.far,daylight:light,underwater:player.underwater,edits:world.edits.size,target:target?{x:target.x,y:target.y,z:target.z,id:target.id}:null,renderer:graphics.sceneStats,bloom:graphics.post.bloomEnabled,postPasses:graphics.post.lastPassCount,sunRays:graphics.post.sunRays.drawn,waterPasses:graphics.waterPasses,rendering:'HDR / ACES',fluidCells:world.fluidChanges.size,foliage:ecosystem.flora[ecosystem.activeFlora].count,grassTrail:Array.from(ecosystem.bendWeights.value),detailRadius:ecosystem.detailRadius});
+    fpsFrames++;fpsTime+=rawDt;if(fpsTime>=1){fps=Math.round(fpsFrames/fpsTime);$('fps').textContent=`${fps} FPS`;fpsFrames=0;fpsTime=0;$('world').dataset.diagnostics=JSON.stringify({fps,scale:graphics.scale,chunks:world.stats.chunks,triangles:world.stats.triangles,queued:world.stats.queued,position:position.toArray(),yaw:player.yaw,pitch:player.pitch,flight:player.flying,lookMode:player.lookMode,pointerLock:player.pointerLockState,torchLights:torchRig.active.length,shaderPrograms:graphics.renderer.info.programs.length,lastTorchPlacement:torchPlacementProbe,drawRadius:world.radius,exploredCells:explorationMap.discovery.count,fogNear:graphics.scene.fog.near,fogFar:graphics.scene.fog.far,daylight:light,underwater:player.underwater,edits:world.edits.size,target:target?{x:target.x,y:target.y,z:target.z,id:target.id}:null,renderer:graphics.sceneStats,bloom:graphics.post.bloomEnabled,postPasses:graphics.post.lastPassCount,sunRays:graphics.post.sunRays.drawn,waterPasses:graphics.waterPasses,reflectionTarget:{width:graphics.reflection.width,height:graphics.reflection.height,samples:graphics.reflection.samples},rendering:'HDR / ACES',fluidCells:world.fluidChanges.size,foliage:ecosystem.flora[ecosystem.activeFlora].count,grassTrail:Array.from(ecosystem.bendWeights.value),detailRadius:ecosystem.detailRadius});
       if(quality==='auto'&&readyAt&&now-readyAt>5000){slowWindows=fps<54?slowWindows+1:0;if(slowWindows>=3&&graphics.scale>.55){graphics.scale=Math.max(.55,graphics.scale-.1);graphics.resize();slowWindows=0;}}
     }
   }catch(error){fatal=true;showError(error);}

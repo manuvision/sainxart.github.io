@@ -21,7 +21,7 @@ test('terrain, foliage and fish share one caustic phase and live water-column re
   const eco=new Ecosystem(new THREE.Scene(),{seed:'caustic-test'},{waterLighting});
   try {
     const shaders=[compile(terrain),compile(eco.floraMaterial),compile(eco.entityMeshes.fish.material,'lambert')];
-    const pattern=shader=>shader.fragmentShader.match(/vec2 p=worldPoint\.xz\*2\.15;[\s\S]*?float edge=/)[0];
+    const pattern=shader=>shader.fragmentShader.match(/vec2 p=worldPoint\.xz[\s\S]*?float edge=/)[0];
     for(const shader of shaders) {
       assert.equal(pattern(shader),pattern(shaders[0]),'every surface uses the same world coordinates and moving line function');
       assert.equal(shader.uniforms.uWaterTime,waterLighting.time);
@@ -51,7 +51,51 @@ test('caustic receiver contract excludes night, dry space, sealed columns and di
       assert.ok(source.indexOf(gate)>sample&&source.indexOf(gate)<pattern,`${gate} rejects ineligible fragments before moving pattern work`);
     }
     assert.match(source,/smoothstep\(0\.0,\.08,wetDepth\)/,'caustics fade across the waterline rather than lighting dry tips');
-    assert.match(source,/totalEmissiveRadiance\+=vec3\(\.24,\.40,\.36\)\*waterLight.y/,'only the narrow caustic lines add pale aqua light');
+  } finally { material.dispose();waterLighting.wetColumns.texture.dispose(); }
+});
+
+test('caustics use upward geometric normals while keeping walls wet',()=>{
+  const waterLighting=lighting(),material=attachWaterCaustics(new THREE.MeshLambertMaterial(),waterLighting);
+  try {
+    const source=compile(material,'lambert').fragmentShader;
+    const orientation=source.match(/float receiver=smoothstep\(([\d.]+),([\d.]+),worldNormal.y\)/);
+    assert.ok(orientation,'receiver orientation is independent of view direction and bump relief');
+    assert.ok(Number(orientation[1])>0&&Number(orientation[2])<1,'walls and undersides are unlit; upward slopes fade smoothly into full-strength tops');
+    const gate=source.indexOf('if(receiver<=0.0)return vec2(wetness,0.0)');
+    assert.ok(gate>source.indexOf('float wetness=')&&gate<source.indexOf('vec2 p=worldPoint.xz'),'unlit sides retain water darkening and skip line generation');
+    assert.match(source,/float light=[^;]*\*receiver\*/,'orientation attenuates the complete light field');
+  } finally { material.dispose();waterLighting.wetColumns.texture.dispose(); }
+});
+
+test('neutral caustic light preserves final material color instead of adding colored emission',()=>{
+  const waterLighting=lighting(),terrain=createTerrainMaterial(waterLighting);
+  const fish=attachWaterCaustics(new THREE.MeshLambertMaterial(),waterLighting);
+  try {
+    for(const [material,kind] of [[terrain,'standard'],[fish,'lambert']]) {
+      const source=compile(material,kind).fragmentShader;
+      const contribution=source.match(/reflectedLight\.directDiffuse\+=diffuseColor\.rgb\*\(waterLight.y\*([\d.]+)\)/);
+      assert.ok(contribution,'white illumination is multiplied by the receiver albedo for both PBR and Lambert surfaces');
+      assert.ok(Number(contribution[1])>0&&Number(contribution[1])<1,'focused light has a bounded, modest gain');
+      assert.ok(source.indexOf(contribution[0])>source.indexOf('#include <lights_fragment_end>'),'caustics use the fully textured wet albedo after material shading');
+      assert.doesNotMatch(source,/totalEmissiveRadiance\s*\+=[^;]*waterLight/,'caustics must not create a common colored glow');
+    }
+    const source=compile(terrain).fragmentShader;
+    assert.ok(source.indexOf('diffuseColor.rgb*=1.0+materialGrain')<source.indexOf('reflectedLight.directDiffuse+=diffuseColor.rgb'),'grain and bark color remain visible inside highlights');
+  } finally { terrain.dispose();fish.dispose();waterLighting.wetColumns.texture.dispose(); }
+});
+
+test('caustic ridges are footprint-filtered and vary focus independently across world space',()=>{
+  const waterLighting=lighting(),material=attachWaterCaustics(new THREE.MeshLambertMaterial(),waterLighting);
+  try {
+    const source=compile(material,'lambert').fragmentShader;
+    assert.match(source,/fwidth\(phase\)/,'narrow ridges filter against their screen footprint');
+    assert.match(source,/return ridge\*\(1\.0-smoothstep\([^;]*footprint\)\)/,'unresolved lines fade instead of aliasing while the camera moves');
+    const pattern=source.slice(source.indexOf('vec2 p=worldPoint.xz'),source.indexOf('float edge='));
+    assert.match(pattern,/focusA=[^;]*swell[^;]*crossSwell/,'the first focus envelope responds to two slow local wave families');
+    assert.match(pattern,/focusB=[^;]*dot\(p,[^;]*t\*/,'the second envelope evolves separately in world space and time');
+    assert.match(pattern,/lineA=waterCausticBand\([^;]*mix\([^;]*focusA/);
+    assert.match(pattern,/lineB=waterCausticBand\([^;]*mix\([^;]*focusB/);
+    assert.doesNotMatch(pattern.replace(/\/\/[^\n]*/g,''),/camera|floor\(.*[tT]ime|random/i,'camera motion and frame boundaries cannot reseed the pattern');
   } finally { material.dispose();waterLighting.wetColumns.texture.dispose(); }
 });
 

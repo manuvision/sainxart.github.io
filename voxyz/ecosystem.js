@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three.module.js';
-import { attachWaterCaustics } from './surface-material.js?v=3.5';
+import { attachWaterCaustics } from './surface-material.js?v=3.6';
 
 // All small scenery shares a cube geometry and an instanced draw call. The next
 // neighborhood is built a few cells at a time while the current one stays visible.
@@ -168,14 +168,14 @@ export class Ecosystem {
           vec2 away = instanceMatrix[3].xz - ecoBendBody.xz;
           float distanceToBody = length(away);
           float level = 1.0 - smoothstep(.45, 1.35, abs(ecoBendBody.y - ecoBend.y));
-          vec2 displacement = away / max(.08, distanceToBody) * (1.0 - smoothstep(.08, 1.25, distanceToBody)) * level * .47;
+          vec2 displacement = away / max(.08, distanceToBody) * (1.0 - smoothstep(.08, 1.45, distanceToBody)) * level * .56;
           for (int stamp = 0; stamp < 4; stamp++) {
             vec2 delta = instanceMatrix[3].xz - ecoBendTrail[stamp].xz;
             float distanceToStep = length(delta);
             float stepLevel = 1.0 - smoothstep(.45, 1.35, abs(ecoBendTrail[stamp].y - ecoBend.y));
-            displacement += delta / max(.08, distanceToStep) * (1.0 - smoothstep(.05, 1.08, distanceToStep)) * stepLevel * ecoBendWeights[stamp] * .16;
+            displacement += delta / max(.08, distanceToStep) * (1.0 - smoothstep(.05, 1.24, distanceToStep)) * stepLevel * ecoBendWeights[stamp] * .19;
           }
-          float amount = min(.68, length(displacement));
+          float amount = min(.78, length(displacement));
           displacement *= amount / max(.001, length(displacement));
           float tip = clamp((bladeWorld.y - ecoBend.y) / max(.15, ecoBend.z), 0.0, 1.0);
           vec3 bend = vec3(displacement.x, -amount * .25, displacement.y) * tip * tip;
@@ -363,6 +363,11 @@ export class Ecosystem {
     return this.world.getBlock(Math.floor(x), Math.floor(y), Math.floor(z));
   }
 
+  _grassSupport(x, ground, z) {
+    const support = this._block(x, ground - 1, z);
+    return (support === 1 || support === 2) && this._block(x, ground, z) === 0;
+  }
+
   _box(x, y, z, sx, sy, sz, color, sway = 0, rotation = 0, bend = 0, bendRoot = 0, bendHeight = 1) {
     const pending = this.pending;
     if (!pending || pending.logicalCount >= pending.logicalLimit) return;
@@ -370,6 +375,9 @@ export class Ecosystem {
     // Entering the buffer can therefore never evict a later visible sample.
     pending.logicalCount++;
     if (!pending.sampleVisible || pending.count >= this.capacity) return;
+    // Offset blades can cross the seeded clump's block boundary. Test the live
+    // root, retaining its logical slot so an edit cannot move unrelated plants.
+    if (bend > .5 && !this._grassSupport(x, bendRoot, z)) return;
     const i = pending.count++;
     this.dummy.position.set(x, y, z);
     this.dummy.scale.set(sx, sy, sz);
@@ -568,11 +576,12 @@ export class Ecosystem {
             this._box(x + .30, ground + h * .45, z, .40, .2, .23, 0x839c72);
             this._box(x + .45, ground + h * .65, z, .18, h * .45, .22, 0x839c72);
             if (random() < .55) this._box(x, ground + h + .06, z, .18, .12, .18, 0xdfb0a3);
-          } else if (random() < .10) {
-            for (let s = 0; s < 3; s++) this._box(x + (random() - .5) * .2, ground + .15, z + (random() - .5) * .2, .04, .30, .045, 0xabaa7b, .04);
+          } else if (random() < .10 && (support === 1 || support === 2)) {
+            for (let s = 0; s < 3; s++) this._box(x + (random() - .5) * .2, ground + .15, z + (random() - .5) * .2, .04, .30, .045, 0xabaa7b, .04, 0, 1, ground, .30);
           }
           continue;
         }
+        if (support !== 1 && support !== 2) continue;
         const jungle = biome === 'jungle';
         const shoreline = height <= 14 && (
           this.world.heightAt(Math.floor(x + 2), Math.floor(z)) < 12 ||

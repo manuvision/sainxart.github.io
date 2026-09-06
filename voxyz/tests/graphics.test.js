@@ -249,3 +249,47 @@ test('water glints reject unavailable or unsupported shadow maps instead of inve
   }
   map.dispose();
 });
+
+test('reflection resolution preserves viewport aspect and respects mobile and GPU sample budgets',()=>{
+  const graphics=Object.create(Graphics.prototype);
+  graphics.renderer={capabilities:{maxSamples:4}};
+  graphics.reflection=new THREE.WebGLRenderTarget(1,1);graphics.mobile=false;graphics.reflectionReady=true;
+  graphics._resizeReflection(1920,1080);
+  assert.deepEqual([graphics.reflection.width,graphics.reflection.height,graphics.reflection.samples],[960,540,4]);
+  assert.equal(graphics.reflectionReady,false,'reallocated images cannot use an old ready flag');
+  graphics.reflectionReady=true;graphics._resizeReflection(1920,1080);
+  assert.equal(graphics.reflectionReady,true,'an unchanged resize keeps the valid image');
+  graphics._resizeReflection(7680,4320);
+  assert.deepEqual([graphics.reflection.width,graphics.reflection.height],[1024,576],'large displays cannot allocate an unbounded reflection');
+  graphics.mobile=true;graphics._resizeReflection(585,1266);
+  assert.equal(graphics.reflection.height,512);assert.equal(graphics.reflection.samples,2);
+  assert.ok(Math.abs(graphics.reflection.width/graphics.reflection.height-585/1266)<.002);
+  graphics.renderer.capabilities.maxSamples=0;graphics._resizeReflection(585,1266);
+  assert.equal(graphics.reflection.samples,0,'devices without multisampling retain the filtered single-sample target');
+  graphics._resizeReflection(1,1);assert.equal(graphics.reflection.width,1);assert.equal(graphics.reflection.height,1);
+  graphics.reflection.dispose();
+});
+
+test('visible reflected animation stays at one cadence through stationary and intermittent mouse frames',()=>{
+  const {graphics}=reflectionFixture(false,2);
+  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(8,8),new THREE.MeshBasicMaterial());
+  mesh.position.set(3,pondY,-3);mesh.rotateX(-Math.PI/2);mesh.updateMatrixWorld();
+  const world={chunks:new Map([['water',{waterMesh:mesh}]])};
+  graphics.wetColumns={world,update(){},surfaceAt(){return null;}};
+  graphics._updateStreamingFog=()=>{};graphics._updateWaterShadow=()=>{};
+  graphics.waterFrustum=new THREE.Frustum();graphics.viewProjection=new THREE.Matrix4();
+  graphics.renderer.shadowMap={};graphics.renderer.info={render:{}};
+  graphics.refraction={};graphics.post={target:{},setSun(){},setWaterSurface(){},render(){}};
+  graphics.waterMaterial.uniforms.uReflect={value:0};graphics.quality='auto';graphics.frame=0;
+  let reflections=0;graphics._updateReflection=()=>{reflections++;graphics.reflectionReady=true;return true;};
+  for(let i=0;i<12;i++){
+    if(i===4||i===8)graphics.camera.rotation.y+=.0001;
+    graphics.render(world);assert.equal(graphics.waterPasses,2);
+  }
+  assert.equal(reflections,12,'stationary and tiny camera movement frames both refresh moving reflected scenery');
+  graphics.waterMaterial.uniforms.uUnder.value=1;graphics.render(world);
+  assert.equal(reflections,12,'underwater views still skip the mirror pass');
+  graphics.waterMaterial.uniforms.uUnder.value=0;graphics.quality='low';graphics.render(world);
+  assert.equal(reflections,12,'Lightweight quality still skips the mirror pass');
+  mesh.geometry.dispose();mesh.material.dispose();
+});
