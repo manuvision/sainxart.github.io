@@ -94,7 +94,7 @@ Underwater shafts use the same occlusion with a shorter 16/12-block range and bl
 
 ## Interaction and placement refinements
 
-The embedded preview was verified to expose no `requestPointerLock` API. Desktop play now requests capture when available and retries on deliberate world clicks; otherwise mouse movement controls the camera without a held button, within the host window's cursor bounds. Touch retains drag-to-look. Native capture is required for unrestricted rotation.
+Actual runtime diagnostics show that the embedded preview exposes `requestPointerLock`, but its host rejected the tested request with a Chromium `UnknownError`. An earlier DOM-proxy inspection incorrectly suggested the API was absent. Desktop play requests capture when available and retries on deliberate world clicks; if the host refuses, mouse movement controls the camera without a held button within the window bounds. Touch retains drag-to-look. Native Chrome capture was verified for unrestricted rotation.
 
 The vendored renderer includes every visible point light in its shader light count, including lights with zero intensity. Torches therefore use six persistent light objects and update only their uniforms. Hidden flame and glow materials are precompiled against the same linear HDR render target used in play; compiling them for the default display target would create a different color-space variant. The first checked placement added no programs and had a 17.4 ms maximum frame interval over the following 1.2 seconds on the development Mac. This is a local observation, not a cross-device guarantee.
 
