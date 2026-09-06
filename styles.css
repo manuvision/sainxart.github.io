@@ -5534,3 +5534,16 @@ main {
         transform: translateY(var(--hero-bg-parallax-y)) scaleX(-1) scale(1.06);
     }
 }
+
+/* Voxyz — the second experiment in the Lab carousel. */
+.lab-card--voxyz {
+    background: #254b3f;
+}
+
+.lab-card--voxyz picture img {
+    object-position: 45% center;
+}
+
+.lab-card--voxyz::after {
+    background: linear-gradient(180deg, transparent 40%, rgba(8, 26, 20, 0.94));
+}

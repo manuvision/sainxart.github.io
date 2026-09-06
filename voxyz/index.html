@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#243d34"><meta name="description" content="A little world. Endless wonder. Explore, shape, and settle into Voxyz, a living voxel wilderness by Manu.Vision.">
+  <meta property="og:title" content="Voxyz — A little world. Endless wonder."><meta property="og:description" content="A cozy, living voxel wilderness. Wander, swim, build, and discover."><meta property="og:image" content="https://manu.vision/voxyz/preview.jpg">
+  <meta property="og:type" content="website"><meta property="og:url" content="https://manu.vision/voxyz/"><meta name="twitter:card" content="summary_large_image"><link rel="canonical" href="https://manu.vision/voxyz/">
+  <title>Voxyz — A little world. Endless wonder.</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
+  <link rel="preload" href="vendor/Tiny5-Regular.ttf" as="font" type="font/ttf" crossorigin>
+</head>
+<body>
+  <canvas id="world" aria-label="Voxyz interactive voxel world"></canvas>
+  <div id="underwater" aria-hidden="true"></div><div class="vignette" aria-hidden="true"></div>
+  <header class="masthead"><a class="maker" href="../#lab"><span class="maker-symbol">✳</span> MANU.VISION <span class="maker-slash">/</span> <span>EXPERIMENT 02</span></a><button id="sound-button" class="icon-button" aria-label="Enable ambient sound" title="Ambient sound"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4 5 9H2v6h3l6 5V4Z"/><path class="sound-wave" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/><path class="sound-off" d="m16 9 6 6m0-6-6 6"/></svg></button></header>
+  <main id="title-screen" class="screen">
+    <div class="title-content">
+      <p class="eyebrow"><span></span> A LITTLE WORLD. ENDLESS WONDER. <span></span></p>
+      <h1 class="voxyz-logo" aria-label="Voxyz"><span>Vo</span><span class="logo-x">X</span><span class="logo-y">Y</span><span class="logo-z">Z</span></h1>
+      <p class="tagline">Somewhere to wander.<br>Something to call your own.</p>
+      <button id="start-button" class="primary-button" disabled><span id="start-label">Growing your world</span><span id="start-arrow">· · ·</span></button>
+      <p id="loading-status" class="start-note">Planting a little wilderness…</p>
+    </div>
+    <div class="title-bottom"><div class="world-caption"><span class="status-dot"></span><span id="scene-caption">THE WILLOW WILDS</span><span class="caption-divider">/</span><span>Take the scenic route.</span></div><button id="world-settings" class="text-button">World settings <span>↗</span></button></div>
+  </main>
+  <section id="game-ui" hidden aria-label="Game controls">
+    <div class="game-top"><div class="location"><span id="biome-name">WILLOW WILDS</span><small id="coordinates">0 / 0 / 0</small></div><div class="game-buttons"><span id="fps" class="fps">60 FPS</span><button id="pause-button" class="icon-button" aria-label="Pause game">Ⅱ</button></div></div>
+    <div id="crosshair" aria-hidden="true"><span></span><span></span></div><div id="target-name"></div>
+    <div class="inventory"><div id="selected-name">Grass</div><div id="hotbar" role="toolbar" aria-label="Block inventory"></div><div class="desktop-hint"><span><kbd>W A S D</kbd> wander</span><span><kbd>SPACE</kbd> jump</span><span><kbd>⇧</kbd> sprint</span><span>left break · right place</span><span><kbd>1–9</kbd> select</span></div></div>
+    <div id="touch-controls"><div id="move-stick" class="joystick" aria-label="Move joystick"><span class="stick-knob"></span><small>MOVE</small></div><div id="look-stick" class="joystick" aria-label="Look joystick"><span class="stick-knob"></span><small>LOOK</small></div><div class="touch-actions"><button id="break-button" aria-label="Break block">⌁<small>BREAK</small></button><button id="place-button" aria-label="Place block">＋<small>PLACE</small></button><button id="jump-button" aria-label="Jump">↑<small>JUMP</small></button></div><button id="sprint-button" aria-label="Toggle sprint">⇧</button></div>
+  </section>
+  <section id="pause-screen" class="modal-backdrop" hidden><div class="menu-card"><p class="eyebrow">TAKE A BREATHER</p><h2>A moment in the wild.</h2><p>Your world will be right here.</p><button id="resume-button" class="primary-button"><span>Keep wandering</span><span>→</span></button><button id="pause-settings" class="secondary-button">World settings</button><button id="title-button" class="text-button">Back to the clearing</button><p class="save-note" id="save-note">Your changes save on this device.</p></div></section>
+  <dialog id="settings-dialog"><form method="dialog"><button class="close-button" aria-label="Close settings">×</button></form><p class="eyebrow">MAKE YOURSELF AT HOME</p><h2>Your little world.</h2><label for="seed-input">World seed</label><div class="seed-row"><input id="seed-input" maxlength="48" autocomplete="off" spellcheck="false"><button id="random-seed" class="small-button" aria-label="Generate random seed">⤨</button></div><p class="field-note">The same seed grows the same landscape. Edits stay with their seed.</p><div class="settings-grid"><label>Light<select id="time-select"><option value="cycle">Living day & night</option><option value="day">Golden morning</option><option value="dusk">Last light</option><option value="night">Firefly hours</option></select></label><label>Graphics<select id="quality-select"><option value="auto">Adaptive · 60 fps target</option><option value="high">Beautiful</option><option value="low">Lightweight</option></select></label></div><label class="check-label"><input type="checkbox" id="sound-check"> Forest sounds</label><button id="grow-button" class="primary-button"><span>Grow this world</span><span>↗</span></button><p class="field-note">WASD to move · mouse to look · Space to jump or swim up.<br>Click to break · right-click to place · scroll or 1–9 to select.<br>On touchscreens, use the two sticks and action buttons.</p></dialog>
+  <div id="toast" role="status"></div>
+  <div id="error-screen" class="modal-backdrop" hidden><div class="menu-card"><p class="eyebrow">A SMALL HICCUP</p><h2>The world couldn’t wake up.</h2><p id="error-message">Please use a browser with WebGL 2 enabled.</p><button class="primary-button" onclick="location.reload()">Try again</button><a href="../#lab">Back to the Lab</a></div></div>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
