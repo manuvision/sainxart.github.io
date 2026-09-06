@@ -88,20 +88,6 @@ test('chunk unload and world replacement clear stale caustics without terrain ge
   settle(mask,worldWithChunk());assert.deepEqual(read(mask,8,8),[0,0,0]);
 });
 
-test('water ambience uses nearby loaded water and attenuates with horizontal distance and altitude',()=>{
-  const world=worldWithChunk(),mask=new WaterColumnMask(32,192);
-  assert.equal(mask.proximityAt({x:8,y:14,z:8}),0,'uninitialized columns stay silent');
-  put(world,8,12,8);settle(mask,world);
-  const near=mask.proximityAt({x:8.5,y:14,z:8.5});
-  const shore=mask.proximityAt({x:12.5,y:14,z:8.5});
-  assert.equal(near,1);assert.ok(shore>0&&shore<near);
-  assert.equal(mask.proximityAt({x:21,y:14,z:8.5}),0);
-  assert.equal(mask.proximityAt({x:8.5,y:25,z:8.5}),0,'flying high above a lake is quiet');
-  assert.equal(mask.proximityAt({x:8.5,y:9,z:8.5}),0,'a cave below the pond does not sound submerged');
-  put(world,8,12,8,BLOCK.AIR,0);settle(mask,world);
-  assert.equal(mask.proximityAt({x:8.5,y:14,z:8.5}),0,'removing water silences its cached source');
-});
-
 const pondY=12.875;
 function reflectionFixture(under,distance,{renderError,skyVisible=true}={}) {
   const graphics=Object.create(Graphics.prototype);

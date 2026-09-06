@@ -1,11 +1,11 @@
 import * as THREE from './vendor/three.module.js';
-import { Graphics } from './graphics.js?v=3.8';
+import { Graphics } from './graphics.js?v=3.11';
 import { World, BLOCK_NAMES } from './world.js?v=3.6';
 import { Player } from './player.js?v=3.6';
 import { TorchLights } from './torch-lights.js?v=3.6';
 import { HeldItem } from './held-item.js?v=3.9';
 import { Ecosystem } from './ecosystem.js?v=3.8';
-import { AmbientAudio } from './audio.js?v=3.8';
+import { AmbientAudio } from './audio.js?v=3.11';
 import { ExplorationMap } from './exploration-map.js?v=3.6';
 import { voxelRaycast, overlapsPlayer } from './interaction.js';
 
@@ -116,7 +116,7 @@ function animate(now){
     world.update(position.x,position.z,2.5);world.tickWater(dt,position);
     const light=daylight();daylightState.value=light;
     ecosystem.update(dt,elapsed,position,light);graphics.update(elapsed,light,graphics.camera.position,started&&player.underwater);
-    audio.update(dt,{daylight:light,underwater:started&&player.underwater,biome:world.biomeAt(position.x,position.z),moving:started&&!paused&&player.moving&&!player.flying,inWater:started&&player.inWater,waterProximity:graphics.wetColumns.world===world?graphics.wetColumns.proximityAt(graphics.camera.position):0});
+    audio.update(dt,{daylight:light,underwater:started&&player.underwater,biome:world.biomeAt(position.x,position.z)});
     if(started){explorationMap.update(player.position,player.yaw,dt);}
     if(started&&!paused)updateTarget();else outline.visible=false;
     if(debrisLife>0){debrisLife-=dt;debris.position.y+=dt*(debrisLife*5-2);debris.scale.setScalar(1+(.65-debrisLife)*1.8);debris.material.opacity=Math.min(1,debrisLife*3);if(debrisLife<=0)debris.visible=false;}

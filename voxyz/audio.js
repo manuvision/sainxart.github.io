@@ -16,11 +16,6 @@ export function soundscapeMix(daylight, biome = 'meadow', underwater = false) {
   };
 }
 
-export function waterSoundMix(proximity = 0, underwater = false, inWater = false) {
-  const near = inWater ? 1 : smoothstep(0, 1, Number.isFinite(proximity) ? proximity : 0);
-  return { surface: underwater ? 0 : near * .009, submerged: underwater ? .026 : 0 };
-}
-
 export class AmbientAudio {
   constructor() {
     this.context = null;
@@ -29,23 +24,18 @@ export class AmbientAudio {
     this.muted = false;
     this.disposed = false;
     this.voices = new Set();
-    this.elapsed = 0;
     this.nextBird = 1.2;
     this.nextCricket = .45;
     this.nextFrog = 4.5;
-    this.nextBubble = 1.8;
     this.ambienceTargets = { bird: 0, cricket: 0, frog: 0 };
-    this.waterTargets = { surface: 0, submerged: 0 };
-    this.waterLoops = new Map();
     this.calls = { bird: 0, cricket: 0, frog: 0 };
     this.lastEffect = new Map();
-    this.state = { daylight: 1, underwater: false, biome: 'meadow', inWater: false, waterProximity: 0 };
+    this.state = { daylight: 1, underwater: false, biome: 'meadow' };
   }
 
   get enabled() { return this.started && !this.muted; }
   get diagnostics() {
-    return { started: this.started, enabled: this.enabled, mix: { ...this.ambienceTargets }, calls: { ...this.calls }, activeVoices: this.voices.size,
-      water: { proximity: this.state.waterProximity, ...this.waterTargets, loops: this.waterLoops.size } };
+    return { started: this.started, enabled: this.enabled, mix: { ...this.ambienceTargets }, calls: { ...this.calls }, activeVoices: this.voices.size };
   }
 
   async start() {
@@ -63,8 +53,8 @@ export class AmbientAudio {
       this.master.connect(this.lowpass);
       this.lowpass.connect(ctx.destination);
       this.noise = this._noiseBuffer(7);
-      // Wildlife has separate buses for dusk/dawn. Water loops are created
-      // lazily near actual water; dry land has silence between wildlife calls.
+      // Separate wildlife buses crossfade at dusk/dawn. No water or wind beds:
+      // the forest remains quiet between birds, crickets and frog calls.
       this.ambience = {};
       for (const kind of ['bird', 'cricket', 'frog']) {
         const bus = ctx.createGain();
@@ -143,59 +133,6 @@ export class AmbientAudio {
         }
         this.ambienceTargets[kind] = next[kind];
       }
-    }
-  }
-
-  _createWaterLoop(kind) {
-    const ctx = this.context;
-    const underwater = kind === 'submerged';
-    const source = ctx.createBufferSource();
-    source.buffer = this.noise; source.loop = true;
-    source.playbackRate.value = underwater ? .64 : .91;
-    const filter = ctx.createBiquadFilter();
-    filter.type = underwater ? 'lowpass' : 'bandpass';
-    filter.frequency.value = underwater ? 360 : 850;
-    filter.Q.value = underwater ? .5 : .42;
-    const highpass = ctx.createBiquadFilter();
-    highpass.type = 'highpass'; highpass.frequency.value = underwater ? 45 : 130;
-    highpass.Q.value = .5;
-    const envelope = ctx.createGain(); envelope.gain.value = 0;
-    source.connect(filter); filter.connect(highpass); highpass.connect(envelope); envelope.connect(this.master);
-    const loop = { source, nodes: [filter, highpass, envelope], envelope, silentFor: 0 };
-    this.waterLoops.set(kind, loop);
-    source.start(ctx.currentTime, Math.random() * 4);
-    return loop;
-  }
-
-  _stopWaterLoop(kind, loop) {
-    try { loop.source.stop(); } catch {}
-    loop.source.disconnect();
-    for (const node of loop.nodes) node.disconnect();
-    this.waterLoops.delete(kind);
-  }
-
-  _updateWater(dt) {
-    const { waterProximity, underwater, inWater } = this.state;
-    const mix = this.muted ? { surface: 0, submerged: 0 } : waterSoundMix(waterProximity, underwater, inWater);
-    // Slow irregular swells, kept far below the birds; no bright global hiss.
-    mix.surface *= .86 + Math.sin(this.elapsed * .73) * .10 + Math.sin(this.elapsed * 1.13 + 1.3) * .04;
-    mix.submerged *= .92 + Math.sin(this.elapsed * .39) * .08;
-    const now = this.context.currentTime;
-    for (const kind of ['surface', 'submerged']) {
-      let loop = this.waterLoops.get(kind);
-      if (!loop && mix[kind] > .00005) loop = this._createWaterLoop(kind);
-      if (!loop) continue;
-      if (Math.abs(mix[kind] - this.waterTargets[kind]) > .00005 || mix[kind] === 0 && this.waterTargets[kind] !== 0) {
-        const gain = loop.envelope.gain;
-        if (gain.cancelAndHoldAtTime) gain.cancelAndHoldAtTime(now);
-        else { gain.cancelScheduledValues(now); gain.setValueAtTime(gain.value, now); }
-        // Finite ramps reach exact silence after leaving the shore, and can
-        // be safely interrupted when crossing the surface repeatedly.
-        gain.linearRampToValueAtTime(mix[kind], now + .8);
-        this.waterTargets[kind] = mix[kind];
-      }
-      loop.silentFor = mix[kind] === 0 ? loop.silentFor + dt : 0;
-      if (loop.silentFor > 1.1) this._stopWaterLoop(kind, loop);
     }
   }
 
@@ -296,32 +233,14 @@ export class AmbientAudio {
     oscillator.start(at); oscillator.stop(at + (calls - 1) * .48 + .31);
   }
 
-  _bubble() {
-    const ctx = this.context;
-    const at = ctx.currentTime;
-    const oscillator = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const panner = this._panner(Math.random() * 1.4 - .7);
-    oscillator.frequency.setValueAtTime(360 + Math.random() * 500, at);
-    oscillator.frequency.exponentialRampToValueAtTime(100 + Math.random() * 130, at + .08);
-    gain.gain.setValueAtTime(.0001, at);
-    gain.gain.linearRampToValueAtTime(.004, at + .012);
-    gain.gain.exponentialRampToValueAtTime(.0001, at + .11);
-    oscillator.connect(gain); gain.connect(panner); panner.connect(this.master);
-    this._track(oscillator, [gain, panner], 'bubble', gain);
-    oscillator.start(at); oscillator.stop(at + .13);
-  }
-
   update(dt, state = {}) {
     Object.assign(this.state, state);
     if (!this.started || this.disposed || !this.context || this.context.state !== 'running') return;
     dt = Math.min(Math.max(dt, 0), .1);
-    this.elapsed += dt;
-    const { underwater, inWater } = this.state;
+    const { underwater } = this.state;
     const now = this.context.currentTime;
     this.lowpass.frequency.setTargetAtTime(underwater ? 580 : 12500, now, .3);
     this._updateAmbience();
-    this._updateWater(dt);
     this.nextBird -= dt;
     if (this.nextBird <= 0 && !this.muted) {
       if (this.ambienceTargets.bird > .01) this._chirp();
@@ -336,11 +255,6 @@ export class AmbientAudio {
     if (this.nextFrog <= 0 && !this.muted) {
       if (this.ambienceTargets.frog > .01) this._frog();
       this.nextFrog = 11 + Math.random() * 13;
-    }
-    this.nextBubble -= dt;
-    if (this.nextBubble <= 0 && !this.muted) {
-      if (inWater || underwater) this._bubble();
-      this.nextBubble = underwater ? 1.5 + Math.random() * 2.5 : 2.2 + Math.random() * 3.5;
     }
   }
 
@@ -382,8 +296,6 @@ export class AmbientAudio {
       for (const node of voice.nodes) node.disconnect();
     }
     this.voices.clear();
-    for (const [kind, loop] of this.waterLoops) this._stopWaterLoop(kind, loop);
-    this.waterTargets.surface = 0; this.waterTargets.submerged = 0;
     if (this.context && this.context.state !== 'closed') await this.context.close();
     this.started = false;
   }
