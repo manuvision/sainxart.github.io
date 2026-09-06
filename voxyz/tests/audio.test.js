@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AmbientAudio, soundscapeMix } from '../audio.js';
+import { AmbientAudio, soundscapeMix, waterSoundMix } from '../audio.js';
 
 class Param {
   constructor(value = 1) { this.value = value; this.events = []; }
@@ -77,7 +77,7 @@ test('daylight and habitat select birds or night wildlife with a gradual dusk cr
   assert.deepEqual(soundscapeMix(.07, 'jungle', true), { bird: 0, cricket: 0, frog: 0 });
 });
 
-test('starting audio creates no continuous water, wind or noise sources', async t => {
+test('dry land has no continuous water, wind or noise sources', async t => {
   const audio = await fixture(t);
   assert.equal(audio.context.nodes.filter(n => n.kind === 'buffer' || n.kind === 'oscillator').length, 0);
   advance(audio, 30, { daylight: 1 });
@@ -149,7 +149,7 @@ test('mute still fades the master and suppresses new ambience and interaction vo
   audio.effect('break'); assert.equal(audio.voices.size, 1);
 });
 
-test('underwater has only occasional subdued bubbles and contextual movement effects', async t => {
+test('underwater has subdued bubbles and a distinct low filtered water bed', async t => {
   const audio = await fixture(t);
   audio.nextBubble = 0;
   audio.update(.1, { daylight: .07, underwater: true, inWater: true });
@@ -158,8 +158,94 @@ test('underwater has only occasional subdued bubbles and contextual movement eff
   const bubble = Array.from(audio.voices)[0];
   assert.equal(bubble.kind, 'bubble');
   assert.equal(bubble.envelope.gain.events.find(e => e.type === 'linear').value, .004);
-  assert.ok(audio.nextBubble >= 1.8);
+  assert.ok(audio.nextBubble >= 1.5);
   assert.equal(audio.lowpass.frequency.events.at(-1).value, 580);
+  assert.equal(audio.waterLoops.size, 1);
+  const bed = audio.waterLoops.get('submerged');
+  assert.equal(bed.nodes[0].type, 'lowpass'); assert.equal(bed.nodes[0].frequency.value, 360);
+  assert.equal(bed.nodes[1].type, 'highpass'); assert.equal(bed.nodes[1].frequency.value, 45);
+  assert.ok(audio.waterTargets.submerged > .02 && audio.waterTargets.submerged <= .026);
+});
+
+test('water proximity gently raises the shore mix and clamps invalid or out-of-range inputs', () => {
+  assert.deepEqual(waterSoundMix(0), { surface: 0, submerged: 0 });
+  assert.deepEqual(waterSoundMix(-3), { surface: 0, submerged: 0 });
+  assert.deepEqual(waterSoundMix(NaN), { surface: 0, submerged: 0 });
+  assert.deepEqual(waterSoundMix(Infinity), { surface: 0, submerged: 0 });
+  assert.deepEqual(waterSoundMix(3), { surface: .009, submerged: 0 });
+  assert.ok(waterSoundMix(.2).surface < waterSoundMix(.5).surface);
+  assert.ok(waterSoundMix(.5).surface < waterSoundMix(.9).surface);
+  assert.deepEqual(waterSoundMix(0, false, true), { surface: .009, submerged: 0 });
+  assert.deepEqual(waterSoundMix(0, true), { surface: 0, submerged: .026 });
+});
+
+test('water loops start only near water, remain quiet, and disconnect after fading to exact silence', async t => {
+  const audio = await fixture(t);
+  audio.update(.1, { waterProximity: .5 });
+  assert.equal(audio.waterLoops.size, 1);
+  const shore = audio.waterLoops.get('surface');
+  assert.equal(shore.source.loop, true); assert.equal(shore.envelope.gain.value, 0);
+  assert.equal(shore.nodes[0].type, 'bandpass'); assert.equal(shore.nodes[0].frequency.value, 850);
+  assert.ok(audio.waterTargets.surface > 0 && audio.waterTargets.surface < .0045);
+  advance(audio, 8, { waterProximity: 1 });
+  assert.equal(audio.waterLoops.get('surface'), shore, 'reuse a single loop while nearby');
+  assert.ok(audio.waterTargets.surface <= .009, 'water stays well below bird call peaks');
+  advance(audio, 1.3, { waterProximity: 0 });
+  assert.equal(audio.waterTargets.surface, 0);
+  assert.equal(shore.envelope.gain.events.at(-1).value, 0);
+  assert.equal(audio.waterLoops.size, 0);
+  assert.ok(shore.source.disconnected && shore.nodes.every(n => n.disconnected));
+});
+
+test('crossing the water surface crossfades the two textures without duplicating loops', async t => {
+  const audio = await fixture(t);
+  audio.update(.1, { waterProximity: 1 });
+  const shore = audio.waterLoops.get('surface');
+  for (let i = 0; i < 6; i++) {
+    advance(audio, .2, { underwater: true, inWater: true });
+    assert.equal(audio.waterTargets.surface, 0); assert.ok(audio.waterTargets.submerged > 0);
+    advance(audio, .2, { underwater: false });
+    assert.ok(audio.waterTargets.surface > 0); assert.equal(audio.waterTargets.submerged, 0);
+    assert.ok(audio.waterLoops.size <= 2);
+  }
+  assert.equal(audio.context.nodes.filter(n => n.kind === 'buffer').length, 2);
+  assert.equal(audio.waterLoops.get('surface'), shore);
+  advance(audio, 1.3, { underwater: false });
+  assert.equal(audio.waterLoops.size, 1);
+  assert.equal(audio.diagnostics.water.submerged, 0);
+  assert.equal(audio.diagnostics.water.loops, 1);
+});
+
+test('walking is silent both on land and in water, while deliberate interaction effects remain', async t => {
+  const audio = await fixture(t);
+  audio.nextBird = audio.nextCricket = audio.nextFrog = audio.nextBubble = 99;
+  advance(audio, 3, { moving: true });
+  audio.effect('step');
+  assert.equal(audio.voices.size, 0);
+  assert.equal(audio.context.nodes.filter(n => n.kind === 'buffer').length, 0);
+  advance(audio, 3, { moving: true, inWater: true });
+  audio.effect('step');
+  assert.equal(audio.voices.size, 0);
+  assert.equal(audio.context.nodes.filter(n => n.kind === 'buffer').length, 1, 'only the contextual water loop');
+  audio.effect('jump'); audio.effect('place'); audio.effect('break');
+  assert.deepEqual(Array.from(audio.voices, v => v.kind).sort(), ['break', 'jump', 'place']);
+});
+
+test('mute fades and removes water loops, and unmute restores only the current water context', async t => {
+  const audio = await fixture(t);
+  audio.update(.1, { waterProximity: 1 });
+  const shore = audio.waterLoops.get('surface');
+  audio.setMuted(true);
+  advance(audio, 1.3);
+  assert.equal(audio.waterLoops.size, 0); assert.equal(audio.waterTargets.surface, 0);
+  assert.ok(shore.source.disconnected);
+  audio.setMuted(false); audio.update(.1);
+  assert.equal(audio.waterLoops.size, 1);
+  assert.notEqual(audio.waterLoops.get('surface'), shore);
+  const restored = audio.waterLoops.get('surface');
+  await audio.dispose();
+  assert.ok(restored.source.disconnected && restored.nodes.every(n => n.disconnected));
+  assert.equal(audio.waterLoops.size, 0); assert.equal(audio.diagnostics.water.surface, 0);
 });
 
 test('disposing audio stops queued voices, disconnects their nodes and prevents restart', async t => {

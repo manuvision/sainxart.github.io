@@ -1,10 +1,11 @@
 import * as THREE from './vendor/three.module.js';
-import { Graphics } from './graphics.js?v=3.6';
+import { Graphics } from './graphics.js?v=3.8';
 import { World, BLOCK_NAMES } from './world.js?v=3.6';
 import { Player } from './player.js?v=3.6';
 import { TorchLights } from './torch-lights.js?v=3.6';
-import { Ecosystem } from './ecosystem.js?v=3.6';
-import { AmbientAudio } from './audio.js?v=3.7';
+import { HeldItem } from './held-item.js?v=3.8';
+import { Ecosystem } from './ecosystem.js?v=3.8';
+import { AmbientAudio } from './audio.js?v=3.8';
 import { ExplorationMap } from './exploration-map.js?v=3.6';
 import { voxelRaycast, overlapsPlayer } from './interaction.js';
 
@@ -18,7 +19,7 @@ let world,ecosystem,explorationMap,player,graphics,audio,started=false,paused=fa
 let quality=storage.get('voxyz:quality','auto'),last=performance.now(),fpsTime=0,fpsFrames=0,fps=60,slowWindows=0,toastTimer,lastAction=0;
 const cameraDirection=new THREE.Vector3(),daylightState={value:1};
 const slots=[{id:1,name:'Meadow',color:'#7f9e55'},{id:3,name:'Stone',color:'#85908a'},{id:5,name:'Timber',color:'#8e704b'},{id:7,name:'Water',color:'#57a8ab'},{id:10,name:'Lantern',color:'#e7ac57'}];
-let torchRig,outline,debris,debrisLife=0,torchPlacementProbe=null;
+let torchRig,heldItem,outline,debris,debrisLife=0,torchPlacementProbe=null;
 const flameGeometry=new THREE.BoxGeometry(.17,.24,.17),flameMaterial=new THREE.MeshBasicMaterial({color:0xffdb81});
 flameMaterial.color.multiplyScalar(3.5);
 const glowCanvas=document.createElement('canvas');glowCanvas.width=glowCanvas.height=32;const glowContext=glowCanvas.getContext('2d'),glowGradient=glowContext.createRadialGradient(16,16,0,16,16,16);glowGradient.addColorStop(0,'rgba(255,224,143,.7)');glowGradient.addColorStop(.25,'rgba(255,185,81,.3)');glowGradient.addColorStop(1,'rgba(255,142,35,0)');glowContext.fillStyle=glowGradient;glowContext.fillRect(0,0,32,32);const glowTexture=new THREE.CanvasTexture(glowCanvas),glowMaterial=new THREE.SpriteMaterial({map:glowTexture,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});
@@ -26,7 +27,7 @@ function randomSeed(){const words=['willow','fern','moss','clover','honey','broo
 function toast(message){$('toast').textContent=message;$('toast').classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('visible'),2800);}
 function showError(error){console.error(error);$('error-message').textContent=error?.message?.includes('WebGL')?'This little wilderness needs WebGL 2. Try Chrome or Safari with hardware acceleration enabled.':'The world could not finish growing. Please reload to try again.';$('error-screen').hidden=false;}
 function blockIcon(color,id){if(id===10)return `<svg viewBox="0 0 40 44" aria-hidden="true"><path d="M17 20h6v21h-6z" fill="#8a603f"/><path d="M12 10h16v17H12z" fill="#bc853a"/><path d="M16 7h8v16h-8z" fill="#ffdf92"/><path d="M18 3h4v15h-4z" fill="#fff4bb"/></svg>`;return `<svg viewBox="0 0 40 44" aria-hidden="true"><path d="M20 3 37 12 20 22 3 12Z" fill="${color}"/><path d="M3 12 20 22v19L3 31Z" fill="${color}"/><path d="m20 22 17-10v19L20 41Z" fill="${color}"/><path d="M3 12 20 22v19L3 31Z" fill="#000" opacity=".16"/><path d="m20 22 17-10v19L20 41Z" fill="#000" opacity=".3"/>${id===1?'<path d="M3 19 20 29v12L3 31Z" fill="#836b43"/><path d="m20 29 17-10v12L20 41Z" fill="#64543b"/>':''}</svg>`;}
-function select(index){selected=(index+slots.length)%slots.length;if(player)player.selected=selected;$('selected-name').textContent=slots[selected].name;document.querySelectorAll('.slot').forEach((button,i)=>{button.classList.toggle('selected',i===selected);button.setAttribute('aria-pressed',String(i===selected));});}
+function select(index){selected=(index+slots.length)%slots.length;if(player)player.selected=selected;heldItem?.select(slots[selected].id);$('selected-name').textContent=slots[selected].name;document.querySelectorAll('.slot').forEach((button,i)=>{button.classList.toggle('selected',i===selected);button.setAttribute('aria-pressed',String(i===selected));});}
 function makeHotbar(){slots.forEach((slot,i)=>{const button=document.createElement('button');button.className='slot';button.title=`${i+1} · ${slot.name}`;button.setAttribute('aria-label',`${slot.name} block, slot ${i+1}`);button.innerHTML=`<kbd>${i+1}</kbd>${blockIcon(slot.color,slot.id)}`;button.addEventListener('pointerdown',event=>{event.stopPropagation();select(i);});button.addEventListener('click',()=>select(i));$('hotbar').append(button);});select(0);}
 async function enableAudio(){if(!audio)return;try{const active=await audio.start();if(!active)return;audio.setMuted(false);soundOn=true;document.body.classList.add('sound-on');$('sound-button').setAttribute('aria-label','Mute ambient sound');$('sound-check').checked=true;}catch{toast('Tap the sound button to enable forest sounds.');}}
 function toggleAudio(){if(!soundOn){enableAudio();return;}soundOn=false;audio.setMuted(true);document.body.classList.remove('sound-on');$('sound-button').setAttribute('aria-label','Enable ambient sound');$('sound-check').checked=false;}
@@ -50,7 +51,7 @@ function newWorld(nextSeed){
   torchRig.clear();warmTorches();
   world.update(8,14,8);
 }
-function begin(){if(!world.ready||!torchRig.ready)return;started=true;paused=false;document.body.classList.add('playing');$('title-screen').hidden=true;$('game-ui').hidden=false;$('pause-screen').hidden=true;
+function begin(){if(!world.ready||!torchRig.ready||!heldItem.ready)return;started=true;paused=false;document.body.classList.add('playing');$('title-screen').hidden=true;$('game-ui').hidden=false;$('pause-screen').hidden=true;
   const view=new THREE.Euler().setFromQuaternion(graphics.camera.quaternion,'YXZ');player.yaw=view.y;player.pitch=view.x;
   player.teleport(graphics.camera.position.x,graphics.camera.position.y-1.62,graphics.camera.position.z);
   player.enable();syncFlightUI();if(!audio.started)enableAudio();
@@ -81,7 +82,7 @@ function syncTouchLayout(){
   world.radius=mobile?6:8;graphics.mobile=mobile;graphics.setQuality(quality);
 }
 
-function warmTorches(){torchRig.warm(graphics.renderer,graphics.camera,graphics.post.target).catch(showError);}
+function warmTorches(){Promise.all([torchRig.warm(graphics.renderer,graphics.camera,graphics.post.target),heldItem.warm(graphics.renderer,graphics.post.target)]).catch(showError);}
 
 function action(kind,{repeat=false}={}){
   // A bucket pours once per press; held construction still repeats other blocks.
@@ -92,11 +93,11 @@ function action(kind,{repeat=false}={}){
   updateTarget();if(!target)return;lastAction=performance.now();
   if(kind==='break'){
     if(target.y<=0){toast('The deep bedrock holds this world together.');return;}
-    if(world.setBlock(target.x,target.y,target.z,0)){audio.effect('break');burst(target);torchRig.remove(target.x,target.y,target.z);}
+    if(world.setBlock(target.x,target.y,target.z,0)){audio.effect('break');heldItem.swing();burst(target);torchRig.remove(target.x,target.y,target.z);}
   }else if(kind==='place'){
     const [x,y,z]=target.previous;if(overlapsPlayer(x,y,z,player.position)){toast('A little more room before placing that block.');return;}
     const id=slots[selected].id;if(world.getBlock(x,y,z)!==0&&world.getBlock(x,y,z)!==7)return;
-    if(world.setBlock(x,y,z,id)){audio.effect('place');if(id===10){torchRig.add(x,y,z);torchPlacementProbe={until:performance.now()+1200,peakFrameMs:0,programsBefore:graphics.renderer.info.programs.length,programsAfter:graphics.renderer.info.programs.length};}}
+    if(world.setBlock(x,y,z,id)){audio.effect('place');heldItem.swing();if(id===10){torchRig.add(x,y,z);torchPlacementProbe={until:performance.now()+1200,peakFrameMs:0,programsBefore:graphics.renderer.info.programs.length,programsAfter:graphics.renderer.info.programs.length};}}
   }
   // A thin torch post does not change the surrounding forest decoration.
   // Its existing sun shadow refresh is sufficient; avoid a full flora rebuild.
@@ -115,25 +116,27 @@ function animate(now){
     world.update(position.x,position.z,2.5);world.tickWater(dt,position);
     const light=daylight();daylightState.value=light;
     ecosystem.update(dt,elapsed,position,light);graphics.update(elapsed,light,graphics.camera.position,started&&player.underwater);
-    audio.update(dt,{daylight:light,underwater:started&&player.underwater,biome:world.biomeAt(position.x,position.z),moving:started&&!paused&&player.moving&&!player.flying,inWater:started&&player.inWater});
+    audio.update(dt,{daylight:light,underwater:started&&player.underwater,biome:world.biomeAt(position.x,position.z),moving:started&&!paused&&player.moving&&!player.flying,inWater:started&&player.inWater,waterProximity:graphics.wetColumns.world===world?graphics.wetColumns.proximityAt(graphics.camera.position):0});
     if(started){explorationMap.update(player.position,player.yaw,dt);}
     if(started&&!paused)updateTarget();else outline.visible=false;
     if(debrisLife>0){debrisLife-=dt;debris.position.y+=dt*(debrisLife*5-2);debris.scale.setScalar(1+(.65-debrisLife)*1.8);debris.material.opacity=Math.min(1,debrisLife*3);if(debrisLife<=0)debris.visible=false;}
     torchRig.update(elapsed);
+    heldItem.update(dt,elapsed,{camera:graphics.camera,sunDirection:graphics.sunDirection,daylight:light,moving:started&&!paused&&player.moving&&!player.flying,visible:started,mobile,underwater:started&&player.underwater});
     graphics.render(world);
     if(torchPlacementProbe&&now<torchPlacementProbe.until){
       torchPlacementProbe.peakFrameMs=Math.max(torchPlacementProbe.peakFrameMs,rawDt*1000);
       torchPlacementProbe.programsAfter=graphics.renderer.info.programs.length;
     }
     if(world.ready&&!readyAt)readyAt=now;
-    if(readyAt&&torchRig.ready&&now-readyAt>800&&$('start-button').disabled){$('start-button').disabled=false;$('start-button').setAttribute('aria-busy','false');$('start-arrow').textContent='→';}
-    fpsFrames++;fpsTime+=rawDt;if(fpsTime>=1){fps=Math.round(fpsFrames/fpsTime);$('fps').textContent=`${fps} FPS`;fpsFrames=0;fpsTime=0;$('world').dataset.diagnostics=JSON.stringify({fps,scale:graphics.scale,chunks:world.stats.chunks,triangles:world.stats.triangles,queued:world.stats.queued,position:position.toArray(),yaw:player.yaw,pitch:player.pitch,flight:player.flying,lookMode:player.lookMode,pointerLock:player.pointerLockState,audio:audio.diagnostics,torchLights:torchRig.active.length,shaderPrograms:graphics.renderer.info.programs.length,lastTorchPlacement:torchPlacementProbe,drawRadius:world.radius,exploredCells:explorationMap.discovery.count,fogNear:graphics.scene.fog.near,fogFar:graphics.scene.fog.far,daylight:light,underwater:player.underwater,edits:world.edits.size,target:target?{x:target.x,y:target.y,z:target.z,id:target.id}:null,renderer:graphics.sceneStats,bloom:graphics.post.bloomEnabled,postPasses:graphics.post.lastPassCount,sunRays:graphics.post.sunRays.drawn,waterPasses:graphics.waterPasses,reflectionTarget:{width:graphics.reflection.width,height:graphics.reflection.height,samples:graphics.reflection.samples},rendering:'HDR / ACES',fluidCells:world.fluidChanges.size,foliage:ecosystem.flora[ecosystem.activeFlora].count,grassTrail:Array.from(ecosystem.bendWeights.value),detailRadius:ecosystem.detailRadius});
+    if(readyAt&&torchRig.ready&&heldItem.ready&&now-readyAt>800&&$('start-button').disabled){$('start-button').disabled=false;$('start-button').setAttribute('aria-busy','false');$('start-arrow').textContent='→';}
+    fpsFrames++;fpsTime+=rawDt;if(fpsTime>=1){fps=Math.round(fpsFrames/fpsTime);$('fps').textContent=`${fps} FPS`;fpsFrames=0;fpsTime=0;$('world').dataset.diagnostics=JSON.stringify({fps,scale:graphics.scale,chunks:world.stats.chunks,triangles:world.stats.triangles,queued:world.stats.queued,position:position.toArray(),yaw:player.yaw,pitch:player.pitch,flight:player.flying,lookMode:player.lookMode,pointerLock:player.pointerLockState,audio:audio.diagnostics,heldItem:heldItem.diagnostics,torchLights:torchRig.active.length,shaderPrograms:graphics.renderer.info.programs.length,lastTorchPlacement:torchPlacementProbe,drawRadius:world.radius,exploredCells:explorationMap.discovery.count,fogNear:graphics.scene.fog.near,fogFar:graphics.scene.fog.far,daylight:light,underwater:player.underwater,edits:world.edits.size,target:target?{x:target.x,y:target.y,z:target.z,id:target.id}:null,renderer:graphics.sceneStats,bloom:graphics.post.bloomEnabled,postPasses:graphics.post.lastPassCount,sunRays:graphics.post.sunRays.drawn,waterPasses:graphics.waterPasses,reflectionTarget:{width:graphics.reflection.width,height:graphics.reflection.height,samples:graphics.reflection.samples},rendering:'HDR / ACES',fluidCells:world.fluidChanges.size,foliage:ecosystem.flora[ecosystem.activeFlora].count,grassTrail:Array.from(ecosystem.bendWeights.value),detailRadius:ecosystem.detailRadius});
       if(quality==='auto'&&readyAt&&now-readyAt>5000){slowWindows=fps<54?slowWindows+1:0;if(slowWindows>=3&&graphics.scale>.55){graphics.scale=Math.max(.55,graphics.scale-.1);graphics.resize();slowWindows=0;}}
     }
   }catch(error){fatal=true;showError(error);}
 }
 try{
   graphics=new Graphics($('world'),mobile);graphics.setQuality(quality);audio=new AmbientAudio();
+  heldItem=new HeldItem(graphics.scene);graphics.heldItem=heldItem;
   torchRig=new TorchLights(graphics.scene,{flameGeometry,flameMaterial,glowMaterial});
   outline=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1.006,1.006,1.006)),new THREE.LineBasicMaterial({color:0xfff4c4,transparent:true,opacity:.7}));outline.visible=false;graphics.scene.add(outline);
   debris=new THREE.InstancedMesh(new THREE.BoxGeometry(.13,.13,.13),new THREE.MeshStandardMaterial({color:0xaab37f,roughness:.9,transparent:true}),18);debris.visible=false;debris.frustumCulled=false;graphics.scene.add(debris);

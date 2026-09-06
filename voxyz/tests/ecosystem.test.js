@@ -171,6 +171,70 @@ test('desktop and mobile detail stay bounded and jumping does not lift the parti
   }
 });
 
+test('fireflies spawn and recycle at floating height, fading alpha instead of climbing from the ground', () => {
+  let height = 15;
+  const world = { ...makeWorld(), heightAt: () => height };
+  const eco = new Ecosystem(new THREE.Scene(), world);
+  const viewer = new THREE.Vector3(0, 100, 0);
+  try {
+    eco._updateParticles(10, viewer, 0);
+    const positions = eco.particles.geometry.getAttribute('position');
+    const opacity = eco.particles.geometry.getAttribute('particleOpacity');
+    const initialY = Array.from({ length: positions.count }, (_, i) => positions.getY(i));
+    const anchors = eco.particleGround.map(particle => particle.y);
+    const size = eco.particleMaterial.size;
+    assert.ok(initialY.every(y => y > 16.2 && y < 20.8), 'first positions are already above the landscape');
+    assert.ok([...opacity.array].every(value => value === 0), 'new particles start transparent');
+    assert.equal(eco.fireflyLight.intensity, 0, 'invisible particles do not emit a premature point light');
+
+    height = 45;
+    eco._updateParticles(10.3, viewer, 0);
+    assert.deepEqual(eco.particleGround.map(particle => particle.y), anchors, 'terrain changes do not pull an existing firefly upward');
+    assert.ok(initialY.every((y, i) => Math.abs(positions.getY(i) - y) < .04), 'only gentle hover motion changes the height');
+    assert.ok([...opacity.array].some(value => value > .03 && value < .4), 'appearance progresses through partial opacity');
+    assert.equal(eco.particleMaterial.size, size, 'fade-in does not scale up the point sprite');
+
+    viewer.x = 36;
+    eco._updateParticles(10.3, viewer, 0);
+    const recycledY = Array.from({ length: positions.count }, (_, i) => positions.getY(i));
+    assert.ok([...opacity.array].every(value => value === 0), 'wrapped particles are invisible at their new locations');
+    recycledY.forEach((y, i) => assert.ok(Math.abs(y - initialY[i] - 30) < .04, 'a new hillside sets the complete floating height immediately'));
+    eco._updateParticles(10.6, viewer, 0);
+    assert.ok(recycledY.every((y, i) => Math.abs(positions.getY(i) - y) < .04), 'a recycled firefly never travels vertically from its old patch');
+    assert.ok([...opacity.array].some(value => value > .03), 'recycled particles softly become visible');
+    assert.equal(eco.particleMaterial.size, size);
+
+    const shader = { uniforms: {}, vertexShader: THREE.ShaderLib.points.vertexShader, fragmentShader: THREE.ShaderLib.points.fragmentShader };
+    eco.particleMaterial.onBeforeCompile(shader);
+    assert.match(shader.vertexShader, /vParticleOpacity = particleOpacity/);
+    assert.match(shader.fragmentShader, /diffuseColor\.a \*= vParticleOpacity/);
+  } finally { eco.dispose(); }
+});
+
+test('particles fade out before recycling at the viewing boundary without moving with the camera', () => {
+  const world = { ...makeWorld(), heightAt: () => 15 };
+  const eco = new Ecosystem(new THREE.Scene(), world);
+  const viewer = new THREE.Vector3(0, 100, 0);
+  try {
+    eco._updateParticles(0, viewer, 1);
+    eco._updateParticles(2, viewer, 1);
+    const positions = eco.particles.geometry.getAttribute('position');
+    const opacity = eco.particles.geometry.getAttribute('particleOpacity');
+    const candidate = Array.from({ length: positions.count }, (_, i) => i).find(i => positions.getX(i) > 10 && positions.getX(i) < 12 && Math.abs(positions.getZ(i)) < 10);
+    assert.notEqual(candidate, undefined, 'the seeded sample includes a particle near the fade band');
+    const x = positions.getX(candidate), y = positions.getY(candidate), z = positions.getZ(candidate);
+    assert.equal(opacity.getX(candidate), 1);
+    viewer.x = -3;
+    eco._updateParticles(2, viewer, 1);
+    assert.ok(opacity.getX(candidate) > 0 && opacity.getX(candidate) < 1, 'moving away fades an existing particle');
+    assert.deepEqual([positions.getX(candidate), positions.getY(candidate), positions.getZ(candidate)], [x, y, z]);
+    viewer.x = -6;
+    eco._updateParticles(2, viewer, 1);
+    assert.equal(opacity.getX(candidate), 0, 'the particle vanishes before its 18-block wrapping edge');
+    assert.deepEqual([positions.getX(candidate), positions.getY(candidate), positions.getZ(candidate)], [x, y, z]);
+  } finally { eco.dispose(); }
+});
+
 test('range tiers have an invisible generation buffer and crossing a cell starts a staged refresh', () => {
   for (const mobile of [false, true]) {
     const eco = new Ecosystem(new THREE.Scene(), makeWorld(), { mobile });

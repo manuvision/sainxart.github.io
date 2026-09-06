@@ -88,6 +88,20 @@ test('chunk unload and world replacement clear stale caustics without terrain ge
   settle(mask,worldWithChunk());assert.deepEqual(read(mask,8,8),[0,0,0]);
 });
 
+test('water ambience uses nearby loaded water and attenuates with horizontal distance and altitude',()=>{
+  const world=worldWithChunk(),mask=new WaterColumnMask(32,192);
+  assert.equal(mask.proximityAt({x:8,y:14,z:8}),0,'uninitialized columns stay silent');
+  put(world,8,12,8);settle(mask,world);
+  const near=mask.proximityAt({x:8.5,y:14,z:8.5});
+  const shore=mask.proximityAt({x:12.5,y:14,z:8.5});
+  assert.equal(near,1);assert.ok(shore>0&&shore<near);
+  assert.equal(mask.proximityAt({x:21,y:14,z:8.5}),0);
+  assert.equal(mask.proximityAt({x:8.5,y:25,z:8.5}),0,'flying high above a lake is quiet');
+  assert.equal(mask.proximityAt({x:8.5,y:9,z:8.5}),0,'a cave below the pond does not sound submerged');
+  put(world,8,12,8,BLOCK.AIR,0);settle(mask,world);
+  assert.equal(mask.proximityAt({x:8.5,y:14,z:8.5}),0,'removing water silences its cached source');
+});
+
 const pondY=12.875;
 function reflectionFixture(under,distance,{renderError,skyVisible=true}={}) {
   const graphics=Object.create(Graphics.prototype);
@@ -280,11 +294,17 @@ test('visible reflected animation stays at one cadence through stationary and in
   graphics.waterFrustum=new THREE.Frustum();graphics.viewProjection=new THREE.Matrix4();
   graphics.renderer.shadowMap={};graphics.renderer.info={render:{}};
   graphics.refraction={};graphics.post={target:{},setSun(){},setWaterSurface(){},render(){}};
+  const frameOrder=[];
+  const renderScene=graphics.renderer.render.bind(graphics.renderer);
+  graphics.renderer.render=(scene,camera)=>{frameOrder.push('world');renderScene(scene,camera);};
+  graphics.heldItem={render(renderer,target){assert.equal(renderer,graphics.renderer);assert.equal(target,graphics.post.target);frameOrder.push('held');}};
+  graphics.post.render=()=>{frameOrder.push('post');};
   graphics.waterMaterial.uniforms.uReflect={value:0};graphics.quality='auto';graphics.frame=0;
   let reflections=0;graphics._updateReflection=()=>{reflections++;graphics.reflectionReady=true;return true;};
   for(let i=0;i<12;i++){
     if(i===4||i===8)graphics.camera.rotation.y+=.0001;
-    graphics.render(world);assert.equal(graphics.waterPasses,2);
+    frameOrder.length=0;graphics.render(world);assert.equal(graphics.waterPasses,2);
+    assert.deepEqual(frameOrder,['world','world','held','post'],'the held prop is drawn once after water captures and before final lighting');
   }
   assert.equal(reflections,12,'stationary and tiny camera movement frames both refresh moving reflected scenery');
   graphics.waterMaterial.uniforms.uUnder.value=1;graphics.render(world);

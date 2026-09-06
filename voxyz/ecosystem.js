@@ -334,22 +334,31 @@ export class Ecosystem {
     const count = this.mobile ? 75 : 160;
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
+    const opacity = new Float32Array(count);
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage));
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute('particleOpacity', new THREE.BufferAttribute(opacity, 1).setUsage(THREE.DynamicDrawUsage));
     this.particleSeeds = [];
     this.particleGround = [];
     const random = rng(this.seed ^ 0x58a7b31);
     for (let i = 0; i < count; i++) {
       this.particleSeeds.push([random(), random(), random(), random(), random()]);
-      this.particleGround.push({ x: Infinity, z: Infinity, y: 0, target: 0 });
+      this.particleGround.push({ x: Infinity, z: Infinity, y: 0, caveY: Infinity, cave: false, born: 0 });
       this.color.setHex(i % 3 === 0 ? 0xffed9b : 0xcdeca0);
       colors[i * 3] = this.color.r;
       colors[i * 3 + 1] = this.color.g;
       colors[i * 3 + 2] = this.color.b;
     }
     this.geometries.push(geometry);
-    this.particleMaterial = new THREE.PointsMaterial({ size: .07, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: .55, depthWrite: false, blending: THREE.AdditiveBlending });
+    this.particleMaterial = new THREE.PointsMaterial({ size: .065, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: .55, depthWrite: false, blending: THREE.AdditiveBlending });
+    this.particleMaterial.onBeforeCompile = shader => {
+      shader.vertexShader = 'attribute float particleOpacity;varying float vParticleOpacity;\n' + shader.vertexShader;
+      shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvParticleOpacity = particleOpacity;');
+      shader.fragmentShader = 'varying float vParticleOpacity;\n' + shader.fragmentShader;
+      shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.a *= vParticleOpacity;');
+    };
+    this.particleMaterial.customProgramCacheKey = () => 'voxyz-floating-particle-opacity-v2';
     this.materials.push(this.particleMaterial);
     this.particles = new THREE.Points(geometry, this.particleMaterial);
     this.particles.name = 'Pollen, drifting dust and fireflies';
@@ -767,34 +776,51 @@ export class Ecosystem {
       this.clouds.setMatrixAt(i, this.dummy.matrix);
     }
     this.clouds.instanceMatrix.needsUpdate = true;
+    this._updateParticles(time, playerPosition, daylight);
+  }
+
+  _updateParticles(time, playerPosition, daylight) {
     const night = 1 - THREE.MathUtils.smoothstep(daylight, .08, .6);
     const positions = this.particles.geometry.getAttribute('position');
+    const opacities = this.particles.geometry.getAttribute('particleOpacity');
     const belowGround = playerPosition.y < this.world.heightAt(Math.floor(playerPosition.x), Math.floor(playerPosition.z));
     let nearestLight = 0, nearestDistance = Infinity;
     for (let i = 0; i < this.particleSeeds.length; i++) {
       const p = this.particleSeeds[i];
-      const x = playerPosition.x + ((p[0] * 36 + time * .025 - playerPosition.x + 180) % 36 + 36) % 36 - 18 + Math.sin(time * (.17 + p[3] * .1) + p[4] * TAU) * 1.1;
-      const z = playerPosition.z + ((p[1] * 36 - playerPosition.z + 180) % 36 + 36) % 36 - 18 + Math.cos(time * .19 + p[3] * TAU) * .8;
+      const baseX = playerPosition.x + ((p[0] * 36 + time * .025 - playerPosition.x + 180) % 36 + 36) % 36 - 18;
+      const baseZ = playerPosition.z + ((p[1] * 36 - playerPosition.z + 180) % 36 + 36) % 36 - 18;
+      const x = baseX + Math.sin(time * (.17 + p[3] * .1) + p[4] * TAU) * 1.1;
+      const z = baseZ + Math.cos(time * .19 + p[3] * TAU) * .8;
       const ground = this.particleGround[i];
-      // Height belongs to the particle's patch of terrain. Walking or jumping
-      // no longer carries the whole pollen/firefly layer upward with the camera.
-      const gx = Math.floor(x / 4) * 4, gz = Math.floor(z / 4) * 4;
-      if (gx !== ground.x || gz !== ground.z) {
-        const initial = !Number.isFinite(ground.x);
-        ground.x = gx; ground.z = gz;
-        ground.target = Math.max(WATER_SURFACE, this.world.heightAt(gx, gz) + 1);
-        if (initial) ground.y = ground.target;
+      const caveY = playerPosition.y + ((p[2] * 8 - playerPosition.y + 80) % 8 + 8) % 8 - 4;
+      const recycled = !Number.isFinite(ground.x) || Math.abs(baseX - ground.x) > 18 || Math.abs(baseZ - ground.z) > 18
+        || ground.cave !== belowGround || (belowGround && Math.abs(caveY - ground.caveY) > 4);
+      if (recycled) {
+        // Spawn directly at a floating height. Never slide from the old ground
+        // height to a new hillside when the viewing volume wraps a particle.
+        ground.y = belowGround ? caveY : Math.max(WATER_SURFACE, this.world.heightAt(Math.floor(x), Math.floor(z)) + 1) + .5 + p[2] * 4;
+        ground.born = time;
       }
-      ground.y += (ground.target - ground.y) * Math.min(1, Math.max(0, dt) * 1.5);
-      const y = belowGround ? playerPosition.y + ((p[2] * 8 - playerPosition.y + 80) % 8 + 8) % 8 - 4 : ground.y + .5 + p[2] * 4 + Math.sin(time * .35 + p[4] * TAU) * .7;
+      ground.x = baseX; ground.z = baseZ; ground.caveY = caveY; ground.cave = belowGround;
+      const y = ground.y + Math.sin(time * .35 + p[4] * TAU) * (belowGround ? .10 : .28);
       positions.setXYZ(i, x, y, z);
+      // Fade completely before the toroidal boundary, then reappear at the
+      // recycled location through alpha only. Hover height and size stay fixed.
+      const range = Math.max(Math.abs(x - playerPosition.x), Math.abs(z - playerPosition.z));
+      const edge = 1 - THREE.MathUtils.smoothstep(range, 12, 16);
+      const verticalEdge = belowGround ? 1 - THREE.MathUtils.smoothstep(Math.abs(y - playerPosition.y), 2.75, 3.75) : 1;
+      const birth = THREE.MathUtils.smoothstep(time - ground.born, 0, .85 + p[3] * .35);
+      const pulse = .65 + .35 * Math.sin(time * (1.1 + p[3] * .8) + p[4] * TAU);
+      const opacity = edge * verticalEdge * birth * (belowGround ? 1 : 1 - night + night * pulse);
+      opacities.setX(i, opacity);
       const distance = (x - playerPosition.x) ** 2 + (y - playerPosition.y) ** 2 + (z - playerPosition.z) ** 2;
-      if (distance < nearestDistance) { nearestDistance = distance; nearestLight = i; }
+      if (opacity > .05 && distance < nearestDistance) { nearestDistance = distance; nearestLight = i; }
     }
     positions.needsUpdate = true;
-    this.particleMaterial.size = belowGround ? .035 : .048 + night * .045;
+    opacities.needsUpdate = true;
+    this.particleMaterial.size = belowGround ? .035 : .065;
     this.particleMaterial.opacity = belowGround ? .22 : .27 + night * .55;
-    this.fireflyLight.intensity = night * (.22 + Math.sin(time * 2.2) * .06);
+    this.fireflyLight.intensity = belowGround || !Number.isFinite(nearestDistance) ? 0 : night * (.22 + Math.sin(time * 2.2) * .06) * opacities.getX(nearestLight);
     this.fireflyLight.position.fromBufferAttribute(positions, nearestLight);
   }
 

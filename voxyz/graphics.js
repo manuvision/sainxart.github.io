@@ -64,6 +64,22 @@ export class WaterColumnMask {
     const i=(z*this.size+x)*4;
     return this.data[i+2]>.5&&position.y>=this.data[i+1]&&position.y<this.data[i]?this.data[i]:null;
   }
+  proximityAt(position,radius=10) {
+    if(!Number.isFinite(this.origin.x+this.origin.y+position.x+position.y+position.z)||radius<=0)return 0;
+    const minX=Math.max(0,Math.floor(position.x-radius)-this.origin.x),maxX=Math.min(this.size-1,Math.floor(position.x+radius)-this.origin.x);
+    const minZ=Math.max(0,Math.floor(position.z-radius)-this.origin.y),maxZ=Math.min(this.size-1,Math.floor(position.z+radius)-this.origin.y);
+    let nearest=radius*radius;
+    // Reuse the bounded loaded-column cache: sound must not generate terrain or
+    // follow an invisible biome-wide water bed, and altitude attenuates it too.
+    for(let z=minZ;z<=maxZ;z++)for(let x=minX;x<=maxX;x++){
+      const i=(z*this.size+x)*4;if(this.data[i+2]<.5||position.y<this.data[i+1]-.75)continue;
+      const wx=this.origin.x+x,wz=this.origin.y+z;
+      const dx=Math.max(wx-position.x,0,position.x-wx-1),dz=Math.max(wz-position.z,0,position.z-wz-1);
+      const dy=Math.max(this.data[i+1]-position.y,0,position.y-this.data[i]);
+      nearest=Math.min(nearest,dx*dx+dy*dy+dz*dz);
+    }
+    return 1-THREE.MathUtils.smoothstep(Math.sqrt(nearest),1.25,radius);
+  }
   update(world,position) {
     const size=this.size,x=Math.floor(position.x/8)*8-size/2,z=Math.floor(position.z/8)*8-size/2;
     const reset=world!==this.world;this.world=world;
@@ -369,6 +385,9 @@ export class Graphics {
     this.waterMaterial.uniforms.uReflect.value=this.waterMaterial.uniforms.uUnder.value<.5&&this.quality!=='low'&&this.reflectionReady?THREE.MathUtils.smoothstep(Math.abs(camera.position.y-12.875),.006,.035):0;
     this._updateWaterShadow();
     renderer.setRenderTarget(this.post.target);renderer.render(scene,camera);this.sceneStats={...renderer.info.render};
+    // The view model writes only its near depth, preserving the world depth
+    // elsewhere. It never enters either water capture, and participates in bloom.
+    this.heldItem?.render(renderer,this.post.target);
     // Snapshot the shadow matrix only after rendering; its cached map and matrix
     // must describe the same light pose between scheduled shadow refreshes.
     this.post.setSun(camera,this.sun,this.sunDirection);
