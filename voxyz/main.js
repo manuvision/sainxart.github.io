@@ -1,10 +1,10 @@
 import * as THREE from './vendor/three.module.js';
-import { Graphics } from './graphics.js?v=2';
-import { World, BLOCK_NAMES } from './world.js';
-import { Player } from './player.js?v=2';
-import { Ecosystem } from './ecosystem.js?v=2';
+import { Graphics } from './graphics.js?v=3.4';
+import { World, BLOCK_NAMES } from './world.js?v=3.4';
+import { Player } from './player.js?v=3.4';
+import { Ecosystem } from './ecosystem.js?v=3.4';
 import { AmbientAudio } from './audio.js';
-import { ExplorationMap } from './exploration-map.js';
+import { ExplorationMap } from './exploration-map.js?v=3.4';
 import { voxelRaycast, overlapsPlayer } from './interaction.js';
 
 const $=id=>document.getElementById(id);
@@ -14,11 +14,12 @@ document.body.classList.toggle('touch-device',mobile);
 const storage={get(key,fallback){try{return localStorage.getItem(key)??fallback;}catch{return fallback;}},set(key,value){try{localStorage.setItem(key,value);}catch{}}};
 let seed=new URLSearchParams(location.search).get('seed')||storage.get('voxyz:last-seed','')||randomSeed();
 let world,ecosystem,explorationMap,player,graphics,audio,started=false,paused=false,elapsed=0,readyAt=0,selected=0,target=null,timeMode=storage.get('voxyz:light','cycle'),soundOn=false,fatal=false,wasRising=false;
-let quality=storage.get('voxyz:quality','auto'),last=performance.now(),fpsTime=0,fpsFrames=0,fps=60,slowWindows=0,toastTimer,saveTimer,lastAction=0;
+let quality=storage.get('voxyz:quality','auto'),last=performance.now(),fpsTime=0,fpsFrames=0,fps=60,slowWindows=0,toastTimer,lastAction=0;
 const cameraDirection=new THREE.Vector3(),daylightState={value:1};
 const slots=[{id:1,name:'Meadow',color:'#7f9e55'},{id:3,name:'Stone',color:'#85908a'},{id:5,name:'Timber',color:'#8e704b'},{id:7,name:'Water',color:'#57a8ab'},{id:10,name:'Lantern',color:'#e7ac57'}];
 const torchLights=[];let outline,debris,debrisLife=0;
 const flameGeometry=new THREE.BoxGeometry(.17,.24,.17),flameMaterial=new THREE.MeshBasicMaterial({color:0xffdb81});
+flameMaterial.color.multiplyScalar(3.5);
 const glowCanvas=document.createElement('canvas');glowCanvas.width=glowCanvas.height=32;const glowContext=glowCanvas.getContext('2d'),glowGradient=glowContext.createRadialGradient(16,16,0,16,16,16);glowGradient.addColorStop(0,'rgba(255,224,143,.7)');glowGradient.addColorStop(.25,'rgba(255,185,81,.3)');glowGradient.addColorStop(1,'rgba(255,142,35,0)');glowContext.fillStyle=glowGradient;glowContext.fillRect(0,0,32,32);const glowTexture=new THREE.CanvasTexture(glowCanvas),glowMaterial=new THREE.SpriteMaterial({map:glowTexture,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});
 function randomSeed(){const words=['willow','fern','moss','clover','honey','brook','juniper','birch'];const n=crypto.getRandomValues(new Uint32Array(2));return `${words[n[0]%words.length]}-${(n[1]%89999)+10000}`;}
 function toast(message){$('toast').textContent=message;$('toast').classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('visible'),2800);}
@@ -28,12 +29,21 @@ function select(index){selected=(index+slots.length)%slots.length;if(player)play
 function makeHotbar(){slots.forEach((slot,i)=>{const button=document.createElement('button');button.className='slot';button.title=`${i+1} · ${slot.name}`;button.setAttribute('aria-label',`${slot.name} block, slot ${i+1}`);button.innerHTML=`<kbd>${i+1}</kbd>${blockIcon(slot.color,slot.id)}`;button.addEventListener('pointerdown',event=>{event.stopPropagation();select(i);});button.addEventListener('click',()=>select(i));$('hotbar').append(button);});select(0);}
 async function enableAudio(){if(!audio)return;try{const active=await audio.start();if(!active)return;audio.setMuted(false);soundOn=true;document.body.classList.add('sound-on');$('sound-button').setAttribute('aria-label','Mute ambient sound');$('sound-check').checked=true;}catch{toast('Tap the sound button to enable forest sounds.');}}
 function toggleAudio(){if(!soundOn){enableAudio();return;}soundOn=false;audio.setMuted(true);document.body.classList.remove('sound-on');$('sound-button').setAttribute('aria-label','Enable ambient sound');$('sound-check').checked=false;}
+function syncFlightUI(){
+  const flying=!!(started&&player?.flying);document.body.classList.toggle('flying',flying);
+  $('descend-button').hidden=!flying;
+  $('jump-button').setAttribute('aria-label',flying?'Ascend; double-tap to stop flying':'Jump or swim up; double-tap to fly');
+  $('jump-button').querySelector('small').textContent=flying?'UP':'JUMP';
+  $('jump-hint').textContent=flying?'up · twice to stop flying':'jump · twice to fly';
+  $('descend-hint').hidden=!flying;
+}
 function newWorld(nextSeed){
-  explorationMap?.dispose();world?.save();world?.dispose();ecosystem?.dispose();seed=nextSeed;storage.set('voxyz:last-seed',seed);$('seed-input').value=seed;
+  player?.disable();player?.setFlying(false);
+  explorationMap?.dispose();world?.dispose();ecosystem?.dispose();seed=nextSeed;storage.set('voxyz:last-seed',seed);$('seed-input').value=seed;
   world=new World(graphics.scene,graphics.terrainMaterial,graphics.waterMaterial,seed,{radius:mobile?6:8});
-  ecosystem=new Ecosystem(graphics.scene,world,{mobile});if(player)player.world=world;
+  ecosystem=new Ecosystem(graphics.scene,world,{mobile,waterLighting:{time:graphics.time,day:graphics.day,wetColumns:graphics.wetColumns}});if(player)player.world=world;
   explorationMap=new ExplorationMap(world,{miniCanvas:$('minimap-canvas'),fullCanvas:$('map-canvas')});$('map-world-name').textContent=seed;
-  readyAt=0;started=false;paused=false;$('title-screen').hidden=false;$('game-ui').hidden=true;$('pause-screen').hidden=true;document.body.classList.remove('playing');
+  readyAt=0;started=false;paused=false;$('title-screen').hidden=false;$('game-ui').hidden=true;$('pause-screen').hidden=true;document.body.classList.remove('playing','flying','submerged');syncFlightUI();
   $('start-button').disabled=true;$('start-button').setAttribute('aria-busy','true');$('start-arrow').textContent='···';
   graphics.camera.position.set(8,world.heightAt(8,14)+2.65,14);graphics.camera.lookAt(-4,14,-12);graphics.renderer.shadowMap.needsUpdate=true;
   for(const light of torchLights){graphics.scene.remove(light);light.dispose?.();}torchLights.length=0;
@@ -43,16 +53,23 @@ function newWorld(nextSeed){
 function begin(){if(!world.ready)return;started=true;paused=false;document.body.classList.add('playing');$('title-screen').hidden=true;$('game-ui').hidden=false;$('pause-screen').hidden=true;
   const view=new THREE.Euler().setFromQuaternion(graphics.camera.quaternion,'YXZ');player.yaw=view.y;player.pitch=view.x;
   player.teleport(graphics.camera.position.x,graphics.camera.position.y-1.62,graphics.camera.position.z);
-  player.enable();if(!audio.started)enableAudio();
+  player.enable();syncFlightUI();if(!audio.started)enableAudio();
   explorationMap.update(player.position,player.yaw,1);
 }
-function pause(){if(!started||paused)return;paused=true;player.disable();explorationMap.save();const saved=world.save();$('save-note').textContent=saved?'Your changes save on this device.':'Storage is unavailable. Keep this tab open to retain your edits.';$('pause-screen').hidden=false;}
+function pause(){if(!started||paused)return;paused=true;player.disable();$('pause-screen').hidden=false;}
 function resume(){paused=false;$('pause-screen').hidden=true;player.enable();}
-function returnToTitle(){player.disable();world.save();started=false;paused=false;newWorld(seed);}
+function returnToTitle(){
+  player.disable();player.setFlying(false);started=false;paused=false;document.body.classList.remove('playing','flying','submerged');syncFlightUI();
+  $('title-screen').hidden=false;$('game-ui').hidden=true;$('pause-screen').hidden=true;
+  graphics.camera.position.set(8,world.heightAt(8,14)+2.65,14);graphics.camera.lookAt(-4,14,-12);graphics.renderer.shadowMap.needsUpdate=true;
+  // Revisit the opening without replacing this session's edits or discovery.
+  world.ready=false;world.update(8,14,2.5);
+  if(!world.ready){readyAt=0;$('start-button').disabled=true;$('start-button').setAttribute('aria-busy','true');$('start-arrow').textContent='···';}
+}
 function settings(){if(started&&!paused)pause();$('seed-input').value=seed;$('settings-dialog').showModal();}
 function openMap(){
   if(!started||paused)return;
-  paused=true;player.disable();world.save();explorationMap.save();
+  paused=true;player.disable();
   $('map-dialog').showModal();explorationMap.drawFull();
 }
 function closeMap(){if($('map-dialog').open)$('map-dialog').close();}
@@ -65,9 +82,12 @@ function syncTouchLayout(){
 }
 
 function addTorch(x,y,z){const light=new THREE.PointLight(0xffad4e,12,13,1.8);light.position.set(x+.5,y+.7,z+.5);light.userData.key=`${x},${y},${z}`;const flame=new THREE.Mesh(flameGeometry,flameMaterial),glow=new THREE.Sprite(glowMaterial);glow.scale.set(1.1,1.3,1);light.add(flame,glow);graphics.scene.add(light);torchLights.push(light);if(torchLights.length>6)graphics.scene.remove(torchLights.shift());}
-function action(kind){
+function action(kind,{repeat=false}={}){
+  // A bucket pours once per press; held construction still repeats other blocks.
+  const pouring=kind==='place'&&slots[selected].id===7;
+  if(pouring&&repeat)return;
   $('world').dataset.lastAction=JSON.stringify({kind,started,paused,target:target?.id,time:performance.now()});
-  if(!started||paused||performance.now()-lastAction<120)return;
+  if(!started||paused||(!pouring&&performance.now()-lastAction<120))return;
   updateTarget();if(!target)return;lastAction=performance.now();
   if(kind==='break'){
     if(target.y<=0){toast('The deep bedrock holds this world together.');return;}
@@ -77,7 +97,7 @@ function action(kind){
     const id=slots[selected].id;if(world.getBlock(x,y,z)!==0&&world.getBlock(x,y,z)!==7)return;
     if(world.setBlock(x,y,z,id)){audio.effect('place');if(id===10)addTorch(x,y,z);}
   }
-  graphics.renderer.shadowMap.needsUpdate=true;ecosystem.invalidate();clearTimeout(saveTimer);saveTimer=setTimeout(()=>world.save(),900);
+  graphics.renderer.shadowMap.needsUpdate=true;ecosystem.invalidate();
 }
 function burst(hit){debris.position.set(hit.x+.5,hit.y+.5,hit.z+.5);debris.material.color.set(slots.find(s=>s.id===hit.id)?.color||'#a3b27e');debris.visible=true;debrisLife=.65;const dummy=new THREE.Object3D();for(let i=0;i<18;i++){dummy.position.set((Math.random()-.5)*.8,(Math.random()-.5)*.8,(Math.random()-.5)*.8);dummy.rotation.set(Math.random()*3,Math.random()*3,0);dummy.updateMatrix();debris.setMatrixAt(i,dummy.matrix);}debris.instanceMatrix.needsUpdate=true;}
 function daylight(){if(timeMode==='night')return .07;if(timeMode==='dusk')return .42;if(timeMode==='day')return 1;return .08+.92*THREE.MathUtils.smoothstep(Math.sin(elapsed/160+.95),-.25,.65);}
@@ -86,12 +106,12 @@ function animate(now){
   if(fatal)return;
   requestAnimationFrame(animate);if(document.hidden){last=now;return;}const rawDt=(now-last)/1000,dt=Math.min(.05,rawDt);last=now;elapsed+=dt;
   try{
-    if(started&&!paused){player.update(dt);document.body.classList.toggle('submerged',player.underwater);const rising=player.velocity.y>2&&!player.inWater;if(rising&&!wasRising)audio.effect('jump');wasRising=rising;}else document.body.classList.remove('submerged');
+    if(started&&!paused){player.update(dt);document.body.classList.toggle('submerged',player.underwater);const rising=player.velocity.y>2&&!player.inWater&&!player.flying;if(rising&&!wasRising)audio.effect('jump');wasRising=rising;}else document.body.classList.remove('submerged');
     const position=started?player.position:graphics.camera.position;
     world.update(position.x,position.z,2.5);world.tickWater(dt,position);
     const light=daylight();daylightState.value=light;
     ecosystem.update(dt,elapsed,position,light);graphics.update(elapsed,light,graphics.camera.position,started&&player.underwater);
-    audio.update(dt,{daylight:light,underwater:started&&player.underwater,biome:world.biomeAt(position.x,position.z),moving:started&&!paused&&player.moving,inWater:started&&player.inWater});
+    audio.update(dt,{daylight:light,underwater:started&&player.underwater,biome:world.biomeAt(position.x,position.z),moving:started&&!paused&&player.moving&&!player.flying,inWater:started&&player.inWater});
     if(started){explorationMap.update(player.position,player.yaw,dt);}
     if(started&&!paused)updateTarget();else outline.visible=false;
     if(debrisLife>0){debrisLife-=dt;debris.position.y+=dt*(debrisLife*5-2);debris.scale.setScalar(1+(.65-debrisLife)*1.8);debris.material.opacity=Math.min(1,debrisLife*3);if(debrisLife<=0)debris.visible=false;}
@@ -99,7 +119,7 @@ function animate(now){
     graphics.render(world);
     if(world.ready&&!readyAt)readyAt=now;
     if(readyAt&&now-readyAt>800&&$('start-button').disabled){$('start-button').disabled=false;$('start-button').setAttribute('aria-busy','false');$('start-arrow').textContent='→';}
-    fpsFrames++;fpsTime+=rawDt;if(fpsTime>=1){fps=Math.round(fpsFrames/fpsTime);$('fps').textContent=`${fps} FPS`;fpsFrames=0;fpsTime=0;$('world').dataset.diagnostics=JSON.stringify({fps,scale:graphics.scale,chunks:world.stats.chunks,triangles:world.stats.triangles,queued:world.stats.queued,position:position.toArray(),yaw:player.yaw,pitch:player.pitch,drawRadius:world.radius,exploredCells:explorationMap.discovery.count,fogNear:graphics.scene.fog.near,fogFar:graphics.scene.fog.far,daylight:light,underwater:player.underwater,edits:world.edits.size,target:target?{x:target.x,y:target.y,z:target.z,id:target.id}:null,renderer:graphics.renderer.info.render});
+    fpsFrames++;fpsTime+=rawDt;if(fpsTime>=1){fps=Math.round(fpsFrames/fpsTime);$('fps').textContent=`${fps} FPS`;fpsFrames=0;fpsTime=0;$('world').dataset.diagnostics=JSON.stringify({fps,scale:graphics.scale,chunks:world.stats.chunks,triangles:world.stats.triangles,queued:world.stats.queued,position:position.toArray(),yaw:player.yaw,pitch:player.pitch,flight:player.flying,drawRadius:world.radius,exploredCells:explorationMap.discovery.count,fogNear:graphics.scene.fog.near,fogFar:graphics.scene.fog.far,daylight:light,underwater:player.underwater,edits:world.edits.size,target:target?{x:target.x,y:target.y,z:target.z,id:target.id}:null,renderer:graphics.sceneStats,bloom:graphics.post.bloomEnabled,postPasses:graphics.post.lastPassCount,sunRays:graphics.post.sunRays.drawn,waterPasses:graphics.waterPasses,rendering:'HDR / ACES',fluidCells:world.fluidChanges.size,foliage:ecosystem.flora[ecosystem.activeFlora].count,grassTrail:Array.from(ecosystem.bendWeights.value),detailRadius:ecosystem.detailRadius});
       if(quality==='auto'&&readyAt&&now-readyAt>5000){slowWindows=fps<54?slowWindows+1:0;if(slowWindows>=3&&graphics.scale>.55){graphics.scale=Math.max(.55,graphics.scale-.1);graphics.resize();slowWindows=0;}}
     }
   }catch(error){fatal=true;showError(error);}
@@ -107,8 +127,8 @@ function animate(now){
 try{
   graphics=new Graphics($('world'),mobile);graphics.setQuality(quality);audio=new AmbientAudio();
   outline=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1.006,1.006,1.006)),new THREE.LineBasicMaterial({color:0xfff4c4,transparent:true,opacity:.7}));outline.visible=false;graphics.scene.add(outline);
-  debris=new THREE.InstancedMesh(new THREE.BoxGeometry(.13,.13,.13),new THREE.MeshLambertMaterial({color:0xaab37f,transparent:true}),18);debris.visible=false;debris.frustumCulled=false;graphics.scene.add(debris);
-  newWorld(seed);player=new Player(graphics.camera,$('world'),world,{onAction:action,onSelect:select,onPause:pause,slotCount:slots.length});makeHotbar();
+  debris=new THREE.InstancedMesh(new THREE.BoxGeometry(.13,.13,.13),new THREE.MeshStandardMaterial({color:0xaab37f,roughness:.9,transparent:true}),18);debris.visible=false;debris.frustumCulled=false;graphics.scene.add(debris);
+  newWorld(seed);player=new Player(graphics.camera,$('world'),world,{onAction:action,onSelect:select,onPause:pause,onFlightChange:syncFlightUI,slotCount:slots.length});makeHotbar();syncFlightUI();
   $('start-button').addEventListener('click',begin);$('pause-button').addEventListener('click',pause);$('resume-button').addEventListener('click',resume);$('title-button').addEventListener('click',returnToTitle);$('world-settings').addEventListener('click',settings);$('pause-settings').addEventListener('click',settings);$('sound-button').addEventListener('click',toggleAudio);$('sound-check').addEventListener('change',toggleAudio);$('random-seed').addEventListener('click',()=>$('seed-input').value=randomSeed());
   $('minimap-button').addEventListener('click',openMap);$('map-close').addEventListener('click',closeMap);$('recenter-button').addEventListener('click',centerCamera);
   $('map-dialog').addEventListener('close',()=>{if(started)resume();});
@@ -120,11 +140,11 @@ try{
   $('time-select').value=timeMode;$('time-select').addEventListener('change',event=>{timeMode=event.target.value;storage.set('voxyz:light',timeMode);graphics.renderer.shadowMap.needsUpdate=true;});$('quality-select').value=quality;$('quality-select').addEventListener('change',event=>{quality=event.target.value;storage.set('voxyz:quality',quality);graphics.setQuality(quality);});
   $('grow-button').addEventListener('click',()=>{const next=$('seed-input').value.trim()||randomSeed();$('settings-dialog').close();if(next!==seed){player.disable();newWorld(next);const url=new URL(location.href);url.searchParams.set('seed',seed);history.replaceState({},'',url);}else toast('Your world settings are saved.');});
   window.addEventListener('resize',syncTouchLayout);touchMedia.addEventListener('change',syncTouchLayout);
-  window.addEventListener('pagehide',()=>{world.save();explorationMap.save();});window.addEventListener('blur',()=>{if(started&&!paused)pause();});
-  document.addEventListener('visibilitychange',()=>{if(document.hidden){world.save();explorationMap.save();if(started&&!paused)pause();}});
+  window.addEventListener('blur',()=>{if(started&&!paused)pause();});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){if(started&&!paused)pause();}});
   $('world').addEventListener('webglcontextlost',event=>{event.preventDefault();showError(new Error('WebGL context lost'));});
   for(const type of ['pointerdown','pointerup','click','contextmenu'])$('world').addEventListener(type,event=>{const events=JSON.parse($('world').dataset.inputEvents||'[]');events.push({type,button:event.button,enabled:player.enabled,paused,target:target?.id,at:performance.now()});$('world').dataset.inputEvents=JSON.stringify(events.slice(-8));});
   // A read-only inspectable surface helps verify performance and engine state.
-  window.voxyz={get world(){return world;},get player(){return player;},get graphics(){return graphics;},get state(){return {seed,started,paused,fps,daylight:daylightState.value,selected,target,quality,scale:graphics.scale,stats:world.stats};}};
+  window.voxyz={get world(){return world;},get player(){return player;},get graphics(){return graphics;},get state(){return {seed,started,paused,flight:player.flying,fps,daylight:daylightState.value,selected,target,quality,scale:graphics.scale,stats:world.stats};}};
   requestAnimationFrame(animate);
 }catch(error){showError(error);}

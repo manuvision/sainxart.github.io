@@ -1,22 +1,26 @@
 import * as THREE from './vendor/three.module.js';
+import { waterCellHeight } from './water.js?v=3.4';
 
 const HALF_WIDTH = 0.29;
 const BODY_HEIGHT = 1.78;
 const EYE_HEIGHT = 1.62;
 const EPSILON = 0.0001;
 const JUMP_SPEED = 7.8;
+const DOUBLE_JUMP_MS = 300;
+const FLIGHT_STROKE = 0.12;
 const MAX_PITCH = Math.PI / 2 - 0.035;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 /** First-person controller. Position is the center of the player's feet. */
 export class Player {
-  constructor(camera, canvas, world, { onAction = () => {}, onSelect = () => {}, onPause = () => {}, slotCount = 5 } = {}) {
+  constructor(camera, canvas, world, { onAction = () => {}, onSelect = () => {}, onPause = () => {}, onFlightChange = () => {}, slotCount = 5 } = {}) {
     this.camera = camera;
     this.canvas = canvas;
     this.world = world;
     this.onAction = onAction;
     this.onSelect = onSelect;
     this.onPause = onPause;
+    this.onFlightChange = onFlightChange;
     this.position = new THREE.Vector3();
     this.velocity = new THREE.Vector3();
     this.yaw = camera.rotation.y;
@@ -27,6 +31,7 @@ export class Player {
     this.grounded = false;
     this.moving = false;
     this.sprinting = false;
+    this.flying = false;
     this.selected = 0;
     this.slotCount = Number.isFinite(slotCount) && slotCount >= 1 ? Math.floor(slotCount) : 5;
     this.height = BODY_HEIGHT;
@@ -40,8 +45,13 @@ export class Player {
     this._controlResets = [];
     this._moveStick = { x: 0, y: 0 };
     this._touchJump = false;
+    this._touchDescend = false;
     this._actions = new Map();
     this._jumpBuffer = 0;
+    this._flightUpBuffer = 0;
+    this._flightDownBuffer = 0;
+    this._inputTime = 0;
+    this._lastJumpPress = -Infinity;
     this._coyoteTime = 0;
     this._hadPointerLock = false;
     this._drag = null;
@@ -89,8 +99,11 @@ export class Player {
         this._pause();
         return;
       }
-      if (event.code === 'Space' || event.code.startsWith('Arrow')) event.preventDefault();
-      if (event.code === 'Space' && !this.keys.has('Space')) this._jumpBuffer = 0.16;
+      // A held key may continue emitting repeats after a pause or focus change.
+      if (event.repeat && !this.keys.has(event.code)) return;
+      if (event.code === 'Space' || event.code.startsWith('Arrow') || (this.flying && event.code.startsWith('Control'))) event.preventDefault();
+      if (event.code === 'Space' && !event.repeat && !this.keys.has('Space') && !this._touchJump) this._pressJump(event);
+      if (this.flying && !event.repeat && !this.keys.has(event.code) && ['ControlLeft', 'ControlRight', 'KeyC'].includes(event.code)) this._flightDownBuffer = FLIGHT_STROKE;
       this.keys.add(event.code);
       const digit = /^(?:Digit|Numpad)(\d)$/.exec(event.code);
       const slot = digit ? Number(digit[1]) - 1 : -1;
@@ -182,10 +195,16 @@ export class Player {
     this._listen(doc, 'visibilitychange', () => { if (doc.hidden && this.enabled) this._pause(); });
 
     this._bindStick('#move-stick', this._moveStick);
-    this._bindButton('#jump-button', (held) => {
+    this._bindButton('#jump-button', (held, event) => {
+      if (held && !this.keys.has('Space')) this._pressJump(event);
+      if (!held && event?.type !== 'pointerup') this._flightUpBuffer = 0;
       this._touchJump = held;
-      if (held) this._jumpBuffer = 0.16;
     });
+    this._resetDescend = this._bindButton('#descend-button', (held, event) => {
+      this._touchDescend = held;
+      if (held) this._flightDownBuffer = FLIGHT_STROKE;
+      else if (event?.type !== 'pointerup') this._flightDownBuffer = 0;
+    }, () => this.flying);
     this._bindButton('#break-button', (held) => {
       if (held) this._startAction('touch:break', 'break');
       else this._actions.delete('touch:break');
@@ -244,36 +263,67 @@ export class Player {
     this._controlResets.push(reset);
   }
 
-  _bindButton(selector, setHeld) {
+  _bindButton(selector, setHeld, canPress = () => true) {
     const element = this._document.querySelector(selector);
     if (!element) return;
     let pointerId = null;
-    const reset = () => {
+    const reset = (event) => {
       const previous = pointerId;
       pointerId = null;
       element.classList.remove('active', 'is-pressed');
-      setHeld(false);
+      setHeld(false, event);
       if (previous !== null) {
         try { element.releasePointerCapture(previous); } catch { /* Already released. */ }
       }
     };
     element.style.touchAction = 'none';
     this._listen(element, 'pointerdown', (event) => {
-      if (!this.enabled || this._modalOpen() || pointerId !== null) return;
+      if (!this.enabled || this._modalOpen() || pointerId !== null || !canPress()) return;
       event.preventDefault();
       event.stopPropagation();
       pointerId = event.pointerId;
       element.classList.add('active', 'is-pressed');
       try { element.setPointerCapture(pointerId); } catch { /* Window listeners remain active. */ }
-      setHeld(true);
+      setHeld(true, event);
     });
     for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
       this._listen(type === 'lostpointercapture' ? element : this._window, type, (event) => {
-        if (event.pointerId === pointerId) reset();
+        if (event.pointerId === pointerId) reset(event);
       });
     }
     this._listen(element, 'contextmenu', (event) => event.preventDefault());
     this._controlResets.push(reset);
+    return reset;
+  }
+
+  _pressJump(event) {
+    // Native timestamps preserve rapid taps even when both occur between frames.
+    // The simulation clock also supports synthetic controls without timestamps.
+    const time = Number.isFinite(event?.timeStamp) ? event.timeStamp : this._inputTime;
+    const interval = time - this._lastJumpPress;
+    if (interval >= 0 && interval <= DOUBLE_JUMP_MS) {
+      this.setFlying(!this.flying);
+      this._lastJumpPress = -Infinity;
+    } else {
+      this._lastJumpPress = time;
+      if (!this.flying) this._jumpBuffer = 0.16;
+    }
+    if (this.flying) this._flightUpBuffer = FLIGHT_STROKE;
+  }
+
+  /** Flight survives a pause; title/new-world transitions explicitly reset it. */
+  setFlying(flying) {
+    const next = !!flying;
+    if (this.flying === next) return;
+    this.flying = next;
+    this.velocity.set(0, 0, 0);
+    this.grounded = false;
+    this._jumpBuffer = 0;
+    this._flightUpBuffer = this._flightDownBuffer = 0;
+    this._coyoteTime = 0;
+    this._lastJumpPress = -Infinity;
+    if (!next) this._resetDescend?.();
+    this.onFlightChange(next);
   }
 
   _startAction(key, kind, pointerId) {
@@ -310,7 +360,9 @@ export class Player {
     this.keys.clear();
     this._actions.clear();
     this._resetDrag();
+    this._lastJumpPress = -Infinity;
     for (const reset of this._controlResets) reset();
+    this._flightUpBuffer = this._flightDownBuffer = 0;
     // Touch and environments without pointer lock use the same movement engine.
     if (!this._usesTouchLayout() && !this._hadPointerLock && this.canvas.requestPointerLock) {
       try {
@@ -329,6 +381,8 @@ export class Player {
     this._actions.clear();
     this._resetDrag();
     this._jumpBuffer = 0;
+    this._flightUpBuffer = this._flightDownBuffer = 0;
+    this._lastJumpPress = -Infinity;
     this._hadPointerLock = false;
     for (const reset of this._controlResets) reset();
     if (this._document.pointerLockElement === this.canvas) this._document.exitPointerLock?.();
@@ -346,6 +400,8 @@ export class Player {
     this.grounded = false;
     this._coyoteTime = 0;
     this._jumpBuffer = 0;
+    this._flightUpBuffer = this._flightDownBuffer = 0;
+    this._lastJumpPress = -Infinity;
     this._updateWater();
     this._updateCamera();
   }
@@ -384,7 +440,7 @@ export class Player {
     // height; mock worlds without fluid levels behave as full source blocks.
     const stacked = this.world.getBlock(bx, by + 1, bz) === 7;
     const level = this.world.getWaterLevel?.(bx, by, bz) || 8;
-    const surface = by + (stacked ? 1 : 0.16 + 0.7 * (level / 8));
+    const surface = by + waterCellHeight(level, stacked);
     return y < surface;
   }
 
@@ -420,11 +476,12 @@ export class Player {
     if (this._modalOpen()) { this._pause(); return; }
     // Avoid tunnelling on a suspended tab, and cap work before the next draw.
     dt = Math.min(dt, 0.1);
+    this._inputTime += dt * 1000;
     this._actionDelay = Math.max(0, this._actionDelay - dt);
     for (const action of this._actions.values()) {
       action.remaining -= dt;
       if (action.remaining <= 0) {
-        this.onAction(action.kind);
+        this.onAction(action.kind, { repeat: true });
         action.remaining += action.kind === 'break' ? 0.21 : 0.25;
       }
     }
@@ -438,7 +495,11 @@ export class Player {
     if (inputLength > 1) { sideways /= inputLength; forward /= inputLength; }
     this.sprinting = this.keys.has('ShiftLeft') || this.keys.has('ShiftRight');
     const wantsUp = this.keys.has('Space') || this._touchJump;
-    const wantsDown = this.keys.has('ControlLeft') || this.keys.has('ControlRight') || this.keys.has('KeyC');
+    const wantsDown = this.keys.has('ControlLeft') || this.keys.has('ControlRight') || this.keys.has('KeyC') || this._touchDescend;
+    // A held control has already been observed by physics, so releasing it
+    // should hover immediately. Only complete taps between frames need a stroke.
+    if (wantsUp) this._flightUpBuffer = 0;
+    if (wantsDown) this._flightDownBuffer = 0;
     const sin = Math.sin(this.yaw);
     const cos = Math.cos(this.yaw);
     const directionX = sideways * cos - forward * sin;
@@ -452,28 +513,38 @@ export class Player {
       this._updateWater();
       this._coyoteTime = this.grounded ? 0.10 : Math.max(0, this._coyoteTime - step);
       this._jumpBuffer = Math.max(0, this._jumpBuffer - step);
-      if (this._jumpBuffer > 0 && this._coyoteTime > 0 && !this._swimming) {
+      if (!this.flying && this._jumpBuffer > 0 && this._coyoteTime > 0 && !this._swimming) {
         this.velocity.y = JUMP_SPEED;
         this.grounded = false;
         this._coyoteTime = 0;
         this._jumpBuffer = 0;
       }
-      const speed = this._swimming ? (this.sprinting ? 3.7 : 2.8) : (this.sprinting ? 6.5 : 4.3);
-      const acceleration = this._swimming ? 6 : this.grounded ? 16 : 7;
-      const damping = 1 - Math.exp(-acceleration * step);
-      this.velocity.x += (directionX * speed - this.velocity.x) * damping;
-      this.velocity.z += (directionZ * speed - this.velocity.z) * damping;
-      if (this._swimming) {
-        // Buoyancy is conditional on being in water: holding jump cannot fly.
-        this.velocity.y -= 4.5 * step;
-        // A tap can start and finish between frames. Reuse the short jump
-        // buffer as a swim stroke while held input continues sustained ascent.
-        if (wantsUp || this._jumpBuffer > 0) this.velocity.y += 15.5 * step;
-        if (wantsDown) this.velocity.y -= 7 * step;
-        this.velocity.y *= Math.exp(-2.6 * step);
-        this.velocity.y = clamp(this.velocity.y, -4, 3.6);
+      if (this.flying) {
+        const speed = this.sprinting ? 11 : 6.5;
+        const up = wantsUp ? 1 : Math.min(1, this._flightUpBuffer / step);
+        const down = wantsDown ? 1 : Math.min(1, this._flightDownBuffer / step);
+        this._flightUpBuffer = Math.max(0, this._flightUpBuffer - step);
+        this._flightDownBuffer = Math.max(0, this._flightDownBuffer - step);
+        this.velocity.x = directionX * speed;
+        this.velocity.z = directionZ * speed;
+        this.velocity.y = (up - down) * (this.sprinting ? 7.5 : 5.5);
       } else {
-        this.velocity.y = Math.max(-35, this.velocity.y - 24 * step);
+        const speed = this._swimming ? (this.sprinting ? 3.7 : 2.8) : (this.sprinting ? 6.5 : 4.3);
+        const acceleration = this._swimming ? 6 : this.grounded ? 16 : 7;
+        const damping = 1 - Math.exp(-acceleration * step);
+        this.velocity.x += (directionX * speed - this.velocity.x) * damping;
+        this.velocity.z += (directionZ * speed - this.velocity.z) * damping;
+        if (this._swimming) {
+          this.velocity.y -= 4.5 * step;
+          // A tap can start and finish between frames. Reuse the short jump
+          // buffer as a swim stroke while held input continues sustained ascent.
+          if (wantsUp || this._jumpBuffer > 0) this.velocity.y += 15.5 * step;
+          if (wantsDown) this.velocity.y -= 7 * step;
+          this.velocity.y *= Math.exp(-2.6 * step);
+          this.velocity.y = clamp(this.velocity.y, -4, 3.6);
+        } else {
+          this.velocity.y = Math.max(-35, this.velocity.y - 24 * step);
+        }
       }
       const vy = this.velocity.y;
       // Each substep is shorter than a block at maximum speed, so an intervening

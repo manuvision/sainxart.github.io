@@ -1,5 +1,8 @@
 import * as THREE from './vendor/three.module.js';
-import { BLOCK, CHUNK_SIZE, WORLD_HEIGHT, indexOf } from './terrain.js';
+import { BLOCK, CHUNK_SIZE, WORLD_HEIGHT, indexOf } from './terrain.js?v=3.4';
+import { waterCellHeight } from './water.js?v=3.4';
+import { createTerrainMaterial, createForestEnvironment } from './surface-material.js?v=3.4';
+import { PostProcessing } from './post-processing.js?v=3.4';
 
 // One texel per nearby terrain column: exposed surface, contiguous water bottom,
 // and presence. Reading loaded arrays keeps this work independent of generation.
@@ -50,10 +53,16 @@ export class WaterColumnMask {
       if(above!==BLOCK.AIR&&above!==BLOCK.GLASS&&above!==BLOCK.TORCH)return;
       let bottom=y;
       while(bottom>0&&chunk.blocks[indexOf(lx,bottom-1,lz)]===BLOCK.WATER)bottom--;
-      this.data[offset]=y+.16+.7*((chunk.levels[index]||8)/8);
+      this.data[offset]=y+waterCellHeight(chunk.levels[index]||8);
       this.data[offset+1]=bottom;this.data[offset+2]=1;this.data[offset+3]=1;
       return;
     }
+  }
+  surfaceAt(position) {
+    const x=Math.floor(position.x)-this.origin.x,z=Math.floor(position.z)-this.origin.y;
+    if(x<0||z<0||x>=this.size||z>=this.size||!Number.isFinite(x+z))return null;
+    const i=(z*this.size+x)*4;
+    return this.data[i+2]>.5&&position.y>=this.data[i+1]&&position.y<this.data[i]?this.data[i]:null;
   }
   update(world,position) {
     const size=this.size,x=Math.floor(position.x/8)*8-size/2,z=Math.floor(position.z/8)*8-size/2;
@@ -83,13 +92,14 @@ export class Graphics {
     this.mobile=mobile; this.frame=0; this.scale=mobile?.85:1; this.quality='auto';
     this.renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:'high-performance'});
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;
-    this.renderer.toneMapping=THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure=1.12;
+    // Linear HDR throughout the scene and water passes; the final pass maps it once.
+    this.renderer.toneMapping=THREE.NoToneMapping;
+    this.renderer.toneMappingExposure=1;
     this.renderer.shadowMap.enabled=true;
-    this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type=THREE.PCFShadowMap;
     this.renderer.shadowMap.autoUpdate=false;
     this.scene=new THREE.Scene();
-    // Keep the foreground clear; reserve haze for the streaming horizon.
+    // Gentle distance haze leaves the nearby material colors clear.
     this.scene.fog=new THREE.Fog(0xaac6b5,36,mobile?88:120);
     this.camera=new THREE.PerspectiveCamera(66,1,.08,260);
     this.time={value:0}; this.day={value:1};
@@ -100,43 +110,27 @@ export class Graphics {
     this.mirrorPlane=new THREE.Plane();this.mirrorNormal=new THREE.Vector3(0,1,0);
     this.clipPlane=new THREE.Vector4();this.clipCorner=new THREE.Vector4();
     this.waterVisible=false;this.waterPasses=0;this.reflectionReady=false;
-    this.terrainMaterial=new THREE.MeshLambertMaterial({vertexColors:true});
-    this.terrainMaterial.onBeforeCompile=shader=>{
-      shader.uniforms.uVoxTime=this.time;shader.uniforms.uVoxDay=this.day;
-      shader.uniforms.uWetColumns={value:this.wetColumns.texture};
-      shader.uniforms.uWetOrigin={value:this.wetColumns.origin};
-      shader.uniforms.uWetSize={value:this.wetColumns.size};
-      shader.vertexShader='varying vec3 vVoxWorld; varying vec3 vVoxNormal;\n'+shader.vertexShader;
-      shader.vertexShader=shader.vertexShader.replace('#include <worldpos_vertex>','#include <worldpos_vertex>\nvVoxWorld=(modelMatrix*vec4(transformed,1.0)).xyz;vVoxNormal=normalize(mat3(modelMatrix)*normal);');
-      shader.fragmentShader='varying vec3 vVoxWorld;varying vec3 vVoxNormal;uniform float uVoxTime,uVoxDay,uWetSize;uniform sampler2D uWetColumns;uniform vec2 uWetOrigin;\n'+shader.fragmentShader;
-      shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
-        vec3 grainCell=floor(vVoxWorld*7.0);
-        float grain=fract(sin(dot(grainCell,vec3(12.9898,78.233,39.425)))*43758.5453);
-        diffuseColor.rgb*=.965+grain*.07;
-        vec3 wetPoint=vVoxWorld+vVoxNormal*.035;
-        vec2 wetUV=(wetPoint.xz-uWetOrigin)/uWetSize;
-        vec3 wet=texture2D(uWetColumns,clamp(wetUV,vec2(0.0),vec2(1.0))).rgb;
-        float wetDepth=wet.r-wetPoint.y;
-        if(wet.b>.5&&wetDepth>0.0&&wetDepth<6.0&&wetPoint.y>=wet.g&&all(greaterThan(wetUV,vec2(0.0)))&&all(lessThan(wetUV,vec2(1.0)))){
-          vec2 p=vVoxWorld.xz*2.5;
-          float a=sin(p.x+sin(p.y*1.4+uVoxTime*.8))+sin(p.y+sin(p.x*1.2-uVoxTime*.7));
-          float c=pow(1.0-abs(sin(a*2.8+uVoxTime*.4)),12.0);
-          float wetEdge=min(min(wetUV.x,wetUV.y),min(1.0-wetUV.x,1.0-wetUV.y))*uWetSize;
-          diffuseColor.rgb+=vec3(.13,.23,.16)*c*uVoxDay*exp(-wetDepth*.3)*smoothstep(0.0,4.0,wetEdge)*(1.0-smoothstep(5.0,6.0,wetDepth));
-        }`);
-    };
-    this.fill=new THREE.HemisphereLight(0xc5dfd1,0x555333,1.65);this.scene.add(this.fill);
-    this.sun=new THREE.DirectionalLight(0xffe4b2,3.2);this.sun.castShadow=true;
+    this.reflectionPosition=new THREE.Vector3(Infinity,Infinity,Infinity);this.reflectionRotation=new THREE.Quaternion();
+    this.reflectionAspect=0;this.reflectionFov=0;this.reflectionUnder=false;this.reflectionClearColor=new THREE.Color();
+    this.terrainMaterial=createTerrainMaterial({time:this.time,day:this.day,wetColumns:this.wetColumns});
+    this.post=new PostProcessing(this.renderer,{mobile});
+    if(this.post.hdr){this.environment=createForestEnvironment(this.renderer);this.scene.environment=this.environment.texture;}
+    this.scene.environmentIntensity=.18;
+    this.fill=new THREE.HemisphereLight(0xd2e0df,0xa39c83,1.65);this.scene.add(this.fill);
+    this.sun=new THREE.DirectionalLight(0xffe1af,3.4);this.sun.castShadow=true;
     this.sun.shadow.mapSize.set(mobile?1024:2048,mobile?1024:2048);
     Object.assign(this.sun.shadow.camera,{left:-42,right:42,top:42,bottom:-42,near:1,far:180});
-    this.sun.shadow.bias=-.00035;this.sun.shadow.normalBias=.06;this.sun.shadow.radius=2;
+    this.sun.shadow.bias=-.00035;this.sun.shadow.normalBias=.06;this.sun.shadow.radius=mobile?3:6;this.sun.shadow.intensity=.94;
     this.scene.add(this.sun,this.sun.target);
-    this.sunDirection=new THREE.Vector3(-.65,.64,-.35).normalize();
-    this.sky=new THREE.Mesh(new THREE.SphereGeometry(230,24,12),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,uniforms:{uDay:this.day,uSun:{value:this.sunDirection}},vertexShader:`varying vec3 vDir; void main(){vDir=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,fragmentShader:`varying vec3 vDir;uniform float uDay;uniform vec3 uSun;void main(){vec3 d=normalize(vDir);float h=max(0.0,d.y);vec3 top=mix(vec3(.013,.029,.075),vec3(.37,.65,.70),uDay);vec3 horizon=mix(vec3(.043,.079,.13),vec3(.83,.84,.65),uDay);vec3 col=mix(horizon,top,pow(h,.48));float sun=max(0.0,dot(d,uSun));col+=vec3(1.,.69,.31)*pow(sun,36.)*.33*uDay;col+=vec3(1.,.86,.58)*smoothstep(.9987,.9993,sun)*uDay*2.;float stars=step(.9989,fract(sin(dot(floor(d*550.),vec3(12.98,78.23,33.719)))*43758.5453));col+=stars*pow(1.-uDay,3.)*smoothstep(.05,.3,h);gl_FragColor=vec4(col,1.);#include <tonemapping_fragment>\n#include <colorspace_fragment>}`.replace(';#include',';\n#include')}));
+    this.sunDirection=new THREE.Vector3(-.55,.48,.42).normalize();
+    this.shadowRight=new THREE.Vector3(this.sunDirection.z,0,-this.sunDirection.x).normalize();
+    this.shadowUp=new THREE.Vector3().crossVectors(this.sunDirection,this.shadowRight);
+    this.sky=new THREE.Mesh(new THREE.SphereGeometry(230,24,12),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,uniforms:{uDay:this.day,uSun:{value:this.sunDirection}},vertexShader:`varying vec3 vDir; void main(){vDir=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,fragmentShader:`varying vec3 vDir;uniform float uDay;uniform vec3 uSun;void main(){vec3 d=normalize(vDir);float h=max(0.0,d.y);vec3 top=mix(vec3(.013,.029,.075),vec3(.055,.22,.35),uDay);vec3 horizon=mix(vec3(.043,.079,.13),vec3(.42,.58,.57),uDay);vec3 col=mix(horizon,top,pow(h,.48));float sun=max(0.0,dot(d,uSun));col+=vec3(1.,.69,.31)*pow(sun,36.)*.33*uDay;col+=vec3(1.,.86,.58)*smoothstep(.9987,.9993,sun)*uDay*2.;float stars=step(.9989,fract(sin(dot(floor(d*550.),vec3(12.98,78.23,33.719)))*43758.5453));col+=stars*pow(1.-uDay,3.)*smoothstep(.05,.3,h);gl_FragColor=vec4(col,1.);#include <tonemapping_fragment>\n#include <colorspace_fragment>}`.replace(';#include',';\n#include')}));
     this.sky.frustumCulled=false;this.scene.add(this.sky);
-    this.refraction=new THREE.WebGLRenderTarget(1,1,{minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,depthBuffer:true});
+    this.refraction=new THREE.WebGLRenderTarget(1,1,{type:this.post.hdr?THREE.HalfFloatType:THREE.UnsignedByteType,minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,depthBuffer:true});
     this.refraction.depthTexture=new THREE.DepthTexture(1,1,THREE.UnsignedIntType);
-    this.reflection=new THREE.WebGLRenderTarget(mobile?256:512,mobile?256:512,{minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter});
+    this.reflection=new THREE.WebGLRenderTarget(mobile?256:512,mobile?256:512,{type:this.post.hdr?THREE.HalfFloatType:THREE.UnsignedByteType,minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter});
+    this.refraction.texture.colorSpace=this.reflection.texture.colorSpace=THREE.LinearSRGBColorSpace;
     this.mirrorCamera=this.camera.clone();this.reflectionMatrix=new THREE.Matrix4();
     this.waterMaterial=new THREE.ShaderMaterial({transparent:true,fog:true,side:THREE.DoubleSide,uniforms:{...THREE.UniformsUtils.clone(THREE.UniformsLib.fog),uTime:this.time,uDay:this.day,tScene:{value:this.refraction.texture},tDepth:{value:this.refraction.depthTexture},tReflection:{value:this.reflection.texture},uReflectionMatrix:{value:this.reflectionMatrix},uResolution:{value:new THREE.Vector2()},uNear:{value:.08},uFar:{value:260},uUnder:{value:0},uReflect:{value:1},uSun:{value:this.sunDirection}},vertexShader:`
       #include <fog_pars_vertex>
@@ -149,44 +143,87 @@ export class Graphics {
       uniform sampler2D tScene,tDepth,tReflection;uniform float uTime,uDay,uNear,uFar,uUnder,uReflect;uniform vec2 uResolution;uniform vec3 uSun;varying vec3 vWorld,vNormal;varying vec4 vReflect;
       float viewDepth(float d){return (uNear*uFar)/((uFar-uNear)*d-uFar);}
       void main(){
-        vec2 p=vWorld.xz;float t=uTime*.65;
-        vec2 ripple=vec2(sin(p.x*4.4+p.y*2.3+t)+sin(p.y*8.1-t*1.5)*.4,cos(p.y*4.2-p.x*2.1+t*.9)+sin(p.x*7.7+t)*.4);
-        vec3 n=normalize(vec3(ripple.x*.065,1.,ripple.y*.065));if(abs(vNormal.y)<.5)n=normalize(vNormal+vec3(ripple.x*.07,0.,ripple.y*.07));
-        vec3 eye=normalize(cameraPosition-vWorld);float facing=abs(dot(n,eye));float fresnel=.045+.76*pow(1.-facing,4.);
+        vec2 p=vWorld.xz;float t=uTime;
+        // Two slow capillary scales: reflection stays readable instead of melting.
+        vec2 ripple=vec2(sin(p.x*.78+p.y*.52+t*.64)+sin(p.y*2.6-t*.85)*.23,cos(p.y*.72-p.x*.47+t*.53)+sin(p.x*2.4+t*.73)*.23);
+        bool surface=abs(vNormal.y)>.5;
+        vec3 n=normalize(vNormal+vec3(ripple.x*.026,0.,ripple.y*.026));
+        if(!surface)n=normalize(vNormal+vec3(ripple.x*.022,0.,ripple.y*.022));
+        vec3 eye=normalize(cameraPosition-vWorld);float facing=abs(dot(n,eye));
+        // The underwater view favors a clear window at every angle. Reflection
+        // is intentionally reserved for viewing the water from above.
+        float fresnel=uUnder>.5?0.:.0204+.9796*pow(1.-facing,5.);
         vec2 uv=gl_FragCoord.xy/uResolution;
         float floorZ=viewDepth(texture2D(tDepth,uv).x);float waterZ=viewDepth(gl_FragCoord.z);float depth=max(.0,waterZ-floorZ);
-        vec2 distort=ripple*.001*min(depth,2.5);vec3 transmitted=texture2D(tScene,clamp(uv+distort,vec2(.002),vec2(.998))).rgb;
-        vec3 tint=mix(vec3(.045,.20,.145),vec3(.009,.048,.062),clamp(depth*.1,0.,1.))*mix(.22,1.,uDay);
-        transmitted=mix(transmitted,tint,1.-exp(-depth*.38));
-        vec2 ruv=vReflect.xy/vReflect.w+ripple*.002;vec3 reflected=texture2D(tReflection,clamp(ruv,vec2(.001),vec2(.999))).rgb*.67;
-        reflected=mix(vec3(.28,.49,.50)*mix(.15,1.,uDay),reflected,uReflect);
-        vec3 col=mix(transmitted,reflected,fresnel*(1.-uUnder*.45));
-        float spec=pow(max(0.,dot(reflect(-uSun,n),eye)),240.);col+=vec3(1.,.86,.56)*spec*1.2*uDay;
-        float foam=(1.-smoothstep(.02,.35,depth))*(.4+.6*sin(p.x*9.+p.y*7.+t));col+=vec3(.43,.57,.41)*foam*.20*uDay;
-        if(uUnder>.5){col=mix(col,vec3(.04,.29,.31),.17);col+=vec3(.13,.29,.23)*pow(facing,6.)*uDay;}
+        float depthEdge=max(abs(dFdx(floorZ)),abs(dFdy(floorZ)));
+        float distortionScale=uUnder>.5?.0048:.00065;
+        vec2 distort=ripple*distortionScale*min(depth,2.0)*(1.-smoothstep(.12,.6,depthEdge));
+        vec2 refractedUV=clamp(uv+distort,vec2(.002),vec2(.998));
+        // Don't pull foreground shore pixels into water at refracted silhouettes.
+        float candidateDepth=viewDepth(texture2D(tDepth,refractedUV).x);
+        refractedUV=mix(uv,refractedUV,smoothstep(0.,.10,waterZ-candidateDepth));
+        vec3 transmitted=texture2D(tScene,refractedUV).rgb;
+        float opticalDepth=uUnder>.5?min(length(cameraPosition-vWorld),12.):min(depth,surface?28.:3.5);
+        vec3 extinction=uUnder>.5?vec3(.15,.065,.028):vec3(.52,.26,.20);
+        vec3 absorption=exp(-extinction*opticalDepth);
+        vec3 tint=vec3(.009,.061,.058)*mix(.18,1.,uDay);
+        transmitted=transmitted*absorption+tint*(1.-absorption);
+        vec2 ruv=vReflect.xy/vReflect.w+ripple*.0013;
+        vec3 reflected=texture2D(tReflection,clamp(ruv,vec2(.001),vec2(.999))).rgb;
+        vec3 reflectionDir=reflect(-eye,n);
+        vec3 reflectedSky=mix(vec3(.71,.78,.67),vec3(.28,.50,.59),smoothstep(0.,.7,reflectionDir.y))*mix(.08,1.,uDay);
+        // One planar pass belongs to the natural pond level. Other elevations
+        // use the sky rather than displaying a physically misplaced reflection.
+        float pondPlane=(1.-smoothstep(.025,.13,abs(vWorld.y-12.875)))*(surface?1.:0.);
+        float reflectionEdge=min(min(ruv.x,ruv.y),min(1.-ruv.x,1.-ruv.y));
+        float inReflection=smoothstep(0.,.018,reflectionEdge)*step(0.,vReflect.w);
+        reflected=mix(reflectedSky,reflected,uReflect*pondPlane*inReflection);
+        vec3 col=mix(transmitted,reflected,fresnel);
+        if(uUnder>.5){
+          // A rippled blue interface remains visible without becoming a mirror.
+          // The tint grows gently at grazing angles while scenery stays readable.
+          float film=.12+.12*pow(1.-facing,2.);
+          vec3 waterFilm=vec3(.018,.12,.20)*mix(.12,1.,uDay);
+          col=mix(col*vec3(.92,.98,1.04),waterFilm,film);
+          float rippleLight=pow(.5+.5*sin(p.x*.78+p.y*.52+t*.64),10.);
+          col+=vec3(.008,.016,.025)*rippleLight*uDay;
+        }
+        float spec=pow(max(0.,dot(reflect(-uSun,n),eye)),460.);
+        col+=vec3(1.,.84,.57)*spec*3.4*uDay*(1.-uUnder);
+        float edge=1.-smoothstep(.015,.22,depth);
+        float sparkle=.65+.35*sin(p.x*5.3+p.y*4.7+t*.55);
+        col+=vec3(.52,.61,.48)*edge*sparkle*.085*uDay*(1.-uUnder);
+        if(!surface){
+          float streak=pow(.5+.5*sin((vWorld.x+vWorld.z)*23.+sin(vWorld.y*2.5+t*5.)),9.);
+          col+=vec3(.24,.34,.30)*streak*.16*mix(.2,1.,uDay);
+        }
         gl_FragColor=vec4(col,1.);
+        if(uUnder<.5){
+          #include <fog_fragment>
+        }
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
-        #include <fog_fragment>
       }`});
-    this.rays=new THREE.Group();this.scene.add(this.rays);
-    const rayMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,uniforms:{uDay:this.day},vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:'varying vec2 vUv;uniform float uDay;void main(){float a=pow(sin(vUv.x*3.14159),2.)*pow(sin(vUv.y*3.14159),1.5);gl_FragColor=vec4(.88,.83,.54,a*.045*uDay);}'});
-    for(let i=0;i<7;i++){const r=new THREE.Mesh(new THREE.PlaneGeometry(1.4+i*.3,25),rayMat);r.position.set(-18+i*8,24,-18-i%3*8);r.rotation.z=-.45;r.rotation.y=.3;this.rays.add(r);}
     this.resize();window.addEventListener('resize',()=>this.resize());
   }
-  resize(){const w=innerWidth,h=innerHeight;this.renderer.setPixelRatio(Math.min(devicePixelRatio,this.mobile?1.5:1.5)*this.scale);this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();const size=this.renderer.getDrawingBufferSize(new THREE.Vector2());this.waterMaterial?.uniforms.uResolution.value.copy(size);this.refraction.setSize(Math.max(1,Math.round(size.x*.65)),Math.max(1,Math.round(size.y*.65)));}
-  setQuality(quality){this.quality=quality;this.scale=quality==='low'?.7:quality==='high'?1:this.mobile?.85:1;this.renderer.shadowMap.enabled=quality!=='low';this.waterMaterial.uniforms.uReflect.value=quality==='low'?0:1;this.resize();}
+  resize(){const w=innerWidth,h=innerHeight;this.renderer.setPixelRatio(Math.min(devicePixelRatio,this.mobile?1.5:1.5)*this.scale);this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();const size=this.renderer.getDrawingBufferSize(new THREE.Vector2());this.post.mobile=this.mobile;this.post.resize(size.x,size.y);this.waterMaterial?.uniforms.uResolution.value.copy(size);this.refraction.setSize(Math.max(1,Math.round(size.x*.65)),Math.max(1,Math.round(size.y*.65)));}
+  setQuality(quality){this.quality=quality;this.post.setQuality(quality);this.scale=quality==='low'?.7:quality==='high'?1:this.mobile?.85:1;this.renderer.shadowMap.enabled=quality!=='low';this.waterMaterial.uniforms.uReflect.value=quality==='low'?0:1;this.resize();}
   update(time,daylight,position,underwater){
     this.frameDt=Math.max(1/240,Math.min(.1,time-this.lastTime));this.lastTime=time;
     this.time.value=time;this.day.value=daylight;this.sky.position.copy(position);
-    this.sun.position.copy(position).addScaledVector(this.sunDirection,70);this.sun.target.position.copy(position);
-    this.sun.intensity=.12+daylight*3.1;this.fill.intensity=.48+daylight*1.65;
-    this.fill.color.setHex(daylight<.3?0x728daa:0xc2dcce);
-    this.scene.fog.color.setHex(underwater?0x136463:0xa8c4b2).lerp(new THREE.Color(0x0d2237),1-daylight);
-    this.scene.fog.near=underwater?0:this.mobile?30:40;
+    // Snap in light space, so refreshing the map cannot shift a stationary
+    // shadow by a fraction of a texel as the player walks.
+    const texel=84/this.sun.shadow.mapSize.x,sx=position.dot(this.shadowRight),sy=position.dot(this.shadowUp);
+    this.sun.target.position.copy(position).addScaledVector(this.shadowRight,Math.round(sx/texel)*texel-sx).addScaledVector(this.shadowUp,Math.round(sy/texel)*texel-sy);
+    this.sun.position.copy(this.sun.target.position).addScaledVector(this.sunDirection,70);
+    this.sun.intensity=.10+daylight*3.2;this.fill.intensity=.16+daylight*.76;
+    this.scene.environmentIntensity=.035+daylight*.195;
+    this.fill.color.setHex(daylight<.3?0x728daa:0xd2e0df);
+    this.scene.fog.color.setHex(underwater?0x136463:0xa3b5aa).lerp(new THREE.Color(0x0d2237),1-daylight);
+    this.scene.fog.near=underwater?0:this.mobile?32:44;
     this.scene.fog.far=underwater?27:this.mobile?88:120;
     this.waterMaterial.uniforms.uUnder.value=underwater?1:0;
-    this.rays.visible=daylight>.4&&!underwater;this.renderer.toneMappingExposure=1.02+daylight*.1;
+    this.post.exposure=1.0+daylight*.18;this.post.setUnderwater(underwater);this.post.setDaylight(daylight);
   }
   _updateStreamingFog(world){
     const center=world.center||{x:Math.floor(this.camera.position.x/CHUNK_SIZE),z:Math.floor(this.camera.position.z/CHUNK_SIZE)};
@@ -201,8 +238,9 @@ export class Graphics {
     if(this.waterMaterial.uniforms.uUnder.value<.5)this.scene.fog.far-=this.streamingFog;
   }
   _updateReflection(){
+    if(this.waterMaterial.uniforms.uUnder.value>.5)return false;
     const camera=this.camera,mirror=this.mirrorCamera;
-    mirror.copy(camera);mirror.position.y=25.72-camera.position.y;
+    mirror.copy(camera);mirror.position.y=25.75-camera.position.y;
     camera.getWorldDirection(this.mirrorDirection);this.mirrorDirection.y*=-1;
     // Three's Water reflects the camera's rotated up vector as well as its
     // direction, preserving perspective when the viewer pitches the camera.
@@ -212,7 +250,8 @@ export class Graphics {
       .multiply(mirror.projectionMatrix).multiply(mirror.matrixWorldInverse);
     // Clip below the pond after constructing the sampling matrix, following
     // examples/jsm/objects/Water.js. The small offset avoids surface seams.
-    const plane=this.mirrorPlane.set(this.mirrorNormal,-12.82).applyMatrix4(mirror.matrixWorldInverse);
+    const bias=Math.min(.04,Math.abs(camera.position.y-12.875)*.5);
+    const plane=this.mirrorPlane.setComponents(0,1,0,-12.875+bias).applyMatrix4(mirror.matrixWorldInverse);
     const clip=this.clipPlane.set(plane.normal.x,plane.normal.y,plane.normal.z,plane.constant);
     const p=mirror.projectionMatrix.elements;
     const q=this.clipCorner.set((Math.sign(clip.x)+p[8])/p[0],(Math.sign(clip.y)+p[9])/p[5],-1,(1+p[10])/p[14]);
@@ -220,7 +259,14 @@ export class Graphics {
     if(Math.abs(denominator)<1e-6)return false;
     clip.multiplyScalar(2/denominator);p[2]=clip.x;p[6]=clip.y;p[10]=clip.z+1;p[14]=clip.w;
     mirror.projectionMatrixInverse.copy(mirror.projectionMatrix).invert();
-    this.renderer.setRenderTarget(this.reflection);this.renderer.render(this.scene,mirror);
+    const skyVisible=this.sky.visible,clearAlpha=this.renderer.getClearAlpha();
+    this.renderer.getClearColor(this.reflectionClearColor);
+    try{
+      this.renderer.setRenderTarget(this.reflection);this.renderer.render(this.scene,mirror);
+    }finally{this.sky.visible=skyVisible;this.renderer.setClearColor(this.reflectionClearColor,clearAlpha);}
+    this.reflectionUnder=false;
+    this.reflectionPosition.copy(camera.position);this.reflectionRotation.copy(camera.quaternion);
+    this.reflectionAspect=camera.aspect;this.reflectionFov=camera.fov;
     this.reflectionReady=true;return true;
   }
   render(world){
@@ -240,14 +286,27 @@ export class Graphics {
     this.waterPasses=0;
     if(visible){
       for(const mesh of water)mesh.visible=false;
-      renderer.setRenderTarget(this.refraction);renderer.render(scene,camera);this.waterPasses++;
-      if(this.quality!=='low'&&camera.position.y>12.9&&(!this.waterVisible||!this.reflectionReady||this.frame%5===1)){
+      const fogNear=scene.fog.near,fogFar=scene.fog.far;
+      try{
+        // Above-water geometry is seen through only the camera-to-surface water
+        // path. Applying underwater fog here as well would cloud the window twice.
+        if(this.waterMaterial.uniforms.uUnder.value>.5){scene.fog.near=10000;scene.fog.far=20000;}
+        renderer.setRenderTarget(this.refraction);renderer.render(scene,camera);this.waterPasses++;
+      }finally{scene.fog.near=fogNear;scene.fog.far=fogFar;}
+      const reflectionMoved=this.reflectionPosition.distanceToSquared(camera.position)>1e-10||1-Math.abs(this.reflectionRotation.dot(camera.quaternion))>1e-12||this.reflectionAspect!==camera.aspect||this.reflectionFov!==camera.fov;
+      const under=this.waterMaterial.uniforms.uUnder.value>.5;
+      if(!under&&this.quality!=='low'&&Math.abs(camera.position.y-12.875)>.006&&(!this.waterVisible||!this.reflectionReady||this.reflectionUnder!==under||reflectionMoved||this.frame%8===1)){
         if(this._updateReflection())this.waterPasses++;
       }
       for(const mesh of water)mesh.visible=true;
     }
     this.waterVisible=visible;
-    this.waterMaterial.uniforms.uReflect.value=this.quality!=='low'&&this.reflectionReady&&camera.position.y>12.9?1:0;
-    renderer.setRenderTarget(null);renderer.render(scene,camera);
+    this.waterMaterial.uniforms.uReflect.value=this.waterMaterial.uniforms.uUnder.value<.5&&this.quality!=='low'&&this.reflectionReady?THREE.MathUtils.smoothstep(Math.abs(camera.position.y-12.875),.006,.035):0;
+    renderer.setRenderTarget(this.post.target);renderer.render(scene,camera);this.sceneStats={...renderer.info.render};
+    // Snapshot the shadow matrix only after rendering; its cached map and matrix
+    // must describe the same light pose between scheduled shadow refreshes.
+    this.post.setSun(camera,this.sun,this.sunDirection);
+    this.post.setWaterSurface(this.wetColumns.surfaceAt(camera.position));
+    this.post.render();
   }
 }

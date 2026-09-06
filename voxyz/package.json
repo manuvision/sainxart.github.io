@@ -1,7 +1,7 @@
 {
   "name": "voxyz",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
-  "scripts": {"check":"node --check main.js && node --check graphics.js && node --check world.js && node --check terrain.js && node --check mesher.js && node --check world-worker.js && node --check interaction.js && node --check player.js && node --check ecosystem.js && node --check audio.js && node --check exploration-map.js", "test":"node --test tests/*.test.js"}
+  "scripts": {"check":"node --check main.js && node --check graphics.js && node --check world.js && node --check terrain.js && node --check mesher.js && node --check world-worker.js && node --check interaction.js && node --check player.js && node --check ecosystem.js && node --check audio.js && node --check exploration-map.js && node --check water.js && node --check surface-material.js && node --check post-processing.js && node --check sun-rays.js", "test":"node --test tests/*.test.js"}
 }

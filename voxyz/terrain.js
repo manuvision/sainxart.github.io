@@ -4,7 +4,7 @@ export const PAD = CHUNK_SIZE + 2;
 export const WATER_LEVEL = 12;
 export const BLOCK = Object.freeze({ AIR:0, GRASS:1, DIRT:2, STONE:3, SAND:4, WOOD:5, LEAVES:6, WATER:7, SNOW:8, CACTUS:9, TORCH:10, BRICK:11, GLASS:12, JUNGLE_LEAVES:13, ICE:14 });
 export const BLOCK_NAMES = ['Air','Meadow','Earth','Stone','Sand','Oak','Leaves','Water','Snow','Cactus','Lantern','Clay brick','Glass','Jungle leaves','Ice'];
-export const BLOCK_COLORS = ['#000000','#82ad5f','#a17a58','#89968b','#e8d19e','#866544','#709b4c','#57c7c8','#e5eee1','#719458','#ffc55d','#b97459','#c2e3d9','#4e9152','#aacfd3'];
+export const BLOCK_COLORS = ['#000000','#668543','#a17a58','#89968b','#e8d19e','#66503a','#507844','#57c7c8','#e5eee1','#719458','#ffc55d','#b97459','#c2e3d9','#285d43','#aacfd3'];
 export const palette = BLOCK_COLORS;
 export const names = BLOCK_NAMES;
 export const indexOf = (x,y,z) => (y * PAD + z + 1) * PAD + x + 1;
@@ -95,18 +95,31 @@ export class Terrain {
     return BLOCK.STONE;
   }
   tree(cellX,cellZ) {
+    const cache=this._treeCache||(this._treeCache=new Map()),key=cellX+','+cellZ;
+    if(cache.has(key))return cache.get(key);
+    if(cache.size>24000)cache.clear();
+    const remember=tree=>{cache.set(key,tree);return tree;};
     const seed=this.seed, density=hash2(cellX,cellZ,seed+218);
     const x=cellX*8+Math.floor(hash2(cellX,cellZ,seed+287)*6)+1;
     const z=cellZ*8+Math.floor(hash2(cellX,cellZ,seed+481)*6)+1;
     const {height,biome}=this.column(x,z);
     const threshold=biome==='jungle'?.87:biome==='desert'?.18:biome==='ice'?.7:.8;
-    if(density>threshold||height<=WATER_LEVEL+1||height>47)return null;
-    if(Math.hypot(x-12,z-22)<4.5)return null;
+    if(density>threshold||height<=WATER_LEVEL+1||height>47)return remember(null);
+    if(Math.hypot(x-12,z-22)<4.5)return remember(null);
     // Keep the near bank and central view toward the pond legible.
-    if(Math.abs(x-(z+8)*.4)<3.8&&z>7&&z<27)return null;
+    if(Math.abs(x-(z+8)*.4)<3.8&&z>7&&z<27)return remember(null);
     const conifer=biome==='ice'||(biome==='meadow'&&hash2(cellX,cellZ,seed+772)<.38);
     const tall=biome==='desert'?4+Math.floor(density*12):biome==='jungle'?17+Math.floor(density*7):conifer?13+Math.floor(density*10):13+Math.floor(density*11);
-    return {x,z,y:height+1,h:tall,biome,density,conifer,lean:hash2(cellX,cellZ,seed+567)>.5?1:-1};
+    const lean=hash2(cellX,cellZ,seed+567)>.5?1:-1;
+    const jungle=biome==='jungle';
+    // Volumetric, overlapping crowns grow vertically around the branches.
+    // Keep the existing origin/height and the six-block generation bounds.
+    const crowns=conifer||biome==='desert'?null:[
+      [0,tall-1.3,0,jungle?4.55:3.75,jungle?3.15:3.25,jungle?4.2:3.6],
+      [lean*2.65,tall-5.0,1.0,2.85,3.2,2.65],
+      [-lean*2.25,tall-3.3,-1.65,2.8,2.85,2.55],
+    ];
+    return remember({x,z,y:height+1,h:tall,biome,density,conifer,lean,crowns});
   }
   treeBlock(tree,x,y,z) {
     const dx=x-tree.x,dz=z-tree.z,dy=y-tree.y;
@@ -126,33 +139,36 @@ export class Terrain {
     }
     if(dx===0&&dz===0&&dy<tree.h)return BLOCK.WOOD;
     if(tree.conifer) {
-      if(dy<2||dy>tree.h+1)return BLOCK.AIR;
-      const taper=(tree.h+1-dy)/(tree.h-1);
-      const r=Math.min(5,Math.max(0,Math.floor(taper*4.8+(dy%3===0?.45:0))));
-      if(Math.abs(dx)<=r&&Math.abs(dz)<=r&&Math.abs(dx)+Math.abs(dz)<=r*1.65+.5) {
-        return (tree.biome==='ice'&&dy%3===0&&Math.abs(dx)+Math.abs(dz)>r)?BLOCK.SNOW:BLOCK.LEAVES;
+      if(dy<3||dy>tree.h+1||Math.abs(dx)>5||Math.abs(dz)>5)return BLOCK.AIR;
+      // A continuous, slightly irregular spruce silhouette replaces repeated
+      // horizontal shelves. Column offsets stagger each branch's outer edge.
+      const lift=(hash2(x,z,this.seed+543)-.5)*1.35;
+      const t=clamp((dy-3+lift)/(tree.h-2),0,1);
+      const r=4.65*Math.pow(1-t,.83)*Math.min(1,.60+(dy-3)*.18);
+      const ax=dx-tree.lean*t*.34,az=dz+t*.18;
+      const radial=ax*ax+az*az*1.08;
+      const edge=r*r*(.94+hash2(x+3,z-4,this.seed+237)*.13);
+      if(radial<=edge||(dx===0&&dz===0&&dy<=tree.h+1)) {
+        return tree.biome==='ice'&&dy>tree.h*.45&&hash2(x+dy*3,z-dy,this.seed+834)>.76?BLOCK.SNOW:BLOCK.LEAVES;
       }
       return BLOCK.AIR;
     }
     const jungle=tree.biome==='jungle';
-    // Overlapping tiered crowns give tall broadleaf trees an irregular silhouette.
-    // The lower branches remain visible beneath their smaller side crowns.
     const leaf=jungle?BLOCK.JUNGLE_LEAVES:BLOCK.LEAVES;
-    const clusters=[
-      [0,tree.h-1,0,jungle?5:4],
-      [tree.lean*3,tree.h-5,1,3],
-      [-tree.lean*2,tree.h-3,-2,3],
-    ];
-    if(dy===tree.h-6&&dz===1&&dx*tree.lean>=0&&dx*tree.lean<=3)return BLOCK.WOOD;
-    for(const [ox,cy,oz,radius] of clusters) {
-      const delta=dy-cy;
-      if(delta<-2||delta>2)continue;
-      const layerRadius=radius-(delta===2?2:delta===1?1:delta===-2?1:0);
-      const ax=Math.abs(dx-ox),az=Math.abs(dz-oz);
-      if(ax<=layerRadius&&az<=layerRadius&&ax+az<=layerRadius*1.65+.2) {
-        if(ax===layerRadius&&az===layerRadius&&hash2(x+y,z,this.seed+713)>.5)continue;
-        return leaf;
-      }
+    // The two ascending branch arms connect to the side crowns instead of
+    // ending in long horizontal bars beneath flat discs of leaves.
+    if(dy>=tree.h-8&&dy<=tree.h-4) {
+      const reach=Math.min(3,1+Math.floor((dy-(tree.h-8))/2));
+      if(dx===tree.lean*reach&&dz===(reach>1?1:0))return BLOCK.WOOD;
+    }
+    for(const [ox,cy,oz,rx,ry,rz] of tree.crowns) {
+      const ax=(dx-ox)/rx,ay=(dy-cy)/ry,az=(dz-oz)/rz;
+      const volume=ax*ax+ay*ay+az*az;
+      if(volume<.85)return leaf;
+      if(volume>1.12)continue;
+      // Variation is restricted to the crown skin: no perforated checkerboard
+      // or internal holes, just occasional stepped tips around a coherent lobe.
+      if(volume<.97+hash2(x+y*5,z-y*3,this.seed+713)*.15)return leaf;
     }
     return BLOCK.AIR;
   }

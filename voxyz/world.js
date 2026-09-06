@@ -1,6 +1,8 @@
 import * as THREE from './vendor/three.module.js';
-import { Terrain, BLOCK, BLOCK_NAMES, BLOCK_COLORS, CHUNK_SIZE, WORLD_HEIGHT, WATER_LEVEL, PAD, indexOf, seedNumber, isSolid } from './terrain.js';
-import { meshChunk } from './mesher.js';
+import { Terrain, BLOCK, BLOCK_NAMES, BLOCK_COLORS, CHUNK_SIZE, WORLD_HEIGHT, WATER_LEVEL, PAD, indexOf, seedNumber, isSolid } from './terrain.js?v=3.4';
+import { meshChunk } from './mesher.js?v=3.4';
+import { nextWaterLevel, WATER_SOURCE, WATER_TICK_SECONDS } from './water.js?v=3.4';
+export { nextWaterLevel, waterSpreadMask, waterCellHeight, WATER_SOURCE, WATER_FALLING, WATER_TICK_SECONDS } from './water.js?v=3.4';
 export { BLOCK, BLOCK_NAMES, BLOCK_COLORS, CHUNK_SIZE, WORLD_HEIGHT, WATER_LEVEL, isSolid };
 export const palette=BLOCK_COLORS;
 export const names=BLOCK_NAMES;
@@ -9,22 +11,6 @@ const chunkKey=(x,z)=>x+','+z;
 const neighbors=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
 const now=()=>globalThis.performance?.now()??Date.now();
 
-/** Eight is a source; seven through one are finite, receding stream levels. */
-export function nextWaterLevel(x,y,z,getBlock,getLevel) {
-  const id=getBlock(x,y,z);
-  if(id!==BLOCK.AIR&&id!==BLOCK.WATER)return 0;
-  if(id===BLOCK.WATER&&getLevel(x,y,z)===8)return 8;
-  if(getBlock(x,y+1,z)===BLOCK.WATER)return 7;
-  let result=0;
-  for(const [dx,,dz] of [[1,0,0],[-1,0,0],[0,0,1],[0,0,-1]]) {
-    if(getBlock(x+dx,y,z+dz)!==BLOCK.WATER)continue;
-    const support=getBlock(x+dx,y-1,z+dz);
-    if(support===BLOCK.AIR)continue; // An unsupported stream falls before spreading.
-    result=Math.max(result,getLevel(x+dx,y,z+dz)-1);
-  }
-  return Math.max(0,result);
-}
-
 export class World {
   constructor(scene,terrainMaterial,waterMaterial,seed,{radius=4}={}) {
     this.scene=scene;this.terrainMaterial=terrainMaterial;this.waterMaterial=waterMaterial;
@@ -32,20 +18,15 @@ export class World {
     this.terrain=new Terrain(this.seed);this.chunks=new Map();this.edits=new Map();this.fluidChanges=new Map();
     this.revisions=new Map();this.pending=new Set();this.dirty=new Set();this.completed=[];this.workers=[];
     this.waterQueue=[];this.waterCursor=0;this.waterQueued=new Set();this.sleepingWater=new Map();this.waterClock=0;
-    this.center={x:0,z:1};this.ready=false;this.disposed=false;this.requestId=0;this.needsSave=false;this.saveClock=0;
+    this.center={x:0,z:1};this.ready=false;this.disposed=false;this.requestId=0;this.needsSave=false;
     this.stats={chunks:0,triangles:0,queued:0,waterCells:0,workers:0};
-    this.storageKey='voxyz:world:v1:'+this.seed;
-    try {
-      const saved=JSON.parse(globalThis.localStorage?.getItem(this.storageKey)||'null');
-      if(saved?.edits)for(const edit of saved.edits) {
-        if(Array.isArray(edit)&&edit.length>=4&&edit.every(Number.isFinite)&&edit[1]>=0&&edit[1]<WORLD_HEIGHT&&edit[3]>=0&&edit[3]<=14)this.edits.set(keyOf(...edit),edit);
-      }
-    }catch{ /* Storage can be unavailable in private browsing or at quota. */ }
+    // Terrain edits and moving water belong only to this World instance.
+    // Existing storage is deliberately neither read nor changed.
     if(typeof Worker!=='undefined') {
       const count=(globalThis.navigator?.hardwareConcurrency||4)>=4?2:1;
       for(let i=0;i<count;i++) {
         try {
-          const worker=new Worker(new URL('./world-worker.js',import.meta.url),{type:'module'});
+          const worker=new Worker(new URL('./world-worker.js?v=3.4',import.meta.url),{type:'module'});
           const slot={worker,busy:false,task:null};
           worker.onmessage=({data})=>{
             slot.busy=false;
@@ -59,7 +40,6 @@ export class World {
       }
     }
     this.stats.workers=this.workers.length;
-    for(const edit of this.edits.values())this._activateWater(edit[0],edit[1],edit[2]);
   }
   biomeAt(x,z){return this.terrain.biomeAt(x,z);}
   heightAt(x,z){return this.terrain.heightAt(Math.floor(x),Math.floor(z));}
@@ -86,8 +66,13 @@ export class World {
     if(y<=0||y>=WORLD_HEIGHT||!Number.isInteger(id)||id<0||id>14)return false;
     if(this.getBlock(x,y,z)===id&&id!==BLOCK.WATER)return false;
     const key=keyOf(x,y,z),edit=[x,y,z,id,id===BLOCK.WATER?8:0];
-    this.edits.set(key,edit);this.fluidChanges.delete(key);this.needsSave=true;
+    this.edits.set(key,edit);this.fluidChanges.delete(key);
     this._applyCell(edit);this._activateWater(x,y,z);
+    // A newly dug drop can change route preference several cells upstream.
+    for(let dz=-5;dz<=5;dz++)for(let dx=-5;dx<=5;dx++) {
+      if(Math.abs(dx)+Math.abs(dz)>5)continue;
+      for(const sy of [y,y+1])if(this.getBlock(x+dx,sy,z+dz)===BLOCK.WATER)this._activateWater(x+dx,sy,z+dz);
+    }
     return true;
   }
   _applyCell([x,y,z,id,level]) {
@@ -110,12 +95,12 @@ export class World {
     }
   }
   tickWater(dt,playerPosition={x:0,z:0}) {
-    this.waterClock+=dt;this.saveClock+=dt;
-    if(this.needsSave&&this.saveClock>2){this.save();this.saveClock=0;}
-    if(this.waterClock<.105)return;
-    this.waterClock=0;
+    if(this.disposed||!Number.isFinite(dt)||dt<=0)return;
+    this.waterClock+=Math.min(dt,.5);
+    if(this.waterClock<WATER_TICK_SECONDS)return;
+    this.waterClock%=WATER_TICK_SECONDS;
     // Distant simulation sleeps in chunk buckets and resumes when revisited.
-    // Dropping those entries would permanently freeze saved distant water edits.
+    // Dropping those entries would permanently freeze distant water edits.
     const pcx=Math.floor(playerPosition.x/CHUNK_SIZE),pcz=Math.floor(playerPosition.z/CHUNK_SIZE);
     for(let dz=-3;dz<=3;dz++)for(let dx=-3;dx<=3;dx++) {
       const bucketKey=chunkKey(pcx+dx,pcz+dz),bucket=this.sleepingWater.get(bucketKey);
@@ -127,8 +112,13 @@ export class World {
       }
       if(!bucket.size)this.sleepingWater.delete(bucketKey);
     }
-    const count=Math.min(96,this.waterQueue.length-this.waterCursor),time=now();
-    for(let i=0;i<count&&now()-time<2.5;i++) {
+    // Read one stable snapshot, then commit: queue order cannot turn one tick
+    // into an instant chain of many flowing cells.
+    const blockCache=new Map(),levelCache=new Map(),spreadCache=new Map(),changes=[];
+    const getBlock=(x,y,z)=>{const key=keyOf(x,y,z);if(!blockCache.has(key))blockCache.set(key,this.getBlock(x,y,z));return blockCache.get(key);};
+    const getLevel=(x,y,z)=>{const key=keyOf(x,y,z);if(!levelCache.has(key))levelCache.set(key,this.getWaterLevel(x,y,z));return levelCache.get(key);};
+    const count=Math.min(192,this.waterQueue.length-this.waterCursor),time=now();
+    for(let i=0;i<count&&now()-time<3;i++) {
       const [x,y,z,key]=this.waterQueue[this.waterCursor++];this.waterQueued.delete(key);
       if(Math.abs(x-playerPosition.x)>48||Math.abs(z-playerPosition.z)>48) {
         const bucketKey=chunkKey(Math.floor(x/CHUNK_SIZE),Math.floor(z/CHUNK_SIZE));
@@ -136,12 +126,17 @@ export class World {
         if(!bucket){bucket=new Map();this.sleepingWater.set(bucketKey,bucket);}
         bucket.set(key,[x,y,z,key]);continue;
       }
-      const old=this.getBlock(x,y,z);
+      const old=getBlock(x,y,z);
       if(old!==BLOCK.AIR&&old!==BLOCK.WATER)continue;
-      const level=nextWaterLevel(x,y,z,this.getBlock.bind(this),this.getWaterLevel.bind(this));
-      if((level===0&&old===BLOCK.AIR)||(old===BLOCK.WATER&&this.getWaterLevel(x,y,z)===level))continue;
-      const edit=[x,y,z,level>0?BLOCK.WATER:BLOCK.AIR,level];
-      this.fluidChanges.set(key,edit);this._applyCell(edit);this._activateWater(x,y,z);
+      const level=nextWaterLevel(x,y,z,getBlock,getLevel,spreadCache);
+      if((level===0&&old===BLOCK.AIR)||(old===BLOCK.WATER&&getLevel(x,y,z)===level))continue;
+      changes.push([x,y,z,level>0?BLOCK.WATER:BLOCK.AIR,level]);
+    }
+    for(const edit of changes) {
+      const key=keyOf(edit[0],edit[1],edit[2]);
+      if(edit[3]===BLOCK.AIR)this.fluidChanges.delete(key);
+      else this.fluidChanges.set(key,edit);
+      this._applyCell(edit);this._activateWater(edit[0],edit[1],edit[2]);
     }
     if(this.waterCursor>2048||this.waterCursor===this.waterQueue.length){this.waterQueue=this.waterQueue.slice(this.waterCursor);this.waterCursor=0;}
     this.stats.waterCells=this.fluidChanges.size;
@@ -157,6 +152,7 @@ export class World {
     geometry.setAttribute('normal',new THREE.BufferAttribute(data.normals,3));
     geometry.setAttribute('color',new THREE.BufferAttribute(data.colors,3));
     geometry.setAttribute('uv',new THREE.BufferAttribute(data.uvs,2));
+    geometry.setAttribute('blockType',new THREE.BufferAttribute(data.blockTypes,1));
     geometry.setIndex(new THREE.BufferAttribute(data.indices,1));
     geometry.computeBoundingSphere();
     return geometry;
@@ -216,11 +212,10 @@ export class World {
     }
     this.stats.chunks=this.chunks.size;this.stats.queued=this.pending.size+candidates.length;
   }
-  save() {
-    try {const storage=globalThis.localStorage;if(!storage)return false;storage.setItem(this.storageKey,JSON.stringify({version:1,seed:this.seedLabel,edits:[...this.edits.values()]}));this.needsSave=false;return true;}catch{return false;}
-  }
+  // Compatibility with existing callers: false explicitly means no disk save.
+  save() { return false; }
   dispose() {
-    this.save();this.disposed=true;
+    this.disposed=true;
     for(const {worker} of this.workers)worker.terminate();
     for(const chunk of this.chunks.values()){this.scene.remove(chunk.mesh,chunk.waterMesh);chunk.mesh.geometry.dispose();chunk.waterMesh.geometry.dispose();}
     this.chunks.clear();this.completed.length=0;

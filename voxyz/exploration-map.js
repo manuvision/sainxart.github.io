@@ -1,4 +1,4 @@
-import { WATER_LEVEL } from './terrain.js';
+import { WATER_LEVEL } from './terrain.js?v=3.4';
 
 export const MAP_CELL_SIZE=4;
 export const MAP_REVEAL_RADIUS=128;
@@ -56,13 +56,12 @@ export class DiscoveryGrid {
 export class ExplorationMap {
   constructor(world,{miniCanvas,fullCanvas}={}){
     this.world=world;this.miniCanvas=miniCanvas;this.fullCanvas=fullCanvas;
-    this.storageKey=`voxyz:exploration:v1:${world.seed}`;this.discovery=new DiscoveryGrid();
-    try{this.discovery=DiscoveryGrid.deserialize(JSON.parse(globalThis.localStorage?.getItem(this.storageKey)||'null'));}catch{}
+    // Exploration belongs to this play session, just like block edits.
+    this.discovery=new DiscoveryGrid();
     this.position={x:0,z:0};this.yaw=0;this.initialized=false;this.disposed=false;
-    this.tiles=new Map();this.pending=[];this.pendingCursor=0;this.dirty=false;
-    this.drawClock=0;this.revealClock=0;this.saveClock=0;this.pruneClock=0;
+    this.tiles=new Map();this.pending=[];this.pendingCursor=0;
+    this.drawClock=0;this.revealClock=0;this.pruneClock=0;
     this.lastReveal={x:Infinity,z:Infinity};
-    this.onPageHide=()=>this.save();globalThis.addEventListener?.('pagehide',this.onPageHide);
   }
   _canvas(width,height){
     const document=this.miniCanvas?.ownerDocument||this.fullCanvas?.ownerDocument||globalThis.document;
@@ -150,7 +149,7 @@ export class ExplorationMap {
     if(this.disposed||!position||![position.x,position.z].every(Number.isFinite))return;
     this.position.x=position.x;this.position.z=position.z;if(Number.isFinite(yaw))this.yaw=yaw;
     dt=clamp(Number.isFinite(dt)?dt:0,0,1);
-    this.drawClock+=dt;this.revealClock+=dt;this.saveClock+=dt;this.pruneClock+=dt;
+    this.drawClock+=dt;this.revealClock+=dt;this.pruneClock+=dt;
     if(!this.initialized||this.revealClock>=.2){
       this.revealClock=0;
       if(!this.initialized||Math.hypot(position.x-this.lastReveal.x,position.z-this.lastReveal.z)>=2){
@@ -159,7 +158,7 @@ export class ExplorationMap {
           const tx=Math.floor(cx/TILE_CELLS),tz=Math.floor(cz/TILE_CELLS),tile=this._tile(tx,tz);
           if(tile)this._queue(tile,(cz-tz*TILE_CELLS)*TILE_CELLS+cx-tx*TILE_CELLS);
         }
-        if(added.length)this.dirty=true;this.lastReveal={x:position.x,z:position.z};
+        this.lastReveal={x:position.x,z:position.z};
       }
     }
     const draw=!this.initialized||this.drawClock>=.16;
@@ -170,7 +169,6 @@ export class ExplorationMap {
       if(this._isFullOpen())this._paint(this.fullCanvas,400,false);
     }
     this.initialized=true;
-    if(this.saveClock>=10){this.saveClock=0;this.save();}
     if(this.pruneClock>=10){
       this.pruneClock=0;const retention=this._retentionRadius();
       for(const [key,tile] of this.tiles)if(Math.hypot((tile.tx+.5)*TILE_BLOCKS-position.x,(tile.tz+.5)*TILE_BLOCKS-position.z)>retention)this.tiles.delete(key);
@@ -239,13 +237,9 @@ export class ExplorationMap {
   drawFull(){
     if(this.disposed)return;this._queueFullView();this._processSamples(128);this._paint(this.fullCanvas,400,false);
   }
-  save(){
-    if(!this.dirty)return;
-    try{globalThis.localStorage?.setItem(this.storageKey,JSON.stringify(this.discovery.serialize()));this.dirty=false;}catch{}
-  }
   dispose(){
-    if(this.disposed)return;this.save();this.disposed=true;
-    globalThis.removeEventListener?.('pagehide',this.onPageHide);this.tiles.clear();this.pending.length=0;
+    if(this.disposed)return;this.disposed=true;
+    this.tiles.clear();this.pending.length=0;
   }
 }
 

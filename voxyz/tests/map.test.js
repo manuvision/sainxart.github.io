@@ -35,14 +35,18 @@ test('invalid saved data and duplicate tiles cannot create phantom discovery',()
   const restored=DiscoveryGrid.deserialize(value);assert.equal(restored.count,1);assert.ok(restored.has(0,0));assert.equal(restored.has(1,0),false);
 });
 
-test('exploration persists independently for each seed',()=>{
-  const previous=globalThis.localStorage,storage=new Map();
-  globalThis.localStorage={getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)};
+test('exploration resets for every new session and never reads or writes browser saves',()=>{
+  const previous=globalThis.localStorage;
+  globalThis.localStorage={getItem(){throw new Error('Must not read old saves');},setItem(){throw new Error('Must not persist discovery');}};
   try{
-    const first=new ExplorationMap({seed:123});first.update({x:140,z:-120},.5,.2);first.dispose();
-    const restored=new ExplorationMap({seed:123}),different=new ExplorationMap({seed:124});
-    assert.ok(restored.discovery.has(35,-30));assert.equal(different.discovery.has(35,-30),false);
-    restored.dispose();different.dispose();
+    const first=new ExplorationMap({seed:123});first.update({x:140,z:-120},.5,.2);
+    assert.ok(first.discovery.has(35,-30));
+    first.update({x:700,z:700},.5,.2);
+    assert.ok(first.discovery.has(35,-30),'earlier exploration survives movement within this session');
+    first.dispose();
+    const reboot=new ExplorationMap({seed:123});
+    assert.equal(reboot.discovery.count,0);assert.equal(reboot.discovery.has(35,-30),false);
+    reboot.dispose();
   }finally{if(previous===undefined)delete globalThis.localStorage;else globalThis.localStorage=previous;}
 });
 

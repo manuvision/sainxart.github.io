@@ -22,6 +22,10 @@ The world starts generating while the title screen is visible. Starting reveals 
 | Look | Mouse; drag fallback if pointer lock is unavailable | Drag anywhere on the world outside the movement stick and UI |
 | Jump / swim up | Space | Jump button |
 | Sprint | Shift | — |
+| Toggle flight | Double-tap Space | Double-tap Jump / Up |
+| Rise while flying | Hold Space | Up button |
+| Descend while flying | Hold Ctrl or C | Down button |
+| Hover | Release movement keys | Release the controls |
 | Swim down | Ctrl or C | — |
 | Break a block | Left mouse button | Break button |
 | Place selected block | Right mouse button | Place button |
@@ -30,7 +34,11 @@ The world starts generating while the title screen is visible. Starting reveals 
 | Exploration map | M or circular minimap | Tap circular minimap |
 | Pause | Escape or menu | Menu button |
 
-The settings panel lets you choose a world seed, lighting mode, graphics quality, and sound. The same seed reproduces the same terrain. Block edits are saved per seed in this browser's `localStorage`; they survive reloads on the same origin. The north-up minimap shows a 180-block radius, and the full map shows 400 blocks from its center to its shorter edge. Visiting a location reveals a 128-block radius; undiscovered terrain stays dark. Exploration saves separately for each seed. Different browsers, devices, and origins have separate saves. Clearing browser site data removes those edits. Moving water is recalculated locally and its transient flow cells are not stored as permanent edits.
+The settings panel controls the seed, lighting, graphics quality and sound. The same seed reproduces the same landscape. **Reloading starts a pristine session:** block edits, placed water and map discovery are not read from or written to browser storage. Pausing or returning to the title screen keeps the current session; changing seeds starts a fresh one. Seed and display preferences can still be remembered.
+
+The north-up minimap shows a 180-block radius. The full map shows 400 blocks from its center to the shorter edge. Visits reveal a 128-block radius; undiscovered terrain stays dark. Discovery and raster sampling are cached and bounded.
+
+Holding break or place repeats normal construction. Water pours once per press, preventing a held button from unintentionally creating a column of new sources.
 
 ## Engine structure
 
@@ -38,16 +46,20 @@ The settings panel lets you choose a world seed, lighting mode, graphics quality
 | --- | --- |
 | `main.js` | Scene lifecycle, title/game UI, inventory, settings, interactions, timing |
 | `terrain.js` | Seed hashing, deterministic terrain, caves, biome selection, voxel trees, chunk halos |
-| `world.js` | Chunk lifecycle, worker scheduling, block queries and edits, persistence, water updates |
+| `world.js` | Chunk lifecycle, worker scheduling, block queries, session edits and fluid scheduling |
 | `world-worker.js` | Terrain generation and remeshing away from the main thread |
 | `mesher.js` | Exposed-face chunk geometry, hidden-face removal, vertex colors, ambient occlusion |
+| `water.js` | Pure gravity, downhill routing, source/flow states and shared water heights |
 | `player.js` | Player collision, gravity, jumping, swimming, pointer lock and touch input |
-| `graphics.js` | Sky, shadows, water reflection/refraction, fog, caustic patterns, light shafts |
+| `graphics.js` | Sky, shadows, water reflection/refraction, fog and nearby water-column cache |
+| `surface-material.js` | World-aligned material textures, relief, roughness and filtered environment light |
+| `post-processing.js` | HDR bloom, ACES display mapping, antialiasing and color grading |
+| `sun-rays.js` | Bounded sun-shadow ray marching, underwater scattering and depth-aware filtering |
 | `ecosystem.js` | Instanced foliage, flowers, kelp, lily pads, animals, clouds and particles |
-| `exploration-map.js` | Persistent discovery grid, cached terrain raster, minimap and full map |
+| `exploration-map.js` | Session discovery grid, cached terrain raster, minimap and full map |
 | `audio.js` | Procedural forest, water, wildlife and interaction sounds through Web Audio |
 
-The engine streams 16 × 16 columns, each 80 blocks high, with an eight-chunk radius on desktop and six on touch layouts. Fog begins 40 blocks away on desktop and 30 on touch layouts; nearby scenery stays clear. One-voxel halos make neighboring meshes and ambient occlusion agree at chunk boundaries, including after edits. Trees are actual editable blocks. Smaller plants and wildlife use instanced decorative geometry. Native ponds and rivers have source water at block level 12, with the exposed surface at 12.86. Source cells produce descending streams and up to seven horizontal flow levels; streams recede after losing their source.
+The engine streams 16 × 16 columns, each 80 blocks high, with an eight-chunk radius on desktop and six on touch layouts. Fog begins 44 blocks away on desktop and 32 on touch layouts; nearby scenery stays clear. One-voxel halos make neighboring meshes and ambient occlusion agree at chunk boundaries, including after edits. Trees are actual editable blocks. Smaller plants and wildlife use instanced decorative geometry. Native ponds and rivers have source water at block level 12, with the exposed surface at 12.875. Source cells supply falling streams and up to seven horizontal flow levels. Unsupported flow falls before spreading; downhill routes take priority. Sources are never created automatically. Streams merge into ponds and recede when their feed is removed. Falling and stacked water are full height; neighboring exposed corners form slopes. See `RESEARCH.md` for behavior sources and deliberate differences from Minecraft.
 
 ## Verification
 
@@ -64,23 +76,23 @@ The world tests can also run alone, without npm, from the site root:
 node --test voxyz/tests/world.test.js
 ```
 
-The world suite covers deterministic seed generation, negative-coordinate chunk seams, agreement between generated and queried blocks, dry starting ground and discoverable biomes, hidden faces, exact water surface elevation, bounded fluid spread and drainage, cross-chunk edit halos, per-seed save restoration and storage failures, stale worker results, a real world water placement/removal cycle, and suspended water waking when its neighborhood is revisited. Player and interaction tests cover their respective input, physics and targeting behavior.
+The tests cover deterministic generation, chunk seams and stale workers, collision and swimming, immediate input and held-action metadata, stable scenery, session reset, exploration caching, source/flow/falling surfaces, downhill routing, finite spread, waterfall entry into ponds, drainage and transient-data cleanup. Post-processing tests cover HDR targets, pass order without framebuffer feedback, quality fallback, resizing and resource cleanup.
 
-The original release passed 30 automated tests. The control and exploration-map revision adds regression coverage for direct multi-touch dragging, camera leveling, five-slot selection, stable scenery, and per-seed map discovery. A 61-chunk terrain-only generation/meshing benchmark for the `VOXYZ` seed produced 197,948 triangles and approximately 18.9 MiB of geometry on the development host.
+## Visual and interaction revision
 
-Browser verification on September 6, 2026 used the local Mac's Codex in-app browser. The 1280 × 720 desktop view settled at 60 fps at adaptive scale 1, including terrain, instanced vegetation, wildlife, refraction and periodically updated planar reflection. The final `fern-62408` scene contained 61 terrain chunks, 218,924 terrain/water triangles and approximately 573,000 triangles in the final scene pass. A 390 × 844 viewport used the mobile budget (37 chunks, scale .85) and held 60 fps during touch-stick movement into the pond. This is a phone-sized viewport on desktop hardware, **not a physical-phone benchmark**. Frame drops during initial shader compilation and interaction were observed; 60 fps is a steady-state target rather than an absolute minimum.
+The world uses rough PBR materials with original procedural bark, stone, turf, sand and leaf relief. Mipmapped textures and derivative-filtered fine detail keep surfaces stable at distance. Rounded crowns and tapered spruce silhouettes replace repeated flat foliage shelves; leaf clusters, reeds and grasses add smaller scale detail within bounded instance budgets.
 
-Browser checks verified title-to-play camera handoff, hotbar keyboard selection, left-click break/right-click placement, edit survival after reload, pause/resume, seed changes, settings, night mode, independent touch controls, swimming and underwater rendering. No shader or browser console errors were reported. Physical iOS/Android devices and extended exploration are still useful follow-up validation.
+Scene lighting, refraction and reflection remain in linear HDR. A single final pass combines thresholded bloom, ACES tone mapping, subtle grading and FXAA. Lantern flames exceed display white to produce true bloom; ordinary foliage does not receive a blanket glow. Water has calmer multi-scale ripples, depth-dependent absorption, foreground-aware refraction and a sky fallback for elevated streams. Planar reflections refresh every moving-camera frame, including slow approaches; stationary scenes update less often. From below, the surface stays transmissive at every angle so the sky and trees remain visible; underwater floor reflection is deliberately disabled for this art direction. Blue absorption, a subtle surface tint and stronger ripple distortion keep the interface visible. Above-water refraction is rendered without underwater fog, avoiding double attenuation, and reflection clip offsets remain valid near surface crossings. Sun shadows snap in light space to reduce shimmer. A wider PCF filter softens their edges, while stronger diffuse sky fill and gentle distance haze balance the lower sun without washing out nearby color.
 
-## Control and exploration revision
+Grass keeps its full size through distance fades, bends away from the nearby player and settles back after footsteps. Fine scenery reaches 48 blocks on desktop and 32 on mobile. Coverage fading avoids translucent-instance sorting. Decorative geometry remains tied to stable world coordinates.
 
-All 56 automated tests pass for this revision, and the local HTTP smoke check returns 200 for the entry page and every updated module. Browser checks on September 6, 2026 verified the minimal title, five-slot inventory, direct camera dragging, camera leveling, immediate break/place actions, saved edits and discovery, map open/close, seed changes, and responsive control spacing at 390 × 844, 390 × 480 and 700 × 390. The map close button remains accessible with a 48-character seed.
+Double-tap jump toggles flight with collision, hovering, vertical controls and sprinting. On mobile, Down occupies the former Jump position while Up sits directly above. Pausing preserves flight and releases held inputs; returning to title or changing worlds exits flight.
 
-The title now contains only the logo, entry button and world-settings button, with the site and sound controls in the upper corners. The in-game inventory has five slots: Meadow, Stone, Timber, Water and Lantern. Touch action buttons respond on press and repeat while held; camera dragging follows pointer deltas without momentum. Center camera levels pitch and roll while preserving heading.
+The title stays minimal: logo, entry and settings buttons, plus site and sound controls. In-game UI retains the five-slot inventory, direct touch looking, large action buttons, camera-level control and circular exploration map.
 
-Fine scenery uses coordinate-specific random streams so camera movement and edits cannot re-roll unrelated plants. Animal identities and animation state survive scenery refreshes. Map discovery has its own compact, persistent per-seed grid; raster sampling is cached, bounded and restricted to discovered cells.
+Verified on 6 September 2026: all 106 automated tests and 15 JavaScript syntax checks pass. Browser checks covered title/start, session reset, block and water edits, flight/hover/up/down, portrait and landscape controls, map overlays, grass contact, moving-camera reflections, the blue underwater interface, shared caustics, sun-shadow shafts, and night/Lightweight fallbacks. No browser or shader errors appeared in the checked views.
 
-A terrain-only CPU benchmark of the expanded `fern-62408` neighborhood generated 137 chunks / 514,210 triangles / 49 MiB of geometry for radius six, and 221 chunks / 823,118 triangles / 78.5 MiB for radius eight. These figures describe generation and geometry, not GPU frame rate. The revised scene settled at 60 fps at 1280 × 720, adaptive scale 1, with all 221 chunks resident. A fresh 390 × 844 load used 137 chunks at scale .85 and held 60 fps while moving into the pond, growing map discovery and swimming underwater. These are browser measurements on the development Mac, not physical-phone benchmarks. Brief drops were observed during initial shader compilation and the first newly placed lantern; the steady-state 60 fps target is not an absolute frame-time guarantee. No shader or browser console errors were reported.
+On the development Mac, the 1280 × 720 desktop view held 60 FPS at render scale 1 with 221 loaded chunks and roughly 1.05 million visible scene triangles. The 390 × 844 mobile layout held 60 FPS at scale 0.85 with 137 chunks and about 283,000 visible triangles underwater. These measurements include the six-pass post-processing path with sun shafts; night drops to four passes and Lightweight to one. First-time shader compilation can briefly dip below target. Responsive browser tests are not a physical-phone performance benchmark.
 
 ## Rendering scope and performance
 
@@ -88,11 +100,12 @@ A terrain-only CPU benchmark of the expanded `fern-62408` neighborhood generated
 
 The visual effects are chosen for an interactive web scene:
 
+- Rendering uses linear HDR targets and a single display transform. Bloom runs at quarter resolution on desktop, one-eighth on mobile Auto, and is disabled in Lightweight mode. Devices without HDR render-target support use a byte-target fallback without bloom.
 - Water uses real voxel surface geometry, depth-based screen-space refraction and a reduced-resolution planar reflection pass. The reflection plane is the main water level; arbitrary elevated placed water does not receive a separate physically correct reflection camera.
-- Caustics are animated procedural light patterns, not a physical transport simulation. A bounded nearby column cache restricts them to exposed water columns, follows their actual source/flow heights, and excludes dry ground and sealed water.
-- Light shafts use translucent additive geometry rather than full volumetric ray marching or physically accurate cloud occlusion.
-- Atmospheric fog conceals the streaming horizon, while a separate saved discovery grid controls the exploration map. Map terrain sampling runs only for discovered cells and is capped per frame.
+- Caustics are animated procedural light patterns, not a physical transport simulation. A bounded nearby column cache restricts them to exposed water columns, follows their actual source/flow heights, and excludes dry ground and sealed water. The pattern is shared by terrain, underwater foliage and fish.
+- Sun shafts march through the actual sun shadow map at quarter resolution, with depth-aware filtering. Trees and terrain occlude them; decorative clouds do not. Underwater shafts stop at the local exit surface. Night, Lightweight and non-HDR modes skip the effect.
+- Atmospheric fog conceals the streaming horizon, while a separate session discovery grid controls the exploration map. Map terrain sampling runs only for discovered cells and is capped per frame.
 - Animals use lightweight ambient movement rather than a survival AI, breeding, or food-chain simulation. Water follows finite cellular flow rules rather than fluid dynamics.
-- Decorative plants, particles and clouds are visual scenery. Terrain and voxel trees are the editable world.
+- Grass contact uses bounded visual spring trails rather than rigid-body colliders. Decorative plants, particles and clouds are visual scenery. Terrain and voxel trees are the editable world.
 
 Three.js and Tiny5 licenses are included alongside their vendored files.

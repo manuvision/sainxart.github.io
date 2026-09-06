@@ -44,8 +44,49 @@ The reviewed [Divine Voxel Engine README](https://github.com/Divine-Star-Softwar
 - Use streamed chunk surface meshes and remove interior faces. The official [Three.js voxel guide](https://threejs.org/manual/en/voxel-geometry) explains why separate cube objects and hidden faces become expensive.
 - Favor vertex ambient occlusion, a bounded sun shadow, atmospheric fog, instanced vegetation and lightweight wildlife. Each shadow-casting light requires additional scene rendering; see [Three.js shadows](https://threejs.org/manual/en/shadows.html).
 - Separate discrete block-water behavior from water appearance. The browser design uses localized level updates with a surface shader; this is a different simulation from MishMash's volume-transport solver.
-- Use reduced-resolution scene refraction and periodic planar reflection where the performance budget permits. Caustics and light shafts are artistic approximations, not a general light-transport simulation.
+- Use reduced-resolution scene refraction and camera-synchronized planar reflection where the performance budget permits. Caustics use a bounded procedural pattern. Sun shafts sample the actual tree/terrain shadow map; neither effect implements a general light-transport simulation.
 - Preserve a warm meadow palette, teal water/shadows, cream highlights and limited flower accents. Reserve brighter emissive colors for lanterns and fireflies.
 - Treat 60 FPS as a measurement target for named devices and resolutions. Adapt resolution and quality from observed frame time; do not infer full-world performance from reference demos or claim a universal minimum.
 
+## v3: water behavior and session semantics
+
+Checked against the following sources on 6 September 2026:
+
+- [Minecraft — Block of the Week: Water](https://www.minecraft.net/en-us/article/block-week-water), the official introduction, describes water spreading into adjacent air and explicitly explains Minecraft's automatic creation of additional source blocks. Voxyz deliberately omits that source multiplication.
+- [PaperMC — FlowingFluid implementation patch](https://github.com/PaperMC/Paper/blob/main/paper-server/patches/sources/net/minecraft/world/level/material/FlowingFluid.java.patch), inspected as primary implementation evidence, exposes downward spreading before side spreading, downhill-path searches, transitions to empty fluid states, and avoiding chunk loads solely for fluid propagation.
+- [Minecraft Wiki — water spreading](https://minecraft.wiki/w/Water#Spreading) documents seven horizontal steps, a downhill search extending four steps beyond a neighboring cell, and five game ticks between updates. Its [fluid-state table](https://minecraft.wiki/w/Water/FS) distinguishes falling water from horizontal flow levels. The Wiki provides useful detailed behavior documentation alongside the implementation source.
+
+**Implemented model.** Voxyz evaluates nearby fluid cells against one stable snapshot every 0.25 seconds. Unsupported water falls before spreading sideways. Supported flow selects the nearest reachable downhill paths, including ties, and loses one level per horizontal step. Falling columns regain seven horizontal steps when they reach solid ground. Streams merge into existing ponds without constructing another sheet above their surface. Removing the source or sealing every feed makes downstream cells recede; opening a nearby drop can reroute an established stream. Horizontal levels strictly decrease, and falling cells require water above, preventing source-free cycles.
+
+**Deliberate limits.** This is a discrete, Minecraft-inspired solver, not a physical volume or pressure simulation. A source continuously supplies water until removed; seven-block reach does not imply finite source volume, and successive downhill drops can extend a stream. Sources arise only from terrain or explicit placement, without Minecraft's automatic two-source multiplication. Waterlogging, item washing and entity-current forces are outside this pass. Voxyz uses its own metadata: `8` is a source, `1–7` are horizontal levels, and `9` is falling water. The shared height helper gives source surfaces 0.875 block height, horizontal cells `level / 8`, and falling/stacked cells full height. Neighboring surface corners are averaged into a continuous slope; this is a rendering choice rather than a claim of identical Minecraft geometry.
+
+**Session behavior.** Block edits and transient flow belong only to the current `World` instance. Chunk eviction and return retain those edits, while reload or world regeneration starts pristine even with the same seed. Legacy block-save entries are ignored; no unrelated browser storage is deleted. Drained flow cells are removed from the transient map. Distant fluid work sleeps and resumes when revisited.
+
+**CPU audit.** Development-host Node probes ran 400 ticks per scenario, followed by source removal. These measurements exclude rendering, worker meshing and browser overhead; they are not FPS claims.
+
+| Scenario | Settled flow cells, excluding sources | Mean / maximum active tick | Drain after removal |
+| --- | ---: | ---: | ---: |
+| One source on an uninterrupted flat floor | 112 | 1.76 / 3.11 ms | 8 ticks / 2 s |
+| Source at Y=65 falling into a Y=12 pond | 52 | 0.012 / 0.031 ms | 52 ticks / 13 s |
+| Six nearby sources on a flat floor | 642 | 2.90 / 3.14 ms | 39 ticks / 9.75 s |
+
+Settled idle ticks averaged roughly 0.001–0.002 ms on that host. Each active tick admits at most 192 candidates and targets a 3 ms evaluation budget; finishing the current bounded search and committing results can exceed that target slightly. Regression tests cover finite spread, downhill ties and obstacles, pond entry, complete drainage, chunk-boundary metadata/geometry, sleeping updates, session isolation and cleanup after long runs.
+
+## v3: material and lighting pipeline
+
+The official [Three.js color-management guide](https://threejs.org/manual/en/color-management.html) establishes linear working-space values and a single final display conversion. Voxyz therefore keeps scene, refraction and reflection targets in linear HDR and applies ACES and sRGB transfer once after compositing. This avoids clipping or display-mapping the water's scene textures before they are sampled.
+
+[MeshStandardMaterial](https://threejs.org/docs/pages/MeshStandardMaterial.html) and [PMREMGenerator](https://threejs.org/docs/pages/PMREMGenerator.html) support the rough PBR terrain/foliage and filtered environment illumination. Original seamless procedural material fields provide bark grain, turf edges, stone variation and leaf relief; they use mip filtering and distance attenuation for fine analytic patterns.
+
+The official [UnrealBloomPass documentation](https://threejs.org/docs/pages/UnrealBloomPass.html) and [post-processing guide](https://threejs.org/manual/en/post-processing.html) informed selective bright extraction and reduced-resolution blur. Voxyz uses a smaller custom three-pass bloom plus one final ACES/FXAA composite to keep browser cost bounded. This is an artistic lighting pass, not volumetric light transport.
+
 No third-party visual assets, shader-pack code, or MishMash engine code were copied as part of this research.
+
+
+## Sun shafts and the underwater interface
+
+The fixed decorative light planes were removed. The current [Three.js GodraysNode documentation](https://threejs.org/docs/pages/GodraysNode.html) recommends shadow-based ray marching followed by bilateral filtering and depth-aware composition. The [three-good-godrays implementation notes](https://github.com/Ameobea/three-good-godrays) provide a useful precedent. Voxyz uses its own small GLSL implementation with the vendored r180 shadow format: RGBA-packed depth decoded with Three's packing helper, not the newer hardware comparison-depth path.
+
+A quarter-resolution pass samples the existing sun shadow map along each camera ray, followed by a depth-aware blur and upsample. Desktop uses 24 steps over at most 32 blocks; mobile uses 16 over 24 blocks. There is no extra geometry pass. The camera and cached shadow matrix are captured together after the scene render. Contributions fade before the shadow-map boundary. Voxel trees and terrain occlude the light; decorative clouds do not cast these shadows. This is bounded single scattering, not path tracing.
+
+Underwater shafts use the same occlusion with a shorter 16/12-block range and blue tint, stopping at the local water exit surface and foreground depth. They are disabled when the local water column is unknown or sealed, and all shafts are disabled at night, on Lightweight quality or without HDR support. The water underside deliberately favors readable transmission at all angles instead of total internal reflection: blue absorption, a subtle surface film and ripple refraction preserve a water interface without reflecting the pond floor into it. Caustic patterns share world coordinates across terrain, kelp and fish, and only apply inside exposed water columns.

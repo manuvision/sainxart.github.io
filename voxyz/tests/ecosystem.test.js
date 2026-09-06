@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../vendor/three.module.js';
-import { Ecosystem } from '../ecosystem.js';
+import { Ecosystem, grassSpring } from '../ecosystem.js';
 import { Terrain } from '../terrain.js';
 
 function makeWorld() {
@@ -180,7 +180,7 @@ test('range tiers have an invisible generation buffer and crossing a cell starts
       assert.ok(eco.pending, 'a crossed cell should begin refreshing immediately');
       const oldCellEdge = (eco.cellRadius + 1) * eco.cellSize;
       assert.ok(oldCellEdge - 16.1 > eco.detailRadius + 5, 'the old batch must still cover the complete invisible fade edge');
-      const frames = Math.ceil((eco.cellRadius * 2 + 1) ** 2 / (mobile ? 1 : 2));
+      const frames = Math.ceil((eco.cellRadius * 2 + 1) ** 2 / eco.buildCellsPerFrame);
       assert.ok(eco.detailBuffer > 3 + 6.5 * frames / 60, 'the buffer covers sprint travel through the staged rebuild at the target frame rate');
       const ranges = eco.flora[eco.activeFlora].geometry.getAttribute('ecoRange').array;
       for (let i = 0; i < eco.flora[eco.activeFlora].count; i++) assert.ok(ranges[i] === eco.detailRadius || ranges[i] === eco.nearDetailRadius);
@@ -234,4 +234,75 @@ test('dense jungle keeps every shared visible sample across three- and six-meter
       }
     } finally { eco.dispose(); }
   }
+});
+
+test('detail fades change alpha coverage while keeping plants and animals at their authored size', () => {
+  const eco = new Ecosystem(new THREE.Scene(), makeWorld());
+  try {
+    captureBuild(eco, new THREE.Vector3(12, 17, 0));
+    const shader = { uniforms: {}, vertexShader: THREE.ShaderLib.standard.vertexShader, fragmentShader: THREE.ShaderLib.standard.fragmentShader };
+    eco.floraMaterial.onBeforeCompile(shader);
+    assert.equal(eco.floraMaterial.alphaHash, true);
+    assert.equal(eco.floraMaterial.transparent, false);
+    assert.match(shader.fragmentShader, /diffuseColor\.a \*= vEcoCoverage/);
+    assert.match(shader.fragmentShader, /getAlphaHashThreshold\(vPosition\)/);
+    assert.doesNotMatch(shader.vertexShader, /detailScale|transformed\.xz \*=|mix\(-\.5, transformed\.y/);
+    const geometry = eco.flora[eco.activeFlora].instanceMatrix.array.slice();
+    eco._updateBend(1, new THREE.Vector3(12, 16, 0));
+    eco.viewer.value.set(40, 17, 0);
+    assert.deepEqual(eco.flora[eco.activeFlora].instanceMatrix.array, geometry);
+    eco._updateAnimals(10, 1 / 60);
+    const fish = eco.animals.fish[0], matrix = new THREE.Matrix4();
+    eco.entityMeshes.fish.getMatrixAt(0, matrix);
+    const before = new THREE.Vector3(), rotation = new THREE.Quaternion(), scale = new THREE.Vector3();
+    matrix.decompose(before, rotation, scale);
+    eco.viewer.value.set(1000, 17, 0);
+    eco._updateAnimals(10, 0);
+    eco.entityMeshes.fish.getMatrixAt(0, matrix);
+    const farScale = new THREE.Vector3();
+    matrix.decompose(before, rotation, farScale);
+    assert.deepEqual(farScale, scale);
+    assert.ok(Math.abs(farScale.x - fish.size) < .00001);
+  } finally { eco.dispose(); }
+});
+
+test('grass contact has a rooted bend mask while flowers, lily pads and canopy keep rigid shapes', () => {
+  const eco = new Ecosystem(new THREE.Scene(), makeWorld());
+  try {
+    captureBuild(eco, new THREE.Vector3(0, 17, 0));
+    const mesh = eco.flora[eco.activeFlora], contact = mesh.geometry.getAttribute('ecoBend');
+    let blades = 0;
+    for (let i = 0; i < mesh.count; i++) {
+      if (contact.getX(i) < .5) continue;
+      blades++;
+      assert.ok(contact.getZ(i) > .15);
+      assert.ok(contact.getY(i) >= 13);
+    }
+    assert.ok(blades > 1000, 'grass blades should carry the contact attributes');
+    for (const kind of ['flower', 'lily', 'canopy']) {
+      eco._beginRebuild(new THREE.Vector3(4, 17, 4));
+      if (kind === 'flower') eco._flower(0, 16, 0, () => .5);
+      else if (kind === 'lily') eco._lily(12, 0, () => .5);
+      else eco._canopy(eco.world.terrain.tree(0, 0));
+      assert.ok(eco.pending.count > 0);
+      const mask = eco.pending.mesh.geometry.getAttribute('ecoBend');
+      for (let i = 0; i < eco.pending.count; i++) assert.equal(mask.getX(i), 0, `${kind} must not receive a whole-body grass bend`);
+    }
+  } finally { eco.dispose(); }
+});
+
+test('a departing footstep leaves a damped spring recoil which settles completely', () => {
+  const eco = new Ecosystem(new THREE.Scene(), makeWorld());
+  try {
+    eco._updateBend(0, new THREE.Vector3(0, 16, 0));
+    assert.equal(eco.bendWeights.value[0], 1);
+    eco._updateBend(.1, new THREE.Vector3(3, 16, 0));
+    assert.equal(eco.bendTrail.value[0].x, 0, 'the old pressure stays anchored to the footstep');
+    assert.equal(eco.bendBody.value.x, 3);
+    eco._updateBend(.25, new THREE.Vector3(3, 16, 0));
+    assert.ok(eco.bendWeights.value[0] < 0, 'the old blades gently recoil after the player leaves');
+    eco._updateBend(2, new THREE.Vector3(3, 16, 0));
+    assert.ok([...eco.bendWeights.value].every(value => value === 0));
+    assert.equal(grassSpring(-1), 0);
+  } finally { eco.dispose(); }
 });
