@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="theme-color" content="#000000"><title>Pocket Pallet · v1 · manu.vision</title>
+ <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect x=%227%22 y=%222%22 width=%2218%22 height=%2228%22 rx=%224%22 fill=%22%23dedcca%22/><rect x=%2210%22 y=%226%22 width=%2212%22 height=%229%22 fill=%22%23578c77%22/><path d=%22M10 21h6m-3-3v6%22 stroke=%22%23233233%22/><circle cx=%2221%22 cy=%2221%22 r=%222%22 fill=%22%23aa4965%22/></svg>">
+ <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+ <main id="stage" tabindex="0" aria-label="Playable 3D Game Boy" aria-describedby="controls-help">
+  <div id="loading" role="status">Loading…</div>
+  <div id="button-targets" aria-label="Game Boy controls"></div>
+  <button id="screen-start" class="hardware-button" aria-label="Press Start to play" hidden>Press Start</button>
+ </main>
+ <p id="controls-help" class="sr-only">Press Enter, the Start button, or the screen to begin. Arrow keys or WASD move. Z or Space interacts. Shift or X hurries. Enter pauses. M toggles sound. Drag the Game Boy to rotate; release to return it upright. Scroll or pinch with two fingers to zoom. Two-finger drag pans while zooming. Double-click the background or press 0 to reset the view.</p>
+ <div class="sr-only" id="announcement" role="status" aria-live="polite"></div>
+ <script type="module" src="./app.js"></script>
+</body>
+</html>

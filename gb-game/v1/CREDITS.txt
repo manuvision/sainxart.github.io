@@ -1,0 +1,12 @@
+Pocket Pallet — manu.vision/gb-game
+
+Original raccoon character: ManuVision. Uses the user-corrected final Aseprite exports.
+Interface, 3D handheld, bitmap opening text, and synthesized audio: created for ManuVision.
+
+Map artwork: Pokémon FireRed / LeafGreen, Nintendo / Game Freak.
+Pallet Town sheet uploaded by FrenchOrange on The Spriters Resource:
+https://www.spriters-resource.com/game_boy_advance/pokemonfireredleafgreen/asset/3771/
+The map and Nintendo / Game Boy marks belong to their respective owners.
+This is an independent fan prototype and is not affiliated with Nintendo.
+
+Three.js 0.185.1, MIT license: vendor/LICENSE.
