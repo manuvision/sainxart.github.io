@@ -24,7 +24,7 @@ export class PocketGame{
  }
  async load(){
   const loadImage=src=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Unable to load '+src));im.src=src;});
-  const asset=name=>new URL('./assets/'+name,import.meta.url).href;
+  const asset=name=>new URL('./assets/'+name+'?v=tilekit-20260907',import.meta.url).href;
   const loadJSON=async name=>{const r=await fetch(asset(name));if(!r.ok)throw new Error('Missing '+name);return r.json();};
   [this.mapImage,this.sprites,this.atlas,this.world]=await Promise.all([loadImage(asset('town-atlas.png')),loadImage(asset('raccoon-master.png')),loadJSON('raccoon-master.json'),loadJSON('world.json')]);
   TOWN=this.world.town;ROOMS=this.world.rooms;DOORS=this.world.doors;SIGNS=this.world.signs;[this.player.x,this.player.y]=this.world.spawn;
@@ -120,7 +120,7 @@ export class PocketGame{
   if(!this.ready)return;
   const [sx,sy,w,h]=this.map.source;
   const cameraX=Math.round(w<240?(w-240)/2:clamp(this.player.x-120,0,w-240));
-  const cameraY=Math.round(h<160?(h-160)/2:clamp(this.player.y-85,0,h-160));
+  const cameraY=Math.round(h<160?(h-160)/2:clamp(this.player.y-(this.world.cameraOffsetY??85),0,h-160));
   c.drawImage(this.mapImage,sx,sy,w,h,-cameraX,-cameraY,w,h);
   // Object bases and the raccoon's feet share one depth order. Canopies can overhang paths.
   const objects=this.room==='town'?this.map.objects:[];

@@ -1,5 +1,5 @@
 import * as THREE from '../vendor/three.module.min.js';
-import {PocketGame} from './game.js';
+import {PocketGame} from './game.js?v=tilekit-20260907';
 
 const stage=document.querySelector('#stage');
 const screenCanvas=document.createElement('canvas');screenCanvas.width=240;screenCanvas.height=160;
