@@ -1,0 +1,9 @@
+RIVER VILLAGE — ORIGINAL EDITION
+
+Original village environment: ManuVision, created in Aseprite for this project.
+Original environment includes the terrain, river, jungle trees, palms, timber homes, bridge, props and all three interiors.
+Original raccoon: ManuVision; exact user-corrected production sprites.
+
+Three.js 0.185.1: MIT license, ../vendor/LICENSE.
+The game uses locally synthesized audio and an original bitmap Start prompt.
+No third-party game map or interior artwork is used in this edition.

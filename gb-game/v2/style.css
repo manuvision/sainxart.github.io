@@ -1,0 +1,14 @@
+:root{font-family:system-ui,sans-serif;color:#dce6d6;background:#000;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
+body{background:#000}
+#stage{position:fixed;inset:0;width:100%;height:100%;height:100dvh;touch-action:none;outline:none;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#stage>canvas{display:block;width:100%;height:100%;touch-action:none}
+#stage[data-dragging=true],#stage[data-dragging=true] *{cursor:grabbing!important}
+#loading{position:absolute;inset:0;display:grid;place-content:center;font-size:12px;letter-spacing:.06em;color:#a6b9ab;pointer-events:none}
+#button-targets{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.hardware-button{position:absolute;border:0;background:transparent;color:transparent;pointer-events:auto;transform:translate(-50%,-50%);border-radius:8px;touch-action:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hardware-button:focus-visible{outline:2px solid #c7e7ae;outline-offset:2px}
+.hardware-button[hidden]{display:none}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.error{max-width:320px;padding:24px;text-align:center;font-size:14px;line-height:1.7;color:#eee}
