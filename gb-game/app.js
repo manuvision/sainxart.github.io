@@ -95,16 +95,23 @@ function initHandheld(){
   const map=new THREE.CanvasTexture(c);map.colorSpace=THREE.SRGBColorSpace;
   const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map,transparent:true,depthWrite:false,toneMapped:false}));m.position.set(x,y,z);body.add(m);return m;
  }
+ // Geometry keeps these symbols identical on phones with emoji-enabled fonts.
+ function arrow(direction,x,y,w,h,color,z){
+  const shape=new THREE.Shape();shape.moveTo(0,h/2);shape.lineTo(-w/2,-h/2);shape.lineTo(w/2,-h/2);shape.closePath();
+  const mesh=new THREE.Mesh(new THREE.ShapeGeometry(shape),new THREE.MeshBasicMaterial({color,toneMapped:false,depthWrite:false}));
+  mesh.rotation.z={up:0,left:Math.PI/2,down:Math.PI,right:-Math.PI/2}[direction];mesh.position.set(x,y,z);body.add(mesh);
+ }
  label('DOT MATRIX WITH STEREO SOUND',.48,4.47,3.7,.15,'#d1d5d0','500 32px Arial',.55);
  solid(.78,.026,.01,.002,new THREE.MeshBasicMaterial({color:0x977687}),-2.38,4.46,.55,.002);
  solid(.78,.026,.01,.002,new THREE.MeshBasicMaterial({color:0x657a94}),-2.38,4.40,.55,.002);
  const led=new THREE.Mesh(new THREE.SphereGeometry(.061,16,12),new THREE.MeshBasicMaterial({color:0xeb734f}));led.position.set(-2.82,3.2,.516);body.add(led);
  label('BATTERY',-2.82,2.91,.49,.105,'#c8ccce','500 32px Arial',.55);
- label('Nintendo',-2.29,-.21,1.5,.31,'#303b62','bold 32px Arial',.412);
- label('GAME BOY',-.25,-.19,2.15,.39,'#303b62','italic bold 32px Arial',.412);
- label('™',.93,-.17,.17,.15,'#303b62','bold 32px Arial',.412);
+ label('MANU VISION',-.08,-.19,2.95,.39,'#303b62','italic bold 32px Arial',.412);
+ label('TM',1.04,-.11,.22,.12,'#303b62','bold 32px Arial',.412);
  label('PHONES',0,-5.10,.75,.14,'#686f6b','bold 32px Arial',.412);
- label('◀  OFF · ON  ▶',-1.9,5.25,1.25,.14,'#6e786e','bold 32px Arial',.412);
+ label('OFF · ON',-1.9,5.25,.95,.14,'#6e786e','bold 32px Arial',.412);
+ arrow('left',-2.27,5.25,.065,.065,'#6e786e',.412);
+ arrow('right',-1.53,5.25,.065,.065,'#6e786e',.412);
  solid(.6,.12,.025,.32,rubber,-2.0,5.64,-.11,.01);
  // Rubber D-pad, built from discrete clickable arms around a shared center.
  solid(2.23,2.23,1.1,.025,new THREE.MeshStandardMaterial({color:0xb5b6a5,roughness:.9}),-1.92,-1.6,.35,.04);
@@ -113,7 +120,7 @@ function initHandheld(){
  for(const [name,x,y,w,h] of definitions){const m=solid(w,h,.055,.18,rubber,-1.92+x,-1.6+y,.44,.035);buttonMeshes[name]=m;buttonPositions[name]={x:m.position.x,y:m.position.y,z:.66,w:.86,h:.86};}
  solid(.75,.75,.055,.18,rubber,-1.92,-1.6,.44,.025);
  const center=new THREE.Mesh(new THREE.CircleGeometry(.23,32),new THREE.MeshStandardMaterial({color:0x111820,roughness:.6}));center.position.set(-1.92,-1.6,.655);body.add(center);
- for(const [name,text] of [['up','▲'],['down','▼'],['left','◀'],['right','▶']]){const p=buttonPositions[name];label(text,p.x,p.y,.22,.2,'#343d43','bold 32px Arial',.665);}
+ for(const name of ['up','down','left','right']){const p=buttonPositions[name];arrow(name,p.x,p.y,.14,.12,'#343d43',.665);}
  solid(2.25,1.17,.58,.02,new THREE.MeshStandardMaterial({color:0xbdbfae,roughness:.8}),1.9,-1.64,.35,.04).rotation.z=.48;
  for(const [name,x,y] of [['b',1.32,-1.98],['a',2.48,-1.35]]){
   const m=new THREE.Mesh(new THREE.CylinderGeometry(.43,.46,.24,64),purple);m.rotation.x=Math.PI/2;m.position.set(x,y,.53);m.castShadow=true;m.receiveShadow=true;body.add(m);buttonMeshes[name]=m;buttonPositions[name]={x,y,z:.71,w:1.08,h:1.08};
@@ -125,6 +132,12 @@ function initHandheld(){
  }
  for(let i=0;i<6;i++){const slot=solid(.085,1.23,.04,.012,new THREE.MeshStandardMaterial({color:0x62716a,roughness:.9}),1.44+i*.29,-4.35+i*.065,.395,.008);slot.rotation.z=.44;}
  const buttonLayer=document.querySelector('#button-targets');const domButtons={};
+ const brandLink=document.createElement('a');brandLink.id='brand-link';brandLink.className='hardware-button';brandLink.href='https://manu.vision';brandLink.setAttribute('aria-label','MANU VISION — home');brandLink.title='Visit manu.vision';brandLink.textContent='MANU VISION';brandLink.hidden=true;buttonLayer.append(brandLink);
+ let brandTouch=null,brandTapCancelled=false;
+ brandLink.addEventListener('pointerdown',e=>{brandTouch={x:e.clientX,y:e.clientY};brandTapCancelled=false;});
+ stage.addEventListener('pointermove',e=>{if(brandTouch&&Math.hypot(e.clientX-brandTouch.x,e.clientY-brandTouch.y)>8)brandTapCancelled=true;},{capture:true});
+ stage.addEventListener('pointercancel',()=>{brandTapCancelled=true;brandTouch=null;},{capture:true});
+ brandLink.addEventListener('click',e=>{if(e.detail!==0&&brandTapCancelled)e.preventDefault();brandTouch=null;});
  const touches=new Map();let pinching=false,pinchStart=null,drag=null;
  const actionLabels={up:'Move up',down:'Move down',left:'Move left',right:'Move right',a:'A — interact or enter',b:'B — hurry or dismiss',start:'Start — begin playing',select:'Select — toggle sound'};
  for(const [action,pos] of Object.entries(buttonPositions)){
@@ -167,6 +180,7 @@ function initHandheld(){
  stage.addEventListener('pointerdown',e=>{
   if(e.pointerType==='touch')touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(touches.size>=2){
+   brandTapCancelled=true;
    pinching=true;stopDrag();clear();e.preventDefault();e.stopPropagation();
    for(const id of touches.keys())stage.setPointerCapture(id);
    pinchStart={...touchPair(),zoom,panX:pan.x,panY:pan.y};
@@ -235,6 +249,9 @@ function initHandheld(){
    b.style.left=center.x+'px';b.style.top=center.y+'px';b.style.width=Math.max(24,2*Math.abs(edge.x-center.x))+'px';b.style.height=Math.max(24,2*Math.abs(edge.y-center.y))+'px';
    b.style.visibility=!interactive||center.x<0||center.x>width||center.y<0||center.y>height?'hidden':'visible';projected[action]=center;
   }
+  const brandCenter=project(-.02,-.19,.412),brandEdge=project(1.25,.12,.412);
+  brandLink.hidden=!interactive||brandCenter.x<0||brandCenter.x>width||brandCenter.y<0||brandCenter.y>height;
+  brandLink.style.left=brandCenter.x+'px';brandLink.style.top=brandCenter.y+'px';brandLink.style.width=2*Math.abs(brandEdge.x-brandCenter.x)+'px';brandLink.style.height=Math.max(44,2*Math.abs(brandEdge.y-brandCenter.y))+'px';
   startButton.hidden=started||!interactive;
   if(!startButton.hidden){
    const center=project(.13,2.55,.56),edge=project(1.68,2.98,.56);
