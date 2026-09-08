@@ -54,8 +54,8 @@ export class SPConsole {
     this.box(2.84,.02,1.925,.035,m.seam,this.hinge,[0,-.063,1.74]);
     this.screenTexture=new THREE.CanvasTexture(this.screen.canvas);this.screenTexture.colorSpace=THREE.SRGBColorSpace;this.screenTexture.magFilter=THREE.NearestFilter;this.screenTexture.minFilter=THREE.NearestFilter;this.screenTexture.generateMipmaps=false;
     this.display=this.mesh(new THREE.PlaneGeometry(2.76,1.84),new THREE.MeshBasicMaterial({map:this.screenTexture,toneMapped:false}),this.hinge,[0,-.079,1.74]);this.display.rotation.x=Math.PI/2;this.display.castShadow=false;this.display.userData.screen=true;this.targets.push(this.display);
-    this.label('GAME BOY ADVANCE SP',2.05,.17,this.hinge,[0,-.064,.52],{size:32,rotation:Math.PI/2,color:'#aaaab4'});
-    this.label('manu.vision',1.65,.36,this.hinge,[0,.247,1.52],{size:49,color:'#70787f'});
+    this.label('Manu.Vision',1.55,.285,this.hinge,[0,-.064,.52],{size:60,rotation:Math.PI/2,color:'#d6dce3'});
+    this.label('Manu.Vision',1.65,.36,this.hinge,[0,.247,1.52],{size:49,color:'#70787f'});
     for(const x of [-1.56,1.56])for(const z of [.23,2.81])this.box(.15,.026,.09,.02,m.rubber,this.hinge,[x,-.02,z]);
     // The D-pad is an extruded cross, with independent directional hit regions.
     this.cylinder(.635,.018,m.edge,root,[-.96,.124,-.24]);

@@ -148,7 +148,7 @@ function fallback(){
   if(fallbackMode)return;releaseAll();fallbackMode=true;if(device){device.destroy();device=null;}document.body.classList.add('fallback');$('#loading').classList.add('done');$('#expand').hidden=true;setExpanded(true);
 }
 try{
-  const { SPConsole }=await import('./console.js?v=20260908-3');
+  const { SPConsole }=await import('./console.js?v=20260908-4');
   device=new SPConsole($('#console'),game,input,()=>{$('#loading').classList.add('done');},holds);
 }catch(error){console.warn('Using 2D garden view:',error);fallback();}
 const shortLandscape=matchMedia('(orientation: landscape) and (max-height: 500px)');
