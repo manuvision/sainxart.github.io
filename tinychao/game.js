@@ -1,7 +1,7 @@
 /* Tiny Chao Garden — a small, persistent fan-made garden for a 240×160 screen. */
 import { getChaoSprite, walkDirection } from './sprites.js';
-import { EGGS, getEgg, EGG_REFRESH_MS, makeEggWeights, restoreEggWeights, rollEggStock, snapshotChao } from './eggs.js';
-export { EGGS } from './eggs.js';
+import { EGGS, getEgg, EGG_REFRESH_MS, makeEggWeights, restoreEggWeights, rollEggStock, snapshotChao, collectEggUnlocks, isEggUnlocked, eggHint } from './eggs.js?v=20260908-3';
+export { EGGS } from './eggs.js?v=20260908-3';
 export const SAVE_KEY = 'tinychao.garden.v3';
 export const FRUITS = [
   { id: 'orange', name: 'ORANGE FRUIT', price: 30, belly: 25, mood: 8, stat: 'swim', xp: 30, sprite: 0, gains: [30,-20,-20,30,10] },
@@ -26,7 +26,7 @@ const int = (n) => Math.floor(n);
 const shuffle = (items) => { const a = [...items]; for (let i = a.length - 1; i > 0; i--) { const j = int(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
 export function freshState() {
-  const state = { version: 3, color: 'normal', collection: {}, eggWeights: makeEggWeights(), eggStock: 'silver', eggRefreshAt: Date.now() + EGG_REFRESH_MS, name: 'CHAO', rings: 120, hatched: false, eggProgress: 0, mood: 80, belly: 75, energy: 90,
+  const state = { version: 3, color: 'normal', collection: {}, eggUnlocks: ['normal','silver'], eggWeights: makeEggWeights(), eggStock: 'silver', eggRefreshAt: Date.now() + EGG_REFRESH_MS, name: 'CHAO', rings: 120, hatched: false, eggProgress: 0, mood: 80, belly: 75, energy: 90,
     inventory: { orange: 0, blue: 0, pink: 0, green: 0, purple: 0, yellow: 0, red: 0 }, toys: [],
     stats: Object.fromEntries(STATS.map(k => [k, { level: 0, xp: 0 }])),
     x: 88, y: 105, totalHatches: 0, totalFeeds: 0, totalPets: 0, totalRingsEarned: 0, bestMemory: 0, bestJanken: 0,
@@ -67,8 +67,9 @@ export function restoreState(raw, now = Date.now(), withCollection = true) {
   }
   clean.collection[clean.color] = snapshotChao(clean);
   // Existing v3 saves keep their current Chao, name, stats, rings, and all items.
-  clean.eggStock = EGGS.some(egg=>egg.id===raw.eggStock&&!clean.collection[egg.id]) ? raw.eggStock :
-    !clean.collection.silver ? 'silver' : rollEggStock(clean.collection,clean.eggWeights);
+  clean.eggUnlocks = collectEggUnlocks({...clean,eggUnlocks:raw.eggUnlocks});
+  clean.eggStock = EGGS.some(egg=>egg.id===raw.eggStock&&!clean.collection[egg.id]&&clean.eggUnlocks.includes(egg.id)) ? raw.eggStock :
+    !clean.collection.silver ? 'silver' : rollEggStock(clean.collection,clean.eggWeights,Math.random,clean.eggUnlocks);
   return clean;
 }
 
@@ -108,13 +109,13 @@ export class TinyGarden {
 
   sound(name) { try { this.onSound(name); } catch {} }
   changed() { try { this.onChange({ mode: this.mode, name: this.state.name, hatched: this.state.hatched, rings: this.state.rings, mood: this.state.mood, belly: this.state.belly, energy: this.state.energy, status: this.accessibleStatus() }); } catch {} }
-  save() { this.state.collection[this.state.color] = snapshotChao(this.state); this.state.lastSaved = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.state)); this.storageError = false; } catch { this.storageError = true; } this.changed(); }
+  save() { this.refreshEggUnlocks(); this.state.collection[this.state.color] = snapshotChao(this.state); this.state.lastSaved = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.state)); this.storageError = false; } catch { this.storageError = true; } this.changed(); }
   exportSave() { this.save(); return JSON.parse(JSON.stringify(this.state)); }
   importSave(data) { if (typeof data === 'string') { try { data = JSON.parse(data); } catch { throw new Error('This file is not a valid garden save.'); } } if (!data || data.version !== 3 || typeof data.hatched !== 'boolean' || !Number.isFinite(data.rings) || !data.stats || !data.inventory) throw new Error('This file is not a Tiny Chao Garden save.'); this.state = restoreState(data); this.mode = 'garden'; this.hatchTime = 0; this.anim = { kind: this.state.hatched ? 'idle' : 'egg', remaining: 0, facing: 1, targetX: this.state.x, targetY: this.state.y, next: 5 }; this.effects = []; this.message(`WELCOME HOME, ${this.state.name}!`); this.save(); this.render(); return true; }
   reset() { this.state = freshState(); this.mode = 'garden'; this.gardenAction = 0; this.heldItem = null; this.cursor = { x: 108, y: 98, visible: 0 }; this.anim = { kind: 'egg', remaining: 0, facing: 1, next: 5, targetX: 88, targetY: 105 }; this.hatchTime = 0; this.effects = []; this.message('A NEW EGG! PRESS A TO RUB', 5); this.save(); this.render(); }
   accessibleStatus() {
     if (this.mode === 'garden') return this.state.hatched ? `${this.state.name}: belly ${Math.round(this.state.belly)}%, happiness ${Math.round(this.state.mood)}%, energy ${Math.round(this.state.energy)}%. ${this.state.rings} rings. ${this.notice || 'A interacts. L opens the shop. R selects a loose fruit. A picks it up; bring it to your Chao. The two GBA icons start mini games. Start opens the menu.'}` : `An egg is waiting to hatch. Press A or tap the egg. ${Math.round(this.state.eggProgress / 12 * 100)}% hatched.`;
-    if (this.mode === 'friends') { const egg=EGGS[this.selection];return `Chao Friends. ${Object.keys(this.state.collection).length} of 12 collected. ${egg.name}, ${egg.rarity}. ${this.state.collection[egg.id]?'Press A to visit. Your other Chao stays saved.':`${egg.price} rings in the rotating egg shop.`}`; }
+    if (this.mode === 'friends') { const egg=EGGS[this.selection];return `Chao Friends. ${Object.keys(this.state.collection).length} of 12 collected. ${egg.name}, ${egg.rarity}. ${this.state.collection[egg.id]?'Press A to visit. Your other Chao stays saved.':isEggUnlocked(egg.id,this.state)?`${egg.price} rings in the rotating egg shop.`:`Still a mystery. ${eggHint(egg.id)}`}`; }
     if (this.mode === 'memory') return `Chao Memory. ${this.memory?.pairs || 0} pairs found. ${this.memory?.mistakes || 0} mistakes. Use the direction pad and A to reveal a card.`;
     if (this.mode === 'janken') return `Chao Janken. ${Math.ceil(this.janken?.remaining || 0)} seconds. ${this.janken?.rings || 0} rings earned. Left or right selects a hand. A shoots.`;
     return `${this.mode}. ${this.notice || ''}`;
@@ -164,10 +165,19 @@ export class TinyGarden {
   }
   groundFruit() { const fruit = []; for (const f of FRUITS) for (let i = 0; i < this.state.inventory[f.id]; i++) { const n = fruit.length; if (n >= 8) return fruit; fruit.push({ id: f.id, sprite: f.sprite, x: 19 + n % 4 * 24, y: 61 + int(n / 4) * 25 }); } return fruit; }
   shopItems() { const fruit = FRUITS.map((f,index)=>({...f,index})); const next = TOYS.findIndex(t=>!this.state.toys.includes(t.id)); const egg=this.state.eggStock?{...getEgg(this.state.eggStock),index:'egg'}:null; return [...fruit,...(egg?[egg]:[]),...(next<0?[]:[{...TOYS[next],index:FRUITS.length+next}])]; }
-  refreshEggStock() { this.state.collection[this.state.color]=snapshotChao(this.state); this.state.eggStock=rollEggStock(this.state.collection,this.state.eggWeights); this.state.eggRefreshAt=Date.now()+EGG_REFRESH_MS; }
+  refreshEggUnlocks(announce=false) {
+    const previous=this.state.eggUnlocks||[],unlocked=collectEggUnlocks(this.state),fresh=unlocked.filter(id=>!previous.includes(id));
+    this.state.eggUnlocks=unlocked;
+    const newOffer=fresh.find(id=>id!=='normal'&&!this.state.collection[id]);
+    if(newOffer){this.state.eggStock=newOffer;this.state.eggRefreshAt=Date.now()+EGG_REFRESH_MS;if(announce){this.message('A NEW EGG HAS FOUND YOUR SHOP!',6);this.sound('levelup');}}
+    return fresh;
+  }
+  refreshEggStock() { this.state.collection[this.state.color]=snapshotChao(this.state); const fresh=this.refreshEggUnlocks();this.state.eggStock=fresh.find(id=>id!=='normal'&&!this.state.collection[id])||rollEggStock(this.state.collection,this.state.eggWeights,Math.random,this.state.eggUnlocks);this.state.eggRefreshAt=Date.now()+EGG_REFRESH_MS; }
+
   buyEgg() {
     const egg=this.state.eggStock&&getEgg(this.state.eggStock);
-    if(!egg||this.state.collection[egg.id]) { this.message('YOU HAVE EVERY EGG!'); this.sound('error'); return false; }
+    if(!egg||this.state.collection[egg.id]) { this.message(Object.keys(this.state.collection).length===EGGS.length?'YOU HAVE EVERY EGG!':'KEEP PLAYING. MORE EGGS WILL FIND YOU.'); this.sound('error'); return false; }
+    if(!isEggUnlocked(egg.id,this.state)){this.message(eggHint(egg.id),5);this.sound('error');return false;}
     if(!this.state.hatched||Object.entries(this.state.collection).some(([id,chao])=>id!==this.state.color&&!chao.hatched)) { this.message('HATCH YOUR WAITING EGG FIRST!'); this.sound('error'); return false; }
     if(this.state.rings<egg.price) { this.message(`${egg.name} EGG: ${egg.price} RINGS. PLAY TO EARN!`); this.sound('error'); return false; }
     this.state.collection[this.state.color]=snapshotChao(this.state);
@@ -177,7 +187,7 @@ export class TinyGarden {
   }
   visitFriend(index) {
     const egg=EGGS[index],friend=egg&&this.state.collection[egg.id];
-    if(!friend) { this.message('FIND THIS EGG IN THE SHOP. STOCK CHANGES AFTER GAMES.',5); this.sound('error'); return false; }
+    if(!friend) { this.message(isEggUnlocked(egg?.id,this.state)?'FIND THIS EGG IN THE SHOP. STOCK CHANGES AFTER GAMES.':eggHint(egg?.id),5); this.sound('error'); return false; }
     this.state.collection[this.state.color]=snapshotChao(this.state);
     const selected=this.state.collection[egg.id]; Object.assign(this.state,snapshotChao(selected));
     this.heldItem=null;this.heldFruit=null;this.effects=[];this.hatchTime=0;
@@ -362,6 +372,7 @@ export class TinyGarden {
 
   update(dt) {
     dt = Math.max(0, Math.min(.1, Number(dt) || 0)); this.time += dt; this.autosave += dt;
+    if(['garden','memory','janken'].includes(this.mode)){this.state.played+=dt;this.unlockElapsed=(this.unlockElapsed||0)+dt;if(this.unlockElapsed>=1){this.unlockElapsed=0;if(this.refreshEggUnlocks(true).length)this.save();}}
     if (this.noticeTime > 0) { this.noticeTime -= dt; if (this.noticeTime <= 0) this.notice = ''; }
     this.cursor.visible = Math.max(0, this.cursor.visible - dt);
     this.effects = this.effects.filter(e => { e.life -= dt; e.x += e.vx * dt; e.y += e.vy * dt; return e.life > 0; });
@@ -398,7 +409,7 @@ export class TinyGarden {
   }
   updateGarden(dt) {
     if(Date.now()>=this.state.eggRefreshAt){this.refreshEggStock();this.save();}
-    const s = this.state, a = this.anim; s.played += dt;
+    const s = this.state, a = this.anim;
     if (this.hatchTime > 0) {
       this.hatchTime -= dt; if (this.hatchTime <= 0) { this.hatchTime = 0; s.hatched = true; s.totalHatches++; a.kind = 'happy'; a.remaining = 4; a.next = 5; this.message(`HELLO! I AM ${s.name}!`, 5); this.sound('chao'); this.particles(s.x, s.y - 20, 'heart', 8); this.save(); }
       return;
@@ -556,13 +567,13 @@ export class TinyGarden {
     this.screenBase('CHAO FRIENDS');
     EGGS.forEach((egg,i)=>{const x=8+i%4*56,y=25+int(i/4)*34,friend=egg.id===this.state.color?this.state:this.state.collection[egg.id];
       this.panel(x,y,54,32,i===this.selection?'#fff1a5':friend?'#dcefc8':'#d9e0da',i===this.selection?'#db8b3a':'#78968c');
-      if(friend?.hatched)this.drawChao(x+27,y+25,'idle',1,egg.id);else this.drawEggSprite(egg.id,x+27,y+24);
+      if(friend?.hatched)this.drawChao(x+27,y+25,'idle',1,egg.id);else {this.ctx.globalAlpha=isEggUnlocked(egg.id,this.state)?1:.25;this.drawEggSprite(egg.id,x+27,y+24);this.ctx.globalAlpha=1;}
       if(!friend)this.text('?',x+44,y+4,'#788478');
       if(egg.id===this.state.color)this.text('>',x+4,y+12,'#2f608f');
     });
     const egg=EGGS[this.selection],friend=egg.id===this.state.color?this.state:this.state.collection[egg.id];
     this.centered(`${egg.name} - ${egg.rarity}`,120,132,'#305a94');
-    this.centered(friend?(friend.hatched?`A: VISIT ${friend.name}`:'A: HATCH YOUR EGG'):`${egg.price} RINGS - FIND IN SHOP`,120,143,'#4265a0');
+    this.centered(friend?(friend.hatched?`A: VISIT ${friend.name}`:'A: HATCH YOUR EGG'):isEggUnlocked(egg.id,this.state)?`${egg.price} RINGS - FIND IN SHOP`:eggHint(egg.id),120,143,'#4265a0');
     this.centered(`${Object.keys(this.state.collection).length}/12 FRIENDS   B: GARDEN`,120,153,'#4265a0');
   }
   drawGames() {

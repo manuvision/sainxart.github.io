@@ -22,7 +22,9 @@ The garden saves automatically in localStorage. One Chao lives in the active gar
 
 The original shop egg row now offers Silver, Gold, Ruby, Sapphire, Amethyst, Emerald, Garnet, Aquamarine, Peridot, Topaz, and Onyx eggs at their original ring prices. Buy an egg, then select it in Chao Friends to hatch it. Your previous Chao stays saved. One egg may wait to hatch at a time.
 
-Stock refreshes after a completed minigame or five minutes. Offers exclude collected colors. Rare weights are assigned once per save and remain stable across reloads; prices range from 500 rings for Silver to 20,000 for Onyx. Collection storage and this restock schedule are standalone adaptations, so no GameCube transfer is needed. The original garden has no adult evolution or Chaos Chao transformation.
+Special eggs have hidden milestones based on best minigame scores, time playing, and care. The Friends screen gives hints without revealing exact thresholds. Earned unlocks and previously owned eggs remain unlocked; rings alone cannot buy locked colors. Visible, unpaused garden and minigame time counts, while menus, paused games, and time away do not.
+
+Stock refreshes after a completed minigame or five minutes. Offers exclude collected and still-locked colors. Rare weights are assigned once per save and remain stable across reloads; prices range from 500 rings for Silver to 20,000 for Onyx. Collection storage and this restock schedule are standalone adaptations, so no GameCube transfer is needed. The original garden has no adult evolution or Chaos Chao transformation.
 
 ## Develop
 
@@ -51,6 +53,7 @@ The tests cover hatching, feeding, fruit effects, purchase limits, minigame rewa
 - `game.js`: game state, persistence, care, original-style menus, two minigames, and pixel rendering.
 - `console.js`: procedural Three.js SP, hinge animation, lighting, physical buttons, raycasting, and drag interaction.
 - `audio.js`: local Web Audio music and effects with gesture activation and background suspension.
+- `controls.js`: shared button holds and gameplay gesture protection for touch and keyboard.
 - `app.js`: keyboard/touch input, game loop, screen expansion, accessibility, settings, and save backups.
 - `assets/`: original sprite sheets and UI resources, with attribution.
 - `vendor/`: locally vendored Three.js and its license.

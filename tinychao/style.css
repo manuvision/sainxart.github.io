@@ -14,3 +14,8 @@
 @media(max-height:540px) and (orientation:landscape){.touch-middle{flex-direction:row;gap:3px}.touch-middle .touch-menu{min-width:42px;font-size:7px;letter-spacing:0;padding:2px}}
 
 @media(max-height:540px) and (orientation:landscape){body{min-height:0}.touch-controls{padding:0!important}}
+
+/* Gameplay touches are physical controls. Keep document/dialog zoom available. */
+#console,#console canvas,#large-screen,.touch-controls,[data-input]{touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;overscroll-behavior:contain}
+.touch-dpad button{display:grid;place-items:center}.dpad-arrow{width:16px;height:16px;fill:currentColor;stroke:none;pointer-events:none}.dpad-left{transform:rotate(-90deg)}.dpad-down{transform:rotate(180deg)}.dpad-right{transform:rotate(90deg)}
+.touch-actions button:last-child.pressed{transform:translateY(-10px)}

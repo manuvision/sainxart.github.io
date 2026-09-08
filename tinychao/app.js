@@ -1,5 +1,6 @@
-import { TinyGarden } from './game.js?v=20260908-2';
+import { TinyGarden } from './game.js?v=20260908-3';
 import { GardenAudio } from './audio.js';
+import { ButtonHolds, protectGameplayGestures } from './controls.js';
 
 const $ = selector => document.querySelector(selector);
 const prefsKey = 'tinychao.preferences.v1';
@@ -25,19 +26,39 @@ function unlock(){if(!$('dialog[open]'))audio.unlock().catch(()=>{});}
 document.addEventListener('pointerdown', unlock, {passive:true,capture:true});
 document.addEventListener('keydown', unlock, {passive:true,capture:true});
 function haptic(){if(prefs.haptics)try{navigator.vibrate?.(8);}catch{}}
-const pulseTimers = new Map();
+const pulseTimers = new Map(), keyboardDown = new Set(), capturedPointers = new Map();
+function renderPressed(key, down) {
+  document.querySelectorAll(`[data-input="${key}"]`).forEach(button => button.classList.toggle('pressed', down));
+  device?.press(key, down);
+}
+const holds = new ButtonHolds({
+  send: key => input(key),
+  canRepeat: () => !document.hidden && !$('dialog[open]'),
+  changed: (key, down) => { clearTimeout(pulseTimers.get(key)); pulseTimers.delete(key); renderPressed(key, down); },
+});
+function stopPointer(id) {
+  holds.stop(`pointer:${id}`);
+  const button = capturedPointers.get(id); capturedPointers.delete(id);
+  try { if (button?.hasPointerCapture(id)) button.releasePointerCapture(id); } catch {}
+}
+function releaseAll() {
+  holds.clear(); keyboardDown.clear();
+  for (const id of capturedPointers.keys()) stopPointer(id);
+  for (const [key, timer] of pulseTimers) { clearTimeout(timer); renderPressed(key, false); }
+  pulseTimers.clear(); device?.cancelInteraction();
+}
 function input(key,point){
   if(key==='fallback'){fallback();return;}
-  if($('dialog[open]')) return;
+  if(document.hidden || $('dialog[open]')) return;
   if(key==='screen'){autoLandscape=false;setExpanded(!expanded);return;}
-  if(key==='touch'){game.touch(point.x,point.y);haptic();return;}
-  game.input(key);haptic();
-  document.querySelectorAll(`[data-input="${key}"]`).forEach(b=>b.classList.add('pressed'));
-  device?.press(key,true);
+  if(key==='touch'){const mode=game.mode;game.touch(point.x,point.y);if(game.mode!==mode)releaseAll();haptic();return;}
+  const previousMode=game.mode;game.input(key);if(game.mode!==previousMode)releaseAll();haptic();
+  renderPressed(key, true);
   clearTimeout(pulseTimers.get(key));
-  pulseTimers.set(key,setTimeout(()=>{document.querySelectorAll(`[data-input="${key}"]`).forEach(b=>b.classList.remove('pressed'));device?.press(key,false);},110));
+  pulseTimers.set(key, setTimeout(() => { pulseTimers.delete(key); if (!holds.hasKey(key)) renderPressed(key, false); }, 110));
 }
 function setExpanded(open){
+  releaseAll();
   if(fallbackMode)open=true;
   expanded=open;$('#screen-view').hidden=!open;document.body.classList.toggle('screen-open',open);
   $('#expand').setAttribute('aria-pressed',String(open));
@@ -51,25 +72,51 @@ $('#sound').addEventListener('click',()=>{prefs.sound=!prefs.sound;audio.setEnab
 $('#music-toggle').addEventListener('change',e=>{prefs.music=e.target.checked;audio.setMusic(prefs.music);persistPrefs();});
 $('#haptics-toggle').addEventListener('change',e=>{prefs.haptics=e.target.checked;persistPrefs();haptic();});
 const keymap={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',z:'a',Z:'a',a:'a',A:'a',' ':'a',x:'b',X:'b',b:'b',B:'b',Escape:'b',Backspace:'b',Enter:'start',Shift:'select',q:'l',Q:'l',e:'r',E:'r'};
-window.addEventListener('keydown',e=>{
-  if(e.ctrlKey||e.metaKey||e.altKey||e.target.closest('input,textarea,select')||$('dialog[open]'))return;
-  if((e.key==='Enter'||e.key===' ')&&e.target.closest('button,a'))return;
-  const key=keymap[e.key];if(!key)return;e.preventDefault();
-  if(e.repeat&&['start','select','b'].includes(key))return;
-  input(key);
+window.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input,textarea,select') || $('dialog[open]')) return;
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.closest?.('button,a')) return;
+  const key = keymap[e.key]; if (!key) return; e.preventDefault();
+  const id = `key:${e.code || e.key}`;
+  if (e.repeat || keyboardDown.has(id)) return;
+  keyboardDown.add(id); holds.start(id, key, 'keyboard');
 });
-const holds=new Map();
-function stopHold(id){const h=holds.get(id);if(!h)return;clearTimeout(h.delay);clearInterval(h.repeat);holds.delete(id);}
-document.querySelectorAll('[data-input]').forEach(button=>{
-  button.addEventListener('pointerdown',e=>{
-    if(e.button!==0)return;e.preventDefault();button.setPointerCapture(e.pointerId);input(button.dataset.input);
-    const h={};holds.set(e.pointerId,h);if(['up','down','left','right','a'].includes(button.dataset.input))h.delay=setTimeout(()=>{h.repeat=setInterval(()=>input(button.dataset.input),button.dataset.input==='a'?220:110);},300);
+window.addEventListener('keyup', e => {
+  const id = `key:${e.code || e.key}`;
+  if (keyboardDown.delete(id)) { e.preventDefault(); holds.stop(id); }
+}, { capture: true });
+document.querySelectorAll('[data-input]').forEach(button => {
+  button.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || document.hidden || $('dialog[open]')) return;
+    e.preventDefault(); stopPointer(e.pointerId);
+    try { button.setPointerCapture(e.pointerId); } catch {}
+    capturedPointers.set(e.pointerId, button);
+    holds.start(`pointer:${e.pointerId}`, button.dataset.input);
   });
-  for(const type of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(type,e=>stopHold(e.pointerId));
-  button.addEventListener('click',e=>{if(e.detail===0)input(button.dataset.input);});
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(type, e => stopPointer(e.pointerId));
+  button.addEventListener('click', e => { if (e.detail === 0) input(button.dataset.input); });
 });
-large.addEventListener('pointerdown',e=>{e.preventDefault();large.focus({preventScroll:true});const rect=large.getBoundingClientRect();input('touch',{x:(e.clientX-rect.left)/rect.width*240,y:(e.clientY-rect.top)/rect.height*160});});
-function openDialog(id){const dialog=$(id);dialog.showModal();audio.suspend();}
+// Global release and touch-end fallbacks cover capture loss and interrupted iOS gestures.
+for (const type of ['pointerup', 'pointercancel']) window.addEventListener(type, e => {
+  stopPointer(e.pointerId); device?.releasePointer(e, type !== 'pointerup');
+}, { capture: true });
+window.addEventListener('pointermove', e => {
+  if (e.buttons === 0) { stopPointer(e.pointerId); device?.releasePointer(e, true); }
+}, { capture: true });
+for (const type of ['touchend', 'touchcancel']) window.addEventListener(type, e => {
+  if (e.touches.length === 0) {
+    holds.stopGroup('pointer');
+    for (const id of capturedPointers.keys()) stopPointer(id);
+    device?.cancelInteraction();
+  }
+}, { passive: true });
+for (const element of document.querySelectorAll('#console, #large-screen, .touch-controls, .keyboard-hints [data-input]')) protectGameplayGestures(element);
+large.addEventListener('pointerdown', e => {
+  if (e.button !== 0) return;
+  e.preventDefault(); large.focus({ preventScroll: true });
+  const rect = large.getBoundingClientRect();
+  input('touch', { x: (e.clientX - rect.left) / rect.width * 240, y: (e.clientY - rect.top) / rect.height * 160 });
+});
+function openDialog(id){releaseAll();const dialog=$(id);dialog.showModal();audio.suspend();}
 for(const [button,dialog] of [['#help','#help-dialog'],['#settings','#settings-dialog']])$(button).addEventListener('click',()=>openDialog(dialog));
 document.querySelectorAll('dialog').forEach(dialog=>{
   dialog.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>dialog.close()));
@@ -98,11 +145,11 @@ $('#reset-garden').addEventListener('click',()=>{$('#reset-confirm').hidden=fals
 $('#cancel-reset').addEventListener('click',()=>{$('#reset-confirm').hidden=true;});
 $('#confirm-reset').addEventListener('click',()=>{game.reset();game.save();$('#reset-confirm').hidden=true;$('#settings-message').textContent='A new little egg is waiting for you.';$('#settings-dialog').close();});
 function fallback(){
-  if(fallbackMode)return;fallbackMode=true;if(device){cancelAnimationFrame(device.raf);device.resizeObserver.disconnect();device.renderer.dispose();device=null;}document.body.classList.add('fallback');$('#loading').classList.add('done');$('#expand').hidden=true;setExpanded(true);
+  if(fallbackMode)return;releaseAll();fallbackMode=true;if(device){device.destroy();device=null;}document.body.classList.add('fallback');$('#loading').classList.add('done');$('#expand').hidden=true;setExpanded(true);
 }
 try{
-  const { SPConsole }=await import('./console.js');
-  device=new SPConsole($('#console'),game,input,()=>{$('#loading').classList.add('done');});
+  const { SPConsole }=await import('./console.js?v=20260908-3');
+  device=new SPConsole($('#console'),game,input,()=>{$('#loading').classList.add('done');},holds);
 }catch(error){console.warn('Using 2D garden view:',error);fallback();}
 const shortLandscape=matchMedia('(orientation: landscape) and (max-height: 500px)');
 function fitOrientation(){if(shortLandscape.matches&&!expanded){setExpanded(true);autoLandscape=true;}else if(!shortLandscape.matches&&autoLandscape){setExpanded(false);autoLandscape=false;}}
@@ -129,8 +176,8 @@ function frame(now){
   if(now-lastStatusTime>1200){refreshStatus();lastStatusTime=now;}
 }
 requestAnimationFrame(frame);
-window.addEventListener('blur',()=>{for(const id of holds.keys())stopHold(id);game.save();});
-window.addEventListener('pagehide',()=>{game.save();audio.suspend();});
-document.addEventListener('visibilitychange',()=>{if(document.hidden){game.save();audio.suspend();for(const id of holds.keys())stopHold(id);}else{previousTime=performance.now();if(!$('dialog[open]'))audio.resume();}});
+window.addEventListener('blur',()=>{releaseAll();game.save();});
+window.addEventListener('pagehide',()=>{releaseAll();game.save();audio.suspend();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){releaseAll();game.save();audio.suspend();}else{previousTime=performance.now();if(!$('dialog[open]'))audio.resume();}});
 // Available only in a local preview or when explicitly requested for verification.
-if(['localhost','127.0.0.1'].includes(location.hostname)||new URLSearchParams(location.search).has('debug'))window.tinyChao={game,get device(){return device;},audio,input,setExpanded};
+if(['localhost','127.0.0.1'].includes(location.hostname)||new URLSearchParams(location.search).has('debug'))window.tinyChao={game,get device(){return device;},audio,input,setExpanded,holds,releaseAll};

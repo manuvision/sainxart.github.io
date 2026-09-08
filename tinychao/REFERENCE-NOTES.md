@@ -55,3 +55,9 @@ Original egg prices are Normal 0, Silver 500, Gold 1,000, Ruby 5,000, Sapphire 7
 The original rare pool has five unequal weights, but [research notes](https://chao-island.com/wiki/Talk%3ATiny_Chao_Garden) report that their assignment to individual rare colors can vary by save. This recreation shuffles the five weights once and persists them; it does not claim a fixed universal Topaz probability. Collected colors are excluded from stock, so the remaining probabilities are renormalized.
 
 **Standalone adaptations:** Chao Friends keeps one saved Chao per original egg color, one active garden, and at most one waiting egg. Buying/visiting eggs never deletes an existing Chao. Stock starts with Silver, then refreshes after a completed minigame or five minutes; quitting does not reroll it. These collection and stock rules replace the need to remove a Chao through a GameCube link. There is no invented adult evolution or Chaos Chao transformation.
+
+## Requested progression and iOS controls
+
+Special eggs now also require hidden minigame records, visible playtime, care, or combinations of them. These are requested standalone progression rules, not original cartridge rules. Friends provides hints, while the exact thresholds stay out of the game UI. Existing collected Chao and earned unlocks survive migration, switching, and backups. Locked eggs cannot enter stock or be purchased with money alone.
+
+D-pad arrows are explicit SVG/3D geometry, so iOS cannot substitute emoji. Browser pan/zoom, selection and callout gestures are suppressed only on gameplay controls and canvases. Shared button holds are cancelled on release, lost capture, cancelled gestures, view/game changes, dialogs and backgrounding. See [WebKit tapping guidance](https://webkit.org/blog/5610/more-responsive-tapping-on-ios/) and [pointer cancellation](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointercancel_event).

@@ -1,11 +1,13 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from './vendor/RoundedBoxGeometry.js';
 import { RoomEnvironment } from './vendor/RoomEnvironment.js';
+import { ButtonHolds } from './controls.js';
 
 const clamp=THREE.MathUtils.clamp;
 export class SPConsole {
-  constructor(container,screen,onInput,onReady){
+  constructor(container,screen,onInput,onReady,controls){
     this.container=container;this.screen=screen;this.onInput=onInput;this.onReady=onReady;
+    this.pressedKeys=new Set();this.controls=controls||new ButtonHolds({send:key=>this.onInput(key),changed:(key,down)=>this.press(key,down),canRepeat:()=>!document.hidden});
     this.reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'low-power'});
     this.renderer.setPixelRatio(Math.min(devicePixelRatio,2));this.renderer.setClearColor(0x000000,0);
@@ -60,9 +62,12 @@ export class SPConsole {
     const shape=new THREE.Shape();const points=[[-.18,.53],[.18,.53],[.18,.18],[.53,.18],[.53,-.18],[.18,-.18],[.18,-.53],[-.18,-.53],[-.18,-.18],[-.53,-.18],[-.53,.18],[-.18,.18]];points.forEach(([x,y],i)=>i?shape.lineTo(x,y):shape.moveTo(x,y));shape.closePath();
     const cross=this.mesh(new THREE.ExtrudeGeometry(shape,{depth:.075,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.035,bevelThickness:.022}),m.button,root,[-.96,.137,-.24]);cross.rotation.x=-Math.PI/2;this.dpad=cross;
     this.cylinder(.12,.006,m.rubber,root,[-.96,.239,-.24]);
-    for(const [key,x,z,label] of [['up',-.96,-.61,'▲'],['down',-.96,.13,'▼'],['left',-1.33,-.24,'◀'],['right',-.59,-.24,'▶']]){
+    for(const [key,x,z,angle] of [['up',-.96,-.61,0],['down',-.96,.13,Math.PI],['left',-1.33,-.24,Math.PI/2],['right',-.59,-.24,-Math.PI/2]]){
       const hit=this.box(.35,.07,.35,.015,new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}),root,[x,.25,z]);hit.userData.key=key;this.targets.push(hit);this.buttons.set(key,cross);
-      this.label(label,.13,.12,root,[x,.245,z],{size:65,color:'#9393a3'});
+      // Geometry keeps the molded arrows monochrome on platforms with emoji fonts.
+      const arrow=new THREE.Shape();arrow.moveTo(0,.054);arrow.lineTo(-.054,-.036);arrow.lineTo(.054,-.036);arrow.closePath();
+      const geometry=new THREE.ShapeGeometry(arrow);geometry.rotateZ(angle);
+      const mark=this.mesh(geometry,new THREE.MeshBasicMaterial({color:0x9393a3,side:THREE.DoubleSide}),root,[x,.252,z]);mark.rotation.x=-Math.PI/2;mark.castShadow=false;
     }
     for(const [key,x,z] of [['b',.77,.05],['a',1.28,-.48]]){
       this.cylinder(.314,.019,m.edge,root,[x,.121,z]);
@@ -93,41 +98,61 @@ export class SPConsole {
   }
   hit(event){const rect=this.container.getBoundingClientRect();this.pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);this.raycaster.setFromCamera(this.pointer,this.camera);return this.raycaster.intersectObjects(this.targets,false)[0]}
   bind(){
-    const el=this.container;this.held=new Map();
-    const endHold=(id)=>{const hold=this.held.get(id);if(!hold)return;clearTimeout(hold.timer);clearInterval(hold.repeat);this.press(hold.key,false);this.held.delete(id)};
-    el.addEventListener('pointerdown',e=>{
-      if(e.button!==0)return;
+    const el=this.container;this.held=new Map();this.captured=new Set();this.eventAbort=new AbortController();
+    const on=(target,type,handler)=>target.addEventListener(type,handler,{signal:this.eventAbort.signal});
+    on(el,'pointerdown',e=>{
+      if(e.button!==0||document.hidden||document.querySelector('dialog[open]'))return;
+      e.preventDefault();this.releasePointer(e,true);
       el.focus({preventScroll:true});const hit=this.ready?this.hit(e):null;
-      el.setPointerCapture(e.pointerId);
+      try{el.setPointerCapture(e.pointerId);this.captured.add(e.pointerId)}catch{}
       if(hit?.object.userData.key){
-        const key=hit.object.userData.key;this.press(key,true);this.onInput(key);
-        const hold={key};this.held.set(e.pointerId,hold);
-        if(['up','down','left','right','a'].includes(key)){hold.timer=setTimeout(()=>{hold.repeat=setInterval(()=>this.onInput(key),key==='a'?220:110)},300)}
+        const key=hit.object.userData.key;this.held.set(e.pointerId,{key});
+        this.controls.start(`pointer:${e.pointerId}`,key);
       }else if(!this.drag){this.drag={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false,hit}}
     });
-    el.addEventListener('pointermove',e=>{
+    on(el,'pointermove',e=>{
+      if(e.buttons===0){this.releasePointer(e,true);const hit=this.ready?this.hit(e):null;el.style.cursor=hit?'pointer':'grab';return}
       if(this.drag?.id===e.pointerId){const dx=e.clientX-this.drag.x,dy=e.clientY-this.drag.y;
         if(Math.hypot(dx,dy)>9){this.drag.moved=true;el.classList.add('dragging');this.targetRotation.y=clamp(dx*.005,-.62,.62);this.targetRotation.x=clamp(dy*.003,-.22,.22);this.targetRotation.z=clamp(-dx*.0012,-.10,.10);this.wake()}
       }else if(!this.held.size){const hit=this.ready?this.hit(e):null;el.style.cursor=hit?'pointer':'grab'}
     });
-    const release=(e,cancel=false)=>{
-      endHold(e.pointerId);
-      if(this.drag?.id===e.pointerId){const {hit,moved}=this.drag;
-        if(!cancel&&!moved&&hit?.object.userData.screen){this.onInput('touch',{x:hit.uv.x*this.screen.canvas.width,y:(1-hit.uv.y)*this.screen.canvas.height})}
-        this.drag=null;this.targetRotation={x:0,y:0,z:0};this.wake();el.classList.remove('dragging');
-      }
-      if(el.hasPointerCapture(e.pointerId))el.releasePointerCapture(e.pointerId);
-    };
-    el.addEventListener('pointerup',e=>release(e));el.addEventListener('pointercancel',e=>release(e,true));el.addEventListener('lostpointercapture',e=>release(e,true));
-    window.addEventListener('blur',()=>{for(const id of this.held.keys())endHold(id);this.drag=null;this.targetRotation={x:0,y:0,z:0};el.classList.remove('dragging')});
-    document.addEventListener('visibilitychange',()=>{if(!document.hidden){this.lastTime=performance.now();if(!this.raf)this.raf=requestAnimationFrame(this.frame)}});
-    this.renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();this.onInput('fallback')});
+    on(el,'pointerup',e=>this.releasePointer(e));
+    on(el,'pointercancel',e=>this.releasePointer(e,true));
+    on(el,'lostpointercapture',e=>this.releasePointer(e,true));
+    on(window,'blur',()=>this.cancelInteraction());
+    on(window,'pagehide',()=>this.cancelInteraction());
+    on(document,'visibilitychange',()=>{if(document.hidden)this.cancelInteraction();else{this.lastTime=performance.now();if(!this.raf)this.raf=requestAnimationFrame(this.frame)}});
+    on(this.renderer.domElement,'webglcontextlost',e=>{e.preventDefault();this.cancelInteraction();this.onInput('fallback')});
   }
-  wake(){if(!this.raf&&this.frameBound&&!this.inFrame){this.lastTime=performance.now();this.raf=requestAnimationFrame(this.frame)}}
-  press(key,down){const b=this.buttons.get(key);if(b){if(b.userData.baseY===undefined)b.userData.baseY=b.position.y;b.position.y=b.userData.baseY-(down?.025:0);this.wake()}}
+  releasePointer(event,cancel=false){
+    const id=event.pointerId,el=this.container;
+    if(this.held.has(id)){this.held.delete(id);this.controls.stop(`pointer:${id}`)}
+    const drag=this.drag?.id===id?this.drag:null;
+    if(drag){this.drag=null;this.targetRotation={x:0,y:0,z:0};el.classList.remove('dragging');this.wake()}
+    this.captured.delete(id);
+    try{if(el.hasPointerCapture(id))el.releasePointerCapture(id)}catch{}
+    // Clear drag/capture before dispatch: screen input may switch modes immediately.
+    if(drag&&!cancel&&!drag.moved&&drag.hit?.object.userData.screen){this.onInput('touch',{x:drag.hit.uv.x*this.screen.canvas.width,y:(1-drag.hit.uv.y)*this.screen.canvas.height})}
+  }
+  cancelInteraction(){
+    for(const id of new Set([...this.held.keys(),...this.captured,this.drag?.id].filter(id=>id!==undefined)))this.releasePointer({pointerId:id},true);
+    this.drag=null;this.targetRotation={x:0,y:0,z:0};this.container.classList.remove('dragging');this.wake();
+  }
+  destroy(){
+    this.cancelInteraction();this.disposed=true;this.eventAbort?.abort();cancelAnimationFrame(this.raf);this.raf=0;this.resizeObserver.disconnect();this.renderer.dispose();
+  }
+  wake(){if(this.disposed)return;if(!this.raf&&this.frameBound&&!this.inFrame){this.lastTime=performance.now();this.raf=requestAnimationFrame(this.frame)}}
+  press(key,down){
+    if(down)this.pressedKeys.add(key);else this.pressedKeys.delete(key);
+    const b=this.buttons.get(key);if(b){
+      if(b.userData.baseY===undefined)b.userData.baseY=b.position.y;
+      const pressed=[...this.pressedKeys].some(k=>this.buttons.get(k)===b);
+      b.position.y=b.userData.baseY-(pressed?.025:0);this.wake();
+    }
+  }
   replay(){this.startTime=performance.now();this.ready=false;this.screen.boot=true;this.screen.draw();this.targetRotation={x:0,y:0,z:0};this.wake()}
   frame(now){
-    this.raf=0;if(document.hidden)return;this.inFrame=true;
+    this.raf=0;if(this.disposed||document.hidden)return;this.inFrame=true;
     const dt=clamp((now-this.lastTime)/1000,0,.05);this.lastTime=now;
     const elapsed=(now-this.startTime)/1000;
     const t=this.reduced?1:clamp((elapsed-.35)/1.65,0,1);const ease=1-Math.pow(1-t,3);
