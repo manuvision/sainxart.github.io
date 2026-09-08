@@ -46,12 +46,12 @@ test('memory ends at three mistakes and preserves rings already earned', () => {
 });
 
 test('janken implements winning, tied, losing and missed shots with original ring rewards', () => {
-  const game = garden(); game.startJanken(); const g = game.janken;
-  function shoot(hand, target) { g.cooldown = 0; g.hands[g.hand] = hand; g.cards = [{ x: 95, y: 50, hand: target, hit: false, position: 200 }, { x: 12, y: 20, hand: 0, hit: false, position: 0 }]; game.shoot(); }
+  const game = garden(); game.startJanken(); const g = game.janken; game.positionJankenCards = () => {};
+  function shoot(hand, target) { g.cooldown = 0; g.hands[g.hand] = hand; g.cards = [{ x: 14, y: 72, hand: target, hit: false, position: 200 }, { x: 146, y: 20, hand: 0, hit: false, position: 0 }]; game.shoot(); advance(game, .2); }
   shoot(1, 0); assert.equal(g.rings, 1); assert.equal(g.lives, 5); assert.equal(g.cards[0].hit, true);
   shoot(2, 2); assert.equal(g.rings, 1); assert.equal(g.lives, 5); assert.equal(g.cards[0].hit, true);
   shoot(0, 1); assert.equal(g.rings, 1); assert.equal(g.lives, 4); assert.equal(g.cards[0].hit, false);
-  g.cooldown = 0; g.cards = [{ x: 12, y: 20, hand: 0, hit: false }]; game.shoot(); assert.equal(g.lives, 3);
+  g.cooldown = 0; g.cards = [{ x: 146, y: 20, hand: 0, hit: false, position: 0 }]; game.shoot(); assert.equal(g.lives, 4); advance(game, .8); assert.equal(g.lives, 3);
 });
 
 test('minigame pause freezes the timer and exiting keeps earned rings', () => {

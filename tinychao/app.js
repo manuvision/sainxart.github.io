@@ -1,4 +1,4 @@
-import { TinyGarden } from './game.js';
+import { TinyGarden } from './game.js?v=20260908-2';
 import { GardenAudio } from './audio.js';
 
 const $ = selector => document.querySelector(selector);

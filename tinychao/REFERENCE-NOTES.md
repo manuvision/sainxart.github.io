@@ -43,3 +43,15 @@ The [rock–paper–scissors guide](https://chao-island.com/guides/spin-off-game
 Original named MIDI sequences are available in [SAT-R/sa2: Tiny Chao Garden music and effects](https://github.com/SAT-R/sa2/tree/main/chao_garden/sound/songs/midi). Relevant files include `mus_garden.mid`, `mus_minigame.mid`, `se_confirm.mid`, `se_hatch.mid`, `se_gauge_lvl_up.mid`, `se_snore.mid`, and the two trumpet sequences. These preserve note sequences and timings; synthesized browser timbres are an adaptation of the original sound hardware.
 
 Reference research completed September 8, 2026. See [CREDITS.md](CREDITS.md) for ownership and contributors.
+
+## Animation and standalone collection corrections
+
+The sheet’s side-walking cells at y34 face left. Mirror them for rightward motion; front/back walking uses y9/y59. Petting uses the original smiling, blushing cells x79/104/129 at y115, not the scowling expressions at x1/26/51,y87. Profile eating and closed-eye sleep use their own rows.
+
+Janken’s selected yellow hand card leaves its own slot at x14/80/146. Its hand and position remain attached to the flying sprite; collisions occur at arrival against the moving cards. The emptied slot receives its replacement after impact or miss. Losing shots visibly deflect.
+
+Original egg prices are Normal 0, Silver 500, Gold 1,000, Ruby 5,000, Sapphire 7,000, Amethyst 8,000, Emerald 10,000, Garnet 12,000, Aquamarine 14,000, Peridot 16,000, Topaz 18,000, Onyx 20,000. See the items guide above and [Chao Island egg reference](https://chao-island.com/wiki/Egg). Egg atlas order is Normal, Gold, Silver, Garnet, Ruby, Amethyst, Sapphire, Aquamarine, Emerald, Peridot, Topaz, Onyx.
+
+The original rare pool has five unequal weights, but [research notes](https://chao-island.com/wiki/Talk%3ATiny_Chao_Garden) report that their assignment to individual rare colors can vary by save. This recreation shuffles the five weights once and persists them; it does not claim a fixed universal Topaz probability. Collected colors are excluded from stock, so the remaining probabilities are renormalized.
+
+**Standalone adaptations:** Chao Friends keeps one saved Chao per original egg color, one active garden, and at most one waiting egg. Buying/visiting eggs never deletes an existing Chao. Stock starts with Silver, then refreshes after a completed minigame or five minutes; quitting does not reroll it. These collection and stock rules replace the need to remove a Chao through a GameCube link. There is no invented adult evolution or Chaos Chao transformation.

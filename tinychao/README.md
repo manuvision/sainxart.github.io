@@ -16,7 +16,13 @@ The game is rendered at the original 240 × 160 resolution. The original garden,
 - Tap the original tiny GBA icons to enter Chao Memory or rock-paper-scissors.
 - Drag the console to turn it. The brightness button or **Screen** opens a larger playable display.
 
-The garden saves automatically in localStorage. It keeps one Chao, rings, fruit, toys, care meters, skill levels, and records. Settings offers JSON backup export/import. Clearing this website's browser data removes the local save. Time away does not harm your Chao. There is no account, server, GameCube connection, or collection of other Sonic games.
+The garden saves automatically in localStorage. One Chao lives in the active garden; **START → Chao Friends** preserves a collection of 12 normal, colored, and rare jewel Chao, each with independent names, hatch progress, care meters, and skill levels. Rings, fruit, toys, and minigame records are shared. Existing saves migrate without losing progress. Settings offers JSON backup export/import. Clearing this website's browser data removes the local save. Time away does not harm your Chao. There is no account, server, GameCube connection, or collection of other Sonic games.
+
+## Colored and rare eggs
+
+The original shop egg row now offers Silver, Gold, Ruby, Sapphire, Amethyst, Emerald, Garnet, Aquamarine, Peridot, Topaz, and Onyx eggs at their original ring prices. Buy an egg, then select it in Chao Friends to hatch it. Your previous Chao stays saved. One egg may wait to hatch at a time.
+
+Stock refreshes after a completed minigame or five minutes. Offers exclude collected colors. Rare weights are assigned once per save and remain stable across reloads; prices range from 500 rings for Silver to 20,000 for Onyx. Collection storage and this restock schedule are standalone adaptations, so no GameCube transfer is needed. The original garden has no adult evolution or Chaos Chao transformation.
 
 ## Develop
 
@@ -40,6 +46,8 @@ The tests cover hatching, feeding, fruit effects, purchase limits, minigame rewa
 
 ## Files
 
+- `eggs.js`: original egg catalog, prices, weighted shop stock, and collection snapshots.
+- `sprites.js`: native animation cells, walking directions, and jewel palettes.
 - `game.js`: game state, persistence, care, original-style menus, two minigames, and pixel rendering.
 - `console.js`: procedural Three.js SP, hinge animation, lighting, physical buttons, raycasting, and drag interaction.
 - `audio.js`: local Web Audio music and effects with gesture activation and background suspension.

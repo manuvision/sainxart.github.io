@@ -1,4 +1,7 @@
 /* Tiny Chao Garden — a small, persistent fan-made garden for a 240×160 screen. */
+import { getChaoSprite, walkDirection } from './sprites.js';
+import { EGGS, getEgg, EGG_REFRESH_MS, makeEggWeights, restoreEggWeights, rollEggStock, snapshotChao } from './eggs.js';
+export { EGGS } from './eggs.js';
 export const SAVE_KEY = 'tinychao.garden.v3';
 export const FRUITS = [
   { id: 'orange', name: 'ORANGE FRUIT', price: 30, belly: 25, mood: 8, stat: 'swim', xp: 30, sprite: 0, gains: [30,-20,-20,30,10] },
@@ -23,14 +26,16 @@ const int = (n) => Math.floor(n);
 const shuffle = (items) => { const a = [...items]; for (let i = a.length - 1; i > 0; i--) { const j = int(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
 export function freshState() {
-  return { version: 3, name: 'CHAO', rings: 120, hatched: false, eggProgress: 0, mood: 80, belly: 75, energy: 90,
+  const state = { version: 3, color: 'normal', collection: {}, eggWeights: makeEggWeights(), eggStock: 'silver', eggRefreshAt: Date.now() + EGG_REFRESH_MS, name: 'CHAO', rings: 120, hatched: false, eggProgress: 0, mood: 80, belly: 75, energy: 90,
     inventory: { orange: 0, blue: 0, pink: 0, green: 0, purple: 0, yellow: 0, red: 0 }, toys: [],
     stats: Object.fromEntries(STATS.map(k => [k, { level: 0, xp: 0 }])),
     x: 88, y: 105, totalHatches: 0, totalFeeds: 0, totalPets: 0, totalRingsEarned: 0, bestMemory: 0, bestJanken: 0,
     played: 0, lastSaved: Date.now() };
+  state.collection.normal = snapshotChao(state);
+  return state;
 }
 
-export function restoreState(raw, now = Date.now()) {
+export function restoreState(raw, now = Date.now(), withCollection = true) {
   const clean = freshState();
   if (!raw || raw.version !== 3) return clean;
   clean.name = typeof raw.name === 'string' ? raw.name.replace(/[^A-Z0-9 ]/gi, '').slice(0, 8).toUpperCase() || 'CHAO' : 'CHAO';
@@ -47,6 +52,23 @@ export function restoreState(raw, now = Date.now()) {
   const away = Math.max(0, Math.min(8 * 3600, (now - Number(raw.lastSaved || now)) / 1000));
   clean.energy = clamp(clean.energy + away / 120);
   clean.lastSaved = now;
+  clean.color = getEgg(raw.color).id;
+  clean.eggWeights = restoreEggWeights(raw.eggWeights);
+  clean.eggRefreshAt = Number.isFinite(raw.eggRefreshAt) ? clamp(raw.eggRefreshAt, 0, now + EGG_REFRESH_MS) : now + EGG_REFRESH_MS;
+  clean.collection = {};
+  if (withCollection && raw.collection && typeof raw.collection === 'object') {
+    for (const egg of EGGS) {
+      const record = raw.collection[egg.id];
+      if (record && typeof record === 'object' && typeof record.hatched === 'boolean') {
+        const restored = restoreState({ ...record, version:3, color:egg.id, collection:null }, now, false);
+        clean.collection[egg.id] = snapshotChao(restored);
+      }
+    }
+  }
+  clean.collection[clean.color] = snapshotChao(clean);
+  // Existing v3 saves keep their current Chao, name, stats, rings, and all items.
+  clean.eggStock = EGGS.some(egg=>egg.id===raw.eggStock&&!clean.collection[egg.id]) ? raw.eggStock :
+    !clean.collection.silver ? 'silver' : rollEggStock(clean.collection,clean.eggWeights);
   return clean;
 }
 
@@ -63,8 +85,6 @@ export class TinyGarden {
     this.anim = { kind: this.state.hatched ? 'idle' : 'egg', remaining: 0, facing: 1, targetX: this.state.x, targetY: this.state.y, next: 5 };
     this.effects = []; this.notice = this.state.hatched ? `WELCOME BACK, ${this.state.name}!` : 'PRESS A TO RUB THE EGG'; this.noticeTime = 5;
     this.hatchTime = 0; this.memory = null; this.janken = null; this.result = null; this.art = {}; this.nameChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '.split(''); this.renameIndex = 0;
-    const frames = (xs, y) => xs.map(x => ({ x, y, w: 24, h: 24 }));
-    this.chaoFrames = { idle: frames([1,26,51],9), walk: frames([1,26,51],34), happy: frames([1,26,51],87), eat: frames([1,26,51],115), sleep: frames([1,26,51],143), sit: frames([79,104,129],115), swim: frames([1,26,51],115), play: frames([1,26,51],87) };
     this.loadArt(); this.render(); this.changed();
   }
 
@@ -72,7 +92,7 @@ export class TinyGarden {
     if (typeof Image === 'undefined') return;
     for (const file of ['garden', 'chao', 'minigames', 'original-ui', 'original-shop', 'original-name']) {
       const img = new Image();
-      img.onload = () => { this.art[file] = img; if (file === 'chao') this.makeTransparent(img); if(file==='minigames')this.makeTransparent(img,'white','minigamesTransparent'); this.render(); };
+      img.onload = () => { this.art[file] = img; if (file === 'chao') this.makeTransparent(img); if(file==='minigames'){this.makeTransparent(img,'white','minigamesTransparent');this.makeTransparent(img,'blue','jankenCursor');} this.render(); };
       img.src = new URL(`./assets/${file}.png`, import.meta.url).href;
     }
   }
@@ -81,19 +101,20 @@ export class TinyGarden {
     try {
       const sheet = document.createElement('canvas'); sheet.width = img.naturalWidth || img.width; sheet.height = img.naturalHeight || img.height;
       const c = sheet.getContext('2d'); c.drawImage(img, 0, 0); const image = c.getImageData(0, 0, sheet.width, sheet.height);
-      for (let i = 0; i < image.data.length; i += 4) if (key==='white' ? image.data[i]===255&&image.data[i+1]===255&&image.data[i+2]===255 : image.data[i] < 12 && image.data[i + 1] > 245 && image.data[i + 2] < 12) image.data[i + 3] = 0;
+      for (let i = 0; i < image.data.length; i += 4) if (key==='blue' ? !(image.data[i+2]>image.data[i]&&image.data[i+2]>=192) : key==='white' ? image.data[i]===255&&image.data[i+1]===255&&image.data[i+2]===255 : image.data[i] < 12 && image.data[i + 1] > 245 && image.data[i + 2] < 12) image.data[i + 3] = 0;
       c.putImageData(image, 0, 0); this.art[target] = sheet;
     } catch { /* optional atlas unavailable */ }
   }
 
   sound(name) { try { this.onSound(name); } catch {} }
   changed() { try { this.onChange({ mode: this.mode, name: this.state.name, hatched: this.state.hatched, rings: this.state.rings, mood: this.state.mood, belly: this.state.belly, energy: this.state.energy, status: this.accessibleStatus() }); } catch {} }
-  save() { this.state.lastSaved = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.state)); this.storageError = false; } catch { this.storageError = true; } this.changed(); }
+  save() { this.state.collection[this.state.color] = snapshotChao(this.state); this.state.lastSaved = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.state)); this.storageError = false; } catch { this.storageError = true; } this.changed(); }
   exportSave() { this.save(); return JSON.parse(JSON.stringify(this.state)); }
   importSave(data) { if (typeof data === 'string') { try { data = JSON.parse(data); } catch { throw new Error('This file is not a valid garden save.'); } } if (!data || data.version !== 3 || typeof data.hatched !== 'boolean' || !Number.isFinite(data.rings) || !data.stats || !data.inventory) throw new Error('This file is not a Tiny Chao Garden save.'); this.state = restoreState(data); this.mode = 'garden'; this.hatchTime = 0; this.anim = { kind: this.state.hatched ? 'idle' : 'egg', remaining: 0, facing: 1, targetX: this.state.x, targetY: this.state.y, next: 5 }; this.effects = []; this.message(`WELCOME HOME, ${this.state.name}!`); this.save(); this.render(); return true; }
   reset() { this.state = freshState(); this.mode = 'garden'; this.gardenAction = 0; this.heldItem = null; this.cursor = { x: 108, y: 98, visible: 0 }; this.anim = { kind: 'egg', remaining: 0, facing: 1, next: 5, targetX: 88, targetY: 105 }; this.hatchTime = 0; this.effects = []; this.message('A NEW EGG! PRESS A TO RUB', 5); this.save(); this.render(); }
   accessibleStatus() {
     if (this.mode === 'garden') return this.state.hatched ? `${this.state.name}: belly ${Math.round(this.state.belly)}%, happiness ${Math.round(this.state.mood)}%, energy ${Math.round(this.state.energy)}%. ${this.state.rings} rings. ${this.notice || 'A interacts. L opens the shop. R selects a loose fruit. A picks it up; bring it to your Chao. The two GBA icons start mini games. Start opens the menu.'}` : `An egg is waiting to hatch. Press A or tap the egg. ${Math.round(this.state.eggProgress / 12 * 100)}% hatched.`;
+    if (this.mode === 'friends') { const egg=EGGS[this.selection];return `Chao Friends. ${Object.keys(this.state.collection).length} of 12 collected. ${egg.name}, ${egg.rarity}. ${this.state.collection[egg.id]?'Press A to visit. Your other Chao stays saved.':`${egg.price} rings in the rotating egg shop.`}`; }
     if (this.mode === 'memory') return `Chao Memory. ${this.memory?.pairs || 0} pairs found. ${this.memory?.mistakes || 0} mistakes. Use the direction pad and A to reveal a card.`;
     if (this.mode === 'janken') return `Chao Janken. ${Math.ceil(this.janken?.remaining || 0)} seconds. ${this.janken?.rings || 0} rings earned. Left or right selects a hand. A shoots.`;
     return `${this.mode}. ${this.notice || ''}`;
@@ -123,6 +144,7 @@ export class TinyGarden {
     this.anim.kind = 'eat'; this.anim.remaining = 3.5; this.anim.next = 5; this.heldFruit = fruit; this.mode = 'garden'; this.sound('eat'); this.message(`YUM! ${fruit.stat.toUpperCase()} +${fruit.xp}`, 3.5); this.particles(this.state.x, this.state.y - 23, 'heart', 4); this.save(); return true;
   }
   buy(index) {
+    if(index === 'egg') return this.buyEgg();
     const item = [...FRUITS, ...TOYS][index]; if (!item) return false;
     if (index >= FRUITS.length && this.state.toys.includes(item.id)) { this.message('ALREADY IN YOUR GARDEN'); this.sound('error'); return false; }
     if (this.state.rings < item.price) { this.message('NEED MORE RINGS! PLAY A GAME.'); this.sound('error'); return false; }
@@ -141,7 +163,28 @@ export class TinyGarden {
     if (Math.hypot(x - this.state.x, y - this.state.y) < 35 || !this.state.hatched) this.pet();
   }
   groundFruit() { const fruit = []; for (const f of FRUITS) for (let i = 0; i < this.state.inventory[f.id]; i++) { const n = fruit.length; if (n >= 8) return fruit; fruit.push({ id: f.id, sprite: f.sprite, x: 19 + n % 4 * 24, y: 61 + int(n / 4) * 25 }); } return fruit; }
-  shopItems() { const fruit = FRUITS.map((f,index)=>({...f,index})); const next = TOYS.findIndex(t=>!this.state.toys.includes(t.id)); return next < 0 ? fruit : [...fruit,{...TOYS[next],index:FRUITS.length+next}]; }
+  shopItems() { const fruit = FRUITS.map((f,index)=>({...f,index})); const next = TOYS.findIndex(t=>!this.state.toys.includes(t.id)); const egg=this.state.eggStock?{...getEgg(this.state.eggStock),index:'egg'}:null; return [...fruit,...(egg?[egg]:[]),...(next<0?[]:[{...TOYS[next],index:FRUITS.length+next}])]; }
+  refreshEggStock() { this.state.collection[this.state.color]=snapshotChao(this.state); this.state.eggStock=rollEggStock(this.state.collection,this.state.eggWeights); this.state.eggRefreshAt=Date.now()+EGG_REFRESH_MS; }
+  buyEgg() {
+    const egg=this.state.eggStock&&getEgg(this.state.eggStock);
+    if(!egg||this.state.collection[egg.id]) { this.message('YOU HAVE EVERY EGG!'); this.sound('error'); return false; }
+    if(!this.state.hatched||Object.entries(this.state.collection).some(([id,chao])=>id!==this.state.color&&!chao.hatched)) { this.message('HATCH YOUR WAITING EGG FIRST!'); this.sound('error'); return false; }
+    if(this.state.rings<egg.price) { this.message(`${egg.name} EGG: ${egg.price} RINGS. PLAY TO EARN!`); this.sound('error'); return false; }
+    this.state.collection[this.state.color]=snapshotChao(this.state);
+    this.state.collection[egg.id]=snapshotChao({...freshState(),color:egg.id});
+    this.state.rings-=egg.price; this.refreshEggStock(); this.enter('friends'); this.selection=EGGS.indexOf(egg);
+    this.sound('buy'); this.message(`${egg.name} EGG! A: HATCH. YOUR CHAO IS SAFE.`,6); this.save(); return true;
+  }
+  visitFriend(index) {
+    const egg=EGGS[index],friend=egg&&this.state.collection[egg.id];
+    if(!friend) { this.message('FIND THIS EGG IN THE SHOP. STOCK CHANGES AFTER GAMES.',5); this.sound('error'); return false; }
+    this.state.collection[this.state.color]=snapshotChao(this.state);
+    const selected=this.state.collection[egg.id]; Object.assign(this.state,snapshotChao(selected));
+    this.heldItem=null;this.heldFruit=null;this.effects=[];this.hatchTime=0;
+    this.cursor={x:this.state.x+20,y:this.state.y-7,visible:0};
+    this.anim={kind:this.state.hatched?'idle':'egg',remaining:0,facing:1,targetX:this.state.x,targetY:this.state.y,next:5};
+    this.enter('garden');this.message(this.state.hatched?`WELCOME HOME, ${this.state.name}!`:`A ${egg.name} EGG! TAP OR PRESS A TO HATCH.`,5);this.save();return true;
+  }
   input(key) {
     key = String(key).toLowerCase();
     if (!['up', 'down', 'left', 'right', 'a', 'b', 'start', 'select', 'l', 'r'].includes(key)) return;
@@ -173,14 +216,17 @@ export class TinyGarden {
       const n = this.mode === 'bag' ? FRUITS.length : this.shopItems().length;
       if (key === 'l' && this.mode === 'shop') this.enter('garden');
       else if (delta) { this.selection = (this.selection + delta + n) % n; this.sound('move'); }
-      if (key === 'a') { if (this.mode === 'bag') this.feed(FRUITS[this.selection].id); else { this.buy(this.shopItems()[this.selection]?.index); this.selection = Math.min(this.selection,this.shopItems().length-1); } }
+      if (key === 'a') { if (this.mode === 'bag') this.feed(FRUITS[this.selection].id); else { this.buy(this.shopItems()[this.selection]?.index); if(this.mode==='shop')this.selection = Math.min(this.selection,this.shopItems().length-1); } }
     } else if (this.mode === 'menu') {
-      if (delta) { this.selection = (this.selection + delta + 6) % 6; this.sound('move'); }
+      if (delta) { this.selection = (this.selection + delta + 7) % 7; this.sound('move'); }
       if (key === 'a') {
-        const destination = ['garden', 'bag', 'shop', 'games', 'rename', 'stats'][this.selection];
+        const destination = ['garden', 'bag', 'shop', 'games', 'rename', 'stats', 'friends'][this.selection];
         if (destination === 'rename') { this.nameDraft = this.state.name; this.renameIndex = 0; }
         this.enter(destination);
       }
+    } else if (this.mode === 'friends') {
+      if(delta){const step=key==='down'?4:key==='up'?-4:delta;this.selection=(this.selection+step+EGGS.length)%EGGS.length;this.sound('move');}
+      if(key==='a')this.visitFriend(this.selection);
     } else if (this.mode === 'games') {
       if (delta) { this.selection = (this.selection + 1) % 2; this.sound('move'); }
       if (key === 'a') this.enter(this.selection ? 'jankenIntro' : 'memoryIntro');
@@ -226,17 +272,18 @@ export class TinyGarden {
     else if (this.mode === 'shop') {
       if (x > 48) { this.enter('garden'); return; }
       if (y < 12) { this.enter('garden'); return; }
-      const row = y >= 140 ? 7 : y >= 124 ? -1 : int((y - 12) / 16);
+      const row = y >= 140 ? this.shopItems().findIndex(item=>typeof item.index==='number'&&item.index>=FRUITS.length) : y >= 124 ? this.shopItems().findIndex(item=>item.index==='egg') : int((y - 12) / 16);
       if (row >= 0 && row < this.shopItems().length) { if (this.selection === row) this.input('a'); else { this.selection = row; this.sound('move'); } }
     }
     else if (this.mode === 'bag') {
       if (y > 127) { this.input('a'); return; }
       const col = x >= 120 ? 1 : 0; const row = int((y - 23) / 20); const index = row * 2 + col;
       if (row >= 0 && index < (this.mode === 'shop' ? FRUITS.length + TOYS.length : FRUITS.length)) { this.selection = index; this.sound('move'); }
-    } else if (this.mode === 'menu') { const i = int((y - 35) / 16); if (i >= 0 && i < 6) { this.selection = i; this.input('a'); return; } }
+    } else if (this.mode === 'menu') { const i = int((y - 31) / 14); if (i >= 0 && i < 7) { this.selection = i; this.input('a'); return; } }
+    else if (this.mode === 'friends') { const col=int((x-8)/56),row=int((y-25)/34);if(col>=0&&col<4&&row>=0&&row<3){const index=row*4+col;if(this.selection===index)this.visitFriend(index);else {this.selection=index;this.sound('move');}} }
     else if (this.mode === 'games') { if (y > 36 && y < 121) { this.selection = y > 79 ? 1 : 0; this.input('a'); return; } }
     else if (this.mode === 'memory') { const col = int(x / 32), row = int(y / 32); if (col >= 0 && col < 6 && row >= 0 && row < 5) { this.memory.cursor = row * 6 + col; this.flipCard(this.memory.cursor); } }
-    else if (this.mode === 'janken') { if (y > 118) { this.janken.hand = clamp(int((x - 15) / 60), 0, 2); this.sound('move'); } else this.shoot(); }
+    else if (this.mode === 'janken') { if (y > 118) { this.janken.hand = clamp(Math.round((x - 26) / 66), 0, 2); this.sound('move'); } else this.shoot(); }
     else if (this.mode === 'pause') { if (y > 96) this.selection = 1; else this.selection = 0; this.input('a'); return; }
     else if (this.mode === 'result') { this.selection = y > 133 ? 1 : 0; this.input('a'); return; }
     else if (this.mode === 'rename') {
@@ -270,7 +317,7 @@ export class TinyGarden {
     this.changed();
   }
   startJanken() {
-    this.janken = { remaining: 30, hand: 0, hands: Array.from({ length: 3 }, () => int(Math.random() * 3)), lives: 5, wave: 0, rings: 0, combo: 0, hits: 0, shots: [], cards: [], spawn: 0, cooldown: 0, feedback: '', flash: 0, elapsed: 0 };
+    this.janken = { remaining: 30, hand: 0, hands: Array.from({ length: 3 }, () => int(Math.random() * 3)), lives: 5, wave: 0, rings: 0, combo: 0, hits: 0, shots: [], cards: [], cooldown: 0, feedback: '', flash: 0, elapsed: 0 };
     this.newJankenWave();
     this.mode = 'janken'; this.notice = ''; this.sound('game'); this.changed(); this.render();
   }
@@ -278,28 +325,38 @@ export class TinyGarden {
   positionJankenCards() { for (const c of this.janken.cards) { const p = ((c.position % 380) + 380) % 380; if (p < 132) { c.x = 14 + p; c.y = 14; } else if (p < 190) { c.x = 146; c.y = 14 + p - 132; } else if (p < 322) { c.x = 146 - (p - 190); c.y = 72; } else { c.x = 14; c.y = 72 - (p - 322); } } }
 
   shoot() {
-    const g = this.janken; if (!g || g.cooldown > 0 || g.remaining <= 0) return;
-    g.cooldown = .32; const live = g.cards.filter(c => !c.hit); if (!live.length) return;
-    // Fire up the central lane. It reaches the lowest card crossing the sight.
-    const inSight = live.filter(c => Math.abs(c.x + 11 - 106) <= 13).sort((a, b) => b.y - a.y);
-    const target = inSight[0];
-    const hand = g.hands[g.hand]; g.hands[g.hand] = int(Math.random() * 3);
-    g.shots.push({ x: 96, y: 119, targetY: target ? target.y + 10 : 18, life: .23, hand }); this.sound('shoot');
-    if (!target) { g.feedback = 'MISSED'; g.flash = .5; g.combo = 0; g.lives--; if (g.lives <= 0) this.finishGame('janken'); return; }
-    // 0 rock, 1 paper, 2 scissors. The next hand beats the previous hand.
-    if ((hand - target.hand + 3) % 3 === 1) {
-      target.hit = true; g.combo++; g.hits++; g.rings++; g.feedback = '+1 RING!'; this.sound('ring'); this.particles(target.x, target.y, 'star', 4);
-    } else if (hand === target.hand) { target.hit = true; g.feedback = 'DRAW!'; g.combo = 0; this.sound('flip'); }
-    else { g.feedback = 'OH NO!'; g.combo = 0; g.lives--; this.sound('error'); }
-    if (g.cards.every(c => c.hit)) { g.wave++; g.remaining += 10; g.feedback = 'CLEAR! +10 SECONDS'; this.newJankenWave(); }
-    if (g.lives <= 0) this.finishGame('janken');
+    const g = this.janken;
+    if (!g || this.mode !== 'janken' || g.cooldown > 0 || g.remaining <= 0 || g.hands[g.hand] === null) return;
+    const slot = g.hand, hand = g.hands[slot];
+    // The selected yellow card leaves its own slot; it is replaced when the shot resolves.
+    g.hands[slot] = null; g.cooldown = .12;
+    g.shots.push({ slot, hand, x: 14 + slot * 66, y: 124, vy: -210, state: 'flying' });
+    this.sound('shoot'); this.changed();
+  }
+  resolveJankenShot(shot, target = null) {
+    const g = this.janken;
+    if (shot.state !== 'flying') return;
+    const outcome = target ? (shot.hand - target.hand + 3) % 3 : 2;
+    // 0 rock, 1 paper, 2 scissors. A win or tie earns a free replacement.
+    g.hands[shot.slot] = int(Math.random() * 3);
+    if (target && outcome !== 2) {
+      shot.state = 'done'; target.hit = true;
+      if (outcome === 1) { g.combo++; g.hits++; g.rings++; g.feedback = '+1 RING!'; this.sound('ring'); this.particles(target.x + 12, target.y + 12, 'star', 4); }
+      else { g.combo = 0; g.feedback = 'DRAW!'; this.sound('flip'); }
+    } else {
+      g.combo = 0; g.lives--; g.feedback = target ? 'OH NO!' : 'MISSED'; this.sound('error');
+      // Losing cards bounce visibly away from the card they struck.
+      shot.state = target ? 'deflected' : 'done'; shot.vx = shot.slot === 2 ? 95 : -95; shot.vy = -45; shot.life = .7;
+    }
     g.flash = .6; this.changed();
+    if (g.lives <= 0) this.finishGame('janken');
   }
   finishGame(game, quit = false) {
     if (this.mode === 'result') return;
     const round = game === 'memory' ? this.memory : this.janken; const earned = Math.max(0, round?.rings || 0);
     this.result = { game, earned, quit, perfect: game === 'memory' && round?.pairs === 7, pairs: round?.pairs || 0, hits: round?.hits || 0, mistakes: round?.mistakes || 0 };
     this.state[game === 'memory' ? 'bestMemory' : 'bestJanken'] = Math.max(this.state[game === 'memory' ? 'bestMemory' : 'bestJanken'], earned);
+    if(!quit)this.refreshEggStock();
     this.state.mood = clamp(this.state.mood + 5); this.gainRings(earned); this.mode = 'result'; this.selection = 0; this.sound('win'); this.changed();
   }
 
@@ -312,14 +369,35 @@ export class TinyGarden {
     if (this.mode === 'memory') { const m = this.memory; m.elapsed += dt; m.preview = Math.max(0, m.preview - dt); if (m.preview <= 0 && m.shuffles > 0) { m.shuffleDelay -= dt; if (m.shuffleDelay <= 0) { const occupied = m.cards.map((v,i) => v === null ? -1 : i).filter(i => i >= 0), empty = m.cards.map((v,i) => v === null ? i : -1).filter(i => i >= 0); const from = occupied[int(Math.random() * occupied.length)], to = empty[int(Math.random() * empty.length)]; [m.cards[from],m.cards[to]] = [m.cards[to],m.cards[from]]; m.moved = to; m.shuffles--; m.shuffleDelay = .65; this.sound('move'); } } if (m.delay > 0) { m.delay -= dt; if (m.delay <= 0) { m.open = []; if (m.mistakes >= 3) this.finishGame('memory'); } } }
     if (this.mode === 'janken') {
       const g = this.janken; g.remaining = Math.max(0, g.remaining - dt); g.elapsed += dt; g.cooldown = Math.max(0, g.cooldown - dt); g.flash = Math.max(0, g.flash - dt);
-      g.shots = g.shots.filter(s => (s.life -= dt) > 0);
-      for (const c of g.cards) c.position += (24 + g.wave * 8) * dt; this.positionJankenCards();
       if (g.remaining <= 0) this.finishGame('janken');
+      // Small physics steps catch the first moving card the visible projectile touches.
+      // No target, reward or miss is decided at button-press time.
+      const steps = Math.max(1, Math.ceil(dt * 120)), step = dt / steps;
+      for (let n = 0; n < steps && this.mode === 'janken'; n++) {
+        const speed = 24 + g.wave * 8 + g.cards.filter(c => c.hit).length * 3;
+        for (const c of g.cards) c.position += speed * step;
+        this.positionJankenCards();
+        for (const shot of g.shots) {
+          if (shot.state === 'deflected') {
+            shot.x += shot.vx * step; shot.y += shot.vy * step; shot.vy += 280 * step; shot.life -= step;
+            if (shot.life <= 0) shot.state = 'done';
+          } else if (shot.state === 'flying') {
+            shot.y += shot.vy * step;
+            const target = g.cards.filter(c => !c.hit && shot.x + 22 > c.x + 2 && shot.x + 2 < c.x + 22 && shot.y + 22 > c.y + 2 && shot.y + 2 < c.y + 22).sort((a, b) => b.y - a.y)[0];
+            if (target) this.resolveJankenShot(shot, target);
+            else if (shot.y + 24 < 0) this.resolveJankenShot(shot);
+          }
+          if (this.mode !== 'janken') break;
+        }
+        g.shots = g.shots.filter(shot => shot.state !== 'done');
+        if (this.mode === 'janken' && g.cards.every(c => c.hit)) { g.wave++; g.remaining += 10; g.feedback = 'CLEAR! +10 SECONDS'; g.flash = .8; this.newJankenWave(); this.sound('win'); this.changed(); }
+      }
     }
     if (this.autosave >= 10) { this.autosave = 0; this.save(); }
     this.render();
   }
   updateGarden(dt) {
+    if(Date.now()>=this.state.eggRefreshAt){this.refreshEggStock();this.save();}
     const s = this.state, a = this.anim; s.played += dt;
     if (this.hatchTime > 0) {
       this.hatchTime -= dt; if (this.hatchTime <= 0) { this.hatchTime = 0; s.hatched = true; s.totalHatches++; a.kind = 'happy'; a.remaining = 4; a.next = 5; this.message(`HELLO! I AM ${s.name}!`, 5); this.sound('chao'); this.particles(s.x, s.y - 20, 'heart', 8); this.save(); }
@@ -339,7 +417,7 @@ export class TinyGarden {
     }
     if (a.kind === 'walk') {
       const dx = a.targetX - s.x, dy = a.targetY - s.y, distance = Math.hypot(dx, dy);
-      if (distance > 2) { s.x += dx / distance * dt * 10; s.y += dy / distance * dt * 10; a.facing = dx < 0 ? -1 : 1; }
+      if (distance > 2) { s.x += dx / distance * dt * 10; s.y += dy / distance * dt * 10; a.facing = dx < 0 ? -1 : 1; a.direction = walkDirection(dx,dy,a.direction); }
       else { a.kind = s.x < 76 && s.y > 121 ? 'swim' : 'idle'; a.remaining = a.kind === 'swim' ? 4 : 0; }
     }
   }
@@ -363,9 +441,10 @@ export class TinyGarden {
       this.ctx.drawImage(this.art.chaoTransparent, 657 + clamp(index, 0, 6) * 17, 257, 16, 16, int(x), int(y), 16 * scale, 16 * scale);
     } else { this.rect(x + 6, y + 6, 9, 10, ['#ffd34d', '#ffa334', '#f74136', '#ffd945', '#7ac94d', '#ff918d', '#5880ee'][index]); this.rect(x + 10, y + 3, 2, 4, '#325724'); }
   }
+  drawEggSprite(color,x,y) { const egg=getEgg(color);if(this.art.chaoTransparent)this.ctx.drawImage(this.art.chaoTransparent,657+egg.atlas*17,201,16,16,int(x)-8,int(y)-16,16,16); }
   drawEgg(x, y) {
     const shake = this.anim.remaining > 0 || this.hatchTime ? Math.sin(this.time * 45) * 2 : 0; x = int(x + shake); y = int(y);
-    if (this.art.chaoTransparent) { this.ctx.drawImage(this.art.chaoTransparent, 657, 201, 16, 16, x - 8, y - 16, 16, 16); return; }
+    if (this.art.chaoTransparent) { this.drawEggSprite(this.state.color,x,y); return; }
     this.rect(x - 10, y - 2, 20, 4, '#268f27');
     const rows = ['000111111000','001111111100','011111111110','011111111110','111111111111','111111111111','111111111111','111111111111','011111111110','001111111100'];
     rows.forEach((line, r) => [...line].forEach((bit, col) => { if (bit === '1') this.rect(x - 12 + col * 2, y - 22 + r * 2, 2, 2, col < 3 || r > 7 ? '#dfcf83' : '#fff4cc'); }));
@@ -373,12 +452,12 @@ export class TinyGarden {
     if (this.state.eggProgress > 5) { this.rect(x, y - 19, 1, 5, '#7c8661'); this.rect(x - 2, y - 14, 3, 1, '#7c8661'); this.rect(x - 2, y - 13, 1, 4, '#7c8661'); }
     if (this.state.eggProgress > 9) { this.rect(x - 7, y - 8, 6, 1, '#7c8661'); this.rect(x - 7, y - 7, 1, 4, '#7c8661'); }
   }
-  drawChao(x, y, kind = this.anim.kind, scale = 1) {
+  drawChao(x, y, kind = this.anim.kind, scale = 1, color = this.state.color) {
     x = int(x); y = int(y); const frame = int(this.time * (kind === 'walk' ? 8 : 3)) % 2;
     if(!this.art.chaoTransparent)this.rect(x - 8 * scale, y - 2 * scale, 16 * scale, 3 * scale, kind === 'swim' ? '#77d8e9' : '#209330');
-    if (this.chaoFrames && this.art.chaoTransparent) {
-      const frames = this.chaoFrames[kind] || this.chaoFrames.idle; const at = frames[int(this.time * (kind === 'walk' ? 7 : 3)) % frames.length];
-      this.ctx.save(); this.ctx.translate(x, y); if (this.anim.facing < 0) this.ctx.scale(-1, 1); this.ctx.drawImage(this.art.chaoTransparent, at.x, at.y, at.w, at.h, -int(at.w / 2) * scale, -at.h * scale, at.w * scale, at.h * scale); this.ctx.restore();
+    if (this.art.chaoTransparent) {
+      const at = getChaoSprite(kind,this.time,{color,facing:this.anim.facing,direction:kind==='walk'?this.anim.direction:undefined});
+      this.ctx.save(); this.ctx.translate(x, y); if (at.flipX) this.ctx.scale(-1, 1); this.ctx.drawImage(this.art.chaoTransparent, at.x, at.y, at.w, at.h, -int(at.w / 2) * scale, -at.h * scale, at.w * scale, at.h * scale); this.ctx.restore();
     } else {
       const bob = kind === 'walk' || kind === 'happy' || kind === 'play' ? frame * scale : 0; y -= bob;
       const p = (dx, dy, w, h, color) => this.rect(x + dx * scale, y + dy * scale, w * scale, h * scale, color);
@@ -430,7 +509,7 @@ export class TinyGarden {
   screenBase(title, color = '#84bfe7') { this.rect(0, 0, 240, 160, color); for (let y = 18; y < 160; y += 8) for (let x = 0; x < 240; x += 8) if ((x + y) % 16) this.rect(x, y, 8, 8, '#93caec'); this.rect(0, 0, 240, 18, '#30568e'); this.text('< B', 5, 5, '#fff3b0'); this.centered(title, 129, 5, '#fff4b3'); }
   drawMenu() {
     this.drawGarden(); this.rect(22, 16, 196, 139, '#21375c'); this.panel(24, 18, 192, 135, '#fff0a8'); this.centered('TINY CHAO GARDEN', 120, 24, '#275a91');
-    ['BACK TO GARDEN', 'FOOD BAG', 'BLACK MARKET', 'MINI GAMES', 'CHAO NAME', 'CHAO STATS'].forEach((label, i) => { const y = 35 + i * 16; if (i === this.selection) this.panel(34, y - 2, 172, 14, '#a8d3f1'); this.text(i === this.selection ? '>' : ' ', 40, y + 2, '#275c96'); this.text(label, 53, y + 2, '#275c96'); });
+    ['BACK TO GARDEN', 'FOOD BAG', 'BLACK MARKET', 'MINI GAMES', 'CHAO NAME', 'CHAO STATS', 'CHAO FRIENDS'].forEach((label, i) => { const y = 31 + i * 14; if (i === this.selection) this.panel(34, y - 2, 172, 14, '#a8d3f1'); this.text(i === this.selection ? '>' : ' ', 40, y + 2, '#275c96'); this.text(label, 53, y + 2, '#275c96'); });
     this.centered('A: SELECT   B: RETURN', 120, 138, '#4b75a0');
   }
   drawShop() {
@@ -439,11 +518,14 @@ export class TinyGarden {
       if (this.art['original-shop']) this.ctx.drawImage(this.art['original-shop'],0,0,48,160,0,0,48,160);
       else { this.rect(0,0,48,160,'#ffb078'); FRUITS.forEach((f,i)=>{this.fruit(f.sprite,1,12+i*16);this.text(String(f.price),32,17+i*16,'#161820');}); }
       // The original left window reserves its last two rows for an egg and one unlockable toy.
-      // Link-only jewel eggs are omitted; the next garden toy uses the original bottom row.
+      // Restore the original egg row; visiting an egg uses the standalone Friends collection.
       this.rect(1,124,46,35,'#ffb078'); for(let y=127;y<159;y+=4)for(let x=2;x<47;x+=4)this.rect(x,y,2,2,'#ffc090');
-      const next = this.shopItems()[7];
+      const egg=this.state.eggStock&&getEgg(this.state.eggStock);
+      if(egg){this.drawEggSprite(egg.id,9,140);this.text(String(egg.price),47-this.textWidth(String(egg.price)),131,'#17251d');}
+      const next = this.shopItems().find(item=>typeof item.index==='number'&&item.index>=FRUITS.length);
       if(next){ const sx = next.id==='trumpet'?657:next.id==='duck'?674:725; if(this.art.chaoTransparent)this.ctx.drawImage(this.art.chaoTransparent,sx,281,16,17,1,142,16,17); this.text(String(next.price),47-this.textWidth(String(next.price)),148,'#17251d'); }
-      const y=this.selection<7?12+this.selection*16:142;
+      const selected=this.shopItems()[this.selection];
+      const y=this.selection<7?12+this.selection*16:selected?.index==='egg'?125:142;
       if(this.art.chaoTransparent)this.ctx.drawImage(this.art.chaoTransparent,684,321,17,17,12,y-2,17,17);
       else this.text('>',17,y+4,'#fff5de');
       return;
@@ -470,6 +552,19 @@ export class TinyGarden {
     STATS.forEach((stat, i) => { const y = 29 + i * 20; this.text(stat.toUpperCase(), 95, y, '#2a578e'); this.text(`LV ${String(this.state.stats[stat].level).padStart(2, '0')}`, 191, y, '#2a578e'); this.bar(95, y + 10, 132, 6, this.state.stats[stat].xp, '#58c668'); });
     this.centered(`BELLY ${int(this.state.belly)}  MOOD ${int(this.state.mood)}  REST ${int(this.state.energy)}`, 120, 141, '#2a578e'); this.centered('A OR B: GARDEN', 120, 152, '#2a578e');
   }
+  drawFriends() {
+    this.screenBase('CHAO FRIENDS');
+    EGGS.forEach((egg,i)=>{const x=8+i%4*56,y=25+int(i/4)*34,friend=egg.id===this.state.color?this.state:this.state.collection[egg.id];
+      this.panel(x,y,54,32,i===this.selection?'#fff1a5':friend?'#dcefc8':'#d9e0da',i===this.selection?'#db8b3a':'#78968c');
+      if(friend?.hatched)this.drawChao(x+27,y+25,'idle',1,egg.id);else this.drawEggSprite(egg.id,x+27,y+24);
+      if(!friend)this.text('?',x+44,y+4,'#788478');
+      if(egg.id===this.state.color)this.text('>',x+4,y+12,'#2f608f');
+    });
+    const egg=EGGS[this.selection],friend=egg.id===this.state.color?this.state:this.state.collection[egg.id];
+    this.centered(`${egg.name} - ${egg.rarity}`,120,132,'#305a94');
+    this.centered(friend?(friend.hatched?`A: VISIT ${friend.name}`:'A: HATCH YOUR EGG'):`${egg.price} RINGS - FIND IN SHOP`,120,143,'#4265a0');
+    this.centered(`${Object.keys(this.state.collection).length}/12 FRIENDS   B: GARDEN`,120,153,'#4265a0');
+  }
   drawGames() {
     this.screenBase('MINI GAMES');
     [['CHAO MEMORY', 'MATCH THE FRUIT CARDS'], ['CHAO JANKEN', 'ROCK, PAPER, SCISSORS!']].forEach((lines, i) => { const y = 31 + i * 48; this.panel(12, y, 216, 41, i === this.selection ? '#fff0a2' : '#d8efc3'); this.text(i === this.selection ? '>' : ' ', 20, y + 9, '#315a94'); this.text(lines[0], 33, y + 9, '#315a94'); this.text(lines[1], 33, y + 25, '#487a9a'); });
@@ -477,7 +572,7 @@ export class TinyGarden {
   }
   drawIntro(game) {
     this.screenBase(game === 'memory' ? 'CHAO MEMORY' : 'CHAO JANKEN'); this.panel(8, 26, 224, 103, '#fff1ae');
-    const lines = game === 'memory' ? ['REMEMBER THE SEVEN PAIRS!', 'WATCH CLOSELY AS CHAO SHUFFLES.', 'OUTSIDE CARDS: 1 RING EACH.', 'MIDDLE: 3 RINGS. CENTER: 5.', 'THREE MISTAKES ENDS THE GAME.', 'D-PAD: CHOOSE   A: FLIP'] : ['WIN ROCK, PAPER, SCISSORS!', 'FIRE AT CARDS UNDER THE BLUE MARK.', 'PAPER > ROCK > SCISSORS > PAPER', 'WIN: 1 RING. FIVE MISSES MAX.', 'CLEAR ALL TEN: +10 SECONDS!', 'L/R: HAND   A: SHOOT'];
+    const lines = game === 'memory' ? ['REMEMBER THE SEVEN PAIRS!', 'WATCH CLOSELY AS CHAO SHUFFLES.', 'OUTSIDE CARDS: 1 RING EACH.', 'MIDDLE: 3 RINGS. CENTER: 5.', 'THREE MISTAKES ENDS THE GAME.', 'D-PAD: CHOOSE   A: FLIP'] : ['WIN ROCK, PAPER, SCISSORS!', 'CHOOSE A SLOT. ITS CARD FLIES UP.', 'PAPER > ROCK > SCISSORS > PAPER', 'WIN: 1 RING. FIVE MISSES MAX.', 'CLEAR ALL TEN: +10 SECONDS!', 'L/R: HAND   A: SHOOT'];
     lines.forEach((line, i) => this.centered(line, 120, 34 + i * 15, '#305a94'));
     this.centered('PRESS A OR TAP TO START', 120, 141, '#284f86');
   }
@@ -520,14 +615,16 @@ export class TinyGarden {
     this.text(String(Math.ceil(g.remaining)).padStart(2,'0'),207,76,'#fff83a');
     this.text(String(g.lives),218,140,'#fff83a');
     this.drawChao(89,74,'idle');
-    for(const shot of g.shots){const t=1-shot.life/.23;this.star(shot.x+8,115-(115-shot.targetY)*t);}
     for(const e of this.effects)this.star(int(e.x),int(e.y));
     for(let i=0;i<3;i++){
-      const x=14+i*66;this.hand(g.hands[i],x,124,25,false,true);
-      if(i===g.hand){this.rect(x-2,123,5,2,'#00b8f8');this.rect(x-2,123,2,5,'#00b8f8');this.rect(x+22,123,5,2,'#00b8f8');this.rect(x+25,123,2,5,'#00b8f8');this.rect(x-2,148,5,2,'#00b8f8');this.rect(x+22,148,5,2,'#00b8f8');}
+      const x=14+i*66;
+      if(i===g.hand){
+        if(this.art.jankenCursor)this.ctx.drawImage(this.art.jankenCursor,27,15,32,32,x-4,120,32,32);
+        else {this.rect(x-2,123,5,2,'#00b8f8');this.rect(x-2,123,2,5,'#00b8f8');this.rect(x+22,123,5,2,'#00b8f8');this.rect(x+25,123,2,5,'#00b8f8');this.rect(x-2,148,5,2,'#00b8f8');this.rect(x+22,148,5,2,'#00b8f8');}
+      }
+      if(g.hands[i]!==null)this.hand(g.hands[i],x,124,24,false,true);
     }
-    const target=g.cards.filter(c=>!c.hit&&Math.abs(c.x+11-106)<=13).sort((a,b)=>b.y-a.y)[0];
-    if(target){this.rect(int(target.x)+10,int(target.y)-3,4,2,'#00b8f8');this.rect(int(target.x)+11,int(target.y)-5,2,5,'#00b8f8');}
+    for(const shot of g.shots)this.hand(shot.hand,int(shot.x),int(shot.y),24,false,true);
   }
 
   drawPause() { this.pausedMode === 'memory' ? this.drawMemory() : this.drawJanken(); this.ctx.globalAlpha = .6; this.rect(0, 0, 240, 160, '#24365b'); this.ctx.globalAlpha = 1; this.panel(29, 34, 182, 92, '#fff1ad'); this.centered('TAKE A LITTLE BREAK', 120, 46, '#315b96'); ['KEEP PLAYING', 'FINISH AND KEEP RINGS'].forEach((str, i) => { if (this.selection === i) this.panel(40, 69 + i * 27, 160, 18, '#acdbeb'); this.centered(str, 120, 75 + i * 27, '#315b96'); }); }
@@ -557,7 +654,7 @@ export class TinyGarden {
 
   render() {
     if (!this.ctx) return; this.ctx.imageSmoothingEnabled = false; this.ctx.globalAlpha = 1;
-    switch (this.mode) { case 'garden': this.drawGarden(); break; case 'menu': this.drawMenu(); break; case 'bag': case 'shop': this.drawShop(); break; case 'stats': this.drawStats(); break; case 'games': this.drawGames(); break; case 'memoryIntro': this.drawIntro('memory'); break; case 'jankenIntro': this.drawIntro('janken'); break; case 'memory': this.drawMemory(); break; case 'janken': this.drawJanken(); break; case 'pause': this.drawPause(); break; case 'result': this.drawResult(); break; case 'rename': this.drawRename(); break; default: this.mode = 'garden'; this.drawGarden(); }
+    switch (this.mode) { case 'garden': this.drawGarden(); break; case 'menu': this.drawMenu(); break; case 'bag': case 'shop': this.drawShop(); break; case 'stats': this.drawStats(); break; case 'friends': this.drawFriends(); break; case 'games': this.drawGames(); break; case 'memoryIntro': this.drawIntro('memory'); break; case 'jankenIntro': this.drawIntro('janken'); break; case 'memory': this.drawMemory(); break; case 'janken': this.drawJanken(); break; case 'pause': this.drawPause(); break; case 'result': this.drawResult(); break; case 'rename': this.drawRename(); break; default: this.mode = 'garden'; this.drawGarden(); }
   }
   draw() { this.render(); }
 }
