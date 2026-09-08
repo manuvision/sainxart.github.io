@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f2eb">
+  <meta name="description" content="A little life in your pocket. Hatch an egg, care for your pixel pet, and play on a tactile 3D pocket companion.">
+  <meta property="og:title" content="Tamagochi — a little life in your pocket">
+  <meta property="og:description" content="Your very own pocket companion. An original pixel pet with a soft spot for you.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://manu.vision/tamagochi/">
+  <link rel="canonical" href="https://manu.vision/tamagochi/">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./style.css">
+  <title>Tamagochi · a little life in your pocket</title>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="https://manu.vision" aria-label="Back to Manu Vision"><span class="brand-mark">m<span>v</span></span><span class="brand-path">MANU.VISION <i>/</i> PLAY</span></a>
+    <div class="utilities">
+      <span class="save-state" id="save-state"><span></span> SAVED ON THIS DEVICE</span>
+      <button class="utility" id="sound-toggle" aria-label="Mute sound" aria-pressed="false" title="Sound on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path class="sound-waves" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/><path class="sound-cross" d="m16 9 6 6m0-6-6 6"/></svg></button>
+      <button class="utility" id="fullscreen-toggle" aria-label="Enter fullscreen" title="Fullscreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button>
+      <button class="utility" id="help-open" aria-label="How to play" title="How to play"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 4 2c-1.5 1-1.5 1.5-1.5 3m0 2v1"/></svg></button>
+    </div>
+  </header>
+  <main class="experience">
+    <div class="intro"><div class="edition"><span></span> YOUR POCKET COMPANION</div><h1>Small friend.<br><em>Big feelings.</em></h1><p>A little care goes a long way.</p></div>
+    <div class="stage" id="stage" aria-label="3D Tamagochi pocket pet">
+      <div class="loading" id="loading">WAKING UP YOUR LITTLE WORLD<span>· · ·</span></div>
+      <div class="fallback-device" id="fallback-device" hidden><div class="fallback-title">tamagochi</div><div id="fallback-lcd"></div><div class="fallback-keys"><span>A</span><span>B</span><span>C</span></div></div>
+      <button class="physical-button" id="button-a" aria-label="A: select next" data-key="a"></button>
+      <button class="physical-button" id="button-b" aria-label="B: confirm" data-key="b"></button>
+      <button class="physical-button" id="button-c" aria-label="C: back" data-key="c"></button>
+    </div>
+    <div class="game-caption"><span class="pet-indicator"></span><span id="caption">Someone small is waiting to meet you.</span><button id="leave-game" class="leave-game" hidden>Exit game</button></div>
+    <div class="control-guide" aria-hidden="true"><span><kbd>A</kbd> SELECT</span><span><kbd>B</kbd> CONFIRM</span><span><kbd>C</kbd> BACK</span></div>
+    <p class="sr-only" id="game-status" aria-live="polite" aria-atomic="true"></p>
+  </main>
+  <footer class="bottom-bar">
+    <div class="color-picker" role="group" aria-label="Device color"><span>SHELL</span><button class="swatch active" data-color="apricot" aria-label="Apricot shell" aria-pressed="true" style="--swatch:#edb684"></button><button class="swatch" data-color="sage" aria-label="Sage shell" aria-pressed="false" style="--swatch:#a0b9a1"></button><button class="swatch" data-color="lilac" aria-label="Lilac shell" aria-pressed="false" style="--swatch:#b3a5c6"></button><span id="color-name">Apricot</span></div>
+    <span class="keyboard-note">PRESS THE BUTTONS. <span>OR USE YOUR KEYBOARD.</span></span>
+    <span class="edition-number">EST. 1996 <span>·</span> REIMAGINED 2026</span>
+  </footer>
+  <dialog id="help-dialog" aria-labelledby="help-title">
+    <button class="dialog-close utility" id="help-close" aria-label="Close instructions">×</button>
+    <div class="edition">HELLO, HUMAN.</div><h2 id="help-title">Meet your little friend.</h2>
+    <p>Press <b>B</b> to warm the egg. Once it hatches, your tiny companion depends on you for a little food, play, and rest.</p>
+    <div class="help-controls"><p><kbd>A</kbd><span><b>Select</b>Cycle through the care menu.</span></p><p><kbd>B</kbd><span><b>Confirm</b>Choose an action or start a game.</span></p><p><kbd>C</kbd><span><b>Back</b>Return to your pet.</span></p></div>
+    <p>Feed, clean, play, heal, and turn out the lights for a nap. Good care helps your pet grow. Your friend rests safely while you’re away; progress is saved in this browser.</p>
+    <p class="help-small"><b>Snack Catch:</b> A moves left, C moves right. Catch snacks and dodge the bad ones.<br><b>Memory:</b> Watch the buttons light up, then repeat with A, B, C.</p>
+    <div class="dialog-bottom"><button id="reset-pet" class="text-button">Start a new egg</button><button id="help-done" class="primary-button">Let’s play <span>↗</span></button></div>
+    <div id="reset-confirm" hidden><p>Say goodbye to this pet and start fresh? This erases this pet’s progress and scores.</p><button class="text-button" id="reset-cancel">Keep my friend</button><button class="primary-button" id="reset-confirm-button">Hatch a new egg</button></div>
+  </dialog>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
