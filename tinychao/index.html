@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#e8eff2">
+  <meta name="description" content="A little Chao, a little garden, and a silver handheld. Hatch, care, play and collect in a lovingly recreated Tiny Chao Garden.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Tiny Chao Garden · Manu.Vision</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Tiny Chao Garden home"><span class="brand-icon" aria-hidden="true"><img src="./assets/egg.png" alt="" onerror="this.hidden=true"></span><span>tiny chao<span class="brand-second">garden<span class="brand-dot">.</span></span></span></a>
+    <div class="edition"><span class="edition-line"></span>A SMALL WORLD, ALL YOURS<span class="edition-line"></span></div>
+    <button class="icon-button help-button" id="help" aria-label="How to play" title="How to play"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 8.5a2.6 2.6 0 0 1 5 1c0 2-2.5 2-2.5 4M12 16.5v.1"/></svg></button>
+  </header>
+  <main class="stage" id="stage">
+    <div class="stage-glow" aria-hidden="true"></div>
+    <div class="margin-note left-note" aria-hidden="true"><span class="tiny-label">EST. 2001</span><span class="note-rule"></span><span>A little nostalgia.<br>A lot of Chao.</span></div>
+    <div class="margin-note right-note" aria-hidden="true"><span class="tiny-label">PLATINUM EDITION</span><span class="note-rule"></span><span>Tap the buttons.<br>Make yourself at home.</span></div>
+    <div id="console" tabindex="0" role="application" aria-label="3D Game Boy Advance SP. Arrow keys move, Z or A interacts, X or B returns, Enter opens menu. You can also tap the physical buttons and screen." aria-describedby="game-status"></div>
+    <div id="loading" class="loading"><span class="loading-dot"></span>Opening your garden</div>
+    <div class="stage-caption"><span class="green-dot"></span><span id="garden-caption">Your little world is waiting.</span><span class="caption-divider">/</span><span class="save-caption" id="save-caption">SAVED ON THIS DEVICE</span></div>
+  </main>
+  <section id="screen-view" class="screen-view" hidden aria-label="Expanded game screen">
+    <div class="screen-heading"><span>TINY CHAO GARDEN</span><button id="close-screen" class="text-button">Back to handheld <span aria-hidden="true">↙</span></button></div>
+    <canvas id="large-screen" width="240" height="160" tabindex="0" role="application" aria-label="Tiny Chao Garden. Touch the screen or use the controls below."></canvas>
+    <div class="touch-controls">
+      <div class="touch-dpad"><button data-input="up" aria-label="Move up">▲</button><button data-input="left" aria-label="Move left">◀</button><button data-input="down" aria-label="Move down">▼</button><button data-input="right" aria-label="Move right">▶</button></div>
+      <div class="touch-middle"><button class="touch-menu" data-input="l" aria-label="L, shop">L · SHOP</button><button class="touch-menu" data-input="start">START</button><button class="touch-menu" data-input="r" aria-label="R, find fruit">R · FRUIT</button></div>
+      <div class="touch-actions"><button data-input="b" aria-label="B, back">B</button><button data-input="a" aria-label="A, interact">A</button></div>
+    </div>
+  </section>
+  <footer class="toolbar">
+    <div class="keyboard-hints"><button data-input="up" class="hint-button" aria-label="Move cursor up"><span class="keycap">↑↓←→</span> Move</button><button data-input="a" class="hint-button" aria-label="A, interact"><span class="keycap">Z</span> Interact</button><button data-input="b" class="hint-button" aria-label="B, back"><span class="keycap">X</span> Back</button><button data-input="start" class="hint-button" aria-label="Start, menu"><span class="keycap">↵</span> Menu</button></div>
+    <span class="mobile-hint">Tap the console to play<span> · </span>Drag to turn</span>
+    <div class="tools">
+      <button class="tool-button" id="sound" aria-pressed="true" title="Sound on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4zM15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14"/><path class="mute-slash" d="m3 3 18 18"/></svg><span>Sound</span></button>
+      <button class="tool-button" id="expand" aria-pressed="false" title="Enlarge game screen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5"/><path d="M3 3l6 6M21 3l-6 6M21 21l-6-6M3 21l6-6"/></svg><span>Screen</span></button>
+      <button class="tool-button" id="settings" title="Garden settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.5"/><circle cx="15" cy="17" r="2.5"/></svg><span>Settings</span></button>
+    </div>
+  </footer>
+  <p class="sr-only" id="game-status" role="status" aria-live="polite"></p>
+  <dialog id="help-dialog"><div class="dialog-head"><span class="eyebrow">WELCOME HOME</span><button class="icon-button" data-close aria-label="Close help">×</button></div><h1>A tiny garden.<br>A friend for life.</h1><p>Give your egg a few gentle taps to meet your Chao. Pet them, bring them fruit, and make time to play.</p><div class="help-grid"><div><b>Move / choose</b><span>D-pad or arrow keys</span></div><div><b>Pick up / pet</b><span>A button or Z / Space</span></div><div><b>Back / put down</b><span>B button or X / Esc</span></div><div><b>Fruit shop</b><span>L button or Q</span></div><div><b>Find a fruit</b><span>R button or E</span></div><div><b>Garden menu</b><span>START or Enter</span></div></div><p class="help-tip">You can also tap directly on the game screen. Use <b>Screen</b> for a bigger view. Tap either little GBA in the garden to play a minigame. Open the shop with L, then pick up a fruit and bring it to your Chao.</p><p class="fine-print">Your garden saves automatically in this browser. Clearing website data will remove your save.</p><button class="primary-button" data-close>Let's play <span>↗</span></button><div class="credits">An unofficial fan recreation by <a href="https://manu.vision" target="_blank" rel="noopener">Manu.Vision</a>. Sonic, Chao and original game artwork belong to SEGA. Game Boy Advance SP belongs to Nintendo. <a href="./CREDITS.md" target="_blank" rel="noopener">Artwork credits</a>.</div></dialog>
+  <dialog id="settings-dialog"><div class="dialog-head"><span class="eyebrow">YOUR GARDEN</span><button class="icon-button" data-close aria-label="Close settings">×</button></div><h2>Make yourself at home.</h2><label class="setting-row"><span><b>Garden music</b><small>The original garden and minigame melodies</small></span><input type="checkbox" id="music-toggle" checked></label><label class="setting-row"><span><b>Button vibration</b><small>On supported devices</small></span><input type="checkbox" id="haptics-toggle" checked></label><div class="setting-row"><span><b>Keep a garden backup</b><small>Save a copy to your device</small></span><button class="small-button" id="export-save">Export</button></div><div class="setting-row"><span><b>Restore your garden</b><small>From a previously exported save</small></span><button class="small-button" id="import-save">Import</button><input type="file" id="import-file" accept="application/json,.json" hidden></div><p class="settings-message" id="settings-message" role="status"></p><button class="reset-button" id="reset-garden">Start a new garden</button><div id="reset-confirm" class="reset-confirm" hidden><p>This replaces your current Chao and progress. Export a backup first if you want to keep them.</p><div><button class="small-button" id="cancel-reset">Keep my Chao</button><button class="small-button danger" id="confirm-reset">New egg</button></div></div></dialog>
+  <noscript>This little garden needs JavaScript to hatch. Please enable it and reload.</noscript>
+</body>
+</html>
