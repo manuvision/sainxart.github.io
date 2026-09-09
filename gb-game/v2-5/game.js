@@ -26,7 +26,7 @@ export class PocketGame{
  }
  async load(){
   const loadImage=src=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Unable to load '+src));im.src=src;});
-  const asset=name=>new URL('./assets/'+name+'?v=v2-5-20260909',import.meta.url).href;
+  const asset=name=>new URL('./assets/'+name+'?v=tideleaf-20260909',import.meta.url).href;
   const loadJSON=async name=>{const r=await fetch(asset(name));if(!r.ok)throw new Error('Missing '+name);return r.json();};
   [this.mapImage,this.sprites,this.atlas,this.world,this.equippedImage,this.equippedAtlas,this.rollImage,this.rollAtlas,this.itemImage]=await Promise.all([loadImage(asset('town-atlas.png')),loadImage(asset('raccoon-master.png')),loadJSON('raccoon-master.json'),loadJSON('world.json'),loadImage(asset('raccoon-machete.png')),loadJSON('raccoon-machete.json'),loadImage(asset('raccoon-roll.png')),loadJSON('raccoon-roll.json'),loadImage(asset('machete-item.png'))]);
   for(const direction of Object.keys(FACING))for(const kind of ['idle','walk','attack','roll'])this.clips[kind+'_'+direction]=(kind==='roll'?this.rollAtlas:this.equippedAtlas).frames.filter(f=>f.filename.startsWith(kind+'_'+direction+'_'));
@@ -82,7 +82,7 @@ export class PocketGame{
      this.equipped=true;this.pickups.add(target.id);try{this.storage?.setItem(SAVE_KEY,JSON.stringify({machete:true}));}catch{}
      this.message('MACHETE EQUIPPED','B swings. A rolls, or interacts with something directly ahead. Your machete is saved.');return;
     }
-    this.message(target.title??target.name??'RIVER VILLAGE',target.text??'');return;
+    this.message(target.title??target.name??'TIDELEAF COVE',target.text??'');return;
    }
    this.startRoll();
   }else if(action==='b'){

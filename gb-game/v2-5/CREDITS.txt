@@ -1,13 +1,19 @@
-RIVER VILLAGE — v2.5
+TIDELEAF COVE — v2.5
 
-Original environment: ManuVision, drawn at native resolution in Aseprite.
-16px terrain grid; 30 shared environment color roles; reusable terrain, foliage,
-architecture and prop components; three original furnished interiors.
+Environment graphics adapted from Pokémon FireRed / LeafGreen.
+Original game graphics: Game Freak / Nintendo / The Pokémon Company.
+Source tiles, metatile definitions and palettes: pret/pokefirered.
+https://github.com/pret/pokefirered
+Visual reference maps: Treasure Beach, Bond Bridge and Berry Forest,
+archived by The Spriters Resource.
+https://www.spriters-resource.com/game_boy_advance/pokemonfireredleafgreen/
+
+New map arrangement, palette adaptations and component edits: ManuVision.
+The adapted environment is derivative artwork, not an original or
+copyright-cleared replacement for the source game graphics. This project
+is not affiliated with or endorsed by the original rights holders.
+
 Original raccoon: ManuVision; exact user-corrected production sprites.
 Original machete and roll animation: ManuVision; native Aseprite assets.
-
-FireRed and Minish Cap artwork was studied for scale, tile construction and
-material readability. No third-party game artwork is included in v2.5.
-
 Three.js 0.185.1: MIT license, ../vendor/LICENSE.
 Locally synthesized audio and an original bitmap Start prompt.
