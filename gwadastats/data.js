@@ -15,6 +15,8 @@ export function summarize(snapshot) {
     }
     if (!isDate(item.publishedAt) || !isDate(item.updatedAt) || item.publishedAt > item.updatedAt ||
         item.updatedAt > snapshot.reviewedAt || item.asOf > item.updatedAt) throw new Error('Invalid publication dates');
+    if (item.checkedAt !== undefined && (!isDate(item.checkedAt) || item.updatedAt > item.checkedAt ||
+        item.checkedAt > snapshot.reviewedAt)) throw new Error('Invalid category check date');
     if (typeof item.publisher !== 'string' || !item.publisher.trim()) throw new Error('Missing publisher');
     const url = new URL(item.source);
     if (url.protocol !== 'https:' || !url.hostname || url.username || url.password) throw new Error('Missing public source');

@@ -1,6 +1,6 @@
 import { estimateAt } from '../dlo/model.js?v=5';
-import { summarize, referenceState } from './data.js?v=1';
-import { COPY } from './content.js?v=1';
+import { summarize, referenceState } from './data.js?v=2';
+import { COPY } from './content.js?v=2';
 const $ = id => document.getElementById(id);
 let language = 'fr', artwork, integers, decimal, snapshot, summary, dataFailed = false, lastRefresh = 0, refreshing = false;
 try { if (localStorage.getItem('gwadastats-language') === 'en') language = 'en'; } catch {}
