@@ -1,10 +1,12 @@
 import { estimateAt, DAY_MS } from './model.js';
 const $ = id => document.getElementById(id);
 const integers = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+const utcClock = new Intl.DateTimeFormat('en-GB', {timeZone:'UTC',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 let scenario = 'central', artwork;
 let paused = matchMedia('(prefers-reduced-motion: reduce)').matches;
 function renderNumbers() {
-  const estimate = estimateAt(Date.now(), scenario);
+  const now = new Date();
+  const estimate = estimateAt(now.getTime(), scenario);
   const dayCapacity = estimate.rate * DAY_MS / 1000;
   const fraction = estimate.today / dayCapacity;
   $('today-value').textContent = integers.format(Math.floor(estimate.today));
@@ -14,6 +16,8 @@ function renderNumbers() {
   $('day-capacity').textContent = (dayCapacity / 1e9).toFixed(2) + ' billion liters';
   $('modal-capacity').textContent = integers.format(dayCapacity) + ' liters';
   $('day-percent').textContent = (fraction * 100).toFixed(1) + '%';
+  $('utc-clock').textContent = utcClock.format(now) + ' UTC';
+  $('utc-clock').dateTime = now.toISOString();
   $('scene').dataset.fillFraction = fraction.toFixed(6);
   artwork?.setFill(fraction);
 }
@@ -39,7 +43,7 @@ dialog.addEventListener('close', () => { document.body.style.overflow = ''; $('o
 renderNumbers(); updateMotion();
 setInterval(() => { if (!document.hidden) renderNumbers(); }, 100);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) renderNumbers(); });
-import('./scene.js?v=2').then(({ createWaterScene }) => {
+import('./scene.js?v=3').then(({ createWaterScene }) => {
   artwork = createWaterScene($('scene'), {
     fraction: estimateAt(Date.now(), scenario).dayFraction, paused,
     onWaterline(position) { $('fill-label').style.top = (position * 100) + '%'; },

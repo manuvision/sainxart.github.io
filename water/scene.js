@@ -3,40 +3,38 @@ import { PROFILE, RADIUS, radiusAtHeight, BottleVolume, SurfaceWaves, springStep
 
 export function createWaterScene(container, {fraction, paused: initiallyPaused, onWaterline}) {
   const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
-  renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));
+  renderer.setPixelRatio(Math.min(Math.max(devicePixelRatio,1.75),2));
   renderer.transmissionResolutionScale=.5;
-  renderer.setClearColor(0xf4f6f8,0);
+  renderer.setClearColor(0x08090b,0);
   renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=.95;
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   container.appendChild(renderer.domElement);
   const scene=new THREE.Scene();
   const camera=new THREE.PerspectiveCamera(32,1,.1,40);
-  camera.position.set(0,.45,8.25);camera.lookAt(0,.08,0);
+  camera.position.set(0,1.85,8.25);camera.lookAt(0,.08,0);
 
   // A real reflected studio environment: broad softboxes, narrow edge lights, dark cards.
-  const studio=new THREE.Scene();studio.background=new THREE.Color('#4b6272');
+  const studio=new THREE.Scene();studio.background=new THREE.Color('#44464a');
   function panel(color,intensity,w,h,x,y,z){
     const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(color).multiplyScalar(intensity),side:THREE.DoubleSide}));
     m.position.set(x,y,z);m.lookAt(0,0,0);studio.add(m);
   }
-  panel('#ffffff',4.5,3,6,-3.5,2,3);
-  panel('#ffffff',3.5,1.2,6,3,1,2);
-  panel('#dceeff',2,4,3,0,5,-1);
-  panel('#ffffff',2,4,4,0,1,-4);
-  panel('#203746',.35,1.8,5,-2,0,-1.8);
-  panel('#243746',.25,.75,6,2,0,3.3);
+  panel('#ffffff',6,1.5,6,-3.5,2,3);
+  panel('#ffffff',5,.9,6,3,1,2);
+  panel('#ffffff',1.5,3,2,0,5,-1);
+  panel('#ffffff',1.8,2,4,0,1,-4);
   const pmrem=new THREE.PMREMGenerator(renderer);
   const environment=pmrem.fromScene(studio,.035);
   scene.environment=environment.texture;
-  scene.add(new THREE.HemisphereLight(0xe9f8ff,0xb8c6d0,.8));
-  const key=new THREE.DirectionalLight(0xffffff,1.5);key.position.set(-3,5,4);scene.add(key);
-  const rim=new THREE.DirectionalLight(0xd5ecff,1);rim.position.set(4,2,-2);scene.add(rim);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x16181c,.35));
+  const key=new THREE.DirectionalLight(0xffffff,.6);key.position.set(-3,5,4);scene.add(key);
+  const rim=new THREE.DirectionalLight(0xffffff,1);rim.position.set(4,2,-2);scene.add(rim);
 
   const bottle=new THREE.Group();scene.add(bottle);
   const waves=new SurfaceWaves(48),volume=new BottleVolume(64);
   const waveTexture=new THREE.DataTexture(waves.h,waves.size,waves.size,THREE.RedFormat,THREE.FloatType);
   waveTexture.minFilter=waveTexture.magFilter=THREE.NearestFilter;waveTexture.needsUpdate=true;
-  const uniforms={uWaves:{value:waveTexture},uLevel:{value:0},uSlope:{value:new THREE.Vector2()},uWaveAmount:{value:1}};
+  const uniforms={uWaves:{value:waveTexture},uLevel:{value:0},uSlope:{value:new THREE.Vector2()},uWaveAmount:{value:1},uCameraLocal:{value:new THREE.Vector3()},uBottleRotation:{value:new THREE.Matrix3()}};
   const waterGLSL=`
     uniform sampler2D uWaves;
     uniform float uLevel;
@@ -58,57 +56,116 @@ export function createWaterScene(container, {fraction, paused: initiallyPaused, 
     const [prevY,prevR]=PROFILE[i];
     return 'if(y<='+y.toFixed(5)+')return mix('+prevR.toFixed(5)+','+r.toFixed(5)+',(y-('+prevY.toFixed(5)+'))/'+(y-prevY).toFixed(5)+');';
   }).join('')+'return .23;}\n';
-  function liquidMaterial(surface=false){
-    const mat=new THREE.MeshPhysicalMaterial({
-      color:surface?0x87bfd6:0x66b8d6,roughness:surface?.035:.06,metalness:0,
-      transmission:.86,thickness:1.15,ior:1.333,attenuationColor:new THREE.Color('#3180a3'),
-      attenuationDistance:1.1,envMapIntensity:1,clearcoat:.3,clearcoatRoughness:.04,
-      side:surface?THREE.DoubleSide:THREE.FrontSide,
+  // Dielectric optics cross both interfaces; no screen-space black refraction buffer.
+  const opticsGLSL=`
+    uniform vec3 uCameraLocal;
+    uniform mat3 uBottleRotation;
+    varying vec3 vLocalNormal;
+    vec3 studioLight(vec3 d){
+      d=normalize(uBottleRotation*d);
+      float sky=.10+.16*smoothstep(-.7,.9,d.y);
+      vec3 radiance=vec3(sky);
+      radiance+=vec3(2.4)*pow(max(dot(d,normalize(vec3(-.8,.4,.55))),0.),38.);
+      radiance+=vec3(1.4)*pow(max(dot(d,normalize(vec3(.9,.65,-.25))),0.),28.);
+      radiance+=vec3(.7)*pow(max(dot(d,normalize(vec3(0.,1.,.2))),0.),24.);
+      radiance+=vec3(4.)*pow(max(dot(d,normalize(vec3(-.7,.5,-1.))),0.),18.);
+      radiance+=vec3(1.8)*pow(max(dot(d,normalize(vec3(.7,.1,-1.))),0.),14.);
+      return radiance;
+    }
+    float liquidDistance(vec3 p){
+      float side=length(p.xz)-bottleRadius(clamp(p.y,-1.6,1.66));
+      return max(side,max(-1.6-p.y,p.y-(uLevel-dot(uSlope,p.xz))));
+    }
+    vec3 exitNormal(vec3 p){
+      float e=.003;
+      return normalize(vec3(
+        liquidDistance(p+vec3(e,0.,0.))-liquidDistance(p-vec3(e,0.,0.)),
+        liquidDistance(p+vec3(0.,e,0.))-liquidDistance(p-vec3(0.,e,0.)),
+        liquidDistance(p+vec3(0.,0.,e))-liquidDistance(p-vec3(0.,0.,e))));
+    }
+  `;
+  function liquidMaterial(isSurface=false){
+    return new THREE.ShaderMaterial({
+      uniforms,transparent:true,depthWrite:false,side:isSurface?THREE.DoubleSide:THREE.FrontSide,
+      vertexShader:waterGLSL+`
+        varying vec3 vLocalNormal;
+        void main(){
+          vec3 p=position;
+          vLocalNormal=normal;
+          `+(isSurface?`
+            p.y=waterHeight(p.xz);
+            float e=.012;
+            vLocalNormal=normalize(vec3(
+              -(waterHeight(p.xz+vec2(e,0.))-waterHeight(p.xz-vec2(e,0.)))/(2.*e),
+              1.,-(waterHeight(p.xz+vec2(0.,e))-waterHeight(p.xz-vec2(0.,e)))/(2.*e)));
+          `:'')+`
+          vBottlePosition=p;
+          gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);
+        }`,
+      fragmentShader:waterGLSL+radiusGLSL+opticsGLSL+`
+        void main(){
+          `+(isSurface?`
+            if(length(vBottlePosition.xz)>bottleRadius(vBottlePosition.y)||vBottlePosition.y< -1.60||vBottlePosition.y>1.66)discard;
+          `:`if(vBottlePosition.y>waterHeight(vBottlePosition.xz))discard;`)+`
+          vec3 incoming=normalize(vBottlePosition-uCameraLocal);
+          vec3 N=normalize(vLocalNormal);
+          if(dot(incoming,N)>0.)N=-N;
+          float facing=max(dot(-incoming,N),0.);
+          float fresnel=.02037+.97963*pow(1.-facing,5.);
+          vec3 reflected=studioLight(reflect(incoming,N));
+          vec3 direction=refract(incoming,N,1./1.333);
+          vec3 point=vBottlePosition+direction*.012;
+          float travel=0.;
+          for(int j=0;j<38;j++){
+            float stepLength=clamp(-liquidDistance(point),.018,.16);
+            point+=direction*stepLength;travel+=stepLength;
+            if(liquidDistance(point)>0.)break;
+          }
+          vec3 outNormal=exitNormal(point);
+          vec3 outgoing=refract(direction,-outNormal,1.333);
+          bool totalInternal=dot(outgoing,outgoing)<.001;
+          if(totalInternal)outgoing=reflect(direction,-outNormal);
+          vec3 transmitted=studioLight(outgoing);
+          // Low optical density, neutral absorption, no opaque diffuse layer.
+          vec3 through=mix(vec3(.025),transmitted,.44)*exp(-travel*.018);
+          if(totalInternal)through=mix(through,studioLight(outgoing),.28);
+          vec3 color=mix(through,reflected,fresnel);
+          float rim=pow(1.-facing,3.);
+          float alpha=clamp(${isSurface?'.32':'.18'}+fresnel*.65+rim*.08,.18,.94);
+          gl_FragColor=vec4(color,alpha);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }`
     });
-    mat.onBeforeCompile=shader=>{
-      Object.assign(shader.uniforms,uniforms);
-      shader.vertexShader=waterGLSL+shader.vertexShader;
-      shader.fragmentShader=waterGLSL+radiusGLSL+shader.fragmentShader;
-      shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',surface?
-        'vec3 transformed=vec3(position.x,waterHeight(position.xz),position.z);vBottlePosition=transformed;':
-        '#include <begin_vertex>\nvBottlePosition=transformed;');
-      if(surface)shader.vertexShader=shader.vertexShader.replace('#include <beginnormal_vertex>',
-        '#include <beginnormal_vertex>\nfloat e=.015;objectNormal=normalize(vec3(-(waterHeight(position.xz+vec2(e,0.))-waterHeight(position.xz-vec2(e,0.)))/(2.*e),1.,-(waterHeight(position.xz+vec2(0.,e))-waterHeight(position.xz-vec2(0.,e)))/(2.*e)));');
-      shader.fragmentShader=shader.fragmentShader.replace('#include <clipping_planes_fragment>',
-        '#include <clipping_planes_fragment>\n'+(surface?
-          'if(length(vBottlePosition.xz)>bottleRadius(vBottlePosition.y)||vBottlePosition.y< -1.60||vBottlePosition.y>1.66)discard;':
-          'if(vBottlePosition.y>waterHeight(vBottlePosition.xz))discard;'));
-    };
-    mat.customProgramCacheKey=()=>surface?'water-surface-v2':'water-volume-v2';
-    return mat;
   }
   const innerPoints=[new THREE.Vector2(0,-1.60),...PROFILE.map(([y,r])=>new THREE.Vector2(r,y)),new THREE.Vector2(0,1.66)];
-  const innerGeometry=new THREE.LatheGeometry(innerPoints,80);
-  const waterBody=new THREE.Mesh(innerGeometry,liquidMaterial());bottle.add(waterBody);
-  const surfaceGeometry=new THREE.PlaneGeometry(RADIUS*2,RADIUS*2,64,64);surfaceGeometry.rotateX(-Math.PI/2);
-  const surface=new THREE.Mesh(surfaceGeometry,liquidMaterial(true));surface.frustumCulled=false;bottle.add(surface);
+  const innerGeometry=new THREE.LatheGeometry(innerPoints,192);
+  const waterBody=new THREE.Mesh(innerGeometry,liquidMaterial());waterBody.renderOrder=2;bottle.add(waterBody);
+  const surfaceGeometry=new THREE.PlaneGeometry(RADIUS*2,RADIUS*2,96,96);surfaceGeometry.rotateX(-Math.PI/2);
+  const surface=new THREE.Mesh(surfaceGeometry,liquidMaterial(true));surface.renderOrder=3;surface.frustumCulled=false;bottle.add(surface);
 
   // Thin clear PET, with modeled grip bands and stronger reflections at grazing angles.
   const outerPoints=[new THREE.Vector2(0,-1.634),new THREE.Vector2(.49,-1.634)];
-  for(let i=0;i<=160;i++){
-    const y=-1.60+i/160*3.26;
+  for(let i=0;i<=360;i++){
+    const y=-1.60+i/360*3.26;
     let r=radiusAtHeight(y)+.025;
+    if(y>-.9&&y<1.46){
+      const smoothRadius=(radiusAtHeight(y-.06)+2*radiusAtHeight(y-.03)+3*radiusAtHeight(y)+2*radiusAtHeight(y+.03)+radiusAtHeight(y+.06))/9;
+      r=Math.max(radiusAtHeight(y)+.012,smoothRadius+.032);
+    }
     if(y> -1.35&&y<.48){
       for(const band of [-1.16,-.89,-.62,-.35])r-=.016*Math.exp(-(((y-band)/.028)**2));
     }
     outerPoints.push(new THREE.Vector2(r,y));
   }
   outerPoints.push(new THREE.Vector2(0,1.66));
-  const bodyGeometry=new THREE.LatheGeometry(outerPoints,96);
-  const plastic=new THREE.MeshPhysicalMaterial({color:0x9aabb2,roughness:.045,metalness:.4,transparent:true,opacity:.20,depthWrite:false,clearcoat:1,clearcoatRoughness:.035,envMapIntensity:1,side:THREE.FrontSide});
-  plastic.onBeforeCompile=shader=>{
-    shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',
-      'diffuseColor.a=.12+.76*pow(1.-abs(dot(normal,normalize(vViewPosition))),2.);\n#include <opaque_fragment>');
-  };
+  const bodyGeometry=new THREE.LatheGeometry(outerPoints,192);
+  // Thin PET contributes reflected light without an opaque diffuse coat.
+  const plastic=new THREE.MeshPhysicalMaterial({color:0x000000,roughness:.035,metalness:0,transparent:true,opacity:.65,blending:THREE.AdditiveBlending,depthWrite:false,clearcoat:1,clearcoatRoughness:.025,envMapIntensity:2,side:THREE.FrontSide});
   const shell=new THREE.Mesh(bodyGeometry,plastic);shell.renderOrder=5;bottle.add(shell);
-  const backPlastic=plastic.clone();backPlastic.side=THREE.BackSide;backPlastic.opacity=.065;
-  const backShell=new THREE.Mesh(bodyGeometry,backPlastic);backShell.renderOrder=4;bottle.add(backShell);
-  const collarMat=new THREE.MeshPhysicalMaterial({color:0xd8e8ed,roughness:.10,metalness:.04,transparent:true,opacity:.6,depthWrite:false,clearcoat:1,envMapIntensity:1.7});
+  const backPlastic=plastic.clone();backPlastic.side=THREE.BackSide;backPlastic.opacity=.15;
+  const backShell=new THREE.Mesh(bodyGeometry,backPlastic);backShell.renderOrder=1;bottle.add(backShell);
+  const collarMat=new THREE.MeshPhysicalMaterial({color:0xffffff,roughness:.08,metalness:0,transparent:true,opacity:.28,depthWrite:false,clearcoat:1,envMapIntensity:1.4});
   for(const y of [1.49,1.55,1.61]){
     const collar=new THREE.Mesh(new THREE.TorusGeometry(.26,.016,10,96),collarMat);
     collar.rotation.x=Math.PI/2;collar.position.y=y;collar.renderOrder=6;bottle.add(collar);
@@ -117,20 +174,20 @@ export function createWaterScene(container, {fraction, paused: initiallyPaused, 
     new THREE.Vector2(0,1.64),new THREE.Vector2(.248,1.64),new THREE.Vector2(.27,1.66),
     new THREE.Vector2(.274,1.69),new THREE.Vector2(.274,1.86),new THREE.Vector2(.264,1.89),
     new THREE.Vector2(.235,1.901),new THREE.Vector2(0,1.901),
-  ],192);
+  ],384);
   const capPosition=capGeometry.attributes.position;
   for(let i=0;i<capPosition.count;i++){
     const x=capPosition.getX(i),y=capPosition.getY(i),z=capPosition.getZ(i),r=Math.hypot(x,z);
     if(r>.26&&y>1.67&&y<1.88){const scale=(r+.004*Math.cos(Math.atan2(z,x)*64))/r;capPosition.setX(i,x*scale);capPosition.setZ(i,z*scale);}
   }
   capGeometry.computeVertexNormals();
-  const cap=new THREE.Mesh(capGeometry,new THREE.MeshPhysicalMaterial({color:0xf7fafb,roughness:.22,metalness:.02,clearcoat:1,clearcoatRoughness:.16,envMapIntensity:1.4}));
+  const cap=new THREE.Mesh(capGeometry,new THREE.MeshPhysicalMaterial({color:0x25272b,roughness:.22,metalness:0,clearcoat:1,clearcoatRoughness:.16,envMapIntensity:1.4}));
   bottle.add(cap);
-  const seal=new THREE.Mesh(new THREE.TorusGeometry(.259,.019,12,96),new THREE.MeshPhysicalMaterial({color:0xf0f6f8,roughness:.25,clearcoat:1}));
+  const seal=new THREE.Mesh(new THREE.TorusGeometry(.259,.019,12,96),new THREE.MeshPhysicalMaterial({color:0x303236,roughness:.25,clearcoat:1}));
   seal.rotation.x=Math.PI/2;seal.position.y=1.62;bottle.add(seal);
 
   // Measurement marks are attached to the bottle, so turning it reveals its depth.
-  const markMaterial=new THREE.MeshBasicMaterial({color:0x7098aa,transparent:true,opacity:.36,depthWrite:false});
+  const markMaterial=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.18,depthWrite:false});
   for(const share of [.25,.5,.75]){
     const y=volume.solve(share);
     const radius=radiusAtHeight(y)+.028;
@@ -140,24 +197,23 @@ export function createWaterScene(container, {fraction, paused: initiallyPaused, 
   const shadow=new THREE.Mesh(new THREE.PlaneGeometry(4.5,4.5),new THREE.ShaderMaterial({
     transparent:true,depthWrite:false,
     vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-    fragmentShader:'varying vec2 vUv;void main(){float d=length((vUv-.5)*2.);float a=exp(-d*d*10.)*.16;gl_FragColor=vec4(.24,.35,.43,a);}',
+    fragmentShader:'varying vec2 vUv;void main(){float d=length((vUv-.5)*2.);float a=exp(-d*d*10.)*.4;gl_FragColor=vec4(0.,0.,0.,a);}',
   }));
   shadow.rotation.x=-Math.PI/2;shadow.position.y=-1.72;scene.add(shadow);
 
   let paused=initiallyPaused,disposed=false,frame=0,lastDraw=performance.now();
   let fill=fraction,yaw=-.28,pitch=.05,roll=-.08,targetYaw=yaw,targetPitch=pitch;
   let slopeX=.12,slopeZ=.03,velocityX=0,velocityZ=0;
-  let spin=0,tiltSpeed=0,dragging=false,pointerId=null,startX=0,startY=0,previousX=0,previousY=0,lastPointer=0,moved=0;
+  let spin=0,tiltSpeed=0,dragging=false,pointerId=null,previousX=0,previousY=0,lastPointer=0;
   const inverse=new THREE.Quaternion(),normal=new THREE.Vector3(),projected=new THREE.Vector3();
   const onDown=e=>{
     if(e.button!==undefined&&e.button!==0)return;
-    dragging=true;pointerId=e.pointerId;startX=previousX=e.clientX;startY=previousY=e.clientY;lastPointer=performance.now();moved=0;spin=0;tiltSpeed=0;
+    dragging=true;pointerId=e.pointerId;previousX=e.clientX;previousY=e.clientY;lastPointer=performance.now();spin=0;tiltSpeed=0;
     container.setPointerCapture(e.pointerId);container.focus({preventScroll:true});
   };
   const onMove=e=>{
     if(!dragging||e.pointerId!==pointerId)return;
     const now=performance.now(),dt=Math.max(.012,(now-lastPointer)/1000),dx=e.clientX-previousX,dy=e.clientY-previousY;
-    moved+=Math.abs(dx)+Math.abs(dy);
     targetYaw+=dx*.008;targetPitch=THREE.MathUtils.clamp(targetPitch+dy*.007,-.72,.72);
     spin=THREE.MathUtils.clamp(dx*.006/dt,-3,3);tiltSpeed=THREE.MathUtils.clamp(dy*.004/dt,-2,2);
     velocityX+=THREE.MathUtils.clamp(-dx*.015,-.32,.32);
@@ -165,24 +221,19 @@ export function createWaterScene(container, {fraction, paused: initiallyPaused, 
     if(!paused)waves.impulse(Math.sin(targetYaw)*.35,Math.cos(targetYaw)*.3,Math.min(.6,Math.hypot(dx,dy)*.012));
     previousX=e.clientX;previousY=e.clientY;lastPointer=now;
   };
-  function splash(){
-    if(paused)return;
-    waves.impulse(.22,-.12,2.5);waves.impulse(-.2,.14,-1.4);velocityX+=.7;velocityZ-=.35;
-  }
   const onUp=e=>{
     if(e.pointerId!==pointerId)return;
     dragging=false;if(container.hasPointerCapture(e.pointerId))container.releasePointerCapture(e.pointerId);
-    if(moved<7)splash();pointerId=null;
+    pointerId=null;
   };
   const onCancel=()=>{if(pointerId===null)return;dragging=false;pointerId=null;spin=0;tiltSpeed=0;};
   const onKey=e=>{
-    if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' ','r','R'].includes(e.key))return;
+    if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','r','R'].includes(e.key))return;
     e.preventDefault();
     if(e.key==='ArrowLeft'){targetYaw-=.24;velocityX-=.5;}
     if(e.key==='ArrowRight'){targetYaw+=.24;velocityX+=.5;}
     if(e.key==='ArrowUp'){targetPitch=Math.max(-.72,targetPitch-.16);velocityZ-=.5;}
     if(e.key==='ArrowDown'){targetPitch=Math.min(.72,targetPitch+.16);velocityZ+=.5;}
-    if(e.key===' ')splash();
     if(e.key.toLowerCase()==='r'){targetYaw=-.28;targetPitch=.05;spin=0;tiltSpeed=0;waves.clear();}
   };
   for(const [name,handler] of Object.entries({pointerdown:onDown,pointermove:onMove,pointerup:onUp,pointercancel:onCancel,lostpointercapture:onCancel,keydown:onKey}))container.addEventListener(name,handler);
@@ -202,6 +253,8 @@ export function createWaterScene(container, {fraction, paused: initiallyPaused, 
     bottle.rotation.set(pitch,yaw,roll,'YXZ');
     bottle.position.y=.035+Math.abs(pitch)*.17+Math.abs(roll)*.12;
     bottle.updateMatrixWorld();
+    uniforms.uCameraLocal.value.copy(camera.position);bottle.worldToLocal(uniforms.uCameraLocal.value);
+    uniforms.uBottleRotation.value.setFromMatrix4(bottle.matrixWorld);
     inverse.copy(bottle.quaternion).invert();
     normal.set(-slopeX,1,-slopeZ).normalize().applyQuaternion(inverse);
     const ny=Math.max(.30,normal.y);
