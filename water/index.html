@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080b10">
+  <title>Water / The hidden current of AI — Manu.Vision</title>
+  <meta name="description" content="A living 3D visualization of AI’s estimated global water footprint. Explore today’s consumption and an illustrative historical model, with transparent research and assumptions.">
+  <link rel="canonical" href="https://manu.vision/water/">
+  <meta property="og:title" content="Water / The hidden current of AI">
+  <meta property="og:description" content="A clock-driven visualization of the water behind artificial intelligence. Research-based estimates, made visible.">
+  <meta property="og:type" content="website"><meta property="og:url" content="https://manu.vision/water/">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%237ce3ee' d='M32 3C25 16 12 29 12 41a20 20 0 0 0 40 0C52 29 39 16 32 3Z'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="wordmark" href="https://manu.vision" aria-label="Manu.Vision home"><svg viewBox="0 0 24 28" aria-hidden="true"><path d="M12 2C9 8 3 14 3 19a9 9 0 0 0 18 0C21 14 15 8 12 2Z"/></svg><span>WATER<span class="wordmark-divider">/</span><span class="byline">MANU.VISION</span></span></a>
+    <button class="glass-button" id="open-method" type="button">Research & model <span aria-hidden="true">↗</span></button>
+  </header>
+
+  <main>
+    <div class="topline"><span><i class="status-dot"></i> GLOBAL AI WATER FOOTPRINT</span><time id="world-clock">UTC CLOCK</time></div>
+    <section class="experience" aria-labelledby="title">
+      <div class="readout">
+        <p class="eyebrow">THE HIDDEN CURRENT OF AI</p>
+        <h1 id="title">Intelligence flows.<br><span>Water follows.</span></h1>
+        <div class="today-label"><span>Consumed today</span><span class="micro-pill">ESTIMATE</span></div>
+        <div class="hero-number" id="today-value" aria-label="Estimated liters consumed today">—</div>
+        <div class="unit-line"><span>liters worldwide</span><span class="midnight-note">since 00:00 UTC</span></div>
+        <p class="scope">The water behind AI data centers.<br>On-site cooling + electricity generation.</p>
+        <fieldset class="scenario-control"><legend>2025 study range · reference rate held constant</legend><div class="segmented"><label><input type="radio" name="scenario" value="low"><span>Lower</span></label><label><input type="radio" name="scenario" value="central" checked><span>Central estimate</span></label><label><input type="radio" name="scenario" value="high"><span>Upper</span></label></div></fieldset>
+      </div>
+      <div class="vessel-area">
+        <div class="vessel-halo" aria-hidden="true"></div>
+        <div id="scene" role="img" aria-label="A liquid glass sphere whose water volume tracks the fraction of the UTC day elapsed"></div>
+        <div class="vessel-top-label"><span class="crosshair">+</span> ONE DAY. ONE VESSEL.</div>
+        <div class="vessel-side-label" aria-hidden="true">24H<span></span>00H</div>
+        <div class="vessel-caption"><span class="tiny-line"></span><span><b id="day-percent">—</b> of the UTC day<br><small>Water volume follows the clock</small></span></div>
+        <button class="motion-button" id="toggle-motion" type="button" aria-pressed="false" aria-label="Pause animation"><svg id="pause-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg><span id="motion-text">Pause motion</span></button>
+        <p id="graphics-status" class="graphics-status" hidden>3D is unavailable on this device. The live estimates remain active.</p>
+      </div>
+    </section>
+
+    <section class="metrics" aria-label="Water consumption estimates">
+      <div class="metric history-metric"><div class="metric-label">Since 2012 <span class="micro-pill">BACKCAST</span></div><div class="metric-value"><span id="history-value">—</span><span class="metric-unit">liters</span></div><p>Illustrative history · modern deep-learning era</p></div>
+      <div class="metric"><div class="metric-label"><i class="status-dot"></i> The current flow</div><div class="metric-value"><span id="rate-value">—</span><span class="metric-unit">L / sec</span></div><p>Clock-driven estimate · global operations</p></div>
+      <div class="metric annual-metric"><div class="metric-label">Annual reference</div><div class="metric-value"><span id="annual-value">538.55</span><span class="metric-unit">billion L</span></div><p>2025 research · cooling + power</p></div>
+    </section>
+    <footer><p><span class="footer-dot"></span> A living estimate, not a live meter.</p><button id="open-notes" type="button">Follow the numbers <span aria-hidden="true">↗</span></button><a href="https://manu.vision">An exploration by Manu.Vision</a></footer>
+    <noscript><p class="noscript">Enable JavaScript for the animated visualization and counters. The 2025 study estimates 312.5–764.6 billion liters annually. <a href="https://doi.org/10.1016/j.patter.2025.101430">Read the research.</a></p></noscript>
+  </main>
+
+  <dialog id="method-dialog" aria-labelledby="method-title">
+    <div class="dialog-top"><span class="eyebrow">BEHIND THE NUMBERS</span><button id="close-method" class="close-button" aria-label="Close research and model" type="button">×</button></div>
+    <h2 id="method-title">An estimate.<br><span>With the workings visible.</span></h2>
+    <p class="dialog-intro">No global live meter separates AI’s water use from other computing. These counters turn published research into a continuous, clock-driven model.</p>
+    <section><h3>01 / What we count</h3><p>Operational water <strong>consumption</strong> from AI workloads worldwide: water consumed by data-center cooling and by the electricity they use. Manufacturing is excluded. Consumption refers to water removed from the immediate water environment, often through evaporation. It is different from withdrawal, which includes water subsequently returned.</p></section>
+    <section><h3>02 / The annual anchor</h3><p>Alex de Vries-Gao’s study in <em>Patterns</em>, published online December 17, 2025, estimates <strong>312.5–764.6 billion liters for 2025</strong>. Our central scenario is the arithmetic midpoint, <strong>538.55 billion liters</strong>. These are scenarios within a published estimate range, not confidence bounds or live observations.</p><a class="source-link" href="https://doi.org/10.1016/j.patter.2025.101430" target="_blank" rel="noopener noreferrer">The carbon and water footprints of data centers and what this could mean for artificial intelligence ↗</a><p>From 2025 onward, we hold the chosen annual total constant. This is a reference-rate scenario, not a claim that water use stopped growing. Water intensity, power sources, and cooling technology can change independently of AI demand.</p><div class="formula">Today = annual liters × elapsed seconds today ÷ seconds in the UTC year</div><p>Every counter recalculates from the device’s UTC clock. “Today” resets at 00:00 UTC worldwide. Leap years use their actual duration. There is no per-request telemetry and no assumption that all facilities run at an identical measured rate.</p></section>
+    <section><h3>03 / Why history begins in 2012</h3><p>There is no established single date when the first AI data center was invented. AI used shared computing infrastructure long before dedicated facilities. We choose <strong>January 1, 2012</strong> as a calendar baseline for the modern deep-learning era associated with AlexNet. It is a display convention, not a facility’s opening date.</p><a class="source-link" href="https://papers.nips.cc/paper_files/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html" target="_blank" rel="noopener noreferrer">Krizhevsky, Sutskever & Hinton · ImageNet classification, 2012 ↗</a><p>For 2012–2024, we extrapolate backward from the chosen 2025 anchor using an <strong>assumed 50% annual growth rate</strong>. This is an illustrative assumption we selected, not a measured historical series or a growth rate established by the paper.</p><div class="formula">Annual liters(y) = 2025 anchor ÷ 1.5<sup>(2025 − y)</sup><br>Cumulative = completed years + elapsed fraction of this year</div><p>History is especially uncertain: using 25%, 50%, or 100% historical growth produces about 2.57, 1.61, or 1.08 trillion liters through the end of 2025 at the central anchor. The lower/upper buttons vary the annual anchor only; they do not capture all historical uncertainty.</p></section>
+    <section><h3>04 / Reading the vessel</h3><p>The sphere’s filled <strong>volume</strong> represents the fraction of the current UTC day elapsed, against that day’s modeled total. Its fill resets at midnight. Ripples, reflections, and floating particles are illustrative. Pause motion freezes the artwork while the numerical estimates continue. Reduced-motion preferences are respected.</p></section>
+    <section><h3>05 / Further context</h3><p>Li et al. distinguish a projected 2027 AI water <em>withdrawal</em> of 4.2–6.6 billion cubic meters from <em>consumption</em> of 0.38–0.60 billion cubic meters. We do not substitute the larger withdrawal figure for consumption.</p><a class="source-link" href="https://arxiv.org/html/2304.03271v5" target="_blank" rel="noopener noreferrer">Making AI Less “Thirsty” · version 5, March 26, 2025 ↗</a><p>The IEA’s April 2026 outlook projects roughly a tripling of AI-focused data-center electricity use from 2025 to 2030. Electricity growth alone does not establish equivalent water growth, so we do not automatically apply it to this counter.</p><a class="source-link" href="https://www.iea.org/reports/key-questions-on-energy-and-ai/executive-summary" target="_blank" rel="noopener noreferrer">IEA · Key Questions on Energy and AI, April 2026 ↗</a></section>
+    <p class="model-version">Model 1.0 · Research reviewed September 9, 2026 · All volumes in liters</p>
+  </dialog>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
