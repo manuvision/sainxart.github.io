@@ -19,9 +19,8 @@ export const COPY = {
     sceneLabel: 'Faites glisser pour tourner la bouteille. Flèches du clavier pour l’incliner, R pour la recentrer.',
     sceneRole: 'bouteille 3D interactive', close: 'Fermer', navLabel: 'Langue et informations',
     counterLabel: 'Estimation des litres perdus ou non comptabilisés depuis minuit en Guadeloupe',
-    title: 'dlo · Guadeloupe — Manu.Vision',
-    description: 'Les pertes du réseau d’eau potable en Guadeloupe, rendues visibles. Une estimation au fil de la journée, fondée sur les données publiques de 2023.',
-    ogDescription: 'Environ 122 millions de litres perdus ou non comptabilisés par jour. Données publiques 2023.',
+    title: 'dlo — L’eau perdue en Guadeloupe | Manu.Vision',
+    description: 'En Guadeloupe, environ 122 millions de litres d’eau sont perdus ou non comptabilisés par jour. Une visualisation fondée sur le bilan public de 2023.',
     millionLitres: 'millions de litres',
     modal: `
 <p class="intro">dlo, c’est l’eau en créole. En Guadeloupe, on peut consulter un calendrier pour savoir quand l’eau sera coupée. J’ai voulu partir de là.</p>
@@ -46,9 +45,8 @@ export const COPY = {
     sceneLabel: 'Drag to rotate the bottle. Arrow keys tilt it. R resets it.',
     sceneRole: 'interactive 3D bottle', close: 'Close', navLabel: 'Language and information',
     counterLabel: 'Estimated litres lost or unaccounted for since midnight in Guadeloupe',
-    title: 'dlo · Guadeloupe — Manu.Vision',
+    title: 'dlo — Water lost in Guadeloupe | Manu.Vision',
     description: 'Water losses in Guadeloupe’s drinking-water network, made visible. An estimate through the day, based on public 2023 data.',
-    ogDescription: 'About 122 million litres lost or unaccounted for per day. Public 2023 data.',
     millionLitres: 'million litres',
     modal: `
 <p class="intro">dlo means water in Creole. In Guadeloupe, you can check a timetable to find out when the water will be cut off. I wanted to start there.</p>

@@ -1,5 +1,5 @@
 import { estimateAt, TIME_ZONE } from './model.js?v=5';
-import { COPY } from './content.js?v=5';
+import { COPY } from './content.js?v=6';
 const $ = id => document.getElementById(id);
 let language = 'fr';
 try { if (localStorage.getItem('dlo-language') === 'en') language = 'en'; } catch {}
@@ -31,11 +31,9 @@ function applyLanguage() {
   decimal = new Intl.NumberFormat(locale, {minimumFractionDigits: 1, maximumFractionDigits: 1});
   clock = new Intl.DateTimeFormat(locale, {timeZone: TIME_ZONE, hour: '2-digit', minute: '2-digit', hourCycle: 'h23'});
   document.documentElement.lang = language;
+  // The canonical social card stays French; the page language is a local preference.
   document.title = text.title;
   document.querySelector('meta[name="description"]').content = text.description;
-  document.querySelector('meta[property="og:title"]').content = text.title.replace(' — Manu.Vision', '');
-  document.querySelector('meta[property="og:description"]').content = text.ogDescription;
-  document.querySelector('meta[property="og:locale"]').content = language === 'fr' ? 'fr_FR' : 'en_GB';
   document.querySelectorAll('[data-i18n]').forEach(node => { node.textContent = text[node.dataset.i18n]; });
   $('method-content').innerHTML = text.modal;
   $('language-toggle').textContent = language === 'fr' ? 'EN' : 'FR';
