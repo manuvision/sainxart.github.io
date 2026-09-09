@@ -1,0 +1,25 @@
+GUADELOUPE GEOGRAPHIC BACKGROUND
+
+Map data: IGN ADMIN EXPRESS, adapted by Etalab / DINUM.
+Official catalogue: https://www.data.gouv.fr/datasets/contours-administratifs
+Original download: https://etalab-datasets.geo.data.gouv.fr/contours-administratifs/latest/geojson/departements-100m.geojson.gz
+Source pipeline: https://github.com/datagouv/contours-administratifs
+Data licence stated by the combined source catalogue: Open Data Commons Open Database License (ODbL) 1.0.
+Licence: https://opendatacommons.org/licenses/odbl/1-0/
+
+This distribution preserves the catalogue's ODbL attribution, although Guadeloupe specifically comes from IGN ADMIN EXPRESS. Data.gouv combines IGN geometry for France and DROM with other sources for COM.
+
+Retrieved: 9 September 2026.
+Source file timestamp in the official directory: 4 May 2026.
+Feature selected: department code 971, Guadeloupe.
+Source simplification: 100 metres; 14 polygons, all retained.
+
+The geographical data in map.js and the accompanying guadeloupe-source.geojson are made available under ODbL 1.0. The source feature is included for reuse. The JavaScript rendering logic does not impose a licence change on the rest of the website.
+
+Processing: local equirectangular projection centred on the source bounding box; longitude distance adjusted by cosine of centre latitude; uniform scale to 5 scene units wide; coordinates rounded to five decimal scene units; duplicate closing points removed. The original source feature has been retained without changing its geometry. No new geographic points were invented.
+
+Interpretation: north up, original relative island positions. The 0.081-unit uniform extrusion is a graphic treatment, not measured terrain elevation. The map displays no pipe network, leak locations or water-loss distribution.
+
+Suggested visible credit:
+FR: Carte : IGN / Etalab-DINUM, contours simplifies (ODbL).
+EN: Map: IGN / Etalab-DINUM, simplified outlines (ODbL).
