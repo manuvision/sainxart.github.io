@@ -1,5 +1,5 @@
 import * as THREE from '../vendor/three.module.min.js';
-import {PocketGame} from './game.js?v=tideleaf-20260909';
+import {PocketGame} from './game.js?v=tideleaf-redraw-20260909';
 
 const stage=document.querySelector('#stage');
 const screenCanvas=document.createElement('canvas');screenCanvas.width=240;screenCanvas.height=160;

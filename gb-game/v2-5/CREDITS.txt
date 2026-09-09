@@ -8,7 +8,9 @@ Visual reference maps: Treasure Beach, Bond Bridge and Berry Forest,
 archived by The Spriters Resource.
 https://www.spriters-resource.com/game_boy_advance/pokemonfireredleafgreen/
 
-New map arrangement, palette adaptations and component edits: ManuVision.
+Map arrangement and native Aseprite paintovers: ManuVision.
+Revised foliage, timber frames, woven furnishings, terrain textures and
+shared palette adaptations retain source underlays in the editable masters.
 The adapted environment is derivative artwork, not an original or
 copyright-cleared replacement for the source game graphics. This project
 is not affiliated with or endorsed by the original rights holders.
