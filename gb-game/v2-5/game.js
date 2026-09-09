@@ -3,6 +3,13 @@ const TILE=16,FOOT_OFFSET=13;
 const FACING={north:'up',south:'down',west:'left',east:'right'};
 const SAVE_KEY='manu.vision:gb-game:v2-5:inventory';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const LEAF_BURST_DURATION=.35;
+const LEAF_POSES=[
+ [[-3,-1],[2,-3],[-1,2],[4,1]],
+ [[-6,-4],[5,-7],[-3,0],[7,-2]],
+ [[-8,-3],[7,-6],[-4,3],[10,0]],
+ [[-10,0],[9,-3],[-5,6],[12,4]],
+];
 
 class PocketSound{
  constructor(){this.enabled=false;this.ctx=null;this.nextNote=0;this.note=0;}
@@ -22,15 +29,17 @@ export class PocketGame{
   this.onChange=onChange;this.player={x:184,y:189,dir:'south'};this.room='town';this.held=new Map();this.walking=false;this.walkTime=0;this.step=null;
   this.paused=false;this.dialog=null;this.clock=0;this.toastUntil=4;this.ready=false;this.visited=new Set();this.sound=new PocketSound();this.transition=0;this.warp=null;
   this.motion=null;this.pendingAction=null;this.equipped=false;this.pickups=new Set();this.clips={};this.storage=null;
+  this.cutVegetation=new Set();this.vegetationBursts=[];
   try{this.storage=Object.hasOwn(options,'storage')?options.storage:globalThis.localStorage;const saved=JSON.parse(this.storage?.getItem(SAVE_KEY)??'null');if(saved?.machete===true){this.equipped=true;this.pickups.add('machete');}}catch{}
  }
  async load(){
   const loadImage=src=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Unable to load '+src));im.src=src;});
-  const asset=name=>new URL('./assets/'+name+'?v=tideleaf-redraw-20260909',import.meta.url).href;
+  const asset=name=>new URL('./assets/'+name+'?v=tideleaf-licensed-20260909',import.meta.url).href;
   const loadJSON=async name=>{const r=await fetch(asset(name));if(!r.ok)throw new Error('Missing '+name);return r.json();};
   [this.mapImage,this.sprites,this.atlas,this.world,this.equippedImage,this.equippedAtlas,this.rollImage,this.rollAtlas,this.itemImage]=await Promise.all([loadImage(asset('town-atlas.png')),loadImage(asset('raccoon-master.png')),loadJSON('raccoon-master.json'),loadJSON('world.json'),loadImage(asset('raccoon-machete.png')),loadJSON('raccoon-machete.json'),loadImage(asset('raccoon-roll.png')),loadJSON('raccoon-roll.json'),loadImage(asset('machete-item.png'))]);
   for(const direction of Object.keys(FACING))for(const kind of ['idle','walk','attack','roll'])this.clips[kind+'_'+direction]=(kind==='roll'?this.rollAtlas:this.equippedAtlas).frames.filter(f=>f.filename.startsWith(kind+'_'+direction+'_'));
   [this.player.x,this.player.y]=this.world.spawn;
+  this.cutVegetation.clear();this.vegetationBursts=[];
   this.ready=true;this.notify();this.draw();
  }
  get map(){return this.room==='town'?this.world.town:this.world.rooms[this.room];}
@@ -104,15 +113,41 @@ export class PocketGame{
   this.pendingAction=null;this.walking=false;this.walkTime=0;this.notify();
  }
  advanceMotion(dt){
-  const m=this.motion,frames=this.clips[m.kind+'_'+m.dir];m.elapsed=Math.min(m.duration,m.elapsed+dt);
+  const m=this.motion,frames=this.clips[m.kind+'_'+m.dir],previous=m.elapsed;m.elapsed=Math.min(m.duration,m.elapsed+dt);
   let elapsed=m.elapsed*1000,index=0;while(index<frames.length-1&&elapsed>=frames[index].duration){elapsed-=frames[index].duration;index++;}
   m.frame=index;m.active=!!frames[index].active;
+  if(m.kind==='attack'){
+   // Process crossed active intervals too, so a dropped render frame cannot
+   // skip contact. Recovery/settle frames never introduce a new hit.
+   let start=0;
+   for(let i=0;i<frames.length;i++){
+    const end=start+frames[i].duration/1000;
+    if((i===2||i===3)&&frames[i].active&&previous<end&&m.elapsed>=start)this.cutVegetationAhead(m.dir,i);
+    start=end;
+   }
+  }
   if(m.kind==='roll'){
    const start=frames[index].rootMotion.progress,end=frames[Math.min(index+1,frames.length-1)].rootMotion.progress;
    const progress=start+(end-start)*Math.min(1,elapsed/frames[index].duration);
    this.player.x=m.from.x+(m.to.x-m.from.x)*progress;this.player.y=m.from.y+(m.to.y-m.from.y)*progress;
   }
   if(m.elapsed>=m.duration){Object.assign(this.player,m.to);this.motion=null;this.walkTime=0;this.notify();}
+ }
+ vegetationInRoom(){return (this.world?.vegetation??[]).filter(v=>(v.room??'town')===this.room);}
+ cutVegetationAhead(direction,attackFrame){
+  if(!this.equipped||!this.motion||this.motion.kind!=='attack'||(attackFrame!==2&&attackFrame!==3))return;
+  const [dx,dy]=DIRECTIONS[FACING[direction]],col=Math.round((this.player.x-8)/TILE),row=Math.round((this.player.y-FOOT_OFFSET)/TILE);
+  const targets=[[col,row],[col+dx,row+dy]].filter(([x,y])=>this.canStand(x*TILE+8,y*TILE+FOOT_OFFSET));
+  let cut=false;
+  for(const v of this.vegetationInRoom()){
+   if(this.cutVegetation.has(v.id)||!targets.some(([x,y])=>v.x===x*TILE&&v.y===y*TILE))continue;
+   this.cutVegetation.add(v.id);this.vegetationBursts.push({id:v.id,room:this.room,x:v.x+8,y:v.y+8,elapsed:0,attackFrame});cut=true;
+  }
+  if(cut)this.sound.tone(720,.055,.009,'triangle');
+ }
+ advanceVegetationEffects(dt){
+  for(const burst of this.vegetationBursts)burst.elapsed+=dt;
+  this.vegetationBursts=this.vegetationBursts.filter(b=>b.elapsed<LEAF_BURST_DURATION);
  }
  message(title,text){this.dialog={title,text};this.walking=false;this.notify();}
  beginWarp(destination){this.warp={...destination,elapsed:0};this.step=null;this.motion=null;this.clear();}
@@ -144,6 +179,7 @@ export class PocketGame{
   }
   const previousPrompt=this.prompt();this.walking=false;
   if(!this.paused&&!this.dialog&&this.transition===0){
+   this.advanceVegetationEffects(dt);
    if(this.motion){this.advanceMotion(dt);this.draw();return;}
    if(this.pendingAction&&!this.step){const action=this.pendingAction;this.pendingAction=null;this.performAction(action);this.draw();return;}
    const actions=[...this.held.values()];const direction=actions.filter(a=>DIRECTIONS[a]).at(-1);
@@ -172,6 +208,7 @@ export class PocketGame{
   const cameraX=Math.round(w<240?(w-240)/2:clamp(this.player.x-120,0,w-240));
   const cameraY=Math.round(h<160?(h-160)/2:clamp(this.player.y-(this.world.cameraOffsetY??85),0,h-160));
   c.drawImage(this.mapImage,sx,sy,w,h,-cameraX,-cameraY,w,h);
+  this.drawVegetation(cameraX,cameraY,false);
   // Object bases and the raccoon's feet share one depth order. Canopies can overhang paths.
   const objects=this.map.objects??[];
   const drawObject=o=>{const [x,y,w,h]=this.world.assets[o.asset];c.drawImage(this.mapImage,x,y,w,h,o.x-cameraX,o.y-cameraY,w,h);};
@@ -181,8 +218,10 @@ export class PocketGame{
   c.fillStyle='#223d4430';c.beginPath();c.ellipse(px,py-1,5,2,0,0,Math.PI*2);c.fill();
   const pose=this.spritePose(),f=pose.frame.frame,pivot=pose.frame.pivot??{x:8,y:32};
   c.save();c.translate(px-(pose.mirrored?1:0),py);if(pose.mirrored)c.scale(-1,1);c.drawImage(pose.image,f.x,f.y,f.w,f.h,-pivot.x,-pivot.y,f.w,f.h);c.restore();
+  this.drawVegetation(cameraX,cameraY,true);
   this.drawPickups(cameraX,cameraY,true);
   for(const o of objects)if(o.depth>this.player.y)drawObject(o);
+  this.drawVegetationBursts(cameraX,cameraY);
   if(this.clock<this.toastUntil&&!this.dialog){
    const name=this.map.name.toUpperCase();c.font='bold 8px monospace';const width=Math.min(224,c.measureText(name).width+18);
    c.fillStyle='#f6f1da';c.fillRect(6,6,width,18);c.fillStyle='#273d3a';c.fillRect(6,22,width,2);c.fillText(name,14,18);
@@ -199,6 +238,29 @@ export class PocketGame{
   const offset={south:0,east:1,north:2,west:1}[this.player.dir],index=this.walking?3+offset*4+Math.floor(this.walkTime/.16)%4:offset;
   return {sheet:'raccoon-master',image:this.sprites,tag:(this.walking?'walk_':'idle_')+this.player.dir,index,frame:this.atlas.frames[index],mirrored:this.player.dir==='west'};
  }
+ drawVegetation(cameraX,cameraY,foreground){
+  const draw=(asset,v)=>{const rect=this.world.assets[asset];if(!rect)return;const [sx,sy,w,h]=rect;this.ctx.drawImage(this.mapImage,sx,sy,w,h,v.x-cameraX,v.y-cameraY,w,h);};
+  for(const v of this.vegetationInRoom()){
+   if(this.cutVegetation.has(v.id)){if(!foreground)draw(v.stubbleAsset,v);continue;}
+   if(!foreground)draw(v.backAsset??v.asset,v);
+   // On the same ground tile, low front leaves cover the legs/waist. A
+   // plant behind the feet must not paint over the raccoon's face.
+   if((v.y+FOOT_OFFSET>=this.player.y)===foreground)draw(v.frontAsset,v);
+  }
+ }
+ drawVegetationBursts(cameraX,cameraY){
+  const c=this.ctx;
+  for(const burst of this.vegetationBursts){
+   if(burst.room!==this.room)continue;
+   const pose=LEAF_POSES[Math.min(3,Math.floor(burst.elapsed/LEAF_BURST_DURATION*4))];
+   for(let i=0;i<pose.length;i++){
+    const [dx,dy]=pose[i],x=Math.round(burst.x+dx-cameraX),y=Math.round(burst.y+dy-cameraY),rect=this.world.assets['vegetation_leaf_'+i];
+    if(rect){const [sx,sy,w,h]=rect;c.drawImage(this.mapImage,sx,sy,w,h,x-Math.floor(w/2),y-Math.floor(h/2),w,h);}
+    else{c.fillStyle='#499250';c.fillRect(x-1,y,3,1);c.fillStyle='#95cb68';c.fillRect(x,y-1,2,1);}
+   }
+  }
+ }
+ vegetationSnapshot(){return {cutIds:[...this.cutVegetation],standingIds:this.vegetationInRoom().filter(v=>!this.cutVegetation.has(v.id)).map(v=>v.id),bursts:this.vegetationBursts.map(b=>({...b,duration:LEAF_BURST_DURATION,frame:Math.min(3,Math.floor(b.elapsed/LEAF_BURST_DURATION*4))}))};}
  drawPickups(cameraX,cameraY,foreground){
   const c=this.ctx;
   for(const item of this.world.interactables??[]){
@@ -219,5 +281,5 @@ export class PocketGame{
   for(const word of words){const next=line?line+' '+word:word;if(c.measureText(next).width>207){lines.push(line);line=word;}else line=next;}if(line)lines.push(line);
   lines.slice(0,3).forEach((l,i)=>c.fillText(l,15,123+i*10));c.fillStyle='#728878';c.fillRect(222,143,3,3);
  }
- getSnapshot(){const pose=this.ready?this.spritePose():null;return {ready:this.ready,room:this.room,player:{...this.player},tile:{x:Math.floor(this.player.x/TILE),y:Math.floor(this.player.y/TILE),size:TILE},movingTo:this.step?{x:this.step.toX,y:this.step.toY}:null,action:this.motion?structuredClone(this.motion):null,pendingAction:this.pendingAction,equipped:this.equipped,pickups:[...this.pickups],sprite:pose?{sheet:pose.sheet,tag:pose.tag,frame:pose.index,source:pose.frame.frame,mirrored:pose.mirrored}:null,warping:!!this.warp,walking:this.walking,paused:this.paused,dialog:this.dialog,visited:[...this.visited],sound:this.sound.enabled,prompt:this.prompt()};}
+ getSnapshot(){const pose=this.ready?this.spritePose():null;return {ready:this.ready,room:this.room,player:{...this.player},tile:{x:Math.floor(this.player.x/TILE),y:Math.floor(this.player.y/TILE),size:TILE},movingTo:this.step?{x:this.step.toX,y:this.step.toY}:null,action:this.motion?structuredClone(this.motion):null,pendingAction:this.pendingAction,equipped:this.equipped,pickups:[...this.pickups],vegetation:this.vegetationSnapshot(),sprite:pose?{sheet:pose.sheet,tag:pose.tag,frame:pose.index,source:pose.frame.frame,mirrored:pose.mirrored}:null,warping:!!this.warp,walking:this.walking,paused:this.paused,dialog:this.dialog,visited:[...this.visited],sound:this.sound.enabled,prompt:this.prompt()};}
 }

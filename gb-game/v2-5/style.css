@@ -15,3 +15,4 @@ body{background:#000}
 .studio-link{position:fixed;z-index:5;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:10px 14px;border:1px solid #293b32;border-radius:24px;color:#c2d7c6;background:rgba(9,18,13,.84);font-size:12px;line-height:1;text-decoration:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .studio-link:hover{background:#14231b;border-color:#536e59}
 .studio-link:focus-visible{outline:2px solid #c7e7ae;outline-offset:3px}
+.credits-link{position:fixed;z-index:5;right:max(18px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));min-height:44px;display:flex;align-items:center;color:#84978c;font:11px system-ui;text-underline-offset:3px;touch-action:manipulation}.credits-link:focus-visible{outline:2px solid #c7e7ae;outline-offset:3px}

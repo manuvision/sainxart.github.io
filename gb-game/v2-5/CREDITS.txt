@@ -1,19 +1,22 @@
-TIDELEAF COVE — v2.5
+TIDELEAF COVE — v2.5, licensed environment revision, 2026-09-09
 
-Environment graphics adapted from Pokémon FireRed / LeafGreen.
-Original game graphics: Game Freak / Nintendo / The Pokémon Company.
-Source tiles, metatile definitions and palettes: pret/pokefirered.
-https://github.com/pret/pokefirered
-Visual reference maps: Treasure Beach, Bond Bridge and Berry Forest,
-archived by The Spriters Resource.
-https://www.spriters-resource.com/game_boy_advance/pokemonfireredleafgreen/
+Environment buildings, trees, flowers, shrubs and planters adapted from Serene Village — revamped
+v1.9 by LimeZu. Native 16x16 source artwork.
+https://limezu.itch.io/serenevillagerevamped
+Creative Commons Attribution 4.0 International (CC BY 4.0).
+https://creativecommons.org/licenses/by/4.0/
 
-Map arrangement and native Aseprite paintovers: ManuVision.
-Revised foliage, timber frames, woven furnishings, terrain textures and
-shared palette adaptations retain source underlays in the editable masters.
-The adapted environment is derivative artwork, not an original or
-copyright-cleared replacement for the source game graphics. This project
-is not affiliated with or endorsed by the original rights holders.
+Changes by ManuVision: teal roof/water palette and quieter grass, isolated
+complete tree sprites, new terrain transitions and texture arrangements,
+new village layout. The bridge, sign, interior rooms/furniture, undergrowth,
+cut stubble and leaf particles were drawn from blank native-pixel canvases
+with a shared palette. The environment adaptations retain CC BY 4.0
+attribution. No endorsement by LimeZu is implied.
+
+This v2.5 revision replaces the previous FireRed-derived environment atlas.
+Older version routes are separate archives and are not covered by this
+environment asset/license record. No claim of exclusive ownership of
+LimeZu's artwork or of certified legal clearance is made.
 
 Original raccoon: ManuVision; exact user-corrected production sprites.
 Original machete and roll animation: ManuVision; native Aseprite assets.
