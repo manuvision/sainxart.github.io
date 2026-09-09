@@ -33,6 +33,7 @@ function clear(){for(const timer of releaseTimers.values())clearTimeout(timer);r
 function pulse(action){const id='pulse-'+action;press(action,id);releaseAfter(id,140);}
 window.addEventListener('keydown',event=>{
  if(event.ctrlKey||event.metaKey||event.altKey)return;
+ if(event.target.closest?.('.studio-link'))return;
  if(event.target.closest?.('.hardware-button')&&(event.code==='Space'||event.code==='Enter'))return;
  const action=keys[event.code];if(!action)return;
  event.preventDefault();if(!event.repeat)press(action,'key-'+event.code);
