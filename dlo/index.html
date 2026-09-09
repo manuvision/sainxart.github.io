@@ -23,7 +23,7 @@
 <meta name="twitter:image" content="https://manu.vision/dlo/og-dlo-v1.png">
 <meta name="twitter:image:alt" content="dlo — L’eau perdue en Guadeloupe. Une bouteille d’eau transparente sur fond sombre.">
 <meta name="robots" content="max-image-preview:large">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23b8bec8' d='M32 3C25 16 12 29 12 41a20 20 0 0 0 40 0C52 29 39 16 32 3Z'/%3E%3C/svg%3E"><link rel="stylesheet" href="./style.css?v=8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23b8bec8' d='M32 3C25 16 12 29 12 41a20 20 0 0 0 40 0C52 29 39 16 32 3Z'/%3E%3C/svg%3E"><link rel="stylesheet" href="./style.css?v=9">
 </head>
 <body>
 <header class="site-header">
@@ -36,13 +36,12 @@
 </header>
 <main><section class="experience" aria-labelledby="title">
   <div class="readout">
-    <p class="place-label" data-i18n="place">GUADELOUPE</p>
-    <h1 id="title" data-i18n="headline">L’eau perdue.</h1>
+    <h1 id="title"><span data-i18n="place">Guadeloupe</span><span> — </span><span data-i18n="headline">L’eau perdue.</span></h1>
     <div class="counter" id="today-value" aria-label="Estimation des litres perdus ou non comptabilisés depuis minuit en Guadeloupe">—</div>
-    <p class="units" data-i18n="units">litres perdus ou non comptabilisés aujourd’hui.</p>
-    <p class="flow"><span aria-hidden="true">≈</span><strong id="rate-value">1 414</strong><span data-i18n="perSecond">litres par seconde</span></p>
-    <p class="estimate-label" data-i18n="estimate">Estimation · données 2023</p>
+    <p class="units" data-i18n="units">litres perdus aujourd’hui</p>
+    <p class="flow"><strong id="rate-value">1414</strong><span data-i18n="perSecond">L/sec (Est. 2023)</span></p>
   </div>
+  <button class="primary-cta" id="open-method" type="button" aria-haspopup="dialog"><span data-i18n="cta">Où passe notre eau ?</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5"/></svg></button>
   <figure class="bottle-figure" aria-label="Une bouteille et une carte de la Guadeloupe">
     <div id="scene" tabindex="0" role="group" aria-roledescription="bouteille 3D interactive" aria-label="Faites glisser pour tourner la bouteille. Flèches du clavier pour l’incliner, R pour la recentrer."></div>
     <figcaption class="fill-label" id="fill-label">
@@ -52,9 +51,8 @@
     </figcaption>
     <p class="graphics-status" id="graphics-status" hidden data-i18n="graphicsError">La vue 3D est indisponible sur cet appareil. L’estimation reste active.</p>
   </figure>
-  <button class="primary-cta" id="open-method" type="button" aria-haspopup="dialog"><span data-i18n="cta">Où passe notre eau ?</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5"/></svg></button>
 </section></main>
 <footer><p class="reset-note" data-i18n="reset">À minuit, le compteur repart. Les pertes continuent.</p></footer>
 <noscript><p class="noscript">Le bilan public de 2023 représente environ 122,2 millions de litres perdus ou non comptabilisés par jour en Guadeloupe. Activez JavaScript pour l’animation, le compteur et la version anglaise. <a href="https://www.observatoire-eau-guadeloupe.fr/services-publics-eau-assainissement/eau-potable/">Consulter la source.</a></p></noscript>
 <dialog id="method-dialog" aria-labelledby="method-title"><div class="dialog-header"><h2 id="method-title" data-i18n="details">Comprendre les chiffres</h2><button class="close-button" id="close-method" type="button" aria-label="Fermer">×</button></div><div id="method-content"></div></dialog>
-<script type="module" src="./app.js?v=8"></script></body></html>
+<script type="module" src="./app.js?v=9"></script></body></html>

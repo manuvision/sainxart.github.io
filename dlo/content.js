@@ -9,8 +9,8 @@ const sources = {
 const link = (key, text) => '<a href="' + sources[key] + '" target="_blank" rel="noopener noreferrer">' + text + ' ↗</a>';
 export const COPY = {
   fr: {
-    place: 'GUADELOUPE', headline: 'L’eau perdue.', estimate: 'Estimation · données 2023',
-    units: 'litres perdus ou non comptabilisés aujourd’hui.', perSecond: 'litres par seconde',
+    place: 'Guadeloupe', headline: 'L’eau perdue.',
+    units: 'litres perdus aujourd’hui', perSecond: 'L/sec (Est. 2023)',
     details: 'Comprendre les chiffres', cta: 'Où passe notre eau ?', languageLabel: 'Langue', figureLabel: 'Une bouteille et une carte de la Guadeloupe', dayShare: 'de la journée écoulée',
     fullBottle: 'Bouteille pleine',
     reset: 'À minuit, le compteur repart. Les pertes continuent.',
@@ -34,8 +34,8 @@ export const COPY = {
 <p class="model-version">Données de référence : 2023 · Sources consultées le 9 septembre 2026</p>`,
   },
   en: {
-    place: 'GUADELOUPE', headline: 'Water lost.', estimate: 'Estimate · 2023 data',
-    units: 'litres lost or unaccounted for today.', perSecond: 'litres every second',
+    place: 'Guadeloupe', headline: 'Water lost.',
+    units: 'litres lost today', perSecond: 'L/sec (Est. 2023)',
     details: 'Behind the numbers', cta: 'Where does our water go?', languageLabel: 'Language', figureLabel: 'A bottle and a map of Guadeloupe', dayShare: 'of the day elapsed',
     fullBottle: 'Full bottle',
     reset: 'At midnight, the counter resets. The losses continue.',

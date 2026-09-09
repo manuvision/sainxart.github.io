@@ -1,5 +1,5 @@
 import { estimateAt } from './model.js?v=5';
-import { COPY } from './content.js?v=8';
+import { COPY } from './content.js?v=9';
 const $ = id => document.getElementById(id);
 let language = 'fr';
 try { if (localStorage.getItem('dlo-language') === 'en') language = 'en'; } catch {}
@@ -9,7 +9,7 @@ let integers, decimal;
 function renderNumbers() {
   const estimate = estimateAt(Date.now());
   $('today-value').textContent = integers.format(Math.floor(estimate.today));
-  $('rate-value').textContent = integers.format(estimate.rate);
+  $('rate-value').textContent = String(Math.round(estimate.rate));
   $('day-capacity').textContent = decimal.format(estimate.dayCapacity / 1e6) + ' ' + COPY[language].millionLitres;
   $('day-percent').textContent = decimal.format(estimate.dayFraction * 100) + (language === 'fr' ? ' %' : '%');
   $('scene').dataset.fillFraction = estimate.dayFraction.toFixed(6);
