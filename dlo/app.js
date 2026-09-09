@@ -1,5 +1,5 @@
 import { estimateAt } from './model.js?v=5';
-import { COPY } from './content.js?v=7';
+import { COPY } from './content.js?v=8';
 const $ = id => document.getElementById(id);
 let language = 'fr';
 try { if (localStorage.getItem('dlo-language') === 'en') language = 'en'; } catch {}
