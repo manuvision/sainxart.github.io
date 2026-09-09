@@ -11,7 +11,7 @@ export function createWaterScene(container, {fraction, paused: initiallyPaused, 
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   container.appendChild(renderer.domElement);
   const scene=new THREE.Scene();
-  const camera=new THREE.PerspectiveCamera(32,1,.1,40);
+  const camera=new THREE.PerspectiveCamera(28,1,.1,40);
   camera.position.set(0,1.85,8.25);camera.lookAt(0,.08,0);
 
   // A real reflected studio environment: broad softboxes, narrow edge lights, dark cards.
@@ -293,7 +293,7 @@ export function createWaterScene(container, {fraction, paused: initiallyPaused, 
   if(!paused){waves.impulse(.18,0,.7);waves.impulse(-.18,0,-.4);}
   frame=requestAnimationFrame(draw);
   renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();document.getElementById('graphics-status').hidden=false;paused=true;});
-  renderer.domElement.addEventListener('webglcontextrestored',()=>{document.getElementById('graphics-status').hidden=true;paused=document.getElementById('toggle-motion').getAttribute('aria-pressed')==='true';resize();});
+  renderer.domElement.addEventListener('webglcontextrestored',()=>{document.getElementById('graphics-status').hidden=true;paused=matchMedia('(prefers-reduced-motion: reduce)').matches;resize();});
   return {
     setFill(value){fill=THREE.MathUtils.clamp(value,0,1);},
     setPaused(value){paused=value;if(value){waves.clear();slopeX=slopeZ=velocityX=velocityZ=0;spin=0;waveTexture.needsUpdate=true;}},
