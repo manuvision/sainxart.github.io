@@ -1,0 +1,34 @@
+GIMP Palette
+Name: River Village
+Columns: 8
+# Roles
+41 43 61 ink
+48 63 61 leafD
+56 108 80 leafS
+90 158 99 leaf
+137 191 112 leafL
+193 213 138 leafH
+157 191 125 grass
+140 175 115 grassD
+173 200 138 grassL
+218 195 139 sand
+173 145 102 sandD
+240 213 160 sandL
+81 66 74 woodD
+150 99 79 wood
+197 141 97 woodL
+226 182 127 woodH
+54 94 123 waterD
+85 126 156 water
+131 181 195 waterL
+184 217 213 waterH
+52 94 104 tealD
+57 140 140 teal
+123 197 180 tealL
+157 81 74 coralD
+218 129 102 coral
+238 230 213 cream
+101 101 116 rockD
+170 168 160 rockL
+114 152 104 shadow
+210 173 124 floorLine
