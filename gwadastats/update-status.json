@@ -1,0 +1,24 @@
+{
+  "lastAttempt": "2026-09-09T17:28:34+00:00",
+  "categories": {
+    "homicides": {
+      "lastSuccess": "2026-09-09T17:28:34+00:00",
+      "outcome": "unchanged",
+      "source": "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue",
+      "errors": [],
+      "verifiedThrough": "2026-09-06"
+    },
+    "roads": {
+      "lastSuccess": "2026-09-09T17:28:34+00:00",
+      "outcome": "unchanged",
+      "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
+      "errors": [],
+      "verifiedThrough": "2026-08-30"
+    }
+  },
+  "warnings": [],
+  "changed": false,
+  "verifiedCategories": 2,
+  "referenceYear": 2026,
+  "checkedArticles": 43
+}
