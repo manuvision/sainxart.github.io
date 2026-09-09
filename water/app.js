@@ -1,49 +1,48 @@
-import { estimateAt } from './model.js';
-
+import { estimateAt, DAY_MS } from './model.js';
 const $ = id => document.getElementById(id);
-const integer = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
-const annualFormat = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
-let scenario = 'central';
+const integers = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+let scenario = 'central', artwork;
 let paused = matchMedia('(prefers-reduced-motion: reduce)').matches;
-let artwork;
-let lastRender = 0;
-const clockFormat = new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-function renderNumbers(now = Date.now()) {
-  const estimate = estimateAt(now, scenario);
-  $('today-value').textContent = integer.format(Math.floor(estimate.today));
-  $('history-value').textContent = integer.format(Math.floor(estimate.cumulative));
-  $('rate-value').textContent = integer.format(estimate.rate);
-  $('annual-value').textContent = annualFormat.format(estimate.annual / 1e9);
-  if (!paused || $('day-percent').textContent === '—') $('day-percent').textContent = `${(estimate.dayFraction * 100).toFixed(1)}%`;
-  $('world-clock').textContent = `${clockFormat.format(now)} UTC`;
-  $('world-clock').dateTime = new Date(now).toISOString();
-  if (!paused) artwork?.setFill(estimate.dayFraction);
+function renderNumbers() {
+  const estimate = estimateAt(Date.now(), scenario);
+  const dayCapacity = estimate.rate * DAY_MS / 1000;
+  const fraction = estimate.today / dayCapacity;
+  $('today-value').textContent = integers.format(Math.floor(estimate.today));
+  $('rate-value').textContent = integers.format(estimate.rate);
+  $('history-value').textContent = integers.format(Math.floor(estimate.cumulative));
+  $('annual-value').textContent = (estimate.annual / 1e9).toLocaleString('en-US', { maximumFractionDigits: 2 });
+  $('day-capacity').textContent = (dayCapacity / 1e9).toFixed(2) + ' billion liters';
+  $('modal-capacity').textContent = integers.format(dayCapacity) + ' liters';
+  $('day-percent').textContent = (fraction * 100).toFixed(1) + '%';
+  $('scene').dataset.fillFraction = fraction.toFixed(6);
+  artwork?.setFill(fraction);
 }
 document.querySelectorAll('input[name="scenario"]').forEach(input => input.addEventListener('change', () => { scenario = input.value; renderNumbers(); }));
 function updateMotion() {
   $('toggle-motion').setAttribute('aria-pressed', String(paused));
-  $('toggle-motion').setAttribute('aria-label', paused ? 'Resume animation' : 'Pause animation');
-  $('motion-text').textContent = paused ? 'Resume motion' : 'Pause motion';
-  $('pause-icon').innerHTML = paused ? '<path d="m7 4 8 6-8 6Z"/>' : '<path d="M7 5v10M13 5v10"/>';
+  $('toggle-motion').setAttribute('aria-label', paused ? 'Resume water animation' : 'Pause water animation');
+  $('motion-text').textContent = paused ? 'Resume' : 'Pause';
+  $('motion-icon').innerHTML = paused ? '<path d="m7 4 8 6-8 6Z"/>' : '<path d="M7 5v10M13 5v10"/>';
   artwork?.setPaused(paused);
-  if (!paused) renderNumbers();
 }
 $('toggle-motion').addEventListener('click', () => { paused = !paused; updateMotion(); });
 matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', event => { paused = event.matches; updateMotion(); });
 const dialog = $('method-dialog');
-let dialogTrigger;
-function openMethod(event) { dialogTrigger = event.currentTarget; dialog.showModal(); document.body.style.overflow = 'hidden'; }
-$('open-method').addEventListener('click', openMethod);
-$('open-notes').addEventListener('click', openMethod);
+$('open-method').addEventListener('click', () => { dialog.showModal(); document.body.style.overflow = 'hidden'; });
 $('close-method').addEventListener('click', () => dialog.close());
-dialog.addEventListener('click', event => { if (event.target === dialog) { const r = dialog.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close(); } });
-dialog.addEventListener('close', () => { document.body.style.overflow = ''; dialogTrigger?.focus(); });
+dialog.addEventListener('click', event => {
+  if (event.target !== dialog) return;
+  const r = dialog.getBoundingClientRect();
+  if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close();
+});
+dialog.addEventListener('close', () => { document.body.style.overflow = ''; $('open-method').focus(); });
 renderNumbers(); updateMotion();
-// Re-read the clock every frame; throttling only limits DOM work, never integrates usage.
-function tick(time) { if (time - lastRender > 90) { renderNumbers(); lastRender = time; } requestAnimationFrame(tick); }
-requestAnimationFrame(tick);
+setInterval(() => { if (!document.hidden) renderNumbers(); }, 100);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) renderNumbers(); });
-// Keep the counters functional even if graphics are unavailable.
-import('./scene.js').then(({ createWaterScene }) => {
-  artwork = createWaterScene($('scene'), { fraction: estimateAt(Date.now(), scenario).dayFraction, paused });
-}).catch(error => { console.warn('Water visualization unavailable:', error); $('graphics-status').hidden = false; $('toggle-motion').hidden = true; });
+import('./scene.js?v=2').then(({ createWaterScene }) => {
+  artwork = createWaterScene($('scene'), {
+    fraction: estimateAt(Date.now(), scenario).dayFraction, paused,
+    onWaterline(position) { $('fill-label').style.top = (position * 100) + '%'; },
+  });
+}).catch(error => { console.warn('Water visualization unavailable:', error); $('graphics-status').hidden = false; $('toggle-motion').hidden = true; $('interaction-hint').hidden = true; });
+
