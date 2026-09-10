@@ -1,52 +1,51 @@
-# Duo interactive study
+# iPhone Duo — Animation by manu.vision
 
-Independent interactive recreation by Manu Vision. This experience is not an Apple product page or an Apple endorsement.
+An independent interactive presentation by Manu Vision. It is not an Apple product page or an Apple endorsement.
 
-The 3D geometry, folding rig, responsive camera, touch interaction, and liquid-glass slider are implemented specifically for this experience. No Apple webpage interface or product-viewer code is included.
+## Device model and appearance
 
-## References
+The device uses the actual public glTF mesh, textures, and Slider skeletal animation referenced by [Apple's iPhone Duo viewer](https://www.apple.com/ca/iphone-duo/). The Star White finish, cameras, buttons, ports, continuous inner display, and articulated central hinge come from that model. The asset is reoriented from its original centimetre coordinates without changing its proportions.
 
-- Apple iPhone Duo product and folding demonstration: https://www.apple.com/iphone-duo/
-- Official announcement (September 9, 2026): https://www.apple.com/newsroom/2026/09/apple-unveils-iphone-duo/
-- Technical dimensions: https://www.apple.com/iphone-duo/specs/
-  - Open: 164.6 × 117.8 × 5.2 mm
-  - Closed: 84.1 × 117.8 × 11.3 mm
-  - This is a visual study, not an engineering CAD model.
-- Apple Duo wallpaper distributed by iClarified: https://www.iclarified.com/102102/download-the-official-iphone-duo-wallpaper-here
-  - Inner Light: https://www.iclarified.com/files/ios/iClarified-iPhone-Duo-Wallpaper/iClarified-iPhone-Duo-Wallpaper-Inner-Light.jpg
-  - Outer Light: https://www.iclarified.com/files/ios/iClarified-iPhone-Duo-Wallpaper/iClarified-iPhone-Duo-Wallpaper-Outer-Light.jpg
-  - Converted to optimized WebP assets. Artwork belongs to its respective owner.
+- [Official model](https://www.apple.com/v/iphone-duo/a/static/uploads/dIFKSKvliUSYOBw/MszYeqEKDgnBqxc/gVFBvbhWgzeMQqC/megyEIopJyvbcOt/kifhkaVQkSALvmb/vroIlOhiWPzmavg.gltf)
+- [Official viewer scene](https://www.apple.com/v/iphone-duo/a/static/scenes/iPhoneDuo_US_L_avif.lsd)
+- [Technical specifications](https://www.apple.com/iphone-duo/specs/)
+- [Star White appearance](https://www.apple.com/ca/iphone-duo/images/overview/design/design_hero__gczn1e74mwa6_large_2x.jpg)
+- [Hinge close-up](https://www.apple.com/v/iphone-duo/a/images/overview/product-viewer/durability__d8uh14wcv2oi_large_2x.jpg)
+- [Top edge](https://www.apple.com/v/iphone-duo/a/images/overview/highlights/highlights_durability_endframe__e2gc60lhc5me_large_2x.jpg)
+- [Bottom edge and flexible inner display](https://www.apple.com/v/iphone-duo/a/images/overview/product-stories/immersive/hero-display_startframe__r42exuol7yi6_large_2x.jpg)
+
+The implementation was checked against 111 distinct still-image families from the Canadian page and its stylesheets, including 57 images depicting the Duo, plus samples of Apple's design and hinge animations. Original Apple assets remain the property of their respective owner.
+
+Lighting uses the original viewer's [studio EXR](https://www.apple.com/v/iphone-duo/a/static/uploads/dIFKSKvliUSYOBw/MszYeqEKDgnBqxc/gVFBvbhWgzeMQqC/tJqCxWnWEQvHeHP/SfFEyQuyjAgUwjH.exr), with its separate [lens-highlight EXR](https://www.apple.com/v/iphone-duo/a/static/uploads/dIFKSKvliUSYOBw/MszYeqEKDgnBqxc/gVFBvbhWgzeMQqC/tJqCxWnWEQvHeHP/ADsFgCxkeKZYiww.exr). Their linear radiance is filtered for reflections, and the original general material textures, ambient occlusion, exposure, blending and roughness detail are preserved. This provides consistent Star White shading during free rotation. Apple's viewer also changes editorial light-card arrangements with its camera poses; this presentation does not reproduce that camera-specific lighting choreography. The source retains an optional fixed `PT_SliderLanding` light-rig mode for reference, disabled in the interactive experience. The corrected default was visually checked in 12 front/rear, open/closed and tilted views.
+
+## Screen artwork and transition
+
+The raccoon photograph was supplied by Manu Vision for this experience. Both screens use proportional crops of that image.
+
+The lock-screen time and controls use the transparent artwork referenced by Apple's viewer, preserving its San Francisco numerals and glass shading:
+
+- [Inner lock-screen artwork](https://www.apple.com/v/iphone-duo/a/static/uploads/dIFKSKvliUSYOBw/MszYeqEKDgnBqxc/CRqwzvoYesuhNwK/lockscreen_ui_inner-wallpaper_png.avif)
+- [Outer lock-screen artwork](https://www.apple.com/v/iphone-duo/a/static/uploads/dIFKSKvliUSYOBw/MszYeqEKDgnBqxc/CRqwzvoYesuhNwK/lockscreen_ui_outer-wallpaper_png.avif)
+
+The independent screen renderer uses two passes of bicubic mip-level defocus before ray-plane projection. Defocused regions fade to black and a broad inner shadow follows the projected image. At both endpoints the outer display returns to its complete lock screen, so rotation does not clip its image. The inner screen is one continuous skinned mesh with no added crease effect.
+
+## Typography and control
+
+The centered title uses SF Pro Display Semibold; the credit uses SF Pro Text Regular and Apple's #0066CC link blue.
+
+- [SF Pro Display Semibold](https://www.apple.com/wss/fonts/SF-Pro-Display/v3/sf-pro-display_semibold.woff2)
+- [SF Pro Text Regular](https://www.apple.com/wss/fonts/SF-Pro-Text/v3/sf-pro-text_regular.woff2)
+- [Apple sliders guidance](https://developer.apple.com/design/human-interface-guidelines/sliders)
+- [Adopting Liquid Glass](https://developer.apple.com/documentation/technologyoverviews/adopting-liquid-glass)
+
+The unlabelled slider becomes clearer during touch, stretches under motion, and settles with a damped response. Native HTML range semantics preserve keyboard and assistive-technology access.
 
 ## Interaction
 
-Slide to open or close. Touching the phone snaps it to the nearest fully open or closed position, then dragging rotates it. Touching or adjusting the slider smoothly restores the straight-on view. On the slider, Home closes and End opens. The introduction respects reduced motion. Rendering pauses when the scene settles or the tab is hidden.
+Slide to open or close. Touching the phone snaps to the nearest fully open or closed endpoint; dragging then rotates it. Touching or adjusting the slider smoothly restores a straight view. Home closes and End opens. With the phone focused, arrow keys rotate and R resets. Reduced motion skips the introduction and animated interpolation. Rendering pauses after the scene settles and while the tab is hidden.
 
 ## Build
 
-From `source/`, run `npm ci` and `npm run build`. The self-contained build outputs `../app.js`. The experience is served as static files by the existing manu.vision GitHub Pages deployment. No third-party services or runtime CDN dependencies are required.
+From `source/`, run `npm ci` and `npm run build`. The bundled output is `../app.js`. All runtime assets are served from the existing manu.vision GitHub Pages site. There are no runtime CDN dependencies.
 
-Dependencies: Three.js 0.180.0 (MIT) and esbuild 0.25.10 (MIT).
-
-## Exact lock-screen typography and transition
-
-The time and on-screen system controls use the original transparent artwork referenced by Apple's public Duo viewer, preserving the custom San Francisco numerals and glass shading:
-
-- https://www.apple.com/v/iphone-duo/a/static/uploads/dIFKSKvliUSYOBw/MszYeqEKDgnBqxc/CRqwzvoYesuhNwK/lockscreen_ui_inner-wallpaper_png.avif
-- https://www.apple.com/v/iphone-duo/a/static/uploads/dIFKSKvliUSYOBw/MszYeqEKDgnBqxc/CRqwzvoYesuhNwK/lockscreen_ui_outer-wallpaper_png.avif
-
-The independent screen renderer uses two passes of bicubic mip-level defocus before ray-plane projection. The blur spreads across the image, fades heavily defocused regions to black, and combines with a broad left-side inner shadow. Its blur ranges and hinge timing were studied directly from Apple's official viewer and checked against the live demonstration. The inner display joins exactly at its rotation axis with continuous UVs and no reflective crease. This is a reconstruction of the effect, not the original Apple viewer.
-
-The unlabelled slider thumb follows Apple's Liquid Glass control guidance: continuous adjustment, a clearer glass material during interaction, stretch under motion, and a damped settling response. Native HTML range semantics preserve keyboard and assistive-technology access.
-
-- https://developer.apple.com/documentation/technologyoverviews/adopting-liquid-glass
-- https://developer.apple.com/videos/play/wwdc2025/284/
-- https://developer.apple.com/design/human-interface-guidelines/sliders
-- https://gizmodo.com/iphone-duo-hands-on-2000808932
-- https://www.reddit.com/r/PhoneNow/comments/1wc634v/this_iphone_duo_animation/
-
-The page heading uses SF Pro Display Semibold and the credit uses SF Pro Text Regular, from Apple's public website font assets:
-
-- https://www.apple.com/wss/fonts/SF-Pro-Display/v3/sf-pro-display_semibold.woff2
-- https://www.apple.com/wss/fonts/SF-Pro-Text/v3/sf-pro-text_regular.woff2
-
-The heading font and #0066CC credit link were checked against https://www.apple.com/ca/iphone-duo/. The outer screen returns to its complete lock-screen artwork at both fold endpoints, so the transitional projection cannot clip its image when the open phone is rotated. The rounded titanium frame and complete screen-to-back stack follow the published 5.2 mm open thickness.
+Three.js 0.180.0 and esbuild 0.25.10 are MIT licensed. The authored interaction and screen-rendering code is separate from the referenced Apple assets.
