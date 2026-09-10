@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#141c21"><title>The Lamplight House · Manu Vision</title><meta name="description" content="A little house between journeys. Explore a three-dimensional world as a pixel-art raccoon."><link rel="icon" href="data:,"><link rel="stylesheet" href="./style.css"><script type="importmap">{"imports":{"three":"../gb-game/vendor/three.module.min.js"}}</script></head>
+<body><canvas id="world" aria-label="Playable 3D house with a pixel-art raccoon"></canvas>
+<header><a href="https://manu.vision" aria-label="Manu Vision home">MANU VISION<span>EXPERIMENT  /  HD2D</span></a><button id="help" aria-label="Show controls">?</button></header>
+<div id="arrival"><span>A LITTLE HOUSE BETWEEN JOURNEYS</span><h1>The Lamplight House</h1><p>Make yourself at home.</p></div>
+<div id="loading" role="status">Lighting the lamps…</div>
+<button id="prompt" hidden></button>
+<section id="dialog" hidden aria-live="polite"><span id="dialog-label"></span><p id="dialog-text"></p><button id="dismiss">Continue <kbd>E</kbd></button></section>
+<footer><span>WASD / arrows <i>move</i></span><span>E <i>examine / roll</i></span><span>B <i>machete</i></span><span>SCROLL <i>zoom</i></span></footer>
+<div id="touch"><div id="stick" aria-label="Movement joystick"><div id="thumb"></div></div><div id="actions"><button id="attack" aria-label="Attack with machete">B</button><button id="interact" aria-label="Interact or roll">A</button></div></div>
+<div id="help-panel" hidden><h2>Stay a while.</h2><p>Walk with WASD or the arrow keys. On touch screens, use the thumbstick.</p><p>Press E or A to examine something nearby. Otherwise, roll. B or X swings the machete. Scroll or pinch to adjust your view.</p><button id="close-help">Back to the house</button><small>Original scene &amp; raccoon · Manu Vision<br>Powered by <a href="https://threejs.org/">Three.js</a> (MIT)</small></div>
+<script type="module" src="./main.js"></script></body></html>
