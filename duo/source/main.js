@@ -4,8 +4,9 @@ import { createPhone, W, H } from './phone.js';
 
 import { foldAt, openingTimeForFold, LOOP_SECONDS } from './loop.js';
 import { setupARLink } from './ar-launch.js';
-import { createLoadingUI, preloadAssets, yieldToMain } from './loading.js';
+import { ensureLoadingMarkup, createLoadingUI, preloadAssets, yieldToMain } from './loading.js';
 
+await ensureLoadingMarkup();
 setupARLink();
 const loopToggle=document.getElementById('loop-toggle');
 const dock=document.querySelector('.slider-dock');
