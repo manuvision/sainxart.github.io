@@ -3,19 +3,29 @@ import * as THREE from 'three';
 // The two displays act as windows onto one shared image plane while folding.
 // Reprojecting a view ray produces the changing trapezoid and black wedges;
 // defocus is applied to the source image before this projection, in screen-blur.js.
-export function createScreenMaterial(texture, outer) {
+export function createScreenMaterial(texture, outer, options={}) {
   const material=new THREE.ShaderMaterial({
     toneMapped:false,
     uniforms:{
       screen:{value:texture},progress:{value:.6},
-      outer:{value:outer?1:0},phoneInverse:{value:new THREE.Matrix4()}
+      outer:{value:outer?1:0},phoneInverse:{value:new THREE.Matrix4()},
+      flipY:{value:options.flipY?1:0},
+      innerSize:{value:new THREE.Vector2(...(options.innerSize||[16.10,11.38]))},
+      outerSize:{value:new THREE.Vector2(...(options.outerSize||[7.81,11.32]))},
+      outerCenter:{value:new THREE.Vector2(...(options.outerCenter||[4.115,0]))}
     },
     vertexShader:`
+      #include <common>
+      #include <skinning_pars_vertex>
+      uniform float flipY;
       varying vec2 texUv;
       varying vec3 surfaceWorld;
       void main(){
-        texUv=uv;
-        vec4 world=modelMatrix*vec4(position,1.0);
+        texUv=vec2(uv.x,mix(uv.y,1.-uv.y,flipY));
+        vec3 transformed=vec3(position);
+        #include <skinbase_vertex>
+        #include <skinning_vertex>
+        vec4 world=modelMatrix*vec4(transformed,1.0);
         surfaceWorld=world.xyz;
         gl_Position=projectionMatrix*viewMatrix*world;
       }
@@ -25,6 +35,9 @@ export function createScreenMaterial(texture, outer) {
       uniform float progress;
       uniform float outer;
       uniform mat4 phoneInverse;
+      uniform vec2 innerSize;
+      uniform vec2 outerSize;
+      uniform vec2 outerCenter;
       varying vec2 texUv;
       varying vec3 surfaceWorld;
       void main(){
@@ -34,8 +47,8 @@ export function createScreenMaterial(texture, outer) {
         float safeZ=abs(ray.z)<.01?.01:ray.z;
         float t=-eye.z/safeZ;
         vec3 hit=eye+ray*t;
-        vec2 projected=vec2((hit.x+8.05)/16.10,(hit.y+5.69)/11.38);
-        if(outer>.5)projected=vec2((hit.x-4.115)/7.81+.5,hit.y/11.32+.5);
+        vec2 projected=hit.xy/innerSize+.5;
+        if(outer>.5)projected=(hit.xy-outerCenter)/outerSize+.5;
         // The shared projection exists only during the handoff. At both endpoints
         // the cover display owns its full lock screen, even when viewed from behind.
         float through=outer>.5?1.-smoothstep(.45,1.,1.-min(progress,1.-progress)):(1.-smoothstep(.60,.99,progress));

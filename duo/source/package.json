@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "esbuild main.js --bundle --minify --format=esm --target=es2022 --outfile=../app.js",
-    "check": "node --check main.js && node --check phone.js"
+    "check": "node --check main.js && node --check phone.js && node --check official-model.js && node --check official-lighting.js && node --check screen-material.js && node --check screen-blur.js"
   },
   "dependencies": {
     "three": "0.180.0"

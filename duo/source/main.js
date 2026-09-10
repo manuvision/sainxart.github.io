@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { loadOfficialLighting } from './official-lighting.js';
 import { createPhone, W, H } from './phone.js';
 
 const stage=document.getElementById('stage');
@@ -13,19 +13,13 @@ async function start() {
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));
   renderer.setClearColor(0x000000,0);renderer.outputColorSpace=THREE.SRGBColorSpace;
-  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1;
   stage.appendChild(renderer.domElement);
   const scene=new THREE.Scene();
   const camera=new THREE.PerspectiveCamera(31,1,.1,150);
-  const pmrem=new THREE.PMREMGenerator(renderer);
-  const room=new RoomEnvironment();const environment=pmrem.fromScene(room,.04);
-  scene.environment=environment.texture;room.dispose();pmrem.dispose();
-  scene.add(new THREE.HemisphereLight(0xffffff,0x929aad,2));
-  const key=new THREE.DirectionalLight(0xffffff,3.3);key.position.set(-8,12,15);scene.add(key);
-  const rim=new THREE.DirectionalLight(0xd9e7ff,2);rim.position.set(12,2,-8);scene.add(rim);
-  const fill=new THREE.DirectionalLight(0xffffff,1.2);fill.position.set(-12,-3,4);scene.add(fill);
   const orbit=new THREE.Group();scene.add(orbit);
-  const model=await createPhone(renderer);orbit.add(model.phone);
+  const [model,lighting]=await Promise.all([createPhone(renderer),loadOfficialLighting(renderer)]);
+  scene.environment=lighting.environment;lighting.applyToModel(model.phone);orbit.add(model.phone);
   // A faint photographic studio shadow anchors the floating product.
   const shadowCanvas=document.createElement('canvas');shadowCanvas.width=256;shadowCanvas.height=256;
   const sc=shadowCanvas.getContext('2d');const grad=sc.createRadialGradient(128,128,3,128,128,128);
@@ -115,7 +109,7 @@ async function start() {
     model.setFold(fold);orbit.rotation.set(pitch,yaw,0,'YXZ');
     orbit.updateMatrixWorld(true);
     model.updateProjection();
-    bounds.setFromObject(model.phone);
+    if(model.getBounds)model.getBounds(bounds);else bounds.setFromObject(model.phone);
     const fov=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
     const width=Math.max(Math.abs(bounds.min.x),Math.abs(bounds.max.x))*2;
     const height=Math.max(Math.abs(bounds.min.y),Math.abs(bounds.max.y))*2;
