@@ -1,0 +1,1 @@
+{"name":"manu-vision-duo-ar","private":true,"type":"module","scripts":{"build":"node build.mjs","check":"node --check main.js && node --check ar-launch.js && node --check loop.js"}}

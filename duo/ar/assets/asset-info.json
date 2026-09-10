@@ -1,0 +1,116 @@
+{
+  "model": "iPhone Duo \u2014 original Apple geometry and folding rig",
+  "geometry": {
+    "meshCount": 62,
+    "jointCount": 27,
+    "triangleCount": 67494,
+    "originalPositionNormalAndUv0DataPreserved": true,
+    "geometrySource": "../../assets/model/iphone-duo.gltf",
+    "scaleConversion": "Original centimetres multiplied by 0.01 for metres"
+  },
+  "animation": {
+    "name": "Duo calm fold loop",
+    "durationSeconds": 7,
+    "sampleRate": 30,
+    "sampleCount": 211,
+    "closedHoldSeconds": [
+      0,
+      1
+    ],
+    "openingSeconds": [
+      1,
+      3.5
+    ],
+    "openHoldSeconds": [
+      3.5,
+      4.5
+    ],
+    "closingSeconds": [
+      4.5,
+      7
+    ],
+    "easing": "(1 - cos(pi*t)) / 2",
+    "loopSeamVertexDeltaMetres": 0
+  },
+  "placement": {
+    "upAxis": "Y",
+    "screenDirectionAtEndpoints": "+Y",
+    "plane": "horizontal",
+    "grounding": "Stationary rear-camera protrusion rests on the table throughout the fold",
+    "translationMetres": [
+      -0.040250725,
+      0.0085146564,
+      0.000224145
+    ],
+    "nativeHorizontalAnchoringMetadata": true,
+    "closedFootprintMm": [
+      85.1593,
+      117.6794
+    ],
+    "openFootprintMm": [
+      165.2097,
+      117.6794
+    ],
+    "dimensionsIncludeProtrusions": true
+  },
+  "wallpaper": {
+    "source": "../../assets/wallpaper-raccoon.png",
+    "lockscreenOverlays": [
+      "../../assets/lockscreen-inner.avif",
+      "../../assets/lockscreen-outer.avif"
+    ],
+    "composition": "Centred proportional crop with the same inset and endpoint zoom as the web display",
+    "screenShading": "Emissive image with black diffuse contribution"
+  },
+  "androidCompatibility": {
+    "singleUvSet": true,
+    "corePbrMaterials": true,
+    "unsupportedMaterialExtensions": false,
+    "secondaryDetailMaps": "UV1 normal/AO maps omitted; UV1 roughness and metallic maps reduced to their mean factors",
+    "maximumInfluencesPerVertex": 4,
+    "maxDiscardedResidualSkinWeight": 5.804495231132023e-07,
+    "renormalizedPrimaryWeights": true,
+    "totalJointsRetained": 27,
+    "maxAllPoseVertexDeltaMetres": 4.61374725e-09,
+    "maxAllPoseBoundsDeltaMetres": 7.76026986e-11
+  },
+  "validation": {
+    "usdzEveryPoseChecked": 211,
+    "usdzMinimumYMetres": -4.9133301767423365e-09,
+    "numericGroundToleranceMetres": 1e-07,
+    "usdzMaximumGroundVariationMetres": 1.0132789383596186e-08,
+    "usdzHoldAndLoopMaxVertexDeltaMetres": 0,
+    "usdStageUnits": "metres",
+    "usdStageUpAxis": "Y",
+    "openUsdArkitCompliance": {
+      "errors": 0,
+      "warnings": 0,
+      "failedChecks": 0
+    },
+    "appleUsdcheckerArkitStrict": "Success",
+    "nativeMetalProofFrames": [
+      0,
+      68,
+      105
+    ],
+    "allResourcesEmbedded": true,
+    "physicalDevicePlacementCheck": "Pending iPhone/Android device trial",
+    "glbEveryPoseChecked": 211,
+    "glbMinimumYMetres": -2.45224e-11,
+    "gltfValidator": {
+      "errors": 0,
+      "warnings": 67,
+      "warningExplanation": "62 original hierarchy skinned-mesh-root warnings and5 generated-tangent-space warnings"
+    }
+  },
+  "files": {
+    "duo-fold.glb": {
+      "bytes": 9942632,
+      "sha256": "21f114ef901445339f81c60ab1551c51a418e7f9de94922ffd329ed73ef8f770"
+    },
+    "duo-fold.usdz": {
+      "bytes": 9317107,
+      "sha256": "e6545c1c73c0778d1dfc062f564faf358db5a59839676d84f2a69cb6fb1381a6"
+    }
+  }
+}

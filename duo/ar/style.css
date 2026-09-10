@@ -1,0 +1,14 @@
+/* This test route extends the existing Duo presentation. */
+.slider-dock{height:auto;display:flex;flex-direction:column;align-items:stretch;bottom:max(24px,env(safe-area-inset-bottom));gap:0}
+.fold-control{flex:none}
+.ar-actions{display:flex;align-items:center;justify-content:center;gap:20px;min-height:44px;font-family:"Duo SF Text",-apple-system,BlinkMacSystemFont,sans-serif;font-size:12px;line-height:1.4;white-space:nowrap}
+.ar-actions button,.ar-actions a{font:inherit;border:0;background:none;padding:10px 0;min-height:44px;display:inline-flex;align-items:center;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ar-actions button{color:#73777f}.ar-actions a{color:#06c}.ar-actions [hidden]{display:none}
+.ar-actions button:hover,.ar-actions a:hover{text-decoration:underline;text-underline-offset:3px}
+.ar-actions button:focus-visible,.ar-actions a:focus-visible{outline:2px solid #06c;outline-offset:4px;border-radius:2px}
+#ar-status{font:12px/1.5 "Duo SF Text",-apple-system,BlinkMacSystemFont,sans-serif;color:#73777f;text-align:center;white-space:normal;margin:0 4px 6px}
+#stage{bottom:172px}
+@media(max-width:600px){.slider-dock{bottom:auto}#stage{bottom:165px}.ar-actions{gap:17px;font-size:12px}}
+@media(max-width:350px){.ar-actions{gap:12px;font-size:11px}}
+@media(max-height:510px){.slider-dock{top:auto;bottom:max(8px,env(safe-area-inset-bottom));width:min(420px,calc(100% - 36px))}.fold-control{height:62px;transform:scale(.9)}#stage{top:72px;bottom:114px}.duo-heading{top:max(10px,env(safe-area-inset-top))}.duo-heading h1{font-size:26px}.duo-heading p{margin-top:3px}.ar-actions{min-height:38px}.ar-actions button,.ar-actions a{padding:7px 0;min-height:38px}}
+:root{--safe-bottom:env(safe-area-inset-bottom,0px)}
