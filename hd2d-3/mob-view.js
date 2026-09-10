@@ -17,8 +17,8 @@ export function createMobView(scene,camera,sheets,combat,village,shadowMaterial)
   function update(){const time=combat.time;
     for(const v of views){const {m,actor,material,bar}=v;if(m.hp<=0){const fade=Math.max(0,1-(time-m.deadAt)/.45);bar.hidden=true;actor.castShadow=false;actor.visible=fade>0;v.shadow.visible=fade>0;if(fade>0){material.emissive.set(fade>.5?'#ff241a':'#000000');material.emissiveIntensity=fade>.5?1.2:0;material.transparent=true;material.opacity=fade;actor.position.y+=.003;}continue;}
       let f;if(m.action==='attack'){
-        // Hold the anticipation cel during the telegraph, then play the committed strike.
-        let elapsed=m.elapsed<rules.windup?0:(m.elapsed-rules.windup)*1000+60,index=0;
+        // Use the exact same authored frames and 115% playback as Tikoon, with no extra hold.
+        let elapsed=m.elapsed*rules.enemyAttackPlayback*1000,index=0;
         while(index<6&&elapsed>=attackDurations[index])elapsed-=attackDurations[index++];
         f=frames.find(f=>f.filename===`attack_${m.dir}_${index}`);
       }else{const index=m.action==='walk'?Math.floor(m.walkTime/.16)%4:0;f=frames.find(f=>f.filename===`${m.action==='walk'?'walk':'idle'}_${m.dir}_${index}`);}

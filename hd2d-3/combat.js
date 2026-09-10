@@ -1,7 +1,7 @@
 // Combat is independent of rendering so every strike, cooldown and drop can be tested.
-export const rules=Object.freeze({mobHP:5,energy:4,enemyEnergy:2,playerHP:6,playerReach:1.5,enemyReach:1.16,enemyAttackRange:1.13,enemyStopRange:1.08,damage:1,heal:1,dropChance:.03,
-  aggro:3.3,loseInterest:5.5,homeRadius:2,leash:6,walk:1.05,chase:1.4,retreat:.7,
-  energyReaction:.12,attackCooldownMin:.52,attackCooldownMax:.80,windup:.20,strike:.30,attackEnd:.50,invulnerability:.65,magnet:1.8});
+export const rules=Object.freeze({mobHP:5,energy:3,enemyEnergy:2,playerHP:6,playerReach:1.5,enemyReach:1.16,enemyAttackRange:1.13,enemyStopRange:1.08,damage:1,heal:1,dropChance:.05,
+  aggro:4.5,loseInterest:6.5,homeRadius:2,leash:6,walk:1.05,chase:1.4,
+  energyReaction:.12,attackCooldownMin:.52,attackCooldownMax:.80,enemyAttackPlayback:1.15,strike:.14/1.15,attackEnd:.48/1.15,invulnerability:.65,magnet:1.8});
 export const spawns=[[2,3.1],[-6.6,3.9],[1.8,-3.2],[10.2,3],[-8.8,-2.4]];
 const directions={south:[0,1],east:[1,0],north:[0,-1],west:[-1,0]};
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
@@ -12,17 +12,16 @@ export function createCombat({player,blocked,random=Math.random,homes=spawns}){
   player.hp=rules.playerHP;player.maxHP=rules.playerHP;player.hurtUntil=0;player.energy=rules.energy;player.maxEnergy=rules.energy;let energyTime=0;
   const mobs=homes.map(([x,z],id)=>({id,x,z,home:{x,z},hp:rules.mobHP,maxHP:rules.mobHP,energy:rules.enemyEnergy,maxEnergy:rules.enemyEnergy,energyTime:0,dir:'south',state:'wander',
     engaged:false,bar:false,action:'idle',elapsed:0,walkTime:0,nextAttack:0,attackAt:0,
-    attackHit:false,target:null,wait:random()*1.5,retreatUntil:0,retreatCheck:0,
-    hurtUntil:0,stunUntil:0,lastSwing:-1,deadAt:null,attacks:0,damageTaken:0}));
+    attackHit:false,target:null,wait:random()*1.5,
+    hurtUntil:0,lastSwing:-1,deadAt:null,attacks:0,damageTaken:0}));
   function clearLine(a,b){const n=Math.ceil(distance(a,b)/.15);for(let i=1;i<=n;i++)if(blocked(a.x+(b.x-a.x)*i/n,a.z+(b.z-a.z)*i/n))return false;return true;}
   function inArc(a,b,reach,width){const [x,z]=directions[a.dir],dx=b.x-a.x,dz=b.z-a.z;return distance(a,b)<=reach&&dx*x+dz*z>=.05&&Math.abs(dx*z-dz*x)<=width&&clearLine(a,b);}
-  function beginRetreat(m){m.state='retreat';m.retreatUntil=time+1.3+random()*.9;m.retreatCheck=time+4;}
   function hitMobs(swing){if(player.hp<=0)return;for(const m of mobs){
     if(m.hp<=0||m.lastSwing===swing||!(isForwardReach(player,m)&&clearLine(player,m)))continue;
-    m.lastSwing=swing;m.hp--;m.damageTaken++;m.bar=true;m.engaged=true;m.hurtUntil=time+.45;m.stunUntil=time+.2;
+    m.lastSwing=swing;m.hp--;m.damageTaken++;m.bar=true;m.engaged=true;m.hurtUntil=time+.45;
     events.push({type:'mob-hit',id:m.id,time});
     if(m.hp===0){m.state='dead';m.action='idle';m.deadAt=time;m.engaged=false;events.push({type:'defeat',id:m.id,time});}
-    else{m.action='idle';m.state='chase';if(m.hp/m.maxHP<.4&&random()<.55)beginRetreat(m);}
+    else if(m.state!=='attack'){m.action='idle';m.state='chase';}
   }}
   function damagePlayer(){if(player.hp<=0||time<player.hurtUntil)return false;
     if(player.action==='roll'&&player.elapsed>=.06&&player.elapsed<=.4)return false;
@@ -49,16 +48,12 @@ export function createCombat({player,blocked,random=Math.random,homes=spawns}){
         if(!m.attackHit&&m.elapsed>=rules.strike){m.attackHit=true;if(inArc(m,player,rules.enemyReach,.85))damagePlayer();}
         if(m.elapsed<rules.attackEnd)continue;m.state='chase';m.action='idle';
       }
-      if(time<m.stunUntil){m.action='idle';continue;}
-      if(m.state!=='return'&&player.hp>0&&d<rules.aggro&&clearLine(m,player)){m.engaged=true;if(m.damageTaken>0)m.bar=true;if(m.state==='wander')m.state='chase';}
+            if(m.state!=='return'&&player.hp>0&&d<rules.aggro&&clearLine(m,player)){m.engaged=true;if(m.damageTaken>0)m.bar=true;if(m.state==='wander')m.state='chase';}
       if(m.engaged&&(homeDistance>rules.leash-.25||d>rules.loseInterest)){m.state='return';m.engaged=false;m.bar=false;}
       m.action='idle';m.elapsed=0;
       if(m.state==='return'){if(homeDistance<.15){m.state='wander';m.wait=.6;m.target=null;}else step(m,m.home.x,m.home.z,rules.walk,dt);continue;}
       if(m.engaged){
-        if(m.state==='retreat'&&time<m.retreatUntil){const dx=m.x-player.x,dz=m.z-player.z,l=Math.hypot(dx,dz)||1;
-          if(!step(m,m.x+dx/l,m.z+dz/l,rules.retreat,dt))step(m,m.home.x,m.home.z,rules.retreat,dt);continue;}
         m.state='chase';
-        if(m.hp/m.maxHP<.4&&time>=m.retreatCheck){m.retreatCheck=time+4;if(random()<.35){beginRetreat(m);continue;}}
         if(d<=rules.enemyAttackRange&&m.energy>0&&time>=m.nextAttack&&clearLine(m,player)){m.dir=facing(player.x-m.x,player.z-m.z);m.state='attack';m.action='attack';m.attackAt=time;m.attackHit=false;m.elapsed=0;m.energy--;m.nextAttack=time+rules.attackCooldownMin+random()*(rules.attackCooldownMax-rules.attackCooldownMin);m.attacks++;events.push({type:'mob-attack',id:m.id,time});}
         else if(d>rules.enemyStopRange)step(m,player.x,player.z,rules.chase,dt);
         else m.dir=facing(player.x-m.x,player.z-m.z);
