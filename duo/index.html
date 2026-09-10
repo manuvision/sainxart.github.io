@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f5f7">
+  <meta name="description" content="iPhone Duo. Animation by manu.vision. Slide to open and close.">
+  <link rel="canonical" href="https://manu.vision/duo/">
+  <title>Duo — Manu Vision</title>
+  <link rel="preload" href="./assets/sf-pro-display-semibold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main id="experience" aria-label="Interactive iPhone Duo">
+    <header class="duo-heading"><h1>iPhone Duo</h1><p>Animation by <a href="https://manu.vision">manu.vision</a></p></header>
+    <div id="stage" tabindex="0" role="region" aria-label="3D iPhone Duo. Drag to rotate; the phone snaps fully open or closed. Use the slider to return to the straight-on view."></div>
+    <div id="loading" role="status" aria-live="polite"><span></span></div>
+    <div class="slider-dock">
+      <div class="fold-control" id="fold-control">
+        <div class="slider-rail" aria-hidden="true"><div class="slider-fill"></div></div>
+        <div class="glass-drop" aria-hidden="true"><span class="drop-refract"></span><span class="drop-highlight"></span></div>
+        <input id="fold" type="range" min="0" max="1000" value="650" step="1" aria-label="Open or close iPhone Duo" aria-valuetext="65 percent open" aria-describedby="instructions">
+      </div>
+    </div>
+    <p id="instructions" class="sr-only">Slide left to close, right to open. Touch the phone to snap to the nearest endpoint, then drag to rotate. Touch the slider to return to the straight-on view. Slider arrow keys adjust precisely; Home closes and End opens. With the phone focused, arrow keys rotate and R resets the view.</p>
+  </main>
+  <noscript><p class="fallback-message">Enable JavaScript to explore iPhone Duo.</p></noscript>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
