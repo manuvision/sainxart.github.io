@@ -33,12 +33,13 @@ async function start() {
   const shadow=new THREE.Mesh(new THREE.PlaneGeometry(19,3),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(shadowCanvas),transparent:true,depthWrite:false,toneMapped:false}));
   shadow.position.set(0,-H/2-1.40,-1.5);scene.add(shadow);
   let target=Number(slider.value)/1000,fold=target;
-  let yaw=-.25,pitch=.07,targetYaw=yaw,targetPitch=pitch;
+  let yaw=0,pitch=0,targetYaw=0,targetPitch=0;
   let vx=0,vy=0,dragging=false,pointerId=null,lastX=0,lastY=0,lastMove=0;
   let raf=0,lastTime=performance.now(),introStart=performance.now(),interacted=false;
   let dirty=true;
   const bounds=new THREE.Box3();
   const projectedCorner=new THREE.Vector3();
+  const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
   let cameraDistance=0;
   let sliderDown=false,thumbStretch=0,stretchSpeed=0,inputSpeed=0;
   let lastSliderValue=target,lastSliderTime=performance.now();
@@ -61,18 +62,27 @@ async function start() {
     control.style.setProperty('--fold',String(p));
     slider.setAttribute('aria-valuetext',p<.005?'Closed':p>.995?'Fully open':`${Math.round(p*100)} percent open`);
   }
+  function faceForward(){
+    const activePointer=pointerId;pointerId=null;dragging=false;
+    if(activePointer!==null&&stage.hasPointerCapture(activePointer))stage.releasePointerCapture(activePointer);
+    targetYaw=targetPitch=0;vx=vy=0;
+  }
   function input(){
     interacted=true;target=Number(slider.value)/1000;
+    faceForward();
     const now=performance.now();inputSpeed=Math.min(3,Math.abs(target-lastSliderValue)/Math.max(.016,(now-lastSliderTime)/1000));
     lastSliderValue=target;lastSliderTime=now;
     updateSlider(target);dirty=true;wake();
   }
   slider.addEventListener('input',input);
-  slider.addEventListener('pointerdown',()=>{interacted=true;sliderDown=true;control.dataset.pressed='true';lastSliderValue=target;lastSliderTime=performance.now();wake();});
+  slider.addEventListener('pointerdown',()=>{interacted=true;sliderDown=true;faceForward();control.dataset.pressed='true';lastSliderValue=target;lastSliderTime=performance.now();wake();});
   const releaseSlider=()=>{sliderDown=false;delete control.dataset.pressed;wake();};
   slider.addEventListener('pointerup',releaseSlider);slider.addEventListener('pointercancel',releaseSlider);slider.addEventListener('lostpointercapture',releaseSlider);
   stage.addEventListener('pointerdown',e=>{
-    if(pointerId!==null || (e.pointerType==='mouse'&&e.button!==0))return;
+    if(sliderDown||pointerId!==null || (e.pointerType==='mouse'&&e.button!==0))return;
+    const rect=stage.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,1-(e.clientY-rect.top)/rect.height*2);
+    raycaster.setFromCamera(pointer,camera);if(!raycaster.intersectObject(model.phone,true).length)return;
+    target=Number(slider.value)<500?0:1;slider.value=String(target*1000);updateSlider(target);
     interacted=true;pointerId=e.pointerId;stage.setPointerCapture(pointerId);dragging=true;
     lastX=e.clientX;lastY=e.clientY;lastMove=performance.now();vx=vy=0;wake();
   });
@@ -88,10 +98,10 @@ async function start() {
   stage.addEventListener('pointerup',end);stage.addEventListener('pointercancel',end);stage.addEventListener('lostpointercapture',end);
   stage.addEventListener('keydown',e=>{
     const moves={ArrowLeft:[-.12,0],ArrowRight:[.12,0],ArrowUp:[0,-.12],ArrowDown:[0,.12]};
-    if(moves[e.key]){e.preventDefault();interacted=true;targetYaw+=moves[e.key][0];targetPitch=clamp(targetPitch+moves[e.key][1],-1.4,1.4);wake();}
-    if(e.key.toLowerCase()==='r'){targetYaw=-.20;targetPitch=.055;vx=vy=0;wake();}
+    if(moves[e.key]){e.preventDefault();interacted=true;target=Number(slider.value)<500?0:1;slider.value=String(target*1000);updateSlider(target);targetYaw+=moves[e.key][0];targetPitch=clamp(targetPitch+moves[e.key][1],-1.4,1.4);wake();}
+    if(e.key.toLowerCase()==='r'){targetYaw=targetPitch=0;vx=vy=0;wake();}
   });
-  stage.addEventListener('dblclick',()=>{targetYaw=-.20;targetPitch=.055;vx=vy=0;interacted=true;wake();});
+  stage.addEventListener('dblclick',()=>{targetYaw=targetPitch=0;vx=vy=0;interacted=true;wake();});
   function frame(now) {
     raf=0;if(disposed||document.hidden)return;
     const dt=Math.min((now-lastTime)/1000,.05);lastTime=now;

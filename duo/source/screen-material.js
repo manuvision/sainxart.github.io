@@ -36,7 +36,9 @@ export function createScreenMaterial(texture, outer) {
         vec3 hit=eye+ray*t;
         vec2 projected=vec2((hit.x+8.05)/16.10,(hit.y+5.69)/11.38);
         if(outer>.5)projected=vec2((hit.x-4.115)/7.81+.5,hit.y/11.32+.5);
-        float through=outer>.5?1.-smoothstep(.45,1.,1.-progress):(1.-smoothstep(.60,.99,progress));
+        // The shared projection exists only during the handoff. At both endpoints
+        // the cover display owns its full lock screen, even when viewed from behind.
+        float through=outer>.5?1.-smoothstep(.45,1.,1.-min(progress,1.-progress)):(1.-smoothstep(.60,.99,progress));
         vec2 directUv=(texUv-.5)/1.12+.5;
         vec2 projectedUv=(projected-.5)/1.12+.5;
         // Interpolate the lookup, not two rendered images, so the clock never doubles.
