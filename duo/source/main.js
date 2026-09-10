@@ -2,14 +2,30 @@ import * as THREE from 'three';
 import { loadOfficialLighting } from './official-lighting.js';
 import { createPhone, W, H } from './phone.js';
 
+import { foldAt, openingTimeForFold, LOOP_SECONDS } from './loop.js';
+import { setupARLink } from './ar-launch.js';
+import { createLoadingUI, preloadAssets, yieldToMain } from './loading.js';
+
+setupARLink();
+const loopToggle=document.getElementById('loop-toggle');
+const dock=document.querySelector('.slider-dock');
+const motionQuery=window.matchMedia('(prefers-reduced-motion: reduce)');
 const stage=document.getElementById('stage');
 const slider=document.getElementById('fold');
 const control=document.getElementById('fold-control');
-const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let reduced=motionQuery.matches;
 const clamp=THREE.MathUtils.clamp;
 let disposed=false;
+const loading=createLoadingUI();
+let arLaunched=false;
+window.addEventListener('duo:ar-launch',()=>{arLaunched=true;});
 
 async function start() {
+  const loadStarted=performance.now();
+  await yieldToMain();
+  const assets=await preloadAssets(loading.update);
+  const downloadFinished=performance.now();
+  await yieldToMain();
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));
   renderer.setClearColor(0x000000,0);renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -18,7 +34,12 @@ async function start() {
   const scene=new THREE.Scene();
   const camera=new THREE.PerspectiveCamera(31,1,.1,150);
   const orbit=new THREE.Group();scene.add(orbit);
-  const [model,lighting]=await Promise.all([createPhone(renderer),loadOfficialLighting(renderer)]);
+  const compact=window.matchMedia('(pointer: coarse)').matches&&Math.min(innerWidth,innerHeight)<=600;
+  const [model,lighting]=await Promise.all([
+    createPhone(renderer,{assets,initialFold:reduced?1:0,maxScreenSize:compact?1024:2048,yieldToMain,onPhase:()=>loading.update(89,'Preparing 3D view')}),
+    loadOfficialLighting(renderer,{assets,yieldToMain,onPhase:()=>loading.update(87,'Preparing 3D view')})
+  ]);
+  assets.dispose();
   scene.environment=lighting.environment;lighting.applyToModel(model.phone);orbit.add(model.phone);
   // A faint photographic studio shadow anchors the floating product.
   const shadowCanvas=document.createElement('canvas');shadowCanvas.width=256;shadowCanvas.height=256;
@@ -29,7 +50,8 @@ async function start() {
   let target=Number(slider.value)/1000,fold=target;
   let yaw=0,pitch=0,targetYaw=0,targetPitch=0;
   let vx=0,vy=0,dragging=false,pointerId=null,lastX=0,lastY=0,lastMove=0;
-  let raf=0,lastTime=performance.now(),introStart=performance.now(),interacted=false;
+  let raf=0,lastTime=performance.now(),loopTime=0,loopPlaying=!reduced&&!arLaunched;
+  let booting=true;
   let dirty=true;
   const bounds=new THREE.Box3();
   const projectedCorner=new THREE.Vector3();
@@ -37,8 +59,19 @@ async function start() {
   let cameraDistance=0;
   let sliderDown=false,thumbStretch=0,stretchSpeed=0,inputSpeed=0;
   let lastSliderValue=target,lastSliderTime=performance.now();
-  const autoIntro=!reduced;
-  if(autoIntro){fold=.12;target=.12;slider.value='120';}
+  fold=target=loopPlaying?0:1;slider.value=String(target*1000);
+  function updateLoopControl(){
+    loopToggle.textContent=loopPlaying?'Pause loop':'Play loop';
+    loopToggle.setAttribute('aria-label',loopPlaying?'Pause folding animation':'Play folding animation');
+  }
+  function pauseLoop(){loopPlaying=false;updateLoopControl();}
+  loopToggle.addEventListener('click',()=>{
+    if(loopPlaying)pauseLoop();
+    else{loopTime=openingTimeForFold(fold);loopPlaying=true;faceForward();updateLoopControl();wake();}
+  });
+  motionQuery.addEventListener('change',event=>{reduced=event.matches;if(reduced)pauseLoop();wake();});
+  updateLoopControl();
+  window.addEventListener('duo:ar-launch',pauseLoop);
   function resize() {
     const {width,height}=stage.getBoundingClientRect();
     renderer.setSize(width,height);camera.aspect=width/Math.max(1,height);
@@ -51,7 +84,7 @@ async function start() {
     camera.lookAt(0,0,0);camera.updateProjectionMatrix();
     dirty=true;wake();
   }
-  function wake(){if(!raf&&!document.hidden&&!disposed){lastTime=performance.now();raf=requestAnimationFrame(frame);}}
+  function wake(){if(!booting&&!raf&&!document.hidden&&!disposed){lastTime=performance.now();raf=requestAnimationFrame(frame);}}
   function updateSlider(p) {
     control.style.setProperty('--fold',String(p));
     slider.setAttribute('aria-valuetext',p<.005?'Closed':p>.995?'Fully open':`${Math.round(p*100)} percent open`);
@@ -62,14 +95,14 @@ async function start() {
     targetYaw=targetPitch=0;vx=vy=0;
   }
   function input(){
-    interacted=true;target=Number(slider.value)/1000;
+    pauseLoop();target=Number(slider.value)/1000;
     faceForward();
     const now=performance.now();inputSpeed=Math.min(3,Math.abs(target-lastSliderValue)/Math.max(.016,(now-lastSliderTime)/1000));
     lastSliderValue=target;lastSliderTime=now;
     updateSlider(target);dirty=true;wake();
   }
   slider.addEventListener('input',input);
-  slider.addEventListener('pointerdown',()=>{interacted=true;sliderDown=true;faceForward();control.dataset.pressed='true';lastSliderValue=target;lastSliderTime=performance.now();wake();});
+  slider.addEventListener('pointerdown',()=>{pauseLoop();sliderDown=true;faceForward();control.dataset.pressed='true';lastSliderValue=target;lastSliderTime=performance.now();wake();});
   const releaseSlider=()=>{sliderDown=false;delete control.dataset.pressed;wake();};
   slider.addEventListener('pointerup',releaseSlider);slider.addEventListener('pointercancel',releaseSlider);slider.addEventListener('lostpointercapture',releaseSlider);
   stage.addEventListener('pointerdown',e=>{
@@ -77,7 +110,7 @@ async function start() {
     const rect=stage.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,1-(e.clientY-rect.top)/rect.height*2);
     raycaster.setFromCamera(pointer,camera);if(!raycaster.intersectObject(model.phone,true).length)return;
     target=Number(slider.value)<500?0:1;slider.value=String(target*1000);updateSlider(target);
-    interacted=true;pointerId=e.pointerId;stage.setPointerCapture(pointerId);dragging=true;
+    pauseLoop();pointerId=e.pointerId;stage.setPointerCapture(pointerId);dragging=true;
     lastX=e.clientX;lastY=e.clientY;lastMove=performance.now();vx=vy=0;wake();
   });
   stage.addEventListener('pointermove',e=>{
@@ -92,18 +125,17 @@ async function start() {
   stage.addEventListener('pointerup',end);stage.addEventListener('pointercancel',end);stage.addEventListener('lostpointercapture',end);
   stage.addEventListener('keydown',e=>{
     const moves={ArrowLeft:[-.12,0],ArrowRight:[.12,0],ArrowUp:[0,-.12],ArrowDown:[0,.12]};
-    if(moves[e.key]){e.preventDefault();interacted=true;target=Number(slider.value)<500?0:1;slider.value=String(target*1000);updateSlider(target);targetYaw+=moves[e.key][0];targetPitch=clamp(targetPitch+moves[e.key][1],-1.4,1.4);wake();}
-    if(e.key.toLowerCase()==='r'){targetYaw=targetPitch=0;vx=vy=0;wake();}
+    if(moves[e.key]){e.preventDefault();pauseLoop();target=Number(slider.value)<500?0:1;slider.value=String(target*1000);updateSlider(target);targetYaw+=moves[e.key][0];targetPitch=clamp(targetPitch+moves[e.key][1],-1.4,1.4);wake();}
+    if(e.key.toLowerCase()==='r'){pauseLoop();targetYaw=targetPitch=0;vx=vy=0;wake();}
   });
-  stage.addEventListener('dblclick',()=>{targetYaw=targetPitch=0;vx=vy=0;interacted=true;wake();});
+  stage.addEventListener('dblclick',()=>{targetYaw=targetPitch=0;vx=vy=0;pauseLoop();wake();});
   function frame(now) {
     raf=0;if(disposed||document.hidden)return;
-    const dt=Math.min((now-lastTime)/1000,.05);lastTime=now;
-    const intro=autoIntro&&!interacted&&(now-introStart<2300);
-    if(intro){const t=clamp((now-introStart-350)/1850,0,1);target=.12+.48*(t*t*(3-2*t));slider.value=String(Math.round(target*1000));updateSlider(target);}
+    const elapsed=Math.max(0,(now-lastTime)/1000);const dt=Math.min(elapsed,.05);lastTime=now;
+    if(loopPlaying){loopTime=(loopTime+elapsed)%LOOP_SECONDS;target=foldAt(loopTime);slider.value=String(Math.round(target*1000));updateSlider(target);}
     if(!dragging){targetYaw+=vx*dt*60;targetPitch=clamp(targetPitch+vy*dt*60,-1.4,1.4);vx*=Math.exp(-dt*7);vy*=Math.exp(-dt*7);}
     const ease=reduced?1:1-Math.exp(-dt*19);
-    fold=THREE.MathUtils.lerp(fold,target,ease);
+    fold=loopPlaying?target:THREE.MathUtils.lerp(fold,target,ease);
     if(Math.abs(fold-target)<.0001)fold=target;
     yaw=THREE.MathUtils.lerp(yaw,targetYaw,ease);pitch=THREE.MathUtils.lerp(pitch,targetPitch,ease);
     model.setFold(fold);orbit.rotation.set(pitch,yaw,0,'YXZ');
@@ -123,7 +155,9 @@ async function start() {
         projectedCorner.set(x,y,z).project(camera);
         phoneBottom=Math.max(phoneBottom,(1-projectedCorner.y)*.5*stage.clientHeight+stage.offsetTop);
       }
-      const dockTop=clamp(phoneBottom+30,innerHeight*.52,innerHeight-100);
+      const viewportHeight=window.visualViewport?.height??innerHeight;
+      const safeBottom=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom'))||0;
+      const dockTop=Math.max(0,Math.min(Math.max(phoneBottom+24,viewportHeight*.50),viewportHeight-dock.offsetHeight-safeBottom-14));
       document.documentElement.style.setProperty('--slider-top',`${dockTop}px`);
     }
     inputSpeed*=Math.exp(-dt*12);
@@ -134,22 +168,48 @@ async function start() {
     control.style.setProperty('--stretch',String(thumbStretch));
     shadow.scale.x=.63+fold*.37;shadow.material.opacity=1-Math.min(.55,Math.abs(pitch)*.3);
     renderer.render(scene,camera);dirty=false;
-    const moving=intro||dragging||sliderDown||Math.abs(thumbStretch-desiredStretch)>.0001||Math.abs(stretchSpeed)>.0001||inputSpeed>.001||Math.abs(cameraDistance-fit)>.005||Math.abs(fold-target)>.0001||Math.abs(yaw-targetYaw)>.0001||Math.abs(pitch-targetPitch)>.0001||Math.abs(vx)+Math.abs(vy)>.0001;
+    const moving=loopPlaying||dragging||sliderDown||Math.abs(thumbStretch-desiredStretch)>.0001||Math.abs(stretchSpeed)>.0001||inputSpeed>.001||Math.abs(cameraDistance-fit)>.005||Math.abs(fold-target)>.0001||Math.abs(yaw-targetYaw)>.0001||Math.abs(pitch-targetPitch)>.0001||Math.abs(vx)+Math.abs(vy)>.0001;
     if(moving)raf=requestAnimationFrame(frame);
   }
-  const observer=new ResizeObserver(resize);observer.observe(stage);
+  const observer=new ResizeObserver(resize);observer.observe(stage);observer.observe(dock);
+  window.addEventListener('resize',resize);
   document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;}else{dirty=true;wake();}});
   renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(raf);raf=0;showError('The 3D view was paused. Reload the page to continue.');});
   window.addEventListener('pagehide',()=>{cancelAnimationFrame(raf);raf=0;});
   window.addEventListener('pageshow',()=>wake());
   updateSlider(target);resize();
-  document.body.classList.add('ready');document.getElementById('loading').setAttribute('aria-label','3D phone ready');
+  loading.update(92,'Preparing materials');await yieldToMain();
+  const textures=new Set();
+  model.phone.traverse(object=>{
+    for(const material of [].concat(object.material||[])){
+      for(const value of Object.values(material))if(value?.isTexture&&!value.isRenderTargetTexture)textures.add(value);
+    }
+  });
+  let prepared=0;
+  for(const texture of textures){
+    renderer.initTexture(texture);
+    loading.update(92+4*(++prepared/textures.size),'Preparing materials');
+    await yieldToMain();
+  }
+  loading.update(97,'Finishing 3D view');await yieldToMain();
+  await renderer.compileAsync(scene,camera);
+  loading.update(99,'Finishing 3D view');await yieldToMain();
+  // Reveal only after drawing a frame, so shader compilation never hides
+  // behind a blank stage or a prematurely completed progress bar.
+  if(document.hidden)await new Promise(resolve=>{
+    const visible=()=>{if(!document.hidden){document.removeEventListener('visibilitychange',visible);resolve();}};
+    document.addEventListener('visibilitychange',visible);
+  });
+  booting=false;lastTime=performance.now();frame(lastTime);
+  loading.complete();slider.disabled=false;loopToggle.disabled=false;
+  const loadTiming={downloadMs:Math.round(downloadFinished-loadStarted),readyMs:Math.round(performance.now()-loadStarted),assetBytes:assets.total};
   // Read-only state is useful for regression checks without adding interface chrome.
-  window.duo={getState:()=>({fold,target,yaw,pitch,dragging,width:stage.clientWidth,height:stage.clientHeight,triangles:renderer.info.render.triangles,calls:renderer.info.render.calls})};
+  window.duo={getState:()=>({fold,target,yaw,pitch,dragging,loopPlaying,loopTime,width:stage.clientWidth,height:stage.clientHeight,triangles:renderer.info.render.triangles,calls:renderer.info.render.calls,screenSize:model.screenSize,loadTiming})};
 }
 
 function showError(message) {
   document.body.classList.add('failed');
+  stage.setAttribute('aria-busy','false');
   const p=document.createElement('p');p.className='fallback-message';p.setAttribute('role','alert');p.textContent=message;stage.appendChild(p);
 }
 start().catch(error=>{console.error(error);showError('The 3D view could not load. Check your connection and reload the page.');});

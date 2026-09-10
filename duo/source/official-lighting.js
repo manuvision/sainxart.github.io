@@ -1,8 +1,42 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
+import precomputedLighting from '../assets/lighting/linear-exr-manifest.json' with { type: 'json' };
 
 const BASE = './assets/lighting/';
+
+export function supportsPrecomputedLighting() {
+  return typeof globalThis.DecompressionStream === 'function';
+}
+
+// Export the same source selection used by the loader so startup preloading can
+// count exactly the files that will be consumed on this browser.
+export function getLightingRadianceFiles() {
+  return precomputedLighting.files.map(file => supportsPrecomputedLighting() ? file.file : file.sourceFile);
+}
+
+async function loadPrecomputedRadiance(definition, url, yieldToMain) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Studio lighting: HTTP ${response.status}`);
+  const packed = await response.arrayBuffer();
+  await yieldToMain();
+  // Ordinarily these .gz assets are delivered as files. Also tolerate a server
+  // which already decoded their gzip Content-Encoding before fetch sees them.
+  const signature = new Uint8Array(packed, 0, Math.min(2, packed.byteLength));
+  const decoded = signature[0] === 0x1f && signature[1] === 0x8b
+    ? await new Response(new Blob([packed]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()
+    : packed;
+  if (decoded.byteLength !== definition.rawBytes) throw new Error('Studio lighting texture has an invalid byte length.');
+  const texture = new THREE.DataTexture(new Uint16Array(decoded), definition.width, definition.height, THREE.RGBAFormat, THREE.HalfFloatType);
+  // Match EXRLoader.load exactly. PMREM sees the same half-float radiance, with
+  // no resampling, tone mapping, exposure changes, or extra precision loss.
+  texture.minFilter = texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+  texture.flipY = false;
+  texture.colorSpace = THREE.LinearSRGBColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+}
 
 function applyRigState(root, state) {
   const materials = new Map();
@@ -108,14 +142,34 @@ export async function loadOfficialLighting(renderer, {
   baseUrl = BASE,
   canonicalRotation = new THREE.Euler(Math.PI / 2, 0, 0),
   useEditorialRigs = false,
+  assets = {},
+  onPhase = () => {},
+  yieldToMain = async () => {},
 } = {}) {
-  const response = await fetch(baseUrl + 'lighting-config.json');
+  const assetUrl = path => assets.url ? assets.url(path) : path;
+  onPhase('lighting-assets', { completed: 0 });
+  await yieldToMain();
+  const response = await fetch(assetUrl(baseUrl + 'lighting-config.json'));
   if (!response.ok) throw new Error(`Official lighting configuration: HTTP ${response.status}`);
   const config = await response.json();
-  const gltfLoader = new GLTFLoader(), exrLoader = new EXRLoader(), textureLoader = new THREE.TextureLoader();
+  const gltfLoader = new GLTFLoader(assets.manager), textureLoader = new THREE.TextureLoader(assets.manager);
+  const usePrecomputed = supportsPrecomputedLighting();
+  const precomputedBySource = new Map(precomputedLighting.files.map(file => [file.sourceFile, file]));
+  const loadRadiance = async () => {
+    if (usePrecomputed) {
+      return Promise.all(config.exrs.map(async source => {
+        const definition = precomputedBySource.get(source.file);
+        if (!definition) throw new Error(`Missing precomputed lighting: ${source.file}`);
+        return loadPrecomputedRadiance(definition, assetUrl(baseUrl + definition.file), yieldToMain);
+      }));
+    }
+    // Legacy fallback is only initialized where native gzip decoding is absent.
+    const exrLoader = new EXRLoader(assets.manager);
+    return Promise.all(config.exrs.map(exr => exrLoader.loadAsync(assetUrl(baseUrl + exr.file))));
+  };
   const [rigs, exrs, materialTextures] = await Promise.all([
     Promise.all((useEditorialRigs ? config.rigs : []).map(rig => gltfLoader.loadAsync(baseUrl + rig.file))),
-    Promise.all(config.exrs.map(exr => exrLoader.loadAsync(baseUrl + exr.file))),
+    loadRadiance(),
     Promise.all((config.textures || []).map(async definition => {
       const texture = await textureLoader.loadAsync(baseUrl + definition.file);
       texture.flipY = definition.properties?.flipY ?? false;
@@ -125,6 +179,8 @@ export async function loadOfficialLighting(renderer, {
       return [definition.id, texture];
     })),
   ]);
+  onPhase('lighting-decoded', { completed: exrs.length, total: config.exrs.length, precomputed: usePrecomputed });
+  await yieldToMain();
   const textures = new Map(materialTextures);
   const authorRotation = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, Math.PI, 0, 'YXZ'));
   const relativeRotation = new THREE.Quaternion().setFromEuler(canonicalRotation).multiply(authorRotation.invert());
@@ -145,9 +201,12 @@ export async function loadOfficialLighting(renderer, {
       targets.push(target);
       layers.set(config.rigs[i].layer, { texture: target.texture, rotation: rotate([0, 0, 0]), intensity: 1 });
       disposeRig(root);
+      await yieldToMain();
     }
     for (let i = 0; i < exrs.length; i++) {
       const texture = exrs[i], definition = config.exrs[i];
+      onPhase('lighting-pmrem', { completed: i, total: exrs.length });
+      await yieldToMain();
       // EXRLoader preserves floating-point radiance. This is linear data, not sRGB.
       texture.mapping = THREE.EquirectangularReflectionMapping;
       texture.colorSpace = THREE.LinearSRGBColorSpace;
@@ -156,7 +215,9 @@ export async function loadOfficialLighting(renderer, {
       targets.push(target);
       layers.set(definition.layer, { texture: target.texture, rotation: rotate(definition.rotation), intensity: definition.intensity });
       texture.dispose();
+      await yieldToMain();
     }
+    onPhase('lighting-ready', { completed: exrs.length, total: exrs.length });
   } catch (error) {
     targets.forEach(target => target.dispose());
     rigs.forEach(gltf => disposeRig(gltf.scene));

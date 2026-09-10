@@ -6,32 +6,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f4f5f7">
   <meta name="description" content="iPhone Duo at real size. Open and close, then place it on your table in augmented reality.">
-  <link rel="canonical" href="https://manu.vision/duo/ar/">
-  <title>iPhone Duo in AR — manu.vision</title>
+  <link rel="canonical" href="https://manu.vision/duo/">
+  <title>iPhone Duo — manu.vision</title>
   <link rel="preload" href="./assets/sf-pro-display-semibold.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="./style.css?v=3">
-  <link rel="stylesheet" href="./ar/style.css?v=1">
+  <link rel="stylesheet" href="./style.css?v=4">
 </head>
 <body>
   <main id="experience" aria-label="Interactive iPhone Duo">
     <header class="duo-heading"><h1>iPhone Duo</h1><p>Animation by <a href="https://manu.vision">manu.vision</a></p></header>
-    <div id="stage" tabindex="0" role="region" aria-label="3D iPhone Duo. Drag to rotate; the phone snaps fully open or closed. Use the slider to return to the straight-on view."></div>
-    <div id="loading" role="status" aria-live="polite"><span></span></div>
+    <div id="stage" aria-busy="true" tabindex="0" role="region" aria-label="3D iPhone Duo. Drag to rotate; the phone snaps fully open or closed. Use the slider to return to the straight-on view."></div>
+    <div id="loading" role="status" aria-live="polite">
+      <p class="loading-title">Loading 3D model…</p>
+      <div class="loading-meter" role="progressbar" aria-label="3D model loading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="loading-bar"></span></div>
+      <p class="loading-detail"><span id="loading-phase">Downloading model</span><span id="loading-percent" aria-hidden="true">0%</span></p>
+    </div>
     <div class="slider-dock">
       <div class="fold-control" id="fold-control">
         <div class="slider-rail" aria-hidden="true"><div class="slider-fill"></div></div>
         <div class="glass-drop" aria-hidden="true"><span class="drop-refract"></span><span class="drop-highlight"></span></div>
-        <input id="fold" type="range" min="0" max="1000" value="0" step="1" aria-label="Open or close iPhone Duo" aria-valuetext="Closed" aria-describedby="instructions">
+        <input id="fold" disabled type="range" min="0" max="1000" value="0" step="1" aria-label="Open or close iPhone Duo" aria-valuetext="Closed" aria-describedby="instructions">
       </div>
       <div class="ar-actions">
-        <button id="loop-toggle" type="button" aria-label="Pause folding animation">Pause loop</button>
+        <button id="loop-toggle" disabled type="button" aria-label="Pause folding animation">Pause loop</button>
         <a id="ar-link" hidden>Try it in Augmented Reality</a>
       </div>
       <p id="ar-status" role="status" aria-live="polite" hidden></p>
     </div>
     <p id="instructions" class="sr-only">The phone opens and closes on a seven-second loop, pausing for one second at each end. Pause the loop or touch the slider to take control. Slide left to close, right to open. Touch the phone to snap to the nearest endpoint, then drag to rotate. Touch the slider to return to the straight-on view. Slider arrow keys adjust precisely; Home closes and End opens. With the phone focused, arrow keys rotate and R resets the view.</p>
   </main>
-  <noscript><p class="fallback-message">Enable JavaScript to explore iPhone Duo.</p></noscript>
-  <script type="module" src="./ar/app.js?v=ar-1"></script>
+  <noscript><style>#loading,.slider-dock{display:none}</style><p class="fallback-message">Enable JavaScript to explore iPhone Duo.</p></noscript>
+  <script type="module" src="./app.js?v=duo-2"></script>
 </body>
 </html>

@@ -39,7 +39,7 @@ export function createScreenBlur(renderer, source, isOuter=false) {
   });
   const scene=new THREE.Scene();scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),material));
   const camera=new THREE.Camera();let last=-1;
-  return {texture:b.texture,update(p){
+  return {texture:b.texture,prepare:()=>renderer.compileAsync(scene,camera),update(p){
     if(Math.abs(p-last)<.0001)return;last=p;
     material.uniforms.wipe.value=isOuter?Math.min(p,1-p):1-p;
     const previous=renderer.getRenderTarget();

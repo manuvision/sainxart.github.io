@@ -1,0 +1,32 @@
+{
+  "schema": "linear-rgba16f-v1",
+  "threeVersion": "0.180.0",
+  "endianness": "little",
+  "channels": "RGBA",
+  "colorSpace": "srgb-linear",
+  "flipY": false,
+  "files": [
+    {
+      "sourceFile": "ADsFgCxkeKZYiww.exr",
+      "file": "ADsFgCxkeKZYiww.rgba16f.gz",
+      "width": 256,
+      "height": 128,
+      "sourceBytes": 83235,
+      "rawBytes": 262144,
+      "gzipBytes": 94431,
+      "sourceSha256": "3397ceab39b777f876a0cb2d164c798003932b7fae1eda667365b4571e9f6e14",
+      "decodedSha256": "12d31c33229405a3b55a33ad001d1389539fb5666f4958cb40107e21ba471460"
+    },
+    {
+      "sourceFile": "SfFEyQuyjAgUwjH.exr",
+      "file": "SfFEyQuyjAgUwjH.rgba16f.gz",
+      "width": 256,
+      "height": 128,
+      "sourceBytes": 199833,
+      "rawBytes": 262144,
+      "gzipBytes": 52360,
+      "sourceSha256": "4367ff591c0e1d0208cbde4e206a479bab2b8c85585c19e0c54c42a8e36a2a93",
+      "decodedSha256": "12d15ecea76c88997cd477cf656495a180f73050d117452706c71b94a82ada25"
+    }
+  ]
+}

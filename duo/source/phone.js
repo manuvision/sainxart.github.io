@@ -8,14 +8,17 @@ export const W=8.23,H=11.78,D=.52;
 function loadImage(src){
   return new Promise((resolve,reject)=>{
     const image=new Image();image.onload=()=>resolve(image);
+    image.decoding='async';
     image.onerror=()=>reject(new Error('Screen artwork could not load'));
     image.src=src;
   });
 }
 
-function makeScreen(image,overlay,outer){
+function makeScreen(image,overlay,outer,maxScreenSize){
   const canvas=document.createElement('canvas');
-  canvas.width=outer?1000:2048;canvas.height=outer?1455:1432;
+  const nativeWidth=outer?1000:2048,nativeHeight=outer?1455:1432;
+  const resolution=Math.min(1,maxScreenSize/Math.max(nativeWidth,nativeHeight));
+  canvas.width=Math.round(nativeWidth*resolution);canvas.height=Math.round(nativeHeight*resolution);
   const context=canvas.getContext('2d',{alpha:false});
   const {width,height}=canvas;
   context.fillStyle='#000';context.fillRect(0,0,width,height);
@@ -32,25 +35,31 @@ function makeScreen(image,overlay,outer){
   return texture;
 }
 
-export async function createPhone(renderer){
+export async function createPhone(renderer,{assets,initialFold=0,maxScreenSize=2048,yieldToMain=async()=>{},onPhase=()=>{}}={}){
+  const url=path=>assets?.url(path)??path;
   const [rig,wallpaper,innerOverlay,outerOverlay]=await Promise.all([
-    loadOfficialModel(renderer),
-    loadImage('./assets/wallpaper-raccoon.png'),
-    loadImage('./assets/lockscreen-inner.avif'),
-    loadImage('./assets/lockscreen-outer.avif')
+    loadOfficialModel(renderer,assets?.manager),
+    loadImage(url('./assets/wallpaper-raccoon.webp')),
+    loadImage(url('./assets/lockscreen-inner.avif')),
+    loadImage(url('./assets/lockscreen-outer.avif'))
   ]);
-  const innerTexture=makeScreen(wallpaper,innerOverlay,false);
-  const outerTexture=makeScreen(wallpaper,outerOverlay,true);
+  onPhase('display');await yieldToMain();
+  const innerTexture=makeScreen(wallpaper,innerOverlay,false,maxScreenSize);
+  renderer.initTexture(innerTexture);await yieldToMain();
+  const outerTexture=makeScreen(wallpaper,outerOverlay,true,maxScreenSize);
+  renderer.initTexture(outerTexture);await yieldToMain();
   innerTexture.anisotropy=outerTexture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
   const innerBlur=createScreenBlur(renderer,innerTexture);
   const outerBlur=createScreenBlur(renderer,outerTexture,true);
+  await Promise.all([innerBlur.prepare(),outerBlur.prepare()]);
+  await yieldToMain();
   const options={flipY:true,innerSize:rig.screenDimensions.inner,outerSize:rig.screenDimensions.outer,outerCenter:rig.screenDimensions.outerCenter};
   const innerMaterial=createScreenMaterial(innerBlur.texture,false,options);
   const outerMaterial=createScreenMaterial(outerBlur.texture,true,options);
   rig.screenMeshes.inner.material=innerMaterial;
   rig.screenMeshes.outer.material=outerMaterial;
   const phone=rig.phone;
-  let progress=.65;
+  let progress=initialFold;
   function setFold(value){
     progress=THREE.MathUtils.clamp(value,0,1);
     rig.setFold(progress);
@@ -66,5 +75,5 @@ export async function createPhone(renderer){
     outerMaterial.uniforms.phoneInverse.value.copy(rig.projectionRoot.matrixWorld).invert();
   }
   setFold(progress);
-  return {phone,setFold,updateProjection,getBounds:rig.getBounds,get progress(){return progress;}};
+  return {phone,setFold,updateProjection,getBounds:rig.getBounds,screenSize:[innerTexture.image.width,innerTexture.image.height],get progress(){return progress;}};
 }

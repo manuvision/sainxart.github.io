@@ -1,6 +1,6 @@
-# Duo AR test
+# Duo AR assets
 
-Isolated test at **https://manu.vision/duo/ar/**. The original `/duo/` page and its bundle remain unchanged.
+Live at **https://manu.vision/duo/**. The `/duo/ar/` route also renders this experience for existing links. The canonical website source now lives in `duo/source`; this directory retains the approved native assets and their build scripts.
 
 The mobile-only **Try it in Augmented Reality** text link opens native AR Quick Look on iPhone/iPad or Scene Viewer on Android. There is no icon. The native viewer handles the camera permission and tabletop placement. Both links disable content resizing so the phone starts and stays at its authored physical size. Unsupported browsers get a brief fallback message; Android devices without AR support may open Scene Viewer's 3D mode.
 
@@ -18,10 +18,10 @@ The webpage uses the same timing. Touching the slider/phone or launching AR paus
 
 ```sh
 npm ci --prefix duo/source
-node duo/ar/source/build.mjs
+node duo/source/build.mjs
 ```
 
-The test entry point imports the existing device and lighting code without editing them. `source/loop.js` contains the timing function. `source/ar-launch.js` contains the native viewer links. The bundle is self-hosted and introduces no runtime CDN dependency.
+The main entry point, timing function, and native links are in `duo/source`. The former AR source entry points forward to those shared modules. The bundle is self-hosted and introduces no runtime CDN dependency. See [website build and loading notes](../README.md).
 
 ## Rebuild the native assets
 
@@ -33,7 +33,7 @@ Run the preparation script, followed by `source/export-ar-assets.py` and `source
 
 The webpage is checked at desktop, iPhone, iPad, Android, small portrait/landscape widths, and reduced motion. Checks cover full-cycle timing, endpoint holds, manual pause/resume, mobile-only link visibility, and viewport fit. USDZ is inspected and rendered through Apple's native USD tools, and the baked skeleton is evaluated through all 211 samples to verify constant tabletop contact and exact holds.
 
-These checks do not replace a physical phone test of camera tracking and placement. Open the test URL in Safari on iPhone or Chrome on Android and tap the AR link to review the native experience before promoting it to `/duo/`.
+These checks do not replace a physical phone test of camera tracking and placement. Open the URL in Safari on iPhone or Chrome on Android and tap the AR link to review the native experience.
 
 ## Sources
 

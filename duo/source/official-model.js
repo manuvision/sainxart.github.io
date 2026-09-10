@@ -197,7 +197,7 @@ export function prepareOfficialModel(gltf, renderer) {
   };
 }
 
-export async function loadOfficialModel(renderer) {
-  const gltf = await new GLTFLoader().loadAsync(OFFICIAL_MODEL_URL);
+export async function loadOfficialModel(renderer, manager) {
+  const gltf = await new GLTFLoader(manager).loadAsync(OFFICIAL_MODEL_URL);
   return prepareOfficialModel(gltf, renderer);
 }
