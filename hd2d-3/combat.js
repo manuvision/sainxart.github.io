@@ -1,7 +1,7 @@
 // Combat is independent of rendering so every strike, cooldown and drop can be tested.
-export const rules=Object.freeze({mobHP:5,energy:4,enemyEnergy:2,playerHP:10,playerReach:1.5,damage:1,heal:3,dropChance:.10,
+export const rules=Object.freeze({mobHP:5,energy:4,enemyEnergy:2,playerHP:6,playerReach:1.5,enemyReach:1.16,enemyAttackRange:1.13,enemyStopRange:1.08,damage:1,heal:1,dropChance:.03,
   aggro:3.3,loseInterest:5.5,homeRadius:2,leash:6,walk:1.05,chase:1.4,retreat:.7,
-  attackCooldownMin:.55,attackCooldownMax:2.1,windup:.20,strike:.30,attackEnd:.50,invulnerability:.65,magnet:1.8});
+  energyReaction:.12,attackCooldownMin:.52,attackCooldownMax:.80,windup:.20,strike:.30,attackEnd:.50,invulnerability:.65,magnet:1.8});
 export const spawns=[[2,3.1],[-6.6,3.9],[1.8,-3.2],[10.2,3],[-8.8,-2.4]];
 const directions={south:[0,1],east:[1,0],north:[0,-1],west:[-1,0]};
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
@@ -43,10 +43,10 @@ export function createCombat({player,blocked,random=Math.random,homes=spawns}){
   function wanderTarget(m){for(let i=0;i<12;i++){const a=random()*Math.PI*2,r=.35+random()*(rules.homeRadius-.35),p={x:m.home.x+Math.cos(a)*r,z:m.home.z+Math.sin(a)*r};if(!blocked(p.x,p.z)&&clearLine(m,p))return p;}return {...m.home};}
   function spendEnergy(){if(player.hp<=0||player.energy<1)return false;player.energy--;return true;}
   function update(dt){time+=dt;if(player.hp>0&&player.energy<player.maxEnergy){energyTime+=dt;while(energyTime>=1&&player.energy<player.maxEnergy){energyTime-=1;player.energy++;}}if(player.energy===player.maxEnergy)energyTime=0;
-    for(const m of mobs){if(m.hp<=0)continue;if(m.energy<m.maxEnergy){m.energyTime+=dt;while(m.energyTime>=1&&m.energy<m.maxEnergy){m.energyTime-=1;m.energy++;}}if(m.energy===m.maxEnergy)m.energyTime=0;const d=distance(m,player),homeDistance=distance(m,m.home);
+    for(const m of mobs){if(m.hp<=0)continue;if(m.energy<m.maxEnergy){m.energyTime+=dt;while(m.energyTime>=1&&m.energy<m.maxEnergy){m.energyTime-=1;m.energy++;if(m.energy===1)m.nextAttack=Math.max(m.nextAttack,time+random()*rules.energyReaction);}}if(m.energy===m.maxEnergy)m.energyTime=0;const d=distance(m,player),homeDistance=distance(m,m.home);
       if(player.hp<=0){m.state='return';m.engaged=false;m.bar=false;}
       if(m.state==='attack'&&player.hp>0){m.elapsed=time-m.attackAt;m.action='attack';
-        if(!m.attackHit&&m.elapsed>=rules.strike){m.attackHit=true;if(inArc(m,player,1.16,.63))damagePlayer();}
+        if(!m.attackHit&&m.elapsed>=rules.strike){m.attackHit=true;if(inArc(m,player,rules.enemyReach,.85))damagePlayer();}
         if(m.elapsed<rules.attackEnd)continue;m.state='chase';m.action='idle';
       }
       if(time<m.stunUntil){m.action='idle';continue;}
@@ -59,8 +59,8 @@ export function createCombat({player,blocked,random=Math.random,homes=spawns}){
           if(!step(m,m.x+dx/l,m.z+dz/l,rules.retreat,dt))step(m,m.home.x,m.home.z,rules.retreat,dt);continue;}
         m.state='chase';
         if(m.hp/m.maxHP<.4&&time>=m.retreatCheck){m.retreatCheck=time+4;if(random()<.35){beginRetreat(m);continue;}}
-        if(d<.94&&m.energy>0&&time>=m.nextAttack&&clearLine(m,player)){m.dir=facing(player.x-m.x,player.z-m.z);m.state='attack';m.action='attack';m.attackAt=time;m.attackHit=false;m.elapsed=0;m.energy--;const fast=random()<.6;m.nextAttack=time+(fast?.55+random()*.25:1.2+random()*.9);m.attacks++;events.push({type:'mob-attack',id:m.id,time});}
-        else if(d>.78)step(m,player.x,player.z,rules.chase,dt);
+        if(d<=rules.enemyAttackRange&&m.energy>0&&time>=m.nextAttack&&clearLine(m,player)){m.dir=facing(player.x-m.x,player.z-m.z);m.state='attack';m.action='attack';m.attackAt=time;m.attackHit=false;m.elapsed=0;m.energy--;m.nextAttack=time+rules.attackCooldownMin+random()*(rules.attackCooldownMax-rules.attackCooldownMin);m.attacks++;events.push({type:'mob-attack',id:m.id,time});}
+        else if(d>rules.enemyStopRange)step(m,player.x,player.z,rules.chase,dt);
         else m.dir=facing(player.x-m.x,player.z-m.z);
       }else{
         m.wait-=dt;if(m.wait>0)continue;if(!m.target)m.target=wanderTarget(m);
