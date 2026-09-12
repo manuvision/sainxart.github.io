@@ -1,6 +1,6 @@
 {
   "year": 2026,
-  "reviewedAt": "2026-09-11",
+  "reviewedAt": "2026-09-12",
   "homicides": {
     "count": 28,
     "asOf": "2026-09-06",
@@ -8,7 +8,7 @@
     "updatedAt": "2026-09-08",
     "publisher": "RCI",
     "source": "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue",
-    "checkedAt": "2026-09-11"
+    "checkedAt": "2026-09-12"
   },
   "roads": {
     "count": 26,
@@ -17,6 +17,6 @@
     "updatedAt": "2026-09-10",
     "publisher": "Préfecture de Guadeloupe",
     "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
-    "checkedAt": "2026-09-11"
+    "checkedAt": "2026-09-12"
   }
 }
