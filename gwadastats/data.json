@@ -1,6 +1,6 @@
 {
   "year": 2026,
-  "reviewedAt": "2026-09-13",
+  "reviewedAt": "2026-09-14",
   "homicides": {
     "count": 28,
     "asOf": "2026-09-06",
@@ -8,7 +8,7 @@
     "updatedAt": "2026-09-08",
     "publisher": "RCI",
     "source": "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue",
-    "checkedAt": "2026-09-13"
+    "checkedAt": "2026-09-14"
   },
   "roads": {
     "count": 26,
