@@ -1,16 +1,16 @@
 {
-  "lastAttempt": "2026-09-16T15:24:35+00:00",
+  "lastAttempt": "2026-09-16T15:27:44+00:00",
   "categories": {
     "homicides": {
-      "lastSuccess": "2026-09-16T15:24:35+00:00",
+      "lastSuccess": "2026-09-16T15:27:44+00:00",
       "outcome": "unchanged",
       "source": "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue",
       "errors": [],
       "verifiedThrough": "2026-09-06"
     },
     "roads": {
-      "lastSuccess": "2026-09-16T15:24:35+00:00",
-      "outcome": "updated",
+      "lastSuccess": "2026-09-16T15:27:44+00:00",
+      "outcome": "unchanged",
       "source": "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html",
       "errors": [
         "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees: RemoteDisconnected: Remote end closed connection without response"
@@ -19,7 +19,7 @@
     }
   },
   "warnings": [],
-  "changed": true,
+  "changed": false,
   "verifiedCategories": 2,
   "referenceYear": 2026,
   "checkedArticles": 43
