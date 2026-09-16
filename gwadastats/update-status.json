@@ -1,29 +1,26 @@
 {
-  "lastAttempt": "2026-09-16T14:59:02+00:00",
+  "lastAttempt": "2026-09-16T15:24:35+00:00",
   "categories": {
     "homicides": {
-      "lastSuccess": "2026-09-16T14:59:02+00:00",
+      "lastSuccess": "2026-09-16T15:24:35+00:00",
       "outcome": "unchanged",
       "source": "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue",
       "errors": [],
       "verifiedThrough": "2026-09-06"
     },
     "roads": {
-      "lastSuccess": "2026-09-13T14:24:25+00:00",
-      "outcome": "unavailable",
-      "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
+      "lastSuccess": "2026-09-16T15:24:35+00:00",
+      "outcome": "updated",
+      "source": "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html",
       "errors": [
-        "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees: RemoteDisconnected: Remote end closed connection without response",
-        "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html: Missing official page update date",
-        "No unambiguous dated 2026 cumulative total was verified"
-      ]
+        "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees: RemoteDisconnected: Remote end closed connection without response"
+      ],
+      "verifiedThrough": "2026-09-13"
     }
   },
-  "warnings": [
-    "Only one category was verified; consult individual checkedAt dates and update-status.json"
-  ],
+  "warnings": [],
   "changed": true,
-  "verifiedCategories": 1,
+  "verifiedCategories": 2,
   "referenceYear": 2026,
-  "checkedArticles": 44
+  "checkedArticles": 43
 }

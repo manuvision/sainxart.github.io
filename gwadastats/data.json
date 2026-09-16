@@ -11,12 +11,12 @@
     "checkedAt": "2026-09-16"
   },
   "roads": {
-    "count": 26,
-    "asOf": "2026-09-06",
-    "publishedAt": "2026-09-10",
-    "updatedAt": "2026-09-10",
-    "publisher": "Préfecture de Guadeloupe",
-    "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
-    "checkedAt": "2026-09-13"
+    "count": 27,
+    "asOf": "2026-09-13",
+    "publishedAt": "2026-09-15",
+    "updatedAt": "2026-09-15",
+    "publisher": "DEAL de Guadeloupe",
+    "source": "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html",
+    "checkedAt": "2026-09-16"
   }
 }
