@@ -6,6 +6,8 @@ The Python standard-library collector reads RCI's Guadeloupe news feed and recen
 
 Only supported dated claims for Guadeloupe's scope are accepted. Ambiguous counts, conflicting scopes, unsupported wording and unavailable sources preserve the previous record. The page shows each report's actual cutoff. Source-format changes may require a parser repair and a new fixture test.
 
+Official road pages may show either a publication date alone or separate publication and revision dates. A publication-only page uses that explicit date for both fields; missing or invalid dates still fail validation. Transient connection failures are retried before the independent official source is used. An unavailable preferred source does not fail the run when the other official source supplies a valid, current record.
+
 `gwadastats/data.json` contains the current common reference year, independent counts, cutoff and publication dates, source links and per-category `checkedAt` dates. Its `reviewedAt` is the latest successful check of either category. A failed category retains its own `checkedAt`. `update-status.json` records each attempt, last success and errors. A new year replaces the previous archive only when both categories have verified totals for the same new year.
 
 From the repository root:

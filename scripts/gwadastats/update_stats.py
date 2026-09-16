@@ -13,12 +13,15 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from copy import deepcopy
 from datetime import date, datetime, timedelta, timezone
 from html.parser import HTMLParser
+from http.client import HTTPException
 import json
 from pathlib import Path
 import re
 import sys
+import time
 import unicodedata
 from urllib.parse import urljoin, urlsplit
+from urllib.error import HTTPError, URLError
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 from xml.etree import ElementTree
 
@@ -139,18 +142,26 @@ class SourceRedirects(HTTPRedirectHandler):
 def fetch(url: str) -> str:
     if not permitted_url(url):
         raise SourceError("URL outside the public-source allowlist")
-    try:
-        with build_opener(SourceRedirects()).open(Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,application/rss+xml,application/xml;q=0.9"}), timeout=25) as response:
-            if not permitted_url(response.url):
-                raise SourceError("Source redirected outside the allowlist")
-            raw = response.read(MAX_BYTES + 1)
-            if len(raw) > MAX_BYTES:
-                raise SourceError("Source exceeds the download limit")
-            return raw.decode(response.headers.get_content_charset() or "utf-8")
-    except SourceError:
-        raise
-    except Exception as exc:
-        raise SourceError(f"{type(exc).__name__}: {exc}") from exc
+    # Government servers occasionally close a connection or return a gateway
+    # error. Retry only transport failures, never rejected source content.
+    for attempt in range(3):
+        try:
+            with build_opener(SourceRedirects()).open(Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,application/rss+xml,application/xml;q=0.9"}), timeout=25) as response:
+                if not permitted_url(response.url):
+                    raise SourceError("Source redirected outside the allowlist")
+                raw = response.read(MAX_BYTES + 1)
+                if len(raw) > MAX_BYTES:
+                    raise SourceError("Source exceeds the download limit")
+                return raw.decode(response.headers.get_content_charset() or "utf-8")
+        except SourceError:
+            raise
+        except (HTTPError, URLError, HTTPException, TimeoutError, ConnectionError) as exc:
+            transient = not isinstance(exc, HTTPError) or exc.code in {408, 429, 500, 502, 503, 504}
+            if not transient or attempt == 2:
+                raise SourceError(f"{type(exc).__name__}: {exc}") from exc
+            time.sleep(2 ** attempt)
+        except Exception as exc:
+            raise SourceError(f"{type(exc).__name__}: {exc}") from exc
 
 
 def publication_dates(page: Page, *, rci: bool) -> tuple[str, str]:
@@ -164,9 +175,12 @@ def publication_dates(page: Page, *, rci: bool) -> tuple[str, str]:
     text = fold(page.text)
     updated_match = re.search(r"mis a jour le\s*(" + DATE_PATTERN + ")", text)
     published_match = re.search(r"publie le\s*(" + DATE_PATTERN + ")", text)
-    if not updated_match:
-        raise SourceError("Missing official page update date")
-    updated = parse_date(updated_match[1])
+    if not updated_match and not published_match:
+        raise SourceError("Missing official page publication or update date")
+    # A newly published DEAL bulletin has only 'Publié le'. Its publication is
+    # the latest known version date until the publisher supplies a revision.
+    # Never substitute today's date or the transport's Last-Modified header.
+    updated = parse_date((updated_match or published_match)[1])
     return parse_date(published_match[1]) if published_match else updated, updated
 
 

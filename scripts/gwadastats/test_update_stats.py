@@ -1,10 +1,14 @@
 """Deterministic source fixtures; no network, accounts, secrets or LLM needed."""
 from copy import deepcopy
 from datetime import date
+from email.message import Message
+from http.client import RemoteDisconnected
 import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import MagicMock, patch
+from urllib.error import HTTPError
 
 MODULE = Path(__file__).resolve().with_name("update_stats.py")
 spec = importlib.util.spec_from_file_location("update_stats", MODULE)
@@ -132,6 +136,25 @@ class ExtractHomicides(unittest.TestCase):
 
 
 class ExtractRoads(unittest.TestCase):
+    def test_new_deal_bulletin_has_publication_date_without_revision(self):
+        # DEAL's live 15 September bulletin uses <time> with no update label.
+        body = roads(27, "13/09/2026", "15/09/2026", deal=True)
+        body = body.replace("<p>Mis à jour le 15/09/2026</p>", '<time datetime="2026-09-15">Publié le 15/09/2026</time>')
+        item = c.extract_roads(body, c.DEAL, date(2026, 9, 16))
+        self.assertEqual((item["count"], item["asOf"], item["publishedAt"], item["updatedAt"]),
+                         (27, "2026-09-13", "2026-09-15", "2026-09-15"))
+
+    def test_official_revision_keeps_distinct_publication_date(self):
+        body = roads(deal=True).replace("<p>Mis à jour", "<p>Publié le 02/01/2026</p><p>Mis à jour")
+        item = c.extract_roads(body, c.DEAL, TODAY)
+        self.assertEqual((item["publishedAt"], item["updatedAt"]), ("2026-01-02", "2026-09-01"))
+
+    def test_missing_and_inconsistent_official_dates_still_fail(self):
+        body = roads(deal=True)
+        for replacement in ["", "Publié le 10/09/2026", "Publié le 01/08/2026"]:
+            with self.subTest(replacement=replacement), self.assertRaises(c.SourceError):
+                c.extract_roads(body.replace("Mis à jour le 01/09/2026", replacement), c.DEAL, TODAY)
+
     def test_official_total_survives_inline_markup(self):
         item = c.extract_roads(roads(), c.PREFECTURE, TODAY)
         self.assertEqual((item["count"], item["asOf"]), (26, "2026-08-30"))
@@ -162,6 +185,17 @@ class ExtractRoads(unittest.TestCase):
 
 
 class Collection(unittest.TestCase):
+    def test_publication_only_backup_updates_road_record_during_prefecture_outage(self):
+        bulletin = roads(27, "13/09/2026", "15/09/2026", deal=True).replace("Mis à jour le", "Publié le")
+        fixture = network_fixture({c.PREFECTURE: OSError("RemoteDisconnected"), c.DEAL: bulletin})
+        output, status, code = c.collect(current_snapshot(), today=date(2026, 9, 16), fetcher=fixture)
+        self.assertEqual((output["roads"]["count"], output["roads"]["asOf"], output["roads"]["checkedAt"]),
+                         (27, "2026-09-13", "2026-09-16"))
+        self.assertEqual(output["roads"]["source"], c.DEAL)
+        self.assertEqual(status["categories"]["roads"]["outcome"], "updated")
+        self.assertEqual(status["verifiedCategories"], 2)
+        self.assertEqual(code, 0)
+
     def test_successful_unchanged_run_preserves_exact_counts_and_cutoffs(self):
         before = current_snapshot()
         output, status, code = c.collect(before, today=TODAY, fetcher=network_fixture())
@@ -247,6 +281,39 @@ class Collection(unittest.TestCase):
     def test_discovery_rejects_external_and_martinique_links(self):
         html = f'<a href="{ARTICLE}">ok</a><a href="https://rci.fm/martinique/infos/Faits-divers/Story">no</a><a href="https://evil.example/guadeloupe/infos/Faits-divers/Story">no</a>'
         self.assertEqual(c.article_links(html, c.RCI_LIST), [ARTICLE])
+
+
+class FetchRetries(unittest.TestCase):
+    def response(self, url=c.DEAL):
+        response = MagicMock()
+        response.__enter__.return_value = response
+        response.url = url
+        response.headers = Message()
+        response.read.return_value = b"<p>official bulletin</p>"
+        return response
+
+    def test_disconnect_and_gateway_error_retry_then_return_source(self):
+        with patch.object(c, "build_opener") as opener, patch.object(c.time, "sleep") as sleep:
+            opener.return_value.open.side_effect = [RemoteDisconnected("closed"), HTTPError(c.DEAL, 502, "gateway", {}, None), self.response()]
+            self.assertEqual(c.fetch(c.DEAL), "<p>official bulletin</p>")
+            self.assertEqual(opener.return_value.open.call_count, 3)
+            self.assertEqual([call.args[0] for call in sleep.call_args_list], [1, 2])
+
+    def test_persistent_transport_failure_is_reported_after_bounded_retries(self):
+        with patch.object(c, "build_opener") as opener, patch.object(c.time, "sleep"):
+            opener.return_value.open.side_effect = RemoteDisconnected("closed")
+            with self.assertRaisesRegex(c.SourceError, "RemoteDisconnected"):
+                c.fetch(c.DEAL)
+            self.assertEqual(opener.return_value.open.call_count, 3)
+
+    def test_permanent_http_error_and_disallowed_redirect_do_not_retry(self):
+        for result in [HTTPError(c.DEAL, 404, "missing", {}, None), self.response("https://example.com")]:
+            with self.subTest(result=result), patch.object(c, "build_opener") as opener, patch.object(c.time, "sleep") as sleep:
+                opener.return_value.open.side_effect = [result]
+                with self.assertRaises(c.SourceError):
+                    c.fetch(c.DEAL)
+                self.assertEqual(opener.return_value.open.call_count, 1)
+                sleep.assert_not_called()
 
 
 if __name__ == "__main__":
