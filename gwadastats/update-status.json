@@ -1,22 +1,20 @@
 {
-  "lastAttempt": "2026-09-18T14:31:59+00:00",
+  "lastAttempt": "2026-09-19T13:55:38+00:00",
   "categories": {
     "homicides": {
-      "lastSuccess": "2026-09-18T14:31:59+00:00",
+      "lastSuccess": "2026-09-19T13:55:38+00:00",
       "outcome": "unchanged",
       "source": "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue",
       "errors": [
-        "https://rci.fm/guadeloupe/infos/Sante/Une-maltraitance-que-nous-pouvons-accepter-les-patients-psychiatriques-laisses-labandon: UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc3 in position 83452: invalid continuation byte"
+        "https://rci.fm/guadeloupe/infos/Sante/Cest-laboutissement-de-40-ans-de-travail-une-trentaine-detudiants-en-medecine-ont-recu: UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc3 in position 77263: invalid continuation byte"
       ],
       "verifiedThrough": "2026-09-06"
     },
     "roads": {
-      "lastSuccess": "2026-09-18T14:31:59+00:00",
+      "lastSuccess": "2026-09-19T13:55:38+00:00",
       "outcome": "unchanged",
       "source": "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html",
-      "errors": [
-        "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees: RemoteDisconnected: Remote end closed connection without response"
-      ],
+      "errors": [],
       "verifiedThrough": "2026-09-13"
     }
   },
@@ -24,5 +22,5 @@
   "changed": true,
   "verifiedCategories": 2,
   "referenceYear": 2026,
-  "checkedArticles": 45
+  "checkedArticles": 46
 }
