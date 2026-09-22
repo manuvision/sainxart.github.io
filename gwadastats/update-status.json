@@ -1,17 +1,17 @@
 {
-  "lastAttempt": "2026-09-21T16:28:49+00:00",
+  "lastAttempt": "2026-09-22T14:55:40+00:00",
   "categories": {
     "homicides": {
-      "lastSuccess": "2026-09-21T16:28:49+00:00",
+      "lastSuccess": "2026-09-22T14:55:40+00:00",
       "outcome": "unchanged",
       "source": "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue",
       "errors": [
-        "https://rci.fm/guadeloupe/infos/Sante/Alzheimer-aux-Abymes-securiser-les-residents-sans-les-priver-de-liberte: UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc3 in position 79708: invalid continuation byte"
+        "https://rci.fm/guadeloupe/infos/Sante/Un-cas-de-chikungunya-importe-de-Guyane-detecte-en-Guadeloupe-lARS-appelle-la-grande: UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc3 in position 78905: invalid continuation byte"
       ],
       "verifiedThrough": "2026-09-06"
     },
     "roads": {
-      "lastSuccess": "2026-09-21T16:28:49+00:00",
+      "lastSuccess": "2026-09-22T14:55:40+00:00",
       "outcome": "unchanged",
       "source": "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html",
       "errors": [],
