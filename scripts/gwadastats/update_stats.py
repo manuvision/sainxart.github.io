@@ -15,8 +15,10 @@ from datetime import date, datetime, timedelta, timezone
 from html.parser import HTMLParser
 from http.client import HTTPException
 import json
+import os
 from pathlib import Path
 import re
+import ssl
 import sys
 import time
 import unicodedata
@@ -41,6 +43,10 @@ DATE_PATTERN = r"(?:\d{1,2}/\d{1,2}/20\d{2}|\d{1,2}(?:er)?\s+(?:" + "|".join(MON
 
 class SourceError(ValueError):
     """The source is unavailable or its claim cannot be read unambiguously."""
+
+
+class SourceUnavailable(SourceError):
+    """A retryable transport failure persisted after the bounded retries."""
 
 
 def fold(value: str) -> str:
@@ -157,8 +163,12 @@ def fetch(url: str) -> str:
             raise
         except (HTTPError, URLError, HTTPException, TimeoutError, ConnectionError) as exc:
             transient = not isinstance(exc, HTTPError) or exc.code in {408, 429, 500, 502, 503, 504}
-            if not transient or attempt == 2:
+            if isinstance(exc, URLError) and isinstance(exc.reason, ssl.SSLError):
+                transient = False  # Certificate/TLS validation failures need attention.
+            if not transient:
                 raise SourceError(f"{type(exc).__name__}: {exc}") from exc
+            if attempt == 2:
+                raise SourceUnavailable(f"{type(exc).__name__}: {exc}") from exc
             time.sleep(2 ** attempt)
         except Exception as exc:
             raise SourceError(f"{type(exc).__name__}: {exc}") from exc
@@ -356,10 +366,15 @@ def collect(snapshot: dict, previous_status: dict | None = None, *, today: date 
     today = today or datetime.now(timezone(timedelta(hours=-4))).date()
     attempt = datetime.now(timezone.utc).isoformat(timespec="seconds")
     previous_status = previous_status or {}
-    status = {"lastAttempt": attempt, "categories": {}, "warnings": []}
+    status = {"lastAttempt": attempt, "runId": os.environ.get("GITHUB_RUN_ID"), "runAttempt": os.environ.get("GITHUB_RUN_ATTEMPT"), "categories": {}, "warnings": []}
     for key in ("homicides", "roads"):
         old_status = previous_status.get("categories", {}).get(key, {})
-        status["categories"][key] = {"lastSuccess": old_status.get("lastSuccess"), "outcome": "unavailable", "source": snapshot[key]["source"], "errors": []}
+        status["categories"][key] = {"lastSuccess": old_status.get("lastSuccess"), "outcome": "unavailable", "source": snapshot[key]["source"], "errors": [], "issues": []}
+
+    def add_issue(category: str, url: str, exc: Exception, kind: str | None = None) -> None:
+        result = status["categories"][category]
+        result["errors"].append(f"{url}: {exc}")
+        result["issues"].append({"kind": kind or ("transport" if isinstance(exc, SourceUnavailable) else "source"), "source": url, "message": str(exc)})
     records = {"homicides": [], "roads": []}
     discovery_ok = False
     seeds = [snapshot["homicides"]["source"]]
@@ -374,7 +389,7 @@ def collect(snapshot: dict, previous_status: dict | None = None, *, today: date 
                 fetched[url] = future.result()
             except Exception as exc:
                 category = "roads" if url in {PREFECTURE, DEAL} else "homicides"
-                status["categories"][category]["errors"].append(f"{url}: {exc}")
+                add_issue(category, url, exc)
         for url in source_urls:
             if url not in fetched:
                 continue
@@ -393,7 +408,7 @@ def collect(snapshot: dict, previous_status: dict | None = None, *, today: date 
                     seeds.extend(links)
             except (SourceError, ValueError, KeyError) as exc:
                 category = "roads" if url in {PREFECTURE, DEAL} else "homicides"
-                status["categories"][category]["errors"].append(f"{url}: {exc}")
+                add_issue(category, url, exc)
         articles = list(dict.fromkeys(seeds))[:MAX_ARTICLES]
         article_futures = {pool.submit(fetcher, url): url for url in articles}
         for future in as_completed(article_futures):
@@ -403,11 +418,12 @@ def collect(snapshot: dict, previous_status: dict | None = None, *, today: date 
                 if record:
                     records["homicides"].append(record)
             except (SourceError, ValueError, KeyError) as exc:
-                status["categories"]["homicides"]["errors"].append(f"{url}: {exc}")
+                add_issue("homicides", url, exc)
             except Exception as exc:
-                status["categories"]["homicides"]["errors"].append(f"{url}: {type(exc).__name__}: {exc}")
+                add_issue("homicides", url, exc)
     if not discovery_ok:
         status["categories"]["homicides"]["errors"].append("No working news discovery source; the existing article alone cannot establish a successful current check")
+        status["categories"]["homicides"]["issues"].append({"kind": "discovery", "source": RCI_LIST, "message": "No working news discovery source"})
         records["homicides"] = []
 
     output = deepcopy(snapshot)
@@ -418,6 +434,8 @@ def collect(snapshot: dict, previous_status: dict | None = None, *, today: date 
         except SourceError as exc:
             rollover = {}
             status["warnings"].append(str(exc))
+            for key in records:
+                add_issue(key, snapshot[key]["source"], exc, "conflict")
         if rollover and all(rollover.values()):
             target_year = today.year
             output["year"] = target_year
@@ -429,10 +447,12 @@ def collect(snapshot: dict, previous_status: dict | None = None, *, today: date 
         try:
             candidate = choose_candidate(records[key], target_year)
         except SourceError as exc:
-            category_status["errors"].append(str(exc))
+            add_issue(key, snapshot[key]["source"], exc, "conflict")
             continue
         if candidate is None:
             category_status["errors"].append(f"No unambiguous dated {target_year} cumulative total was verified")
+            if not category_status["issues"]:
+                category_status["issues"].append({"kind": "source", "source": snapshot[key]["source"], "message": "No supported cumulative total for the reference year"})
             continue
         successes += 1
         category_status["source"] = candidate["source"]

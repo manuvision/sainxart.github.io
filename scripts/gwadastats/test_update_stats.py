@@ -185,6 +185,30 @@ class ExtractRoads(unittest.TestCase):
 
 
 class Collection(unittest.TestCase):
+    def test_older_backup_does_not_extend_network_outage_grace(self):
+        before = current_snapshot()
+        previous = {"categories": {"roads": {"lastSuccess": "2026-09-09T09:00:00+00:00"}}}
+        fixture = network_fixture({c.PREFECTURE: c.SourceUnavailable("connection closed")})
+        with patch.dict(c.os.environ, {"GITHUB_RUN_ID": "repair-test"}):
+            output, status, _ = c.collect(before, previous, today=date(2026, 9, 10), fetcher=fixture)
+        self.assertEqual(output["roads"], before["roads"])
+        road_status = status["categories"]["roads"]
+        self.assertEqual(road_status["lastSuccess"], previous["categories"]["roads"]["lastSuccess"])
+        self.assertEqual(road_status["outcome"], "fallback")
+        self.assertEqual([item["kind"] for item in road_status["issues"]], ["transport"])
+        self.assertEqual(status["runId"], "repair-test")
+        again, next_status, _ = c.collect(output, status, today=date(2026, 9, 11), fetcher=fixture)
+        self.assertEqual(again["roads"], before["roads"])
+        self.assertEqual(next_status["categories"]["roads"]["lastSuccess"], road_status["lastSuccess"])
+
+    def test_parser_and_conflict_failures_are_not_transient_network_issues(self):
+        _, status, _ = c.collect(current_snapshot(), today=TODAY, fetcher=network_fixture({c.PREFECTURE: "<html>Changed source</html>"}))
+        self.assertEqual(status["categories"]["roads"]["issues"][0]["kind"], "source")
+        conflict = rci("29 homicides depuis le début de l’année en Guadeloupe.")
+        fixture = network_fixture({c.RCI_RSS: f"<rss><channel><item><link>{NEW_ARTICLE}</link></item></channel></rss>", NEW_ARTICLE: conflict})
+        _, status, _ = c.collect(current_snapshot(), today=TODAY, fetcher=fixture)
+        self.assertEqual(status["categories"]["homicides"]["issues"][-1]["kind"], "conflict")
+
     def test_publication_only_backup_updates_road_record_during_prefecture_outage(self):
         bulletin = roads(27, "13/09/2026", "15/09/2026", deal=True).replace("Mis à jour le", "Publié le")
         fixture = network_fixture({c.PREFECTURE: OSError("RemoteDisconnected"), c.DEAL: bulletin})
@@ -302,16 +326,17 @@ class FetchRetries(unittest.TestCase):
     def test_persistent_transport_failure_is_reported_after_bounded_retries(self):
         with patch.object(c, "build_opener") as opener, patch.object(c.time, "sleep"):
             opener.return_value.open.side_effect = RemoteDisconnected("closed")
-            with self.assertRaisesRegex(c.SourceError, "RemoteDisconnected"):
+            with self.assertRaisesRegex(c.SourceUnavailable, "RemoteDisconnected"):
                 c.fetch(c.DEAL)
             self.assertEqual(opener.return_value.open.call_count, 3)
 
     def test_permanent_http_error_and_disallowed_redirect_do_not_retry(self):
-        for result in [HTTPError(c.DEAL, 404, "missing", {}, None), self.response("https://example.com")]:
+        for result in [HTTPError(c.DEAL, 404, "missing", {}, None), c.URLError(c.ssl.SSLCertVerificationError("invalid certificate")), self.response("https://example.com")]:
             with self.subTest(result=result), patch.object(c, "build_opener") as opener, patch.object(c.time, "sleep") as sleep:
                 opener.return_value.open.side_effect = [result]
-                with self.assertRaises(c.SourceError):
+                with self.assertRaises(c.SourceError) as error:
                     c.fetch(c.DEAL)
+                self.assertNotIsInstance(error.exception, c.SourceUnavailable)
                 self.assertEqual(opener.return_value.open.call_count, 1)
                 sleep.assert_not_called()
 

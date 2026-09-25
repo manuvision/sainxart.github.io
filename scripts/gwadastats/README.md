@@ -10,6 +10,8 @@ Official road pages may show either a publication date alone or separate publica
 
 `gwadastats/data.json` contains the current common reference year, independent counts, cutoff and publication dates, source links and per-category `checkedAt` dates. Its `reviewedAt` is the latest successful check of either category. A failed category retains its own `checkedAt`. `update-status.json` records each attempt, last success and errors. A new year replaces the previous archive only when both categories have verified totals for the same new year.
 
+Short publisher network outages are reported as **degraded**, with a visible workflow warning, for up to 72 hours after that category's last successful verification. This applies only to typed retryable transport failures. An older backup never refreshes the displayed record, its `checkedAt`, or the grace deadline. Daily checks continue automatically. At 72 hours, or immediately for parser failures, conflicting totals, invalid status or missing verification history, the health check fails. The status must belong to the current GitHub run, so a crashed collector cannot reuse an old successful check.
+
 From the repository root:
 
 ```sh
@@ -18,7 +20,7 @@ python3 scripts/gwadastats/update_stats.py --data gwadastats/data.json --status 
 node scripts/gwadastats/verify-data.mjs
 ```
 
-The workflow validates the JSON, commits only the two data/status files, then explicitly requests a GitHub Pages build. This request matters: commits made using `GITHUB_TOKEN` do not trigger a Pages build by themselves. It finally checks that the public JSON matches the run and reports missing categories as a failed check. Normal git pushes and rebases preserve concurrent work; conflicts stop the run without forcing changes.
+The workflow validates the JSON, commits only the two data/status files, then explicitly requests a GitHub Pages build. This request matters: commits made using `GITHUB_TOKEN` do not trigger a Pages build by themselves. It finally checks that the public JSON matches the run and reports category health using the bounded outage policy above. Normal git pushes and rebases preserve concurrent work; conflicts stop the run without forcing changes.
 
 The status commit also keeps a healthy public repository active, avoiding GitHub's 60-day inactivity limit on scheduled workflows. If checks stop, inspect Actions and re-enable a disabled schedule. Every open page refetches its JSON every 15 minutes and after returning to a stale tab, preserving the last valid result during transient errors.
 
