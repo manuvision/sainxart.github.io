@@ -1,11 +1,14 @@
 {
-  "lastAttempt": "2026-09-25T15:17:06+00:00",
+  "lastAttempt": "2026-09-25T15:33:04+00:00",
+  "runId": "36154901578",
+  "runAttempt": "1",
   "categories": {
     "homicides": {
-      "lastSuccess": "2026-09-25T15:17:06+00:00",
+      "lastSuccess": "2026-09-25T15:33:04+00:00",
       "outcome": "unchanged",
       "source": "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue",
       "errors": [],
+      "issues": [],
       "verifiedThrough": "2026-09-06"
     },
     "roads": {
@@ -16,11 +19,18 @@
         "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees: RemoteDisconnected: Remote end closed connection without response",
         "An older backup total was verified; the displayed newer record was not reverified"
       ],
+      "issues": [
+        {
+          "kind": "transport",
+          "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
+          "message": "RemoteDisconnected: Remote end closed connection without response"
+        }
+      ],
       "verifiedThrough": "2026-09-13"
     }
   },
   "warnings": [],
-  "changed": true,
+  "changed": false,
   "verifiedCategories": 2,
   "referenceYear": 2026,
   "checkedArticles": 44
