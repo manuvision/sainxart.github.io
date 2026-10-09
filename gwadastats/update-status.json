@@ -1,10 +1,10 @@
 {
-  "lastAttempt": "2026-10-08T17:25:41+00:00",
-  "runId": "37816294790",
+  "lastAttempt": "2026-10-09T17:00:14+00:00",
+  "runId": "37963113552",
   "runAttempt": "1",
   "categories": {
     "homicides": {
-      "lastSuccess": "2026-10-08T17:25:41+00:00",
+      "lastSuccess": "2026-10-09T17:00:14+00:00",
       "outcome": "unchanged",
       "source": "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue",
       "errors": [],
@@ -12,7 +12,7 @@
       "verifiedThrough": "2026-09-06"
     },
     "roads": {
-      "lastSuccess": "2026-10-08T17:25:41+00:00",
+      "lastSuccess": "2026-10-09T17:00:14+00:00",
       "outcome": "unchanged",
       "source": "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html",
       "errors": [
@@ -32,5 +32,5 @@
   "changed": true,
   "verifiedCategories": 2,
   "referenceYear": 2026,
-  "checkedArticles": 46
+  "checkedArticles": 45
 }
