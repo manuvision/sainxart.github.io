@@ -1,10 +1,10 @@
 {
-  "lastAttempt": "2026-10-19T16:59:44+00:00",
-  "runId": "39290198430",
+  "lastAttempt": "2026-10-20T15:06:53+00:00",
+  "runId": "39445393471",
   "runAttempt": "1",
   "categories": {
     "homicides": {
-      "lastSuccess": "2026-10-19T16:59:44+00:00",
+      "lastSuccess": "2026-10-20T15:06:53+00:00",
       "outcome": "unchanged",
       "source": "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue",
       "errors": [],
@@ -12,25 +12,25 @@
       "verifiedThrough": "2026-09-06"
     },
     "roads": {
-      "lastSuccess": "2026-10-19T16:59:44+00:00",
-      "outcome": "unchanged",
-      "source": "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html",
+      "lastSuccess": "2026-10-20T15:06:53+00:00",
+      "outcome": "updated",
+      "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
       "errors": [
-        "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees: RemoteDisconnected: Remote end closed connection without response"
+        "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html: HTTPError: HTTP Error 503: Service Unavailable"
       ],
       "issues": [
         {
           "kind": "transport",
-          "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
-          "message": "RemoteDisconnected: Remote end closed connection without response"
+          "source": "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html",
+          "message": "HTTPError: HTTP Error 503: Service Unavailable"
         }
       ],
-      "verifiedThrough": "2026-10-14"
+      "verifiedThrough": "2026-10-18"
     }
   },
   "warnings": [],
   "changed": true,
   "verifiedCategories": 2,
   "referenceYear": 2026,
-  "checkedArticles": 42
+  "checkedArticles": 46
 }
