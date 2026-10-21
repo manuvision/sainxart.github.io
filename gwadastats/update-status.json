@@ -1,10 +1,10 @@
 {
-  "lastAttempt": "2026-10-20T15:06:53+00:00",
-  "runId": "39445393471",
+  "lastAttempt": "2026-10-21T15:16:18+00:00",
+  "runId": "39624067714",
   "runAttempt": "1",
   "categories": {
     "homicides": {
-      "lastSuccess": "2026-10-20T15:06:53+00:00",
+      "lastSuccess": "2026-10-21T15:16:18+00:00",
       "outcome": "unchanged",
       "source": "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue",
       "errors": [],
@@ -13,24 +13,32 @@
     },
     "roads": {
       "lastSuccess": "2026-10-20T15:06:53+00:00",
-      "outcome": "updated",
+      "outcome": "unavailable",
       "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
       "errors": [
-        "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html: HTTPError: HTTP Error 503: Service Unavailable"
+        "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees: Missing official page publication or update date",
+        "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html: Missing official page publication or update date",
+        "No unambiguous dated 2026 cumulative total was verified"
       ],
       "issues": [
         {
-          "kind": "transport",
+          "kind": "source",
+          "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
+          "message": "Missing official page publication or update date"
+        },
+        {
+          "kind": "source",
           "source": "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html",
-          "message": "HTTPError: HTTP Error 503: Service Unavailable"
+          "message": "Missing official page publication or update date"
         }
-      ],
-      "verifiedThrough": "2026-10-18"
+      ]
     }
   },
-  "warnings": [],
+  "warnings": [
+    "Only one category was verified; consult individual checkedAt dates and update-status.json"
+  ],
   "changed": true,
-  "verifiedCategories": 2,
+  "verifiedCategories": 1,
   "referenceYear": 2026,
-  "checkedArticles": 46
+  "checkedArticles": 48
 }
