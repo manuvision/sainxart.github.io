@@ -1,10 +1,10 @@
 {
-  "lastAttempt": "2026-10-21T15:16:18+00:00",
-  "runId": "39624067714",
+  "lastAttempt": "2026-10-22T15:18:02+00:00",
+  "runId": "39803482657",
   "runAttempt": "1",
   "categories": {
     "homicides": {
-      "lastSuccess": "2026-10-21T15:16:18+00:00",
+      "lastSuccess": "2026-10-22T15:18:02+00:00",
       "outcome": "unchanged",
       "source": "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue",
       "errors": [],
@@ -16,19 +16,19 @@
       "outcome": "unavailable",
       "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
       "errors": [
+        "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html: HTTPError: HTTP Error 500: Internal Server Error",
         "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees: Missing official page publication or update date",
-        "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html: Missing official page publication or update date",
         "No unambiguous dated 2026 cumulative total was verified"
       ],
       "issues": [
         {
-          "kind": "source",
-          "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
-          "message": "Missing official page publication or update date"
+          "kind": "transport",
+          "source": "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html",
+          "message": "HTTPError: HTTP Error 500: Internal Server Error"
         },
         {
           "kind": "source",
-          "source": "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html",
+          "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
           "message": "Missing official page publication or update date"
         }
       ]
@@ -40,5 +40,5 @@
   "changed": true,
   "verifiedCategories": 1,
   "referenceYear": 2026,
-  "checkedArticles": 48
+  "checkedArticles": 46
 }
