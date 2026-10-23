@@ -1,10 +1,10 @@
 {
-  "lastAttempt": "2026-10-22T15:18:02+00:00",
-  "runId": "39803482657",
+  "lastAttempt": "2026-10-23T15:05:12+00:00",
+  "runId": "39975180597",
   "runAttempt": "1",
   "categories": {
     "homicides": {
-      "lastSuccess": "2026-10-22T15:18:02+00:00",
+      "lastSuccess": "2026-10-23T15:05:12+00:00",
       "outcome": "unchanged",
       "source": "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue",
       "errors": [],
@@ -12,33 +12,17 @@
       "verifiedThrough": "2026-09-06"
     },
     "roads": {
-      "lastSuccess": "2026-10-20T15:06:53+00:00",
-      "outcome": "unavailable",
-      "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
-      "errors": [
-        "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html: HTTPError: HTTP Error 500: Internal Server Error",
-        "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees: Missing official page publication or update date",
-        "No unambiguous dated 2026 cumulative total was verified"
-      ],
-      "issues": [
-        {
-          "kind": "transport",
-          "source": "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html",
-          "message": "HTTPError: HTTP Error 500: Internal Server Error"
-        },
-        {
-          "kind": "source",
-          "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
-          "message": "Missing official page publication or update date"
-        }
-      ]
+      "lastSuccess": "2026-10-23T15:05:12+00:00",
+      "outcome": "updated",
+      "source": "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html",
+      "errors": [],
+      "issues": [],
+      "verifiedThrough": "2026-10-18"
     }
   },
-  "warnings": [
-    "Only one category was verified; consult individual checkedAt dates and update-status.json"
-  ],
+  "warnings": [],
   "changed": true,
-  "verifiedCategories": 1,
+  "verifiedCategories": 2,
   "referenceYear": 2026,
-  "checkedArticles": 46
+  "checkedArticles": 48
 }
