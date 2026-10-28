@@ -1,10 +1,10 @@
 {
-  "lastAttempt": "2026-10-27T15:53:39+00:00",
-  "runId": "40535455885",
+  "lastAttempt": "2026-10-28T16:38:45+00:00",
+  "runId": "40727924916",
   "runAttempt": "1",
   "categories": {
     "homicides": {
-      "lastSuccess": "2026-10-27T15:53:39+00:00",
+      "lastSuccess": "2026-10-28T16:38:45+00:00",
       "outcome": "unchanged",
       "source": "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue",
       "errors": [],
@@ -12,11 +12,19 @@
       "verifiedThrough": "2026-09-06"
     },
     "roads": {
-      "lastSuccess": "2026-10-27T15:53:39+00:00",
+      "lastSuccess": "2026-10-28T16:38:45+00:00",
       "outcome": "unchanged",
       "source": "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html",
-      "errors": [],
-      "issues": [],
+      "errors": [
+        "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees: RemoteDisconnected: Remote end closed connection without response"
+      ],
+      "issues": [
+        {
+          "kind": "transport",
+          "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
+          "message": "RemoteDisconnected: Remote end closed connection without response"
+        }
+      ],
       "verifiedThrough": "2026-10-18"
     }
   },
@@ -24,5 +32,5 @@
   "changed": true,
   "verifiedCategories": 2,
   "referenceYear": 2026,
-  "checkedArticles": 44
+  "checkedArticles": 47
 }
