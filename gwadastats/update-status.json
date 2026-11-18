@@ -1,37 +1,62 @@
 {
-  "lastAttempt": "2026-11-17T19:11:24+00:00",
-  "runId": "44155840794",
+  "lastAttempt": "2026-11-18T18:51:38+00:00",
+  "runId": "44374203254",
   "runAttempt": "1",
   "categories": {
     "homicides": {
       "lastSuccess": "2026-11-17T19:11:24+00:00",
-      "outcome": "unchanged",
+      "outcome": "unavailable",
       "source": "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue",
-      "errors": [],
-      "issues": [],
-      "verifiedThrough": "2026-09-06"
-    },
-    "roads": {
-      "lastSuccess": "2026-11-14T16:36:23+00:00",
-      "outcome": "fallback",
-      "source": "https://www.guadeloupe.developpement-durable.gouv.fr/accidentalite-remontees-rapides-a305.html",
       "errors": [
-        "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees: RemoteDisconnected: Remote end closed connection without response",
-        "An older backup total was verified; the displayed newer record was not reverified"
+        "https://rci.fm/guadeloupe/fb/articles_rss_gp: URLError: <urlopen error timed out>",
+        "https://rci.fm/guadeloupe/infos/Faits-divers?page=1: URLError: <urlopen error timed out>",
+        "https://rci.fm/guadeloupe/infos/Faits-divers: URLError: <urlopen error timed out>",
+        "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue: URLError: <urlopen error timed out>",
+        "No working news discovery source; the existing article alone cannot establish a successful current check",
+        "No unambiguous dated 2026 cumulative total was verified"
       ],
       "issues": [
         {
           "kind": "transport",
-          "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
-          "message": "RemoteDisconnected: Remote end closed connection without response"
+          "source": "https://rci.fm/guadeloupe/fb/articles_rss_gp",
+          "message": "URLError: <urlopen error timed out>"
+        },
+        {
+          "kind": "transport",
+          "source": "https://rci.fm/guadeloupe/infos/Faits-divers?page=1",
+          "message": "URLError: <urlopen error timed out>"
+        },
+        {
+          "kind": "transport",
+          "source": "https://rci.fm/guadeloupe/infos/Faits-divers",
+          "message": "URLError: <urlopen error timed out>"
+        },
+        {
+          "kind": "transport",
+          "source": "https://rci.fm/guadeloupe/infos/Faits-divers/Meurtre-au-Gosier-un-suspect-en-garde-vue",
+          "message": "URLError: <urlopen error timed out>"
+        },
+        {
+          "kind": "discovery",
+          "source": "https://rci.fm/guadeloupe/infos/Faits-divers",
+          "message": "No working news discovery source"
         }
-      ],
-      "verifiedThrough": "2026-11-01"
+      ]
+    },
+    "roads": {
+      "lastSuccess": "2026-11-18T18:51:38+00:00",
+      "outcome": "updated",
+      "source": "https://www.guadeloupe.gouv.fr/Actions-de-l-Etat/Securite/Securite-routiere/L-accidentalite-en-chiffres/Les-chiffres-de-l-accidentalite-barometres-mensuels-autres-donnees",
+      "errors": [],
+      "issues": [],
+      "verifiedThrough": "2026-11-15"
     }
   },
-  "warnings": [],
+  "warnings": [
+    "Only one category was verified; consult individual checkedAt dates and update-status.json"
+  ],
   "changed": true,
-  "verifiedCategories": 2,
+  "verifiedCategories": 1,
   "referenceYear": 2026,
-  "checkedArticles": 47
+  "checkedArticles": 1
 }
